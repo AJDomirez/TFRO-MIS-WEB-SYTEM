@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payments</title>
+
+  <link rel="stylesheet" href="../css/payment.css">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+</head>
+<body>
+
+<div class="dashboard-container">
+
+  <!-- SIDEBAR -->
+ <aside class="sidebar">
+
+  <div class="logo">
+    <i class="ri-government-line"></i>
+
+<div>
+  <h2>TFRO</h2>
+  <p>Lucena City</p>
+</div>
+
+  </div>
+
+
+<ul class="menu">
+
+  <li id="dashboardMenu">
+    <a href="dashboard.html">
+      <i class="ri-dashboard-line"></i>
+      Dashboard
+    </a>
+  </li>
+
+  <li id="franchiseMenu">
+    <a href="franchise.html">
+      <i class="ri-file-list-3-line"></i>
+      Franchises
+    </a>
+  </li>
+
+  <li id="operatorMenu">
+    <a href="operator.html">
+      <i class="ri-user-star-line"></i>
+      Operators
+    </a>
+  </li>
+
+  <li id="driverMenu">
+    <a href="driver.html">
+      <i class="ri-steering-2-line"></i>
+      Drivers
+    </a>
+  </li>
+
+  <li id="violationMenu">
+    <a href="violation.html">
+      <i class="ri-alert-line"></i>
+      Violations
+    </a>
+  </li>
+
+  <li class="active">
+    <a href="payment.html">
+      <i class="ri-money-dollar-circle-line"></i>
+      Payments
+    </a>
+  </li>
+
+  <li id="reportMenu">
+    <a href="report.html">
+      <i class="ri-bar-chart-line"></i>
+      Reports
+    </a>
+  </li>
+
+  <li id="notificationMenu">
+        <a href="notification.html">
+          <i class="ri-notification-3-line"></i>
+          Notifications
+        </a>
+      </li>
+
+  <li id="auditlogMenu"> 
+        <a href="auditlog.html"> 
+        <i class="ri-history-line">
+            </i> Audit Log </a> 
+    </li>
+
+   <li id="profileMenu">
+        <a href="profile.html">
+          <i class="ri-user-settings-line"></i>
+          Profile
+        </a>
+      </li>
+
+</ul>
+
+<!-- USER PROFILE -->
+<div class="sidebar-user">
+
+  <div class="user-left">
+
+    <div class="user-avatar">
+      MS
+    </div>
+
+    <div class="user-details">
+      <h4>Maria Santos</h4>
+      <p>Administrator</p>
+    </div>
+
+  </div>
+
+  <button class="logout-btn" id="logoutBtn">
+    <i class="ri-logout-box-r-line"></i>
+  </button>
+
+</div>
+
+
+</aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div>
+        <h1>Payments & Fees</h1>
+        <p>Track payment transactions and fee collections</p>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+
+      <div class="card">
+        <h2 id="totalCollected">₱0</h2>
+        <p>Total Collected</p>
+      </div>
+
+      <div class="card">
+        <h2 id="pendingCount">0</h2>
+        <p>Pending Payments</p>
+      </div>
+
+      <div class="card">
+        <h2 id="overdueCount">0</h2>
+        <p>Overdue Payments</p>
+      </div>
+
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+
+      <div class="toolbar-left">
+
+        <div class="search-box">
+          <i class="ri-search-line"></i>
+
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search payments..."
+          >
+        </div>
+
+        <select id="statusFilter">
+
+          <option value="all">All Status</option>
+          <option value="paid">Paid</option>
+          <option value="pending">Pending</option>
+          <option value="overdue">Overdue</option>
+
+        </select>
+
+      </div>
+
+      <button class="add-btn">
+        <i class="ri-add-line"></i>
+        Record Payment
+      </button>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>Receipt #</th>
+            <th>Payer</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+
+        </thead>
+
+        <tbody id="paymentsTable"></tbody>
+
+      </table>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script src="../js/payment.js"></script>
+
+</body>
+</html>
+

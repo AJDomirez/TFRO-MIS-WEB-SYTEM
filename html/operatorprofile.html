@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Operator Profile</title>
+
+  <link rel="stylesheet" href="../css/operatorprofile.css">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="logo">
+
+      <i class="ri-government-line"></i>
+
+      <div>
+        <h2>TFRO</h2>
+        <p>Lucena City</p>
+      </div>
+
+    </div>
+
+    <ul class="menu">
+
+      <li>
+        <a href="operatorportal.html">
+          <i class="ri-file-list-3-line"></i>
+          My Franchise
+        </a>
+      </li>
+
+      <li class="active">
+        <a href="operatorprofile.html">
+          <i class="ri-user-settings-line"></i>
+          My Profile
+        </a>
+      </li>
+
+    </ul>
+
+    <!-- USER PROFILE -->
+    <div class="sidebar-user">
+
+      <div class="user-left">
+
+        <div class="user-avatar">
+          AC
+        </div>
+
+        <div class="user-details">
+          <h4>Antonio Cruz</h4>
+          <p>Operator</p>
+        </div>
+
+      </div>
+
+      <button class="logout-btn" id="logoutBtn">
+        <i class="ri-logout-box-r-line"></i>
+      </button>
+
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+
+      <div>
+        <h1>My Profile</h1>
+        <p>Manage your account information and security settings</p>
+      </div>
+
+    </div>
+
+    <!-- PROFILE CARD -->
+    <div class="profile-card">
+
+      <div class="profile-header">
+
+        <div class="profile-avatar">
+          AC
+        </div>
+
+        <div>
+          <h2>Antonio Cruz</h2>
+          <p>Operator</p>
+          <span>operator@tfro.gov.ph</span>
+        </div>
+
+      </div>
+
+      <form class="profile-form">
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" value="Antonio">
+          </div>
+
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" value="Cruz">
+          </div>
+
+          <div class="form-group full">
+            <label>Email Address</label>
+            <input type="email" value="operator@tfro.gov.ph">
+          </div>
+
+          <div class="form-group full">
+            <label>Contact Number</label>
+            <input type="text" value="0917-123-4567">
+          </div>
+
+          <div class="form-group full">
+            <label>Role</label>
+            <input type="text" value="Operator" disabled>
+          </div>
+
+        </div>
+
+        <button type="submit" class="save-btn">
+          Save Changes
+        </button>
+
+      </form>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script src="../js/operatorprofile.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Operator Portal</title>
+
+  <link rel="stylesheet" href="../css/operatorportal.css">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="logo">
+      <i class="ri-government-line"></i>
+
+      <div>
+        <h2>TFRO</h2>
+        <p>Lucena City</p>
+      </div>
+    </div>
+
+    <ul class="menu">
+
+      <li class="active">
+        <a href="operatorportal.html">
+          <i class="ri-file-list-3-line"></i>
+          My Franchise
+        </a>
+      </li>
+
+      <li>
+        <a href="operatorprofile.html">
+          <i class="ri-user-settings-line"></i>
+          My Profile
+        </a>
+      </li>
+
+    </ul>
+
+    <!-- USER PROFILE -->
+    <div class="sidebar-user">
+
+      <div class="user-left">
+
+        <div class="user-avatar">
+          AC
+        </div>
+
+        <div class="user-details">
+          <h4>Antonio Cruz</h4>
+          <p>Operator</p>
+        </div>
+
+      </div>
+
+      <button class="logout-btn" id="logoutBtn">
+        <i class="ri-logout-box-r-line"></i>
+      </button>
+
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+
+      <div>
+        <h1>My Franchise</h1>
+        <p>View your franchise information and payment status</p>
+      </div>
+
+    </div>
+
+    <!-- WELCOME CARD -->
+    <div class="welcome-card">
+
+      <p>Welcome back,</p>
+
+      <h2>Antonio Cruz</h2>
+
+      <span>
+        Registered Tricycle Operator — Lucena City TFRO
+      </span>
+
+    </div>
+
+    <!-- FRANCHISE DETAILS -->
+    <div class="info-card">
+
+      <div class="card-header">
+
+        <h3>Franchise Details</h3>
+
+        <span class="badge approved">
+          Approved
+        </span>
+
+      </div>
+
+      <div class="info-grid">
+
+        <div>
+          <label>Franchise Number</label>
+          <h4>FR-2024-0891</h4>
+        </div>
+
+        <div>
+          <label>Assigned Route</label>
+          <h4>Route 3 — Cotta to Market</h4>
+        </div>
+
+        <div>
+          <label>Date Applied</label>
+          <h4>2024-01-15</h4>
+        </div>
+
+        <div>
+          <label>Expiry Date</label>
+          <h4>2025-01-15</h4>
+        </div>
+
+        <div>
+          <label>Annual Fee</label>
+          <h4>₱3,500</h4>
+        </div>
+
+        <div>
+          <label>Payment Status</label>
+          <h4>✔ Paid</h4>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- PAYMENT HISTORY -->
+    <div class="table-card">
+
+      <div class="table-header">
+        <h3>Payment History</h3>
+      </div>
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Receipt</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr>
+            <td class="receipt">
+              OR-2024-0441
+            </td>
+
+            <td>Franchise Renewal</td>
+
+            <td>₱3,500</td>
+
+            <td>
+              <span class="badge paid">
+                Paid
+              </span>
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <!-- VIOLATIONS -->
+    <div class="table-card">
+
+      <div class="table-header">
+        <h3>Violation Records</h3>
+      </div>
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Violation</th>
+            <th>Date</th>
+            <th>Penalty</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr>
+            <td>Route Deviation</td>
+            <td>2024-01-10</td>
+            <td>₱500</td>
+
+            <td>
+              <span class="badge paid">
+                Paid
+              </span>
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script src="../js/operatorportal.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TFRO Driver Portal</title>
+
+  <link rel="stylesheet" href="../css/driverportal.css">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+</head>
+
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="logo">
+      <i class="ri-government-line"></i>
+
+      <div>
+        <h2>TFRO</h2>
+        <p>Lucena City</p>
+      </div>
+    </div>
+
+    <ul class="menu">
+
+      <li class="active">
+        <a href="driverportal.html">
+          <i class="ri-user-line"></i>
+          My Records
+        </a>
+      </li>
+
+      <li>
+        <a href="driverprofile.html">
+          <i class="ri-user-settings-line"></i>
+          My Profile
+        </a>
+      </li>
+
+    </ul>
+
+    <!-- USER SECTION -->
+    <div class="user-section">
+
+      <div class="user-info">
+
+        <div class="avatar">
+          RL
+        </div>
+
+        <div>
+          <h4>Ricardo Lim</h4>
+          <p>Driver</p>
+        </div>
+
+      </div>
+
+      <button class="logout-btn" id="logoutBtn">
+        <i class="ri-logout-box-r-line"></i>
+      </button>
+
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+
+      <div>
+        <h1>My Records</h1>
+        <p>View your driver records and compliance status</p>
+      </div>
+
+      <div class="top-right">
+
+        <span id="dateToday"></span>
+
+        <button class="notif-btn">
+          <i class="ri-notification-3-line"></i>
+        </button>
+
+      </div>
+
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- WELCOME CARD -->
+      <div class="welcome-card">
+
+        <p>Welcome back,</p>
+
+        <h2>Ricardo Lim</h2>
+
+        <span>
+          Registered Driver — Lucena City TFRO
+        </span>
+
+      </div>
+
+      <!-- DRIVER INFO -->
+      <div class="info-card">
+
+        <div class="info-header">
+
+          <h3>Driver Information</h3>
+
+          <span class="status compliant">
+            <i class="ri-checkbox-circle-line"></i>
+            Compliant
+          </span>
+
+        </div>
+
+        <div class="info-grid">
+
+          <div>
+            <label>Driver's License #</label>
+            <p>N01-23-456789</p>
+          </div>
+
+          <div>
+            <label>Assigned Operator</label>
+            <p>Antonio Cruz</p>
+          </div>
+
+          <div>
+            <label>Franchise Number</label>
+            <p>FR-2024-0891</p>
+          </div>
+
+          <div>
+            <label>Contact Number</label>
+            <p>0917-111-2222</p>
+          </div>
+
+          <div>
+            <label>Registration Date</label>
+            <p>2021-03-10</p>
+          </div>
+
+          <div>
+            <label>Compliance Status</label>
+            <p>✓ Compliant</p>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- VIOLATIONS -->
+      <div class="table-card">
+
+        <div class="table-header">
+          <h3>Violation Records</h3>
+        </div>
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Violation</th>
+              <th>Date</th>
+              <th>Penalty</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody id="violationTable">
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script src="../js/driverportal.js"></script>
+
+</body>
+</html>
+

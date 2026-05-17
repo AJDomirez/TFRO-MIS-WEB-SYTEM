@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Driver Profile</title>
+
+  <link rel="stylesheet" href="../css/driverprofile.css">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+</head>
+
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- LOGO -->
+    <div class="logo">
+      <i class="ri-government-line"></i>
+
+      <div>
+        <h2>TFRO</h2>
+        <p>Lucena City</p>
+      </div>
+    </div>
+
+    <!-- MENU -->
+    <ul class="menu">
+
+      <li>
+        <a href="driverportal.html">
+          <i class="ri-file-list-3-line"></i>
+          My Records
+        </a>
+      </li>
+
+      <li class="active">
+        <a href="driverprofile.html">
+          <i class="ri-user-settings-line"></i>
+          My Profile
+        </a>
+      </li>
+
+    </ul>
+
+    <!-- USER -->
+    <div class="user-section">
+
+      <div class="user-profile">
+
+        <div class="avatar">
+          RL
+        </div>
+
+        <div class="user-info">
+          <h4>Ricardo Lim</h4>
+          <p>Driver</p>
+        </div>
+
+      </div>
+
+      <button class="logout-btn" id="logoutBtn">
+        <i class="ri-logout-box-r-line"></i>
+      </button>
+
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+
+      <div>
+        <h1>My Profile</h1>
+        <p>Manage your account information and security settings</p>
+      </div>
+
+      <div class="top-right">
+
+        <span class="date">
+          Sunday, May 17, 2026
+        </span>
+
+        <button class="notif-btn">
+          <i class="ri-notification-3-line"></i>
+        </button>
+
+        <div class="top-user">
+
+          <div class="top-avatar">
+            RL
+          </div>
+
+          <span>Ricardo Lim</span>
+
+        </div>
+
+      </div>
+
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- TABS -->
+      <div class="tabs">
+
+        <button class="tab active">
+          Profile Info
+        </button>
+
+        <button class="tab">
+          Change Password
+        </button>
+
+      </div>
+
+      <!-- PROFILE CARD -->
+      <div class="profile-card">
+
+        <div class="profile-header">
+
+          <div class="big-avatar">
+            RL
+          </div>
+
+          <div>
+            <h2>Ricardo Lim</h2>
+            <p>Driver</p>
+            <span>driver@tfro.gov.ph</span>
+          </div>
+
+        </div>
+
+        <!-- FORM -->
+        <form id="profileForm">
+
+          <div class="form-grid">
+
+            <div class="input-group">
+              <label>First Name</label>
+              <input type="text" value="Ricardo">
+            </div>
+
+            <div class="input-group">
+              <label>Last Name</label>
+              <input type="text" value="Lim">
+            </div>
+
+          </div>
+
+          <div class="input-group">
+            <label>Email Address</label>
+            <input type="email" value="driver@tfro.gov.ph">
+          </div>
+
+          <div class="input-group">
+            <label>Contact Number</label>
+            <input type="text" value="0917-123-4567">
+          </div>
+
+          <div class="input-group">
+            <label>Role</label>
+            <input type="text" value="Driver" disabled>
+          </div>
+
+          <button type="submit" class="save-btn">
+            Save Changes
+          </button>
+
+        </form>
+
+      </div>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script src="../js/driverprofile.js"></script>
+
+</body>
+</html>
