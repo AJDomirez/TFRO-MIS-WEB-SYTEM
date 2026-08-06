@@ -252,3 +252,116 @@ font-weight: 600;
 .print-btn:hover{
   background:#f9fafb;
 }
+
+/* REPORT MODAL */
+
+.report-modal{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(0,0,0,0.5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+  padding:20px;
+}
+
+.report-modal[hidden]{
+  display:none;
+}
+
+.report-modal-content{
+  background:white;
+  border-radius:15px;
+  width:90%;
+  max-width:900px;
+  max-height:80vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+}
+
+.report-modal-header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:18px 22px;
+  border-bottom:1px solid #e2e8f0;
+}
+
+.report-modal-header h2{
+  font-size:18px;
+  color:#1e293b;
+  flex:1;
+}
+
+.modal-count{
+  font-size:12px;
+  color:#64748b;
+  background:#f1f5f9;
+  padding:4px 10px;
+  border-radius:20px;
+}
+
+.modal-close-btn{
+  width:32px;
+  height:32px;
+  border:none;
+  background:transparent;
+  font-size:22px;
+  color:#94a3b8;
+  cursor:pointer;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal-close-btn:hover{
+  background:#f1f5f9;
+  color:#475569;
+}
+
+.report-modal-body{
+  padding:20px 22px;
+  overflow-y:auto;
+  flex:1;
+}
+
+.report-modal-body table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+
+.report-modal-body th{
+  background:#0f2d6b;
+  color:white;
+  padding:10px 12px;
+  text-align:left;
+  font-size:11px;
+  position:sticky;
+  top:0;
+}
+
+.report-modal-body td{
+  padding:9px 12px;
+  border-bottom:1px solid #f1f5f9;
+  color:#334155;
+}
+
+.report-modal-body tr:nth-child(even) td{
+  background:#f8fafc;
+}
+
+.report-modal-body tr:hover td{
+  background:#eef2ff;
+}
+
+.download-btn i, .print-btn i{
+  font-size:14px;
+}

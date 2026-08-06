@@ -12,6 +12,10 @@
     href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
     rel="stylesheet"
   />
+
+  <!-- jsPDF + autoTable for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
@@ -154,11 +158,23 @@
 
     </div>
 
+    <!-- REPORT PREVIEW MODAL -->
+    <div class="report-modal" id="reportModal" hidden>
+      <div class="report-modal-content">
+        <div class="report-modal-header">
+          <h2 id="modalTitle">Report Preview</h2>
+          <span id="modalCount" class="modal-count"></span>
+          <button class="modal-close-btn" id="closeModalBtn">&times;</button>
+        </div>
+        <div class="report-modal-body" id="modalBody"></div>
+      </div>
+    </div>
+
   </main>
 
 </div>
 
-<script src="../js/report.js"></script>
+<script type="module" src="../js/report.js"></script>
 
 <script>
 

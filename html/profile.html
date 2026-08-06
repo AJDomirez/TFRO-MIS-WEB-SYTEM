@@ -41,7 +41,7 @@
     </a>
   </li>
 
-  <li class="active">
+  <li id="franchiseMenu">
     <a href="franchise.html">
       <i class="ri-file-list-3-line"></i>
       Franchises
@@ -110,13 +110,13 @@
 
   <div class="user-left">
 
-    <div class="user-avatar">
+    <div class="user-avatar" id="userAvatar">
       MS
     </div>
 
     <div class="user-details">
-      <h4>Maria Santos</h4>
-      <p>Administrator</p>
+      <h4 id="userName">Administrator</h4>
+      <p id="userRole">Administrator</p>
     </div>
 
   </div>
@@ -163,14 +163,14 @@
 
         <div class="profile-header">
 
-          <div class="profile-avatar">
+          <div class="profile-avatar" id="profileAvatar">
             M
           </div>
 
           <div>
-            <h2>Maria Santos</h2>
-            <p>Administrator</p>
-            <span>admin@tfro.gov.ph</span>
+            <h2 id="profileName">Administrator</h2>
+            <p id="profileRole">Administrator</p>
+            <span id="profileEmail">—</span>
           </div>
 
         </div>
@@ -181,29 +181,29 @@
 
             <div class="input-group">
               <label>First Name</label>
-              <input type="text" value="Maria">
+              <input type="text" id="firstName">
             </div>
 
             <div class="input-group">
               <label>Last Name</label>
-              <input type="text" value="Santos">
+              <input type="text" id="lastName">
             </div>
 
           </div>
 
           <div class="input-group">
             <label>Email Address</label>
-            <input type="email" value="admin@tfro.gov.ph">
+            <input type="email" id="email" disabled>
           </div>
 
           <div class="input-group">
             <label>Contact Number</label>
-            <input type="text" value="09171234567">
+            <input type="text" id="contactNumber">
           </div>
 
           <div class="input-group">
             <label>Role</label>
-            <input type="text" value="Administrator" disabled>
+            <input type="text" id="role" disabled>
           </div>
 
           <button type="submit" class="save-btn">
@@ -248,7 +248,7 @@
 
 </div>
 
-<script src="../js/profile.js"></script>
+<script type="module" src="../js/profile.js"></script>
 
 <script>
 

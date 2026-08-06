@@ -163,12 +163,26 @@
 
       </div>
 
-      <button class="add-btn">
+      <button class="add-btn" id="addViolationBtn">
         <i class="ri-add-line"></i>
         Record Violation
       </button>
 
     </div>
+
+    <section class="violation-form-panel" id="violationFormPanel" hidden>
+      <h2>Record Violation</h2>
+      <form id="violationForm">
+        <label>Subject name<input name="subject_name" required></label>
+        <label>Subject type<select name="subject_type"><option value="driver">Driver</option><option value="operator">Operator</option></select></label>
+        <label>Violation type<input name="violation_type" required placeholder="No Helmet"></label>
+        <label>Penalty (PHP)<input name="penalty" type="number" min="0" step="0.01" required></label>
+        <label>Date<input name="occurred_date" type="date" required></label>
+        <label>Status<select name="status"><option value="pending">Pending</option><option value="paid">Paid</option><option value="dismissed">Dismissed</option></select></label>
+        <label>Description<input name="description"></label>
+        <div class="violation-form-actions"><button class="add-btn" type="submit">Save Violation</button><button type="button" id="cancelViolationBtn">Cancel</button></div>
+      </form>
+    </section>
 
     <!-- TABLE -->
     <div class="table-card">
@@ -197,7 +211,7 @@
 
 </div>
 
-<script src="../js/violation.js"></script>
+<script type="module" src="../js/violation.js"></script>
 <script>
 
   const role = localStorage.getItem("role");

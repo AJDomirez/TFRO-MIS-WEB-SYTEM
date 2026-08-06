@@ -150,3 +150,115 @@ body{
   border-radius:8px;
   cursor:pointer;
 }
+
+/* REGISTER PAGE */
+
+.register-box{
+  max-width:480px;
+  max-height:90vh;
+  overflow-y:auto;
+}
+
+.switch-link{
+  display:block;
+  text-align:center;
+  margin-top:20px;
+  color:#64748b;
+  font-size:14px;
+}
+
+.switch-link a{
+  color:#1d4ed8;
+  font-weight:bold;
+  text-decoration:none;
+}
+
+.switch-link a:hover{
+  text-decoration:underline;
+}
+
+/* ROLE SELECTOR */
+
+.role-selector{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.role-card{
+  cursor:pointer;
+}
+
+.role-card input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.role-card-inner{
+  border:2px solid #cbd5e1;
+  border-radius:12px;
+  padding:16px 12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  text-align:center;
+  background:#f8fafc;
+  transition:border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.role-card-inner i{
+  font-size:26px;
+  color:#1d4ed8;
+  margin-bottom:4px;
+}
+
+.role-card-inner strong{
+  color:#1e293b;
+  font-size:15px;
+}
+
+.role-card-inner span{
+  color:#64748b;
+  font-size:12px;
+}
+
+.role-card input:checked + .role-card-inner{
+  border-color:#1d4ed8;
+  background:#eff6ff;
+  box-shadow:0 0 0 3px rgba(29,78,216,0.15);
+}
+
+.role-card input:focus-visible + .role-card-inner{
+  outline:2px solid #1d4ed8;
+  outline-offset:2px;
+}
+
+/* LOADING SPINNER */
+
+.ri-spin{
+  display:inline-block;
+  animation:ri-spin 1s linear infinite;
+}
+
+@keyframes ri-spin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+
+/* RESPONSIVE */
+
+@media (max-width:900px){
+  .left-panel{
+    display:none;
+  }
+
+  .right-panel{
+    width:100%;
+  }
+
+  .role-selector{
+    grid-template-columns:1fr;
+  }
+}

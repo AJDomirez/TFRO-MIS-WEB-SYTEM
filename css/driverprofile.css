@@ -311,3 +311,20 @@ body{
 .save-btn:hover{
   background:#1d4ed8;
 }
+
+/* CHANGE PASSWORD */
+
+.hidden{
+  display:none !important;
+}
+
+.form-hint{
+  font-size:13px;
+  color:#64748b;
+  margin-bottom:18px;
+}
+
+#passwordForm h3{
+  margin-bottom:10px;
+  color:#1e293b;
+}

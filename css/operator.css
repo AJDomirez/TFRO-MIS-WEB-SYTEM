@@ -206,6 +206,58 @@ select{
   cursor:pointer;
 }
 
+.add-btn:hover{
+  background:#1e40af;
+}
+
+.operator-form-panel{
+  background:white;
+  border-radius:15px;
+  padding:20px;
+  margin-bottom:20px;
+}
+
+.operator-form-panel h2{
+  font-size:18px;
+  margin-bottom:15px;
+}
+
+#operatorForm{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+#operatorForm label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  color:#475569;
+  font-size:13px;
+  font-weight:bold;
+}
+
+#operatorForm input,#operatorForm select{
+  padding:10px;
+  border:1px solid #cbd5e1;
+  border-radius:7px;
+  font:inherit;
+}
+
+.operator-form-actions{
+  grid-column:1/-1;
+  display:flex;
+  gap:10px;
+}
+
+.operator-form-actions button[type="button"]{
+  padding:10px 16px;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  background:white;
+  cursor:pointer;
+}
+
 /* STATS */
 
 .stats-grid{

@@ -164,12 +164,24 @@
 
       </div>
 
-      <button class="add-btn">
+      <button class="add-btn" id="addDriverBtn">
         <i class="ri-user-add-line"></i>
         Add Driver
       </button>
 
     </div>
+
+    <section class="driver-form-panel" id="driverFormPanel" hidden>
+      <h2>Add Driver</h2>
+      <form id="driverForm">
+        <label>Full name<input name="full_name" required></label>
+        <label>License number<input name="license_number" required></label>
+        <label>Operator name<input name="operator_name" required></label>
+        <label>Contact number<input name="contact_number" required></label>
+        <label>Compliance<select name="compliance"><option value="compliant">Compliant</option><option value="non-compliant">Non-Compliant</option></select></label>
+        <div class="driver-form-actions"><button class="add-btn" type="submit">Save Driver</button><button type="button" id="cancelDriverBtn">Cancel</button></div>
+      </form>
+    </section>
 
     <!-- TABLE -->
     <div class="table-card">
@@ -198,7 +210,7 @@
 
 </div>
 
-<script src="../js/driver.js"></script>
+<script type="module" src="../js/driver.js"></script>
 
 <script>
 

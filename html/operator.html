@@ -165,12 +165,24 @@
 
       </div>
 
-      <button class="add-btn">
+      <button class="add-btn" id="addOperatorBtn">
         <i class="ri-user-add-line"></i>
         Add Operator
       </button>
 
     </div>
+
+    <section class="operator-form-panel" id="operatorFormPanel" hidden>
+      <h2>Add Operator</h2>
+      <form id="operatorForm">
+        <label>Full name<input name="full_name" required></label>
+        <label>Address<input name="address" required></label>
+        <label>Contact number<input name="contact_number" required></label>
+        <label>Franchise number <small>(optional)</small><input name="franchise_number"></label>
+        <label>Status<select name="status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="suspended">Suspended</option></select></label>
+        <div class="operator-form-actions"><button class="add-btn" type="submit">Save Operator</button><button type="button" id="cancelOperatorBtn">Cancel</button></div>
+      </form>
+    </section>
 
     <!-- STAT CARDS -->
     <div class="stats-grid">
@@ -223,7 +235,7 @@
 
 </div>
 
-<script src="../js/operator.js"></script>
+<script type="module" src="../js/operator.js"></script>
 
 <script>
 

@@ -145,11 +145,24 @@
         <p>Manage franchise applications and renewals</p>
       </div>
 
-      <button class="new-btn" onclick="goToNewForm()">
+      <button class="new-btn" id="newApplicationBtn">
         <i class="ri-add-line"></i>
         New Application
       </button>
     </header>
+
+    <section class="application-panel" id="applicationPanel" hidden>
+      <h2>New Franchise Application</h2>
+      <form id="franchiseForm">
+        <label>Franchise number<input name="franchise_number" required placeholder="FR-2026-0001"></label>
+        <label>Operator name<input name="operator_name" required></label>
+        <label>Route<input name="route" required></label>
+        <label>Application type<select name="application_type"><option value="new">New application</option><option value="renewal">Renewal</option></select></label>
+        <label>Application date<input name="application_date" type="date" required></label>
+        <label>Expiry date <small>(optional)</small><input name="expiration_date" type="date"></label>
+        <div class="form-actions"><button type="submit" class="new-btn">Save Application</button><button type="button" id="cancelApplicationBtn">Cancel</button></div>
+      </form>
+    </section>
 
     <!-- TOOLBAR -->
     <div class="toolbar">
@@ -198,7 +211,7 @@
 
 </div>
 
-<script src="../js/franchise.js"></script>
+<script type="module" src="../js/franchise.js"></script>
 <script>
 
   const role = localStorage.getItem("role");

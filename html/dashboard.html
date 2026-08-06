@@ -145,7 +145,7 @@
     <!-- NOTICE -->
     <div class="notice">
       <i class="ri-alarm-warning-line"></i>
-      <span><strong>5 franchises</strong> are expiring within 14 days.</span>
+      <span><strong id="expiringCount">0</strong> franchises are expiring within 14 days.</span>
     </div>
 
     <!-- STAT CARDS -->
@@ -153,19 +153,19 @@
 
       <div class="card">
         <i class="ri-file-list-3-line blue"></i>
-        <h2>1,240</h2>
+        <h2 id="totalFranchises">—</h2>
         <p>Total Franchises</p>
       </div>
 
       <div class="card">
         <i class="ri-checkbox-circle-line green"></i>
-        <h2>1,100</h2>
+        <h2 id="activeFranchises">—</h2>
         <p>Active Franchises</p>
       </div>
 
       <div class="card">
         <i class="ri-time-line orange"></i>
-        <h2>45</h2>
+        <h2 id="pendingApplications">—</h2>
         <p>Pending Applications</p>
       </div>
 
@@ -209,21 +209,7 @@
           </tr>
         </thead>
 
-        <tbody>
-          <tr>
-            <td>FR-1021</td>
-            <td>Juan Dela Cruz</td>
-            <td>Lucena Bayan</td>
-            <td>5 Days</td>
-          </tr>
-
-          <tr>
-            <td>FR-1045</td>
-            <td>Pedro Santos</td>
-            <td>Market Route</td>
-            <td>8 Days</td>
-          </tr>
-        </tbody>
+        <tbody id="expiringRows"></tbody>
       </table>
 
     </div>
@@ -232,7 +218,7 @@
 
 </div>
 
-<script src="../js/dashboard.js"></script>
+<script type="module" src="../js/dashboard.js"></script>
 
 <script>
 

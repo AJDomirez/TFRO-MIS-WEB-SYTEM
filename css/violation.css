@@ -215,6 +215,14 @@ select{
   background:#1e40af;
 }
 
+.violation-form-panel{background:white;border-radius:15px;padding:20px;margin-bottom:20px;}
+.violation-form-panel h2{font-size:18px;margin-bottom:15px;}
+#violationForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+#violationForm label{display:flex;flex-direction:column;gap:6px;color:#475569;font-size:13px;font-weight:bold;}
+#violationForm input,#violationForm select{padding:10px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;}
+.violation-form-actions{grid-column:1/-1;display:flex;gap:10px;}
+.violation-form-actions button[type="button"]{padding:10px 16px;border:1px solid #cbd5e1;border-radius:8px;background:white;cursor:pointer;}
+
 /* TABLE */
 
 .table-card{

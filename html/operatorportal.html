@@ -53,12 +53,12 @@
 
       <div class="user-left">
 
-        <div class="user-avatar">
+        <div class="user-avatar" id="userAvatar">
           AC
         </div>
 
         <div class="user-details">
-          <h4>Antonio Cruz</h4>
+          <h4 id="userName">Operator</h4>
           <p>Operator</p>
         </div>
 
@@ -90,7 +90,7 @@
 
       <p>Welcome back,</p>
 
-      <h2>Antonio Cruz</h2>
+      <h2 id="welcomeName">Operator</h2>
 
       <span>
         Registered Tricycle Operator — Lucena City TFRO
@@ -105,7 +105,7 @@
 
         <h3>Franchise Details</h3>
 
-        <span class="badge approved">
+        <span class="badge approved" id="franchiseStatus">
           Approved
         </span>
 
@@ -115,32 +115,32 @@
 
         <div>
           <label>Franchise Number</label>
-          <h4>FR-2024-0891</h4>
+          <h4 id="franchiseNumber">—</h4>
         </div>
 
         <div>
           <label>Assigned Route</label>
-          <h4>Route 3 — Cotta to Market</h4>
+          <h4 id="assignedRoute">—</h4>
         </div>
 
         <div>
           <label>Date Applied</label>
-          <h4>2024-01-15</h4>
+          <h4 id="dateApplied">—</h4>
         </div>
 
         <div>
           <label>Expiry Date</label>
-          <h4>2025-01-15</h4>
+          <h4 id="expiryDate">—</h4>
         </div>
 
         <div>
           <label>Annual Fee</label>
-          <h4>₱3,500</h4>
+          <h4 id="annualFee">—</h4>
         </div>
 
         <div>
           <label>Payment Status</label>
-          <h4>✔ Paid</h4>
+          <h4 id="paymentStatus">—</h4>
         </div>
 
       </div>
@@ -207,19 +207,7 @@
           </tr>
         </thead>
 
-        <tbody>
-
-          <tr>
-            <td>Route Deviation</td>
-            <td>2024-01-10</td>
-            <td>₱500</td>
-
-            <td>
-              <span class="badge paid">
-                Paid
-              </span>
-            </td>
-          </tr>
+        <tbody id="violationTable">
 
         </tbody>
 
@@ -231,7 +219,7 @@
 
 </div>
 
-<script src="../js/operatorportal.js"></script>
+<script type="module" src="../js/operatorportal.js"></script>
 
 </body>
 </html>

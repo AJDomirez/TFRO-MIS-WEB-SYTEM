@@ -55,12 +55,12 @@
 
       <div class="user-left">
 
-        <div class="user-avatar">
+        <div class="user-avatar" id="userAvatar">
           AC
         </div>
 
         <div class="user-details">
-          <h4>Antonio Cruz</h4>
+          <h4 id="userName">Operator</h4>
           <p>Operator</p>
         </div>
 
@@ -87,50 +87,63 @@
 
     </div>
 
+    <!-- TABS -->
+    <div class="tabs">
+
+      <button class="tab active" data-tab="profile">
+        Profile Info
+      </button>
+
+      <button class="tab" data-tab="password">
+        Change Password
+      </button>
+
+    </div>
+
     <!-- PROFILE CARD -->
     <div class="profile-card">
 
       <div class="profile-header">
 
-        <div class="profile-avatar">
+        <div class="profile-avatar" id="profileAvatar">
           AC
         </div>
 
         <div>
-          <h2>Antonio Cruz</h2>
+          <h2 id="profileName">Operator</h2>
           <p>Operator</p>
-          <span>operator@tfro.gov.ph</span>
+          <span id="profileEmail">—</span>
         </div>
 
       </div>
 
-      <form class="profile-form">
+      <form class="profile-form" id="profileForm">
 
         <div class="form-grid">
 
           <div class="form-group">
             <label>First Name</label>
-            <input type="text" value="Antonio">
+            <input type="text" id="firstName">
           </div>
 
           <div class="form-group">
             <label>Last Name</label>
-            <input type="text" value="Cruz">
+            <input type="text" id="lastName">
           </div>
 
           <div class="form-group full">
             <label>Email Address</label>
-            <input type="email" value="operator@tfro.gov.ph">
+            <input type="email" id="email" disabled>
           </div>
 
           <div class="form-group full">
             <label>Contact Number</label>
-            <input type="text" value="0917-123-4567">
+            <input type="text" id="contactNumber">
           </div>
 
           <div class="form-group full">
             <label>Role</label>
-            <input type="text" value="Operator" disabled>
+            <input type="text" id="role" disabled>
           </div>
 
         </div>
@@ -141,13 +154,44 @@
 
       </form>
 
+      <!-- CHANGE PASSWORD FORM -->
+      <form class="profile-form hidden" id="passwordForm">
+
+        <h3>Change Password</h3>
+
+        <p class="form-hint">
+          Enter your current password, then choose a new one. You will be
+          signed in again with your new password.
+        </p>
+
+        <div class="form-group full">
+          <label>Current Password</label>
+          <input type="password" id="currentPassword" placeholder="Enter current password" required>
+        </div>
+
+        <div class="form-group full">
+          <label>New Password</label>
+          <input type="password" id="newPassword" placeholder="Enter new password" minlength="6" required>
+        </div>
+
+        <div class="form-group full">
+          <label>Confirm New Password</label>
+          <input type="password" id="confirmPassword" placeholder="Repeat new password" required>
+        </div>
+
+        <button type="submit" class="save-btn">
+          Update Password
+        </button>
+
+      </form>
+
     </div>
 
   </main>
 
 </div>
 
-<script src="../js/operatorprofile.js"></script>
+<script type="module" src="../js/operatorprofile.js"></script>
 
 </body>
 </html>

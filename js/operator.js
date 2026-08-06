@@ -1,167 +1,47 @@
-const logoutBtn =
-document.getElementById("logoutBtn");
+import { supabase } from "./supabase.js";
 
-if(logoutBtn){
+let operators = [];
+const table = document.getElementById("operatorsTable");
+const formPanel = document.getElementById("operatorFormPanel");
+const form = document.getElementById("operatorForm");
 
-  logoutBtn.addEventListener("click", () => {
+function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" })[c]); }
+function setCount(id, value) { document.getElementById(id).textContent = value; }
 
-    localStorage.removeItem("role");
-
-    window.location.href = "index.html";
-
-  });
-
+function render() {
+  const term = document.getElementById("searchInput").value.trim().toLowerCase();
+  const status = document.getElementById("statusFilter").value;
+  const rows = operators.filter((row) => (status === "all" || row.status === status) && [row.full_name, row.address, row.franchise_number || ""].some((value) => value.toLowerCase().includes(term)));
+  table.innerHTML = rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row.full_name)}</td><td>${escapeHtml(row.address)}</td><td>${escapeHtml(row.contact_number)}</td><td>${escapeHtml(row.franchise_number || "—")}</td><td><span class="status ${row.status}">${row.status}</span></td><td>—</td></tr>`).join("") : '<tr><td colspan="6">No operators found.</td></tr>';
+  setCount("totalOperators", operators.length);
+  setCount("activeOperators", operators.filter((row) => row.status === "active").length);
+  setCount("inactiveOperators", operators.filter((row) => row.status === "inactive").length);
+  setCount("suspendedOperators", operators.filter((row) => row.status === "suspended").length);
 }
 
-const operators = [
-
-  {
-    name:"Antonio Cruz",
-    address:"123 Rizal Ave, Lucena City",
-    contact:"0917-123-4567",
-    franchise:"FR-2024-0891",
-    status:"active"
-  },
-
-  {
-    name:"Mario Villanueva",
-    address:"45 Burgos St, Lucena City",
-    contact:"0918-234-5678",
-    franchise:"FR-2024-0388",
-    status:"active"
-  },
-
-  {
-    name:"Luis Magno",
-    address:"12 Mabini St, Lucena City",
-    contact:"0920-456-7890",
-    franchise:"FR-2023-0447",
-    status:"inactive"
-  },
-
-  {
-    name:"Fernando Santos",
-    address:"67 Jacinto St, Lucena City",
-    contact:"0924-890-1234",
-    franchise:"FR-2024-0700",
-    status:"suspended"
-  }
-
-];
-
-const table =
-document.getElementById("operatorsTable");
-
-function loadTable(data){
-
-  table.innerHTML = "";
-
-  data.forEach(op => {
-
-    table.innerHTML += `
-      <tr>
-
-        <td>${op.name}</td>
-
-        <td>${op.address}</td>
-
-        <td>${op.contact}</td>
-
-        <td>${op.franchise}</td>
-
-        <td>
-          <span class="status ${op.status}">
-            ${op.status}
-          </span>
-        </td>
-
-        <td>
-
-          <div class="actions">
-
-            <button title="View">
-              <i class="ri-eye-line"></i>
-            </button>
-
-            <button title="Edit">
-              <i class="ri-edit-line"></i>
-            </button>
-
-            <button title="Delete">
-              <i class="ri-delete-bin-line"></i>
-            </button>
-
-          </div>
-
-        </td>
-
-      </tr>
-    `;
-
-  });
-
+async function loadOperators() {
+  const { data, error } = await supabase.from("operators").select("*").order("full_name");
+  if (error) { console.error(error); alert("Could not load operators. Run supabase/setup-operators.sql in SQL Editor."); return; }
+  operators = data; render();
 }
 
-loadTable(operators);
+async function verifyAccess() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return window.location.replace("index.html");
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single();
+  if (!profile || !["admin", "staff"].includes(profile.role)) { await supabase.auth.signOut(); return window.location.replace("index.html"); }
+  loadOperators();
+}
 
-/* COUNTS */
-
-document.getElementById("totalOperators").innerText =
-operators.length;
-
-document.getElementById("activeOperators").innerText =
-operators.filter(o => o.status === "active").length;
-
-document.getElementById("inactiveOperators").innerText =
-operators.filter(o => o.status === "inactive").length;
-
-document.getElementById("suspendedOperators").innerText =
-operators.filter(o => o.status === "suspended").length;
-
-/* SEARCH */
-
-document
-.getElementById("searchInput")
-.addEventListener("keyup", function(){
-
-  const value =
-  this.value.toLowerCase();
-
-  const filtered =
-  operators.filter(o =>
-
-    o.name.toLowerCase().includes(value) ||
-    o.franchise.toLowerCase().includes(value) ||
-    o.address.toLowerCase().includes(value)
-
-  );
-
-  loadTable(filtered);
-
+document.getElementById("addOperatorBtn").addEventListener("click", () => { formPanel.hidden = false; });
+document.getElementById("cancelOperatorBtn").addEventListener("click", () => { form.reset(); formPanel.hidden = true; });
+document.getElementById("searchInput").addEventListener("input", render);
+document.getElementById("statusFilter").addEventListener("change", render);
+form.addEventListener("submit", async (event) => {
+  event.preventDefault(); const entry = Object.fromEntries(new FormData(form));
+  const { error } = await supabase.from("operators").insert({ full_name: entry.full_name.trim(), address: entry.address.trim(), contact_number: entry.contact_number.trim(), franchise_number: entry.franchise_number.trim() || null, status: entry.status });
+  if (error) return alert(`Could not save operator: ${error.message}`);
+  form.reset(); formPanel.hidden = true; loadOperators();
 });
-
-/* FILTER */
-
-document
-.getElementById("statusFilter")
-.addEventListener("change", function(){
-
-  const status = this.value;
-
-  if(status === "all"){
-    loadTable(operators);
-  }
-
-  else{
-
-    const filtered =
-    operators.filter(
-      o => o.status === status
-    );
-
-    loadTable(filtered);
-
-  }
-
-});
-
+document.getElementById("logoutBtn")?.addEventListener("click", async () => { await supabase.auth.signOut(); localStorage.clear(); window.location.href = "index.html"; });
+verifyAccess();

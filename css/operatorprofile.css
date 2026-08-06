@@ -225,6 +225,44 @@ body{
   background:#1d4ed8;
 }
 
+/* TABS */
+
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+.tab{
+  border:none;
+  background:#f3f4f6;
+  padding:10px 16px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.tab.active{
+  background:white;
+  font-weight:600;
+}
+
+/* CHANGE PASSWORD */
+
+.hidden{
+  display:none !important;
+}
+
+.form-hint{
+  font-size:13px;
+  color:#64748b;
+  margin-bottom:18px;
+}
+
+#passwordForm h3{
+  margin-bottom:10px;
+  color:#1e293b;
+}
+
 /* RESPONSIVE */
 
 @media(max-width:900px){
