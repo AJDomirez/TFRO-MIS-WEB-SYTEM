@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Operator Portal</title>
 
-  <link rel="stylesheet" href="../css/operatorportal.css">
+<link rel="stylesheet" href="../css/operatorportal.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css">
 
   <!-- Remix Icons -->
   <link
@@ -21,8 +22,8 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
 
-    <div class="logo">
-      <i class="ri-government-line"></i>
+<div class="logo">
+      <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
 
       <div>
         <h2>TFRO</h2>
@@ -189,7 +190,7 @@
 
     </div>
 
-    <!-- VIOLATIONS -->
+<!-- VIOLATIONS -->
     <div class="table-card">
 
       <div class="table-header">
@@ -211,6 +212,107 @@
 
         </tbody>
 
+      </table>
+
+    </div>
+
+    <!-- CHANGE MOTOR / MTOP -->
+    <div class="table-card" id="changeMotorCard">
+
+      <div class="card-header">
+        <h3>Change Motor / MTOP</h3>
+        <span class="badge approved" id="changeMotorBadge">Request</span>
+      </div>
+
+      <div class="change-motor-form" id="changeMotorWrap">
+        <p class="change-motor-note">
+          Request to update the engine, chassis, or plate number of your registered tricycle.
+          Please provide the new details and attach a supporting document (PDF).
+        </p>
+
+        <div class="cm-grid">
+          <div class="cm-field">
+            <label>New Engine No.</label>
+            <input type="text" id="cmEngine" placeholder="New engine number">
+          </div>
+          <div class="cm-field">
+            <label>New Chassis No.</label>
+            <input type="text" id="cmChassis" placeholder="New chassis number">
+          </div>
+          <div class="cm-field">
+            <label>New Plate No.</label>
+            <input type="text" id="cmPlate" placeholder="New plate number">
+          </div>
+          <div class="cm-field">
+            <label>Motor Brand</label>
+            <input type="text" id="cmBrand" placeholder="e.g. Yamaha, Honda">
+          </div>
+          <div class="cm-field">
+            <label>Motor Serial</label>
+            <input type="text" id="cmSerial" placeholder="Motor serial number">
+          </div>
+          <div class="cm-field">
+            <label>Supporting Document (PDF)</label>
+            <input type="file" id="cmDoc" accept="application/pdf">
+          </div>
+        </div>
+
+        <div class="cm-error" id="cmError" hidden></div>
+
+        <div class="cm-actions">
+          <button class="add-btn" id="cmSubmitBtn" type="button">
+            <i class="ri-send-plane-line"></i>
+            Submit Request
+          </button>
+        </div>
+      </div>
+
+      <!-- Request history -->
+      <div class="cm-history">
+        <h4>Request History</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Request #</th>
+              <th>New Engine</th>
+              <th>New Chassis</th>
+              <th>New Plate</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="cmHistoryTable">
+            <tr>
+              <td colspan="6" style="text-align:center;color:#94a3b8;">No change motor requests.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+</div>
+
+    <!-- ASSIGNED DRIVERS -->
+    <div class="table-card" id="assignedDriversCard">
+
+      <div class="card-header">
+        <h3>Assigned Drivers</h3>
+        <span class="badge approved">Active</span>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Driver Name</th>
+            <th>Driver's License #</th>
+            <th>Status</th>
+            <th>Assigned Date</th>
+          </tr>
+        </thead>
+        <tbody id="assignedDriversTable">
+          <tr>
+            <td colspan="4" style="text-align:center;color:#94a3b8;">No drivers assigned yet.</td>
+          </tr>
+        </tbody>
       </table>
 
     </div>

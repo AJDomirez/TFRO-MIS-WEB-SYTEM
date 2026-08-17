@@ -6,6 +6,7 @@
   <title>TFRO Audit Log</title>
 
   <link rel="stylesheet" href="../css/auditlog.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css">
 
   <!-- Remix Icons -->
   <link
@@ -19,193 +20,294 @@
 <div class="layout">
 
   <!-- SIDEBAR -->
-  
-<aside class="sidebar">
+  <aside class="sidebar">
 
-  <div class="logo">
-    <i class="ri-government-line"></i>
-
-<div>
-  <h2>TFRO</h2>
-  <p>Lucena City</p>
-</div>
-
-  </div>
-
- 
-<ul class="menu">
-
-  <li id="dashboardMenu">
-    <a href="dashboard.html">
-      <i class="ri-dashboard-line"></i>
-      Dashboard
-    </a>
-  </li>
-
-  <li id="franchiseMenu">
-    <a href="franchise.html">
-      <i class="ri-file-list-3-line"></i>
-      Franchises
-    </a>
-  </li>
-
-  <li id="operatorMenu">
-    <a href="operator.html">
-      <i class="ri-user-star-line"></i>
-      Operators
-    </a>
-  </li>
-
-  <li id="driverMenu">
-    <a href="driver.html">
-      <i class="ri-steering-2-line"></i>
-      Drivers
-    </a>
-  </li>
-
-  <li id="violationMenu">
-    <a href="violation.html">
-      <i class="ri-alert-line"></i>
-      Violations
-    </a>
-  </li>
-
-  <li id="paymentMenu">
-    <a href="payment.html">
-      <i class="ri-money-dollar-circle-line"></i>
-      Payments
-    </a>
-  </li>
-
-  <li id="reportMenu">
-    <a href="report.html">
-      <i class="ri-bar-chart-line"></i>
-      Reports
-    </a>
-  </li>
-
-  
-  <li id="notificationMenu">
-        <a href="notification.html">
-          <i class="ri-notification-3-line"></i>
-          Notifications
-        </a>
-      </li>
-
-    <li class="active"> 
-        <a href="auditlog.html"> 
-        <i class="ri-history-line">
-            </i> Audit Log </a> 
-    </li>
-
-    <li id="profileMenu">
-        <a href="profile.html">
-          <i class="ri-user-settings-line"></i>
-          Profile
-        </a>
-      </li>
-
-</ul>
-
-<!-- USER PROFILE -->
-<div class="sidebar-user">
-
-  <div class="user-left">
-
-    <div class="user-avatar" id="userAvatar">
-      MS
+    <div class="logo">
+      <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
+      <div>
+        <h2>TFRO</h2>
+        <p>Lucena City</p>
+      </div>
     </div>
 
-    <div class="user-details">
-      <h4 id="userName">User</h4>
-      <p id="userRole">—</p>
+    <ul class="menu">
+      <li id="dashboardMenu">
+        <a href="dashboard.html"><i class="ri-dashboard-line"></i>Dashboard</a>
+      </li>
+      <li id="franchiseMenu">
+        <a href="franchise.html"><i class="ri-file-list-3-line"></i>Franchises</a>
+      </li>
+      <li id="operatorMenu">
+        <a href="operator.html"><i class="ri-user-star-line"></i>Operators</a>
+      </li>
+      <li id="driverMenu">
+        <a href="driver.html"><i class="ri-steering-2-line"></i>Drivers</a>
+      </li>
+      <li id="violationMenu">
+        <a href="violation.html"><i class="ri-alert-line"></i>Violations</a>
+      </li>
+      <li id="paymentMenu">
+        <a href="payment.html"><i class="ri-money-dollar-circle-line"></i>Payments</a>
+      </li>
+      <li id="reportMenu">
+        <a href="report.html"><i class="ri-bar-chart-line"></i>Reports</a>
+      </li>
+      <li id="notificationMenu">
+        <a href="notification.html"><i class="ri-notification-3-line"></i>Notifications</a>
+      </li>
+      <li class="active">
+        <a href="auditlog.html"><i class="ri-history-line"></i>Audit Log</a>
+      </li>
+      <li id="profileMenu">
+        <a href="profile.html"><i class="ri-user-settings-line"></i>Profile</a>
+      </li>
+    </ul>
+
+    <!-- USER PROFILE -->
+    <div class="sidebar-user">
+      <div class="user-left">
+        <div class="user-avatar" id="userAvatar">MS</div>
+        <div class="user-details">
+          <h4 id="userName">User</h4>
+          <p id="userRole">—</p>
+        </div>
+      </div>
+      <button class="logout-btn" id="logoutBtn">
+        <i class="ri-logout-box-r-line"></i>
+      </button>
     </div>
 
-  </div>
-
-  <button class="logout-btn" id="logoutBtn">
-    <i class="ri-logout-box-r-line"></i>
-  </button>
-
-</div>
-
-</aside>
+  </aside>
 
   <!-- MAIN -->
   <main class="main-content">
 
     <!-- TOPBAR -->
     <header class="topbar">
-
       <div>
         <h1>Audit Log</h1>
         <p>System activity and user action history for compliance tracking</p>
       </div>
-
-      <button class="export-btn">
-        <i class="ri-download-line"></i>
-        Export Log
-      </button>
-
+      <div class="topbar-actions">
+        <button class="manage-btn" id="manageBtn">
+          <i class="ri-tools-line"></i>
+          Manage Logs
+        </button>
+        <button class="export-btn">
+          <i class="ri-download-line"></i>
+          Export Log
+        </button>
+      </div>
     </header>
 
-    <!-- TOOLBAR -->
-    <div class="toolbar">
+    <!-- SUMMARY CARDS -->
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-icon"><i class="ri-stack-line"></i></div>
+        <div>
+          <span class="summary-value" id="sumTotal">0</span>
+          <span class="summary-label">Total Activities</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon"><i class="ri-calendar-today-line"></i></div>
+        <div>
+          <span class="summary-value" id="sumToday">0</span>
+          <span class="summary-label">Today's Activities</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon"><i class="ri-user-star-line"></i></div>
+        <div>
+          <span class="summary-value" id="sumAdmin">0</span>
+          <span class="summary-label">Admin Actions</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon"><i class="ri-user-line"></i></div>
+        <div>
+          <span class="summary-value" id="sumOperator">0</span>
+          <span class="summary-label">Operator Actions</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon"><i class="ri-steering-2-line"></i></div>
+        <div>
+          <span class="summary-value" id="sumDriver">0</span>
+          <span class="summary-label">Driver Actions</span>
+        </div>
+      </div>
+    </div>
 
+    <!-- FILTERS / TOOLBAR -->
+    <div class="filters-card">
       <div class="search-box">
         <i class="ri-search-line"></i>
-
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Search actions or users..."
-        >
+        <input type="text" id="searchInput" placeholder="Search by user, email, action, or record...">
       </div>
 
+      <div class="filter-group">
+        <label>Role</label>
+        <select id="roleFilter">
+          <option value="all">All</option>
+          <option value="admin">Admin</option>
+          <option value="operator">Operator</option>
+          <option value="driver">Driver</option>
+          <option value="staff">Staff</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Action</label>
+        <select id="actionFilter">
+          <option value="all">All Actions</option>
+          <option value="login">Login</option>
+          <option value="logout">Logout</option>
+          <option value="create">Create</option>
+          <option value="update">Update</option>
+          <option value="delete">Delete</option>
+          <option value="approve">Approve</option>
+          <option value="reject">Reject</option>
+          <option value="upload">Upload</option>
+          <option value="verification">Verification</option>
+          <option value="assignment">Assignment</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Date</label>
+        <select id="dateFilter">
+          <option value="all">All Time</option>
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+          <option value="custom">Custom Date Range</option>
+        </select>
+      </div>
+
+      <div class="filter-group custom-range" id="customRange" style="display:none;">
+        <input type="date" id="dateFrom">
+        <span>to</span>
+        <input type="date" id="dateTo">
+      </div>
     </div>
 
     <!-- TABLE -->
     <div class="table-card">
+      <div class="table-toolbar" id="bulkBar" style="display:none;">
+        <span id="selectedCount">0 selected</span>
+        <button class="delete-btn" id="deleteSelectedBtn">
+          <i class="ri-delete-bin-line"></i> Delete Selected
+        </button>
+      </div>
 
       <table>
-
         <thead>
           <tr>
+            <th class="col-check"><input type="checkbox" id="selectAll"></th>
             <th>User</th>
             <th>Role</th>
             <th>Action</th>
+            <th>Record</th>
             <th>IP Address</th>
-            <th>Timestamp</th>
+            <th>Date &amp; Time</th>
+            <th></th>
           </tr>
         </thead>
-
-        <tbody id="logTable">
-
-        </tbody>
-
+        <tbody id="logTable"></tbody>
       </table>
-
     </div>
 
   </main>
 
 </div>
 
+<!-- VIEW ACTIVITY DETAILS MODAL -->
+<div class="modal-overlay" id="detailModal" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h3><i class="ri-file-list-3-line"></i> View Activity Details</h3>
+      <button class="modal-close" data-close="detailModal"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+  </div>
+</div>
+
+<!-- MANAGE LOGS MODAL (Admin only) -->
+<div class="modal-overlay" id="manageModal" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h3><i class="ri-tools-line"></i> Manage Logs</h3>
+      <button class="modal-close" data-close="manageModal"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="manage-options">
+        <button class="manage-option" id="archiveOldBtn">
+          <i class="ri-archive-line"></i>
+          <span>Archive Old Logs<br><small>Move logs older than 90 days to archive</small></span>
+        </button>
+        <button class="manage-option" id="clearOlderBtn">
+          <i class="ri-time-line"></i>
+          <span>Clear Logs Older Than...<br><small>Permanently remove logs older than a chosen date</small></span>
+        </button>
+        <button class="manage-option danger" id="clearAllBtn">
+          <i class="ri-delete-bin-line"></i>
+          <span>Delete Selected Logs<br><small>Remove the currently selected records</small></span>
+        </button>
+      </div>
+      <p class="manage-note">
+        <i class="ri-shield-check-line"></i>
+        Security-related records (login/logout, approvals, rejections, verifications, assignments, role changes) are protected and will be archived rather than permanently deleted.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRMATION MODAL -->
+<div class="modal-overlay" id="confirmModal" hidden>
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <h3><i class="ri-alert-line"></i> Delete Audit Logs?</h3>
+      <button class="modal-close" data-close="confirmModal"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <p id="confirmMessage">This will permanently remove the selected audit records. This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="confirmModal">Cancel</button>
+        <button class="btn-danger" id="confirmDeleteBtn"><i class="ri-delete-bin-line"></i> Delete Logs</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CLEAR OLDER THAN MODAL -->
+<div class="modal-overlay" id="clearModal" hidden>
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <h3><i class="ri-time-line"></i> Clear Logs Older Than</h3>
+      <button class="modal-close" data-close="clearModal"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <label for="clearDate">Delete all logs before:</label>
+      <input type="date" id="clearDate" class="date-input">
+      <p class="manage-note">Protected security records will be archived instead of deleted.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="clearModal">Cancel</button>
+        <button class="btn-danger" id="confirmClearBtn"><i class="ri-delete-bin-line"></i> Clear Logs</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script type="module" src="../js/auditlog.js"></script>
 
 <script>
-
   const role = localStorage.getItem("role");
-
-  const paymentMenu =
-    document.getElementById("paymentMenu");
-
-  if(role === "admin"){
+  const paymentMenu = document.getElementById("paymentMenu");
+  if (role === "admin") {
     paymentMenu.style.display = "none";
   }
-
 </script>
 
 </body>
 </html>
-

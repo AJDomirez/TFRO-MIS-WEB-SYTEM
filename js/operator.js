@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { logAudit } from "./audit-helper.js";
 
 let operators = [];
 const table = document.getElementById("operatorsTable");
@@ -42,6 +43,12 @@ form.addEventListener("submit", async (event) => {
   const { error } = await supabase.from("operators").insert({ full_name: entry.full_name.trim(), address: entry.address.trim(), contact_number: entry.contact_number.trim(), franchise_number: entry.franchise_number.trim() || null, status: entry.status });
   if (error) return alert(`Could not save operator: ${error.message}`);
   form.reset(); formPanel.hidden = true; loadOperators();
+  logAudit({
+    action: "Added Operator",
+    actionType: "create",
+    record: entry.full_name.trim(),
+    description: `Added new operator record for ${entry.full_name.trim()} (${entry.franchise_number.trim() || "no franchise"}).`,
+  });
 });
 document.getElementById("logoutBtn")?.addEventListener("click", async () => { await supabase.auth.signOut(); localStorage.clear(); window.location.href = "index.html"; });
 verifyAccess();

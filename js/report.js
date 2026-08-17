@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { logAudit } from "./audit-helper.js";
 
 const currencyFormatter = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
 const dateFormatter = new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" });
@@ -449,10 +450,17 @@ async function handleReport(action, reportType) {
         return;
     }
 
-    if (action === "view") {
+if (action === "view") {
       showPreview(title, headers, rows);
     } else if (action === "print") {
       printReport(title, headers, rows);
+    } else if (action === "download") {
+      logAudit({
+        action: "Generated Report",
+        actionType: "create",
+        record: title,
+        description: `Generated and downloaded the ${title} (${data ? data.length : 0} records).`,
+      });
     }
   } catch (err) {
     console.error("Report error:", err);

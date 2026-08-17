@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Franchise Application - TFRO</title>
+
+  <link rel="stylesheet" href="../css/operatorportal.css">
+  <link rel="stylesheet" href="../css/application.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+</head>
+<body>
+
+<div class="dashboard-container">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
+      <div>
+        <h2>TFRO</h2>
+        <p>Lucena City</p>
+      </div>
+    </div>
+
+    <ul class="menu">
+      <li>
+        <a href="operatorportal.html">
+          <i class="ri-file-list-3-line"></i>
+          My Franchise
+        </a>
+      </li>
+      <li class="active">
+        <a href="operatorapplication.html">
+          <i class="ri-add-circle-line"></i>
+          Franchise Application
+        </a>
+      </li>
+      <li>
+        <a href="operatorprofile.html">
+          <i class="ri-user-settings-line"></i>
+          My Profile
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-user">
+      <div class="user-left">
+        <div class="user-avatar" id="userAvatar">AC</div>
+        <div class="user-details">
+          <h4 id="userName">Operator</h4>
+          <p>Operator</p>
+        </div>
+      </div>
+      <button class="logout-btn" id="logoutBtn">
+        <i class="ri-logout-box-r-line"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <div class="topbar">
+      <div>
+        <h1>Franchise Application</h1>
+        <p>Submit your tricycle franchise application and required documents</p>
+      </div>
+    </div>
+
+    <div class="app-status-card" id="statusCard" hidden></div>
+
+    <!-- APPLICATION FORM -->
+    <div class="application-card" id="applicationFormCard">
+      <div class="card-header">
+        <h3>Franchise Information</h3>
+        <span class="req-hint">All fields with <span class="req">*</span> are required</span>
+      </div>
+
+      <form id="applicationForm">
+
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Fn# — Franchise Number <span class="req">*</span></label>
+            <input type="text" name="franchise_number" placeholder="FR-2026-0001" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Previous Registration <span class="req">*</span></label>
+            <input type="text" name="previous_registration" placeholder="e.g. FR-2020-0342 / None" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Operator Name <span class="req">*</span></label>
+            <input type="text" name="operator_name" id="operatorNameInput" placeholder="Full name of operator" required>
+          </div>
+        </div>
+
+        <div class="form-row three">
+          <div class="form-group">
+            <label>Month <span class="req">*</span></label>
+            <select name="registration_month" required>
+              <option value="" disabled selected>Month</option>
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Day <span class="req">*</span></label>
+            <input type="number" name="registration_day" min="1" max="31" placeholder="Day" required>
+          </div>
+          <div class="form-group">
+            <label>Year <span class="req">*</span></label>
+            <input type="number" name="registration_year" min="1900" max="2100" placeholder="Year" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Address <span class="req">*</span></label>
+            <input type="text" name="address" placeholder="Complete operator address" autocomplete="street-address" required>
+          </div>
+        </div>
+
+        <div class="form-row three">
+          <div class="form-group">
+            <label>Engine No. <span class="req">*</span></label>
+            <input type="text" name="engine_number" placeholder="Engine number" autocomplete="off" required>
+          </div>
+          <div class="form-group">
+            <label>Chassis No. <span class="req">*</span></label>
+            <input type="text" name="chassis_number" placeholder="Chassis number" autocomplete="off" required>
+          </div>
+          <div class="form-group">
+            <label>Plate No. <span class="req">*</span></label>
+            <input type="text" name="plate_number" placeholder="Plate number" autocomplete="off" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Contact Number <span class="req">*</span></label>
+            <input type="tel" name="contact_number" placeholder="09XX-XXX-XXXX" autocomplete="tel-national" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Assigned Route <small>(optional)</small></label>
+            <input type="text" name="route" placeholder="Assigned route (optional)">
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- REQUIRED DOCUMENTS -->
+    <div class="application-card">
+      <div class="card-header">
+        <h3>Required Documents</h3>
+        <span class="req-hint">Upload the following PDF documents. All are required.</span>
+      </div>
+
+      <p class="doc-note">Only <strong>PDF files</strong> are accepted &mdash; max 5 MB each.</p>
+
+      <div class="doc-list">
+        <div class="doc-item" data-doc="voters">
+          <div class="doc-label">
+            <i class="ri-file-pdf-line"></i>
+            <span>Voters Certificate</span>
+          </div>
+          <div class="doc-upload">
+            <input type="file" accept="application/pdf,.pdf" data-doc="voters" class="doc-file">
+            <span class="doc-name">No file selected</span>
+            <button type="button" class="doc-remove" data-doc="voters" hidden><i class="ri-close-line"></i></button>
+          </div>
+        </div>
+
+        <div class="doc-item" data-doc="barangay">
+          <div class="doc-label">
+            <i class="ri-file-pdf-line"></i>
+            <span>Barangay Clearance</span>
+          </div>
+          <div class="doc-upload">
+            <input type="file" accept="application/pdf,.pdf" data-doc="barangay" class="doc-file">
+            <span class="doc-name">No file selected</span>
+            <button type="button" class="doc-remove" data-doc="barangay" hidden><i class="ri-close-line"></i></button>
+          </div>
+        </div>
+
+        <div class="doc-item" data-doc="cedula">
+          <div class="doc-label">
+            <i class="ri-file-pdf-line"></i>
+            <span>Cedula</span>
+          </div>
+          <div class="doc-upload">
+            <input type="file" accept="application/pdf,.pdf" data-doc="cedula" class="doc-file">
+            <span class="doc-name">No file selected</span>
+            <button type="button" class="doc-remove" data-doc="cedula" hidden><i class="ri-close-line"></i></button>
+          </div>
+        </div>
+
+        <div class="doc-item" data-doc="ohcr">
+          <div class="doc-label">
+            <i class="ri-file-pdf-line"></i>
+            <span>OHCR</span>
+          </div>
+          <div class="doc-upload">
+            <input type="file" accept="application/pdf,.pdf" data-doc="ohcr" class="doc-file">
+            <span class="doc-name">No file selected</span>
+            <button type="button" class="doc-remove" data-doc="ohcr" hidden><i class="ri-close-line"></i></button>
+          </div>
+        </div>
+
+        <div class="doc-item" data-doc="insurance">
+          <div class="doc-label">
+            <i class="ri-file-pdf-line"></i>
+            <span>Insurance</span>
+          </div>
+          <div class="doc-upload">
+            <input type="file" accept="application/pdf,.pdf" data-doc="insurance" class="doc-file">
+            <span class="doc-name">No file selected</span>
+            <button type="button" class="doc-remove" data-doc="insurance" hidden><i class="ri-close-line"></i></button>
+          </div>
+        </div>
+
+        <div class="doc-item" data-doc="pmbl">
+          <div class="doc-label">
+            <i class="ri-file-pdf-line"></i>
+            <span>PMBL</span>
+          </div>
+          <div class="doc-upload">
+            <input type="file" accept="application/pdf,.pdf" data-doc="pmbl" class="doc-file">
+            <span class="doc-name">No file selected</span>
+            <button type="button" class="doc-remove" data-doc="pmbl" hidden><i class="ri-close-line"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="submit-row">
+        <button type="button" class="btn-submit" id="submitApplicationBtn">
+          <i class="ri-send-plane-line"></i>
+          Submit Application
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script type="module" src="../js/operatorapplication.js"></script>
+
+</body>
+</html>
+

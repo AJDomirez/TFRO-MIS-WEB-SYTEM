@@ -81,23 +81,68 @@ async function loadPortal() {
   setText("userAvatar", initials(fullName));
   setText("welcomeName", fullName);
 
-  /* Driver record */
-  const { data: driver } = await supabase
+/* Driver record (prefer FK user_id, fallback to name) */
+  let driver = null;
+  const { data: driverByUser } = await supabase
     .from("drivers")
     .select("*")
-    .eq("full_name", fullName)
+    .eq("user_id", user.id)
+    .order("id", { ascending: false })
+    .limit(1)
     .maybeSingle();
+  if (driverByUser) {
+    driver = driverByUser;
+  } else {
+    const { data: driverByName } = await supabase
+      .from("drivers")
+      .select("*")
+      .eq("full_name", fullName)
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    driver = driverByName;
+  }
 
   if (driver) {
     setText("licenseNumber", driver.license_number);
-    setText("assignedOperator", driver.operator_name);
     setText("contactNumber", driver.contact_number || contact);
     setText(
       "registrationDate",
       driver.created_at ? new Date(driver.created_at).toLocaleDateString() : "—"
     );
 
-    const compliant = driver.compliance === "compliant";
+    /* License verification status */
+    const licenseStatus = (driver.license_status || "not_verified").toLowerCase();
+    const exp = driver.license_expiration ? new Date(driver.license_expiration) : null;
+    const isExpired = exp && exp < new Date();
+    const effectiveStatus = isExpired ? "expired" : licenseStatus;
+
+    /* Assigned operator + franchise via driver_assignments (FK) */
+    let operatorName = driver.operator_name || "—";
+    let franchiseNumber = "—";
+    const { data: assignment } = await supabase
+      .from("driver_assignments")
+      .select("*, operators(full_name, address), franchises(franchise_number)")
+      .eq("driver_id", driver.id)
+      .eq("status", "active")
+      .limit(1)
+      .maybeSingle();
+    if (assignment) {
+      if (assignment.franchises) franchiseNumber = assignment.franchises.franchise_number;
+      if (assignment.operators && assignment.operators.full_name) operatorName = assignment.operators.full_name;
+    } else if (driver.franchise_id) {
+      const { data: directFran } = await supabase
+        .from("franchises")
+        .select("franchise_number")
+        .eq("id", driver.franchise_id)
+        .maybeSingle();
+      if (directFran) franchiseNumber = directFran.franchise_number;
+    }
+    setText("assignedOperator", operatorName);
+    setText("franchiseNumber", franchiseNumber);
+
+    /* Compliance reflects verified + not expired license */
+    const compliant = effectiveStatus === "verified";
     setText("complianceStatus", compliant ? "✓ Compliant" : "✗ Non-Compliant");
 
     const badge = document.getElementById("complianceBadge");
@@ -105,17 +150,19 @@ async function loadPortal() {
       badge.className = "status " + (compliant ? "compliant" : "non-compliant");
       badge.innerHTML = `<i class="ri-${
         compliant ? "checkbox-circle" : "close-circle"
-      }-line"></i> ${compliant ? "Compliant" : "Non-Compliant"}`;
+      }-line"></i> ${
+        compliant ? "Compliant" : effectiveStatus === "expired" ? "License Expired" : "License Not Verified"
+      }`;
     }
 
-    /* Franchise number linked through the operator's name */
-    const { data: franchise } = await supabase
-      .from("franchises")
-      .select("franchise_number")
-      .eq("operator_name", driver.operator_name || "")
-      .limit(1)
-      .maybeSingle();
-    setText("franchiseNumber", franchise?.franchise_number);
+    /* License type + expiration into dedicated fields if present */
+    if (document.getElementById("licenseType")) setText("licenseType", driver.license_type);
+    if (document.getElementById("licenseExpiration")) {
+      setText("licenseExpiration", driver.license_expiration ? new Date(driver.license_expiration).toLocaleDateString() : "—");
+    }
+    if (document.getElementById("licenseStatus")) {
+      setText("licenseStatus", effectiveStatus === "verified" ? "✓ Verified" : (effectiveStatus === "expired" ? "Expired" : "Not Verified"));
+    }
   } else {
     setText("licenseNumber", "—");
     setText("assignedOperator", "—");

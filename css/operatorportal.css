@@ -243,6 +243,110 @@ table th{
   color:#15803d;
 }
 
+/* CHANGE MOTOR / MTOP */
+
+.change-motor-note{
+  font-size:0.88rem;
+  color:#64748b;
+  margin-bottom:18px;
+  line-height:1.6;
+}
+
+.cm-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:16px;
+  margin-bottom:16px;
+}
+
+.cm-field label{
+  display:block;
+  font-size:0.82rem;
+  font-weight:600;
+  color:#1c3a2e;
+  margin-bottom:6px;
+}
+
+.cm-field input{
+  width:100%;
+  padding:11px 13px;
+  border:1px solid #d5e2da;
+  border-radius:10px;
+  font-size:0.92rem;
+  color:#1c3a2e;
+  background:#fbfdfc;
+  transition:border-color 0.2s, box-shadow 0.2s;
+}
+
+.cm-field input:focus{
+  outline:none;
+  border-color:#1ea86f;
+  box-shadow:0 0 0 3px rgba(30,168,111,0.15);
+}
+
+.cm-field input[type="file"]{
+  font-size:0.82rem;
+}
+
+.cm-error{
+  background:#fdeaea;
+  color:#9c2f2f;
+  border:1px solid #f0b9b9;
+  padding:12px 16px;
+  border-radius:10px;
+  margin-bottom:14px;
+  font-size:0.88rem;
+}
+
+.cm-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:6px;
+}
+
+.add-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:linear-gradient(135deg,#178a5e,#1ea86f);
+  color:#fff;
+  border:none;
+  border-bottom:2px solid #f4c430;
+  padding:12px 24px;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(11,61,46,0.25);
+  transition:transform 0.2s, box-shadow 0.2s;
+}
+
+.add-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 16px rgba(11,61,46,0.32);
+}
+
+.add-btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+  transform:none;
+}
+
+.cm-history{
+  margin-top:22px;
+  padding-top:18px;
+  border-top:1px solid #e2e8f0;
+}
+
+.cm-history h4{
+  color:#1c3a2e;
+  margin-bottom:14px;
+  font-size:1rem;
+}
+
+.cm-history .badge{
+  text-transform:capitalize;
+}
+
 /* RESPONSIVE */
 
 @media(max-width:900px){
@@ -255,4 +359,23 @@ table th{
     grid-template-columns:1fr;
   }
 
+  .cm-grid{
+    grid-template-columns:1fr 1fr;
+  }
+
+}
+
+@media(max-width:600px){
+  .cm-grid{
+    grid-template-columns:1fr;
+  }
+
+  .cm-actions{
+    justify-content:stretch;
+  }
+
+  .add-btn{
+    width:100%;
+    justify-content:center;
+  }
 }

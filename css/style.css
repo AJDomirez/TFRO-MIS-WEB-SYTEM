@@ -2,68 +2,162 @@
   margin:0;
   padding:0;
   box-sizing:border-box;
-  font-family:Arial, sans-serif;
+  font-family:'Inter','Poppins','Segoe UI',Arial,sans-serif;
 }
 
 body{
-  background:#f1f5f9;
+  background:#ffffff;
 }
 
 .container{
   display:flex;
   min-height:100vh;
+  position:relative;
+  z-index:2;
 }
 
-/* LEFT PANEL */
-
+/* ================= LEFT PANEL (green office theme) ================= */
 .left-panel{
   width:50%;
-  background:linear-gradient(135deg,#0f2d6b,#1a3a8a,#0d2460);
+  background:
+    radial-gradient(circle at 85% 15%, rgba(244,196,48,0.12), transparent 40%),
+    radial-gradient(circle at 10% 85%, rgba(30,168,111,0.18), transparent 50%),
+    linear-gradient(135deg, #0b3d2e, #146a4f, #0f4d3a);
   color:white;
   padding:60px;
   display:flex;
   flex-direction:column;
   justify-content:space-between;
+  position:relative;
+  overflow:hidden;
+}
+
+/* subtle geometric accents */
+.left-panel::before,
+.left-panel::after{
+  content:'';
+  position:absolute;
+  border-radius:50%;
+  pointer-events:none;
+}
+.left-panel::before{
+  width:340px;height:340px;
+  border:1px solid rgba(244,196,48,0.3);
+  top:-120px;right:-90px;
+}
+.left-panel::after{
+  width:220px;height:220px;
+  border:1px solid rgba(255,255,255,0.12);
+  bottom:-70px;left:-60px;
 }
 
 .logo{
   display:flex;
   align-items:center;
   gap:15px;
+  position:relative;
+  z-index:2;
 }
 
 .logo-icon{
   width:50px;
   height:50px;
   border-radius:12px;
-  background:rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.15);
   display:flex;
   justify-content:center;
   align-items:center;
+  color:#f4c430;
 }
 
 .logo-icon i{
   font-size:24px;
 }
 
+/* TFRO logo image inside the auth panel badge */
+.auth-tfro-logo{
+  width:44px;
+  height:44px;
+  object-fit:contain;
+  border-radius:8px;
+  background:#fff;
+  padding:3px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+}
+
+.logo h2{
+  color:#ffffff;
+}
+
+.logo p{
+  color:rgba(255,255,255,0.85);
+}
+
 .hero h1{
   font-size:40px;
   margin-bottom:20px;
+  position:relative;
+  z-index:2;
 }
 
 .hero p{
   line-height:1.7;
-  color:#dbeafe;
+  color:rgba(255,255,255,0.9);
+  position:relative;
+  z-index:2;
 }
 
-/* RIGHT PANEL */
+.hero h1::after{
+  content:'';
+  display:block;
+  width:64px;
+  height:3px;
+  background:linear-gradient(90deg, #f4c430, #1ea86f);
+  border-radius:3px;
+  margin-top:16px;
+}
 
+/* ================= RIGHT PANEL ================= */
 .right-panel{
   width:50%;
   display:flex;
   justify-content:center;
   align-items:center;
   padding:40px;
+  background:linear-gradient(180deg,#ffffff,#f7faf8);
+}
+
+/* Register page right panel — center the form and let it use the
+   available width so there's no large empty gap on the right side */
+.register-panel{
+  justify-content:center;
+  align-items:center;
+  padding:40px;
+  position:relative;
+  overflow:hidden;
+}
+.register-panel .register-box{
+  width:100%;
+  max-width:600px;
+  position:relative;
+  z-index:2;
+}
+/* Confine the tricycle to the right registration area (bottom-right),
+   as a decorative element that never affects the form layout and never
+   creates horizontal page overflow. */
+.register-panel .trike-scene{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:110px;
+}
+.register-panel .trike-scene .tricycle{
+  bottom:4px;
+  width:120px;
+}
+.register-panel .trike-asset{
+  width:120px;
 }
 
 .login-box{
@@ -71,16 +165,19 @@ body{
   width:100%;
   max-width:420px;
   padding:40px;
-  border-radius:20px;
+  border-radius:16px;
+  border:1px solid #e2eae5;
+  box-shadow:0 12px 30px rgba(11,61,46,0.08);
+  border-top:4px solid #1ea86f;
 }
 
 .login-box h2{
   margin-bottom:10px;
-  color:#1e293b;
+  color:#123328;
 }
 
 .login-box p{
-  color:#64748b;
+  color:#6b8177;
   margin-bottom:30px;
 }
 
@@ -93,6 +190,7 @@ body{
   margin-bottom:8px;
   font-size:14px;
   font-weight:bold;
+  color:#1c3a2e;
 }
 
 .input-group input{
@@ -100,6 +198,14 @@ body{
   padding:12px;
   border:1px solid #cbd5e1;
   border-radius:8px;
+  transition:border-color 0.25s, box-shadow 0.25s;
+  font-family:inherit;
+}
+
+.input-group input:focus{
+  outline:none;
+  border-color:#1ea86f;
+  box-shadow:0 0 0 3px rgba(30,168,111,0.15);
 }
 
 .password-box{
@@ -113,24 +219,35 @@ body{
 .password-box button{
   width:50px;
   border:none;
-  background:#e2e8f0;
+  background:#eef4f0;
+  color:#146a4f;
   cursor:pointer;
   border-radius:0 8px 8px 0;
+  transition:background 0.25s;
+}
+
+.password-box button:hover{
+  background:#e2eae5;
 }
 
 .login-btn{
   width:100%;
   padding:14px;
   border:none;
-  background:#1d4ed8;
+  background:linear-gradient(135deg,#178a5e,#1ea86f);
   color:white;
   border-radius:8px;
   cursor:pointer;
   font-size:16px;
+  font-weight:700;
+  border-bottom:3px solid #f4c430;
+  box-shadow:0 6px 18px rgba(11,61,46,0.2);
+  transition:transform 0.2s, box-shadow 0.2s;
 }
 
 .login-btn:hover{
-  background:#1e40af;
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px rgba(11,61,46,0.28);
 }
 
 .demo-section{
@@ -163,12 +280,12 @@ body{
   display:block;
   text-align:center;
   margin-top:20px;
-  color:#64748b;
+  color:#6b8177;
   font-size:14px;
 }
 
 .switch-link a{
-  color:#1d4ed8;
+  color:#178a5e;
   font-weight:bold;
   text-decoration:none;
 }
@@ -205,34 +322,80 @@ body{
   gap:4px;
   text-align:center;
   background:#f8fafc;
-  transition:border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  transition:border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 
 .role-card-inner i{
   font-size:26px;
-  color:#1d4ed8;
+  color:#178a5e;
   margin-bottom:4px;
 }
 
 .role-card-inner strong{
-  color:#1e293b;
+  color:#123328;
   font-size:15px;
 }
 
 .role-card-inner span{
-  color:#64748b;
+  color:#6b8177;
   font-size:12px;
 }
 
+.role-card:hover .role-card-inner{
+  transform:translateY(-3px);
+}
+
 .role-card input:checked + .role-card-inner{
-  border-color:#1d4ed8;
-  background:#eff6ff;
-  box-shadow:0 0 0 3px rgba(29,78,216,0.15);
+  border-color:#1ea86f;
+  background:#f2faf6;
+  box-shadow:0 0 0 3px rgba(30,168,111,0.15);
 }
 
 .role-card input:focus-visible + .role-card-inner{
-  outline:2px solid #1d4ed8;
+  outline:2px solid #1ea86f;
   outline-offset:2px;
+}
+
+/* =========================================================
+   Animated decorative tricycle (Login & Register only)
+   Uses the actual Philippine tricycle asset (Trycicle
+   Image.png) with a transparent background.
+
+   Movement: continuous, straight, horizontal RIGHT -> CENTER
+   -> LEFT, continues forward off-screen, then REPEATS.
+   ========================================================= */
+.trike-scene{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  height:120px;
+  z-index:50;                /* ON TOP of the panels so the trike is VISIBLE */
+  pointer-events:none;       /* but never blocks clicks on the form */
+  overflow:hidden;
+}
+
+.tricycle{
+  position:absolute;
+  bottom:2px;
+  left:0;
+  width:130px;
+  transform:translateX(-150px);          /* start fully off-screen (LEFT) */
+  will-change:transform;
+}
+
+/* Tricycle image asset — kept small & low so the page text stays readable */
+.trike-asset{
+  display:block;
+  width:130px;
+  height:auto;
+  filter:drop-shadow(0 6px 10px rgba(11,61,46,0.3));
+}
+
+/* Extra small tricycle on mobile / small screens */
+@media (max-width:900px){
+  .tricycle{width:100px;}
+  .trike-asset{width:100px;}
 }
 
 /* LOADING SPINNER */

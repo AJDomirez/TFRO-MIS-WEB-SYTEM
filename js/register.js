@@ -51,10 +51,11 @@ registerForm.addEventListener("submit", async (event) => {
     email,
     password,
     options: {
-      // After the user clicks the confirmation link in their email, send them
+// After the user clicks the confirmation link in their email, send them
       // back to the login page. login.js will detect the session and sign them
-      // in automatically.
-      emailRedirectTo: new URL("http://127.0.0.1:5500/html/index.html", window.location.href).href,
+      // in automatically. Uses the current origin so it works locally or in
+      // any deployed environment.
+      emailRedirectTo: new URL("html/login.html", window.location.href).href,
       data: {
         role,
         full_name: fullName,
@@ -107,7 +108,7 @@ registerForm.addEventListener("submit", async (event) => {
     alert(
       "Account created! Please check your email to confirm your account before signing in."
     );
-    window.location.href = "index.html";
+window.location.href = "login.html";
     return;
   }
 

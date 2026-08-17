@@ -64,7 +64,7 @@ async function routeUser(user) {
 
   // Insert an audit log entry for the successful login.
   const fullName = profile?.full_name || user.user_metadata?.full_name || "";
-  await supabase
+await supabase
     .from("audit_logs")
     .insert({
       user_name: fullName || user.email,
@@ -72,6 +72,7 @@ async function routeUser(user) {
       action: "Logged in to system",
       action_type: "login",
       ip_address: null,
+      user_id: user.id,
     })
     .then(() => {})
     .catch((err) => console.error("Audit log insert failed:", err));

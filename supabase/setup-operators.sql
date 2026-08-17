@@ -10,6 +10,7 @@ create table if not exists public.operators (
 );
 
 alter table public.operators enable row level security;
+drop policy if exists "Staff can manage operators" on public.operators;
 create policy "Staff can manage operators"
 on public.operators for all to authenticated
 using ((select public.is_tfro_staff()))

@@ -6,6 +6,7 @@
   <title>Operators - TFRO</title>
 
   <link rel="stylesheet" href="../css/operator.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css">
 
   <!-- Remix Icons -->
   <link
@@ -21,7 +22,7 @@
  <aside class="sidebar">
 
   <div class="logo">
-    <i class="ri-government-line"></i>
+    <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
 
 <div>
   <h2>TFRO</h2>
@@ -40,10 +41,24 @@
     </a>
   </li>
 
-  <li id="franchiseMenu">
+<li id="franchiseMenu">
     <a href="franchise.html">
       <i class="ri-file-list-3-line"></i>
       Franchises
+    </a>
+  </li>
+
+<li id="applicationMenu">
+    <a href="application.html">
+      <i class="ri-file-add-line"></i>
+      Franchise Applications
+    </a>
+  </li>
+
+  <li id="motorMenu">
+    <a href="motorequests.html">
+      <i class="ri-settings-5-line"></i>
+      Change Motor Requests
     </a>
   </li>
 
@@ -109,13 +124,13 @@
 
   <div class="user-left">
 
-    <div class="user-avatar">
-      MS
+<div class="user-avatar" id="userAvatar">
+      U
     </div>
 
     <div class="user-details">
-      <h4>Maria Santos</h4>
-      <p>Administrator</p>
+      <h4 id="userName">User</h4>
+      <p id="userRole">—</p>
     </div>
 
   </div>
@@ -236,6 +251,7 @@
 </div>
 
 <script type="module" src="../js/operator.js"></script>
+<script type="module" src="../js/sidebar-user.js"></script>
 
 <script>
 

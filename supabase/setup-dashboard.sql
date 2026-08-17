@@ -36,6 +36,11 @@ alter table public.franchises enable row level security;
 alter table public.violations enable row level security;
 alter table public.payments enable row level security;
 
+-- Make this script safe to re-run: drop existing policies first.
+drop policy if exists "Staff can read franchises" on public.franchises;
+drop policy if exists "Staff can read violations" on public.violations;
+drop policy if exists "Staff can read payments" on public.payments;
+
 create policy "Staff can read franchises" on public.franchises for select to authenticated using ((select public.is_tfro_staff()));
 create policy "Staff can read violations" on public.violations for select to authenticated using ((select public.is_tfro_staff()));
 create policy "Staff can read payments" on public.payments for select to authenticated using ((select public.is_tfro_staff()));

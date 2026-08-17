@@ -47,12 +47,13 @@ async function logAudit(action, userName) {
   const lower = action.toLowerCase();
   const actionType = lower.includes("password") ? "update" : "update";
   try {
-    await supabase.from("audit_logs").insert({
+await supabase.from("audit_logs").insert({
       user_name: userName || null,
       role: currentUserRole || null,
       action,
       action_type: actionType,
       ip_address: null,
+      user_id: currentUserId || null,
     });
   } catch (err) {
     console.error("Audit log insert failed:", err);
@@ -72,11 +73,27 @@ async function loadProfile() {
   }
   currentUserId = user.id;
 
-  const { data: profile } = await supabase
+// Select only well-known columns so a missing 'contact_number' column
+  // doesn't break profile loading before the schema is fixed.
+  let profile = null;
+  const { data: profileData, error: profileError } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id, role, full_name, contact_number")
     .eq("id", user.id)
     .maybeSingle();
+
+  if (!profileError && profileData) {
+    profile = profileData;
+  } else {
+    console.warn("Profile select issue:", profileError?.message);
+    // Fallback to a minimal select that avoids the missing column.
+    const { data: minimal } = await supabase
+      .from("profiles")
+      .select("id, role, full_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (minimal) profile = minimal;
+  }
 
   const fullName = profile?.full_name || user.user_metadata?.full_name || "";
   const contact = profile?.contact_number || user.user_metadata?.contact_number || "";
@@ -142,20 +159,53 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  const { error } = await supabase
+let contactWarned = false;
+
+  // 1) Always update the full name first — this is required and its success
+  //    is what refreshes the sidebar name.
+  const { error: nameError } = await supabase
     .from("profiles")
-    .update({ full_name: fullName, contact_number: contactNumber })
+    .update({ full_name: fullName })
     .eq("id", currentUserId);
 
-  if (error) {
-    console.error("Profile update error:", error);
-    alert("Failed to save profile: " + error.message);
+  if (nameError) {
+    console.error("Profile name update error:", nameError);
+    alert("Failed to save profile: " + nameError.message);
     return;
+  }
+
+  // Also keep auth user metadata in sync so other pages that read metadata
+  // (fallback) also show the new name. This is best-effort and won't break
+  // the profile page if it fails.
+  await supabase.auth.updateUser({
+    data: { full_name: fullName },
+  }).then(() => {}).catch((err) => console.error("Metadata sync failed:", err));
+
+  // 2) Update the contact number if one was provided. If the column is still
+  //    missing from the database (schema not fixed yet), warn once but do NOT
+  //    block the name update / UI refresh.
+  if (contactNumber) {
+    const { error: contactError } = await supabase
+      .from("profiles")
+      .update({ contact_number: contactNumber })
+      .eq("id", currentUserId);
+
+    if (contactError) {
+      console.error("Contact number update error:", contactError);
+      if (!contactWarned) {
+        contactWarned = true;
+        alert(
+          "Your name was updated, but the contact number could not be saved. " +
+            "Please run supabase/setup-fix-profiles.sql in the Supabase SQL Editor, " +
+            "then try saving the contact number again."
+        );
+      }
+    }
   }
 
   await logAudit("Updated profile", fullName);
   alert("Profile updated successfully!");
-  loadProfile();
+  loadProfile(); // refreshes sidebar name + role (e.g. Administrator) below it
 });
 
 /* CHANGE PASSWORD */

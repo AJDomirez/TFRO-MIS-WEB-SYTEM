@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Drivers - TFRO</title>
 
-  <link rel="stylesheet" href="../css/driver.css">
+<link rel="stylesheet" href="../css/driver.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css">
 
   <link
     href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
@@ -20,8 +21,8 @@
 
 <aside class="sidebar">
 
-  <div class="logo">
-    <i class="ri-government-line"></i>
+<div class="logo">
+    <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
 
 <div>
   <h2>TFRO</h2>
@@ -44,6 +45,20 @@
     <a href="franchise.html">
       <i class="ri-file-list-3-line"></i>
       Franchises
+    </a>
+  </li>
+
+  <li id="applicationMenu">
+    <a href="application.html">
+      <i class="ri-file-add-line"></i>
+      Franchise Applications
+    </a>
+  </li>
+
+  <li id="motorMenu">
+    <a href="motorequests.html">
+      <i class="ri-settings-5-line"></i>
+      Change Motor Requests
     </a>
   </li>
 
@@ -109,13 +124,13 @@
 
   <div class="user-left">
 
-    <div class="user-avatar">
-      MS
+    <div class="user-avatar" id="userAvatar">
+      U
     </div>
 
     <div class="user-details">
-      <h4>Maria Santos</h4>
-      <p>Administrator</p>
+      <h4 id="userName">User</h4>
+      <p id="userRole">—</p>
     </div>
 
   </div>
@@ -196,6 +211,7 @@
             <th>Contact</th>
             <th>Violations</th>
             <th>Compliance</th>
+            <th>License Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -210,7 +226,29 @@
 
 </div>
 
+<!-- ASSIGN DRIVER MODAL -->
+<div class="modal" id="assignModal" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Assign Driver to Operator / Franchise</h3>
+      <button class="modal-close" data-close="assignModal"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom:14px;color:#64748b;">Assign <strong id="assignDriverName">driver</strong> to an approved operator and franchise.</p>
+      <label>Operator <span class="req">*</span></label>
+      <select id="assignOperator" style="width:100%;padding:11px;border:1px solid #d5e2da;border-radius:10px;margin-bottom:14px;"></select>
+      <label>Approved Franchise <span class="req">*</span></label>
+      <select id="assignFranchise" style="width:100%;padding:11px;border:1px solid #d5e2da;border-radius:10px;margin-bottom:14px;"></select>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" data-close="assignModal">Cancel</button>
+        <button type="button" class="btn-primary" id="saveAssignBtn"><i class="ri-user-add-line"></i> Assign Driver</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script type="module" src="../js/driver.js"></script>
+<script type="module" src="../js/sidebar-user.js"></script>
 
 <script>
 

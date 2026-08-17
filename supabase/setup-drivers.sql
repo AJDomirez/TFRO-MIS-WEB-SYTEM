@@ -11,6 +11,7 @@ create table if not exists public.drivers (
 );
 
 alter table public.drivers enable row level security;
+drop policy if exists "Staff can manage drivers" on public.drivers;
 create policy "Staff can manage drivers"
 on public.drivers for all to authenticated
 using ((select public.is_tfro_staff()))

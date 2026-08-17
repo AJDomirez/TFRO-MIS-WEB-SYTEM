@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { logAudit } from "./audit-helper.js";
 
 let violations = [];
 const table = document.getElementById("violationsTable");
@@ -33,6 +34,12 @@ form.addEventListener("submit", async (event) => {
   const { error } = await supabase.from("violations").insert({ subject_name: entry.subject_name.trim(), subject_type: entry.subject_type, violation_type: entry.violation_type.trim(), description: entry.description.trim() || null, penalty: Number(entry.penalty), status: entry.status, occurred_at: `${entry.occurred_date}T00:00:00` });
   if (error) return alert(`Could not save violation: ${error.message}`);
   form.reset(); formPanel.hidden = true; loadViolations();
+  logAudit({
+    action: "Recorded Violation",
+    actionType: "create",
+    record: entry.subject_name.trim(),
+    description: `Recorded ${entry.violation_type} violation for ${entry.subject_name.trim()} (${entry.subject_type}) with penalty ${money.format(Number(entry.penalty))}.`,
+  });
 });
 document.getElementById("logoutBtn")?.addEventListener("click", async () => { await supabase.auth.signOut(); localStorage.clear(); window.location.href = "index.html"; });
 verifyAccess();

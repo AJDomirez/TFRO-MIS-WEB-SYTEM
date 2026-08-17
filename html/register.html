@@ -19,16 +19,16 @@
 
   <div class="left-panel">
 
-    <div class="logo">
+<a href="index.html" class="logo" style="text-decoration:none;cursor:pointer;">
       <div class="logo-icon">
-        <i class="ri-government-line"></i>
+        <img class="auth-tfro-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
       </div>
 
       <div>
-        <h2>TFRO</h2>
+        <h2>TFRO MIS</h2>
         <p>Lucena City</p>
       </div>
-    </div>
+    </a>
 
     <div class="hero">
       <h1>Create Your TFRO Account</h1>
@@ -42,7 +42,7 @@
   </div>
 
   <!-- RIGHT PANEL -->
-  <div class="right-panel">
+  <div class="right-panel register-panel">
 
     <div class="login-box register-box">
 
@@ -148,12 +148,26 @@
         </button>
 
         <span class="switch-link">
-          Already have an account?
-          <a href="index.html">Sign in here</a>
+Already have an account?
+          <a href="login.html">Sign in here</a>
         </span>
 
       </form>
 
+    </div>
+
+    <!-- Animated decorative tricycle — confined to the registration
+         area (bottom-right), straight horizontal movement only, and
+         it never affects the form's layout or creates page overflow. -->
+    <div class="trike-scene" aria-hidden="true">
+      <div class="tricycle" id="driveTricycle">
+        <img
+          class="trike-asset"
+          src="../Tricycle Image.png"
+          alt="TFRO Philippine Tricycle"
+          draggable="false"
+        />
+      </div>
     </div>
 
   </div>
@@ -161,6 +175,7 @@
 </div>
 
 <script type="module" src="../js/register.js"></script>
+<script src="../js/trike-drive.js"></script>
 
 </body>
 </html>

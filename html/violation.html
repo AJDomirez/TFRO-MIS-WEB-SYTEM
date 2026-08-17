@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TFRO Violations</title>
 
-  <link rel="stylesheet" href="../css/violation.css">
+<link rel="stylesheet" href="../css/violation.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css">
 
   <!-- Remix Icons -->
   <link
@@ -20,8 +21,8 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
 
-  <div class="logo">
-    <i class="ri-government-line"></i>
+<div class="logo">
+    <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
 
 <div>
   <h2>TFRO</h2>
@@ -108,13 +109,13 @@
 
   <div class="user-left">
 
-    <div class="user-avatar">
-      MS
+    <div class="user-avatar" id="userAvatar">
+      U
     </div>
 
     <div class="user-details">
-      <h4>Maria Santos</h4>
-      <p>Administrator</p>
+      <h4 id="userName">User</h4>
+      <p id="userRole">—</p>
     </div>
 
   </div>
@@ -212,6 +213,7 @@
 </div>
 
 <script type="module" src="../js/violation.js"></script>
+<script type="module" src="../js/sidebar-user.js"></script>
 <script>
 
   const role = localStorage.getItem("role");

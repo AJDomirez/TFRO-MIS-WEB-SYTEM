@@ -1,0 +1,176 @@
+/* =========================================================
+   TFRO System-Wide Theme Override
+   Converts the blue interface to white / green / yellow
+   and styles the TFRO logo that appears in every sidebar.
+   Load this AFTER each page's own stylesheet.
+   ========================================================= */
+
+/* --- Sidebar: green gradient (overrides the blue) --- */
+.sidebar{
+  background:linear-gradient(180deg,#0b3d2e 0%,#146a4f 60%,#0f4d3a 100%) !important;
+}
+
+/* Sidebar logo image */
+.sidebar-logo{
+  width:40px;
+  height:40px;
+  object-fit:contain;
+  border-radius:9px;
+  background:#fff;
+  padding:3px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  flex-shrink:0;
+}
+
+/* Logo icon (legacy) color — normally not used once img replaces it */
+.logo i{
+  color:#f4c430 !important;
+}
+
+/* Logo text colors */
+.logo p,
+.logo-text p,
+.logo h2,
+.logo-text h2{
+  color:#ffffff !important;
+}
+
+/* Menu links */
+.menu li a,
+.menu-item{
+  color:#e5f5ee !important;
+}
+.menu li a:hover,
+.menu li.active a,
+.menu-item:hover,
+.menu-item.active{
+  background:rgba(244,196,48,0.18) !important;
+  color:#ffffff !important;
+}
+.menu li.active a{
+  border-left:3px solid #f4c430;
+}
+
+/* Sidebar user/avatar */
+.user-avatar,
+.user-left .user-avatar,
+.avatar,
+.user-info .avatar,
+.user-profile .avatar{
+  background:#1ea86f !important;
+  color:#fff !important;
+}
+.user-details p,
+.user-info p,
+.user-details h4,
+.user-info h4{
+  color:#ffffff !important;
+}
+.logout-btn{
+  color:#e5f5ee !important;
+}
+
+/* --- Topbar / card accents --- */
+.topbar{
+  background:#ffffff !important;
+  border-bottom:1px solid #e2eae5 !important;
+}
+.topbar h1{color:#0b3d2e !important;}
+.topbar p{color:#6b8177 !important;}
+
+/* --- Primary buttons: green with yellow accent --- */
+.add-btn,
+.new-btn,
+.login-btn,
+.save-btn,
+.mark-btn,
+.export-btn,
+.download-btn,
+.btn-primary{
+  background:linear-gradient(135deg,#178a5e,#1ea86f) !important;
+  color:#fff !important;
+  border:none !important;
+  border-bottom:2px solid #f4c430 !important;
+  box-shadow:0 4px 12px rgba(11,61,46,0.25) !important;
+}
+.add-btn:hover,
+.new-btn:hover,
+.login-btn:hover,
+.save-btn:hover,
+.mark-btn:hover,
+.export-btn:hover,
+.download-btn:hover,
+.btn-primary:hover{
+  background:linear-gradient(135deg,#146a4f,#178a5e) !important;
+  box-shadow:0 6px 16px rgba(11,61,46,0.32) !important;
+}
+
+/* --- Accent numbers / headings that were blue --- */
+.stat-card h2,
+.card h2,
+.blue,
+.receipt,
+.approval,
+.create{
+  color:#178a5e !important;
+}
+
+/* --- Welcome cards (indigo → green) --- */
+.welcome-card{
+  background:linear-gradient(135deg,#0b3d2e,#146a4f) !important;
+  color:#fff !important;
+}
+.welcome-card p,
+.welcome-card span{
+  color:#cfe8dd !important;
+}
+
+/* --- Profile avatars (blue → green) --- */
+.profile-avatar,
+.profile-header .profile-avatar,
+.big-avatar,
+.top-avatar{
+  background:#178a5e !important;
+  color:#fff !important;
+}
+
+/* --- Input focus (blue → green) --- */
+.input-group input:focus,
+.form-group input:focus{
+  border-color:#1ea86f !important;
+}
+.tab-btn.active,
+.tab.active{
+  background:#178a5e !important;
+  color:#fff !important;
+}
+
+/* --- Info / role badges that were blue --- */
+.role-badge,
+.type.operator,
+.type.driver,
+.notification-icon.info{
+  background:#d7f0e4 !important;
+  color:#146a4f !important;
+}
+
+/* --- Notice / info banners (blue → green) --- */
+.notice{
+  background:#e5f5ee !important;
+  border:1px solid #b7e3cd !important;
+  color:#0b5c41 !important;
+}
+
+/* --- Report modal table header (blue → green) --- */
+.report-modal-body th{
+  background:#0b3d2e !important;
+  color:#ffffff !important;
+}
+
+/* --- Audit log action colors (keep distinct but green-tinted) --- */
+.create{color:#178a5e !important;}
+
+/* Body background — light green-white office feel */
+body{
+  background:#f7faf8 !important;
+}

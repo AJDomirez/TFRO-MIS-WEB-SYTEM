@@ -66,4 +66,38 @@ async function loadDashboard() {
 }
 
 document.getElementById("logoutBtn")?.addEventListener("click", async () => { await supabase.auth.signOut(); localStorage.clear(); window.location.href = "index.html"; });
+
+/* POPULATE SIDEBAR USER INFO FROM THE LOGGED-IN PROFILE */
+function initials(name = "") {
+  return (
+    name
+      .split(" ")
+      .filter(Boolean)
+      .map((part) => part[0].toUpperCase())
+      .slice(0, 2)
+      .join("") || "U"
+  );
+}
+function roleLabel(role) {
+  const map = { admin: "Administrator", staff: "Staff", operator: "Operator", driver: "Driver" };
+  return map[role] || role || "User";
+}
+async function loadUserInfo() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) return;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, role")
+    .eq("id", sessionData.session.user.id)
+    .maybeSingle();
+  const fullName = profile?.full_name || sessionData.session.user.user_metadata?.full_name || "";
+  const role = profile?.role || localStorage.getItem("role") || "";
+  const nameEl = document.getElementById("userName");
+  const roleEl = document.getElementById("userRole");
+  const avatarEl = document.getElementById("userAvatar");
+  if (nameEl) nameEl.textContent = fullName || roleLabel(role);
+  if (roleEl) roleEl.textContent = roleLabel(role);
+  if (avatarEl) avatarEl.textContent = initials(fullName);
+}
 loadDashboard();
+loadUserInfo();
