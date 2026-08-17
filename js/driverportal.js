@@ -1,11 +1,15 @@
 import { supabase } from "./supabase.js";
+import { requireRole } from "./auth-guard.js";
 
-/* ROLE PROTECTION */
-const role = localStorage.getItem("role");
-if (role !== "driver") {
-  alert("Access Denied");
-  window.location.href = "index.html";
-}
+/* ROLE PROTECTION — server-verified, not localStorage */
+let currentUser = null;
+let currentProfile = null;
+requireRole(["driver"]).then(({ user, profile }) => {
+  if (!user) return;
+  currentUser = user;
+  currentProfile = profile;
+  loadPortal();
+});
 
 /* DATE */
 const today = new Date();
@@ -47,31 +51,30 @@ function loadViolations(violations) {
   violations.forEach((v) => {
     table.innerHTML += `
       <tr>
-        <td>${v.violation_type || "—"}</td>
+        <td>${escapeHTML(v.violation_type || "—")}</td>
         <td>${v.occurred_at ? new Date(v.occurred_at).toLocaleDateString() : "—"}</td>
         <td>${money(v.penalty)}</td>
-        <td><span class="badge">${v.status || "—"}</span></td>
+        <td><span class="badge">${escapeHTML(v.status || "—")}</span></td>
       </tr>
     `;
   });
 }
 
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#039;",
+    '"': "&quot;",
+  })[character]);
+}
+
 /* LOAD DATA */
 async function loadPortal() {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) {
-    window.location.href = "index.html";
-    return;
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
+  const user = currentUser;
+  const profile = currentProfile;
+  if (!user) return;
 
   const fullName = profile?.full_name || user.user_metadata?.full_name || "Driver";
   const contact = profile?.contact_number || user.user_metadata?.contact_number || "";
@@ -81,7 +84,7 @@ async function loadPortal() {
   setText("userAvatar", initials(fullName));
   setText("welcomeName", fullName);
 
-/* Driver record (prefer FK user_id, fallback to name) */
+  /* Driver record (prefer FK user_id, fallback to name) */
   let driver = null;
   const { data: driverByUser } = await supabase
     .from("drivers")
@@ -183,12 +186,12 @@ async function loadPortal() {
 
 /* LOGOUT */
 const logoutBtn = document.getElementById("logoutBtn");
+document.getElementById("notificationsBtn")?.addEventListener("click", () => {
+  window.location.href = "notification.html";
+});
 logoutBtn.addEventListener("click", async () => {
   await supabase.auth.signOut();
   localStorage.removeItem("role");
   localStorage.removeItem("userId");
   window.location.href = "index.html";
 });
-
-loadPortal();
-

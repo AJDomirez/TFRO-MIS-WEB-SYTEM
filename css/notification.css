@@ -274,3 +274,16 @@ font-weight: 600;
   background:#e5e7eb;
   color:#374151;
 }
+
+.notification-view{
+  margin-top:10px;
+  border:0;
+  background:transparent;
+  color:#178a5e;
+  font-weight:700;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:0;
+}

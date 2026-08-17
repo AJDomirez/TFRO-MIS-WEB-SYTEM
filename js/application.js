@@ -1,5 +1,6 @@
 import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
+import { requireRole } from "./auth-guard.js";
 
 let applications = [];
 let currentApp = null;
@@ -44,10 +45,7 @@ function docStatusBadge(app) {
 }
 
 async function verifyAccess() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return window.location.replace("index.html");
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single();
-  if (!profile || !["admin", "staff"].includes(profile.role)) { await supabase.auth.signOut(); return window.location.replace("index.html"); }
+  const { profile } = await requireRole(["admin", "staff"]);
   return profile;
 }
 
@@ -106,7 +104,7 @@ async function openReview(id) {
   if (error) console.error("Load docs error:", error);
   currentDocs = docs || [];
 
-  renderReview(currentApp, currentDocs);
+  await renderReview(currentApp, currentDocs);
   el("reviewModal").hidden = false;
 }
 
@@ -115,15 +113,19 @@ function getDefaultDocStatus(app, docType) {
   return "pending";
 }
 
-function renderReview(app, docs) {
+async function renderReview(app, docs) {
   const body = el("reviewBody");
+
+  const urls = new Map(await Promise.all(docs.map(async (doc) => [doc.id, await getSignedUrl(doc.storage_path)])));
 
   // Build document rows
   const docRows = DOC_TYPES.map((type) => {
     const doc = docs.find((d) => d.doc_type === type);
     const status = doc ? (doc.verified ? "verified" : "pending") : "pending";
     const fileHtml = doc
-      ? `<a href="${getSignedUrl(doc.storage_path)}" target="_blank" class="doc-link"><i class="ri-file-download-line"></i> ${escapeHtml(doc.file_name)}</a>`
+      ? (urls.get(doc.id)
+        ? `<a href="${escapeHtml(urls.get(doc.id))}" target="_blank" rel="noopener" class="doc-link"><i class="ri-file-download-line"></i> ${escapeHtml(doc.file_name)}</a>`
+        : '<span class="doc-missing">Document unavailable</span>')
       : '<span class="doc-missing">No document uploaded</span>';
     return `
       <div class="review-doc" data-doc="${type}">
@@ -216,9 +218,13 @@ function renderActions(app, allVerified) {
   `;
 }
 
-function getSignedUrl(path) {
-  // Use a signed URL from storage
-  return supabase.storage.from("franchise-documents").getPublicUrl(path).data.publicUrl;
+async function getSignedUrl(path) {
+  const { data, error } = await supabase.storage.from("franchise-documents").createSignedUrl(path, 3600);
+  if (error) {
+    console.error("Could not create document URL:", error);
+    return null;
+  }
+  return data.signedUrl;
 }
 
 /* Toggle info complete */
@@ -227,7 +233,7 @@ async function toggleInfoComplete() {
   const { error } = await supabase.from("franchise_applications").update({ info_complete: newVal }).eq("id", currentApp.id);
   if (error) return alert("Update failed: " + error.message);
   currentApp.info_complete = newVal;
-  renderReview(currentApp, currentDocs);
+  await renderReview(currentApp, currentDocs);
 }
 
 /* Mark a document verified or needs correction */
@@ -248,7 +254,7 @@ async function markDoc(docType, mark) {
     doc.status = mark;
   }
 
-  renderReview(currentApp, currentDocs);
+  await renderReview(currentApp, currentDocs);
 
   logAudit({
     action: mark === "verified" ? "Verified Requirement" : "Marked Requirement Needs Correction",
@@ -272,66 +278,15 @@ async function acceptApplication() {
     return;
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: adminProfile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
-  const adminName = adminProfile?.full_name || user.email;
-
   try {
-    // 1) Update application status to approved
-    const { error: appError } = await supabase
-      .from("franchise_applications")
-      .update({
-        status: "approved",
-        admin_id: user.id,
-        admin_name: adminName,
-        admin_approved_at: new Date().toISOString(),
-      })
-      .eq("id", currentApp.id);
-    if (appError) throw appError;
-
-    // 2) Create the official franchise record
-    const { data: franchise, error: franError } = await supabase
-      .from("franchises")
-      .insert({
-        operator_id: currentApp.operator_id,
-        application_id: currentApp.id,
-        franchise_number: currentApp.franchise_number,
-        previous_registration: currentApp.previous_registration,
-        operator_name: currentApp.operator_name,
-        registration_month: currentApp.registration_month,
-        registration_day: currentApp.registration_day,
-        registration_year: currentApp.registration_year,
-        address: currentApp.address,
-        engine_number: currentApp.engine_number,
-        chassis_number: currentApp.chassis_number,
-        plate_number: currentApp.plate_number,
-        contact_number: currentApp.contact_number,
-        route: currentApp.route,
-        status: "active",
-        is_archived: false,
-      })
-      .select("id")
-      .single();
-    if (franError) throw franError;
-
-    // 3) Create the tricycle record
-    await supabase.from("tricycles").insert({
-      franchise_id: franchise.id,
-      engine_number: currentApp.engine_number,
-      chassis_number: currentApp.chassis_number,
-      plate_number: currentApp.plate_number,
-      is_current: true,
+    // The database function performs approval, franchise creation, tricycle
+    // creation, and notification in one transaction. A failure rolls back all
+    // changes instead of leaving a partially approved application.
+    const { error } = await supabase.rpc("approve_franchise_application", {
+      p_application_id: currentApp.id,
     });
+    if (error) throw error;
 
-    // 4) Notify the operator
-    await supabase.from("notifications").insert({
-      user_id: currentApp.operator_id,
-      message: `Your franchise application (${currentApp.franchise_number}) has been approved.`,
-      link: "operatorportal.html",
-      type: "success",
-    });
-
-// 5) Update the local object and reload
     currentApp.status = "approved";
     alert("Franchise approved! The record has been added to Franchise Records.");
     el("reviewModal").hidden = true;
@@ -366,13 +321,6 @@ async function rejectApplication() {
       .eq("id", currentApp.id);
     if (error) throw error;
 
-    await supabase.from("notifications").insert({
-      user_id: currentApp.operator_id,
-      message: `Your franchise application (${currentApp.franchise_number}) needs correction: ${reason}`,
-      link: "operatorportal.html",
-      type: "warning",
-    });
-
 alert("Application rejected. The operator has been notified.");
     el("rejectModal").hidden = true;
     el("rejectReason").value = "";
@@ -405,9 +353,11 @@ function bindEvents() {
   el("logoutBtn")?.addEventListener("click", async () => { await supabase.auth.signOut(); localStorage.clear(); window.location.href = "index.html"; });
 }
 
-function init() {
+async function init() {
   bindEvents();
-  verifyAccess().then(loadApplications);
+  const profile = await verifyAccess();
+  if (!profile) return;
+  await loadApplications();
 }
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

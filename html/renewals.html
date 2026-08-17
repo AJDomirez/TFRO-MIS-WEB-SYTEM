@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Franchise Renewals - TFRO</title>
+  <link rel="stylesheet" href="../css/franchise.css">
+  <link rel="stylesheet" href="../css/application.css">
+  <link rel="stylesheet" href="../css/renewal-admin.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body class="admin-sidebar">
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo"><img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo"><div><h2>TFRO MIS</h2><p>Lucena City</p></div></div>
+    <ul class="menu">
+      <li><a href="dashboard.html"><i class="ri-dashboard-line"></i> Dashboard</a></li>
+      <li><a href="franchise.html"><i class="ri-file-list-3-line"></i> Franchises</a></li>
+      <li><a href="application.html"><i class="ri-file-add-line"></i> Franchise Applications</a></li>
+      <li class="active"><a href="renewals.html"><i class="ri-refresh-line"></i> Franchise Renewals</a></li>
+      <li><a href="motorequests.html"><i class="ri-settings-5-line"></i> Change Motor Requests</a></li>
+      <li><a href="operator.html"><i class="ri-user-star-line"></i> Operators</a></li>
+      <li><a href="driver.html"><i class="ri-steering-2-line"></i> Drivers</a></li>
+      <li><a href="violation.html"><i class="ri-alert-line"></i> Violations</a></li>
+      <li><a href="report.html"><i class="ri-bar-chart-line"></i> Reports</a></li>
+      <li><a href="notification.html"><i class="ri-notification-3-line"></i> Notifications</a></li>
+      <li><a href="auditlog.html"><i class="ri-history-line"></i> Audit Log</a></li>
+      <li><a href="profile.html"><i class="ri-user-settings-line"></i> Profile</a></li>
+    </ul>
+    <div class="sidebar-user"><div class="user-left"><div class="user-avatar" id="userAvatar">U</div><div class="user-details"><h4 id="userName">User</h4><p id="userRole">—</p></div></div><button class="logout-btn" id="logoutBtn"><i class="ri-logout-box-r-line"></i></button></div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar"><div><h1>Franchise Renewals</h1><p>Verify documents, inspect units, assess payment, and issue MTOP renewals.</p></div></header>
+    <div class="workflow-legend"><span>1–4 Operator Submission</span><i class="ri-arrow-right-line"></i><span>5 Document Verification</span><i class="ri-arrow-right-line"></i><span>6 Vehicle Inspection</span><i class="ri-arrow-right-line"></i><span>7 Assessment &amp; Payment</span><i class="ri-arrow-right-line"></i><span>8 Confirmation</span></div>
+    <div class="toolbar"><div class="search-box"><i class="ri-search-line"></i><input id="searchInput" placeholder="Search request, franchise, or operator..."></div><select id="statusFilter"><option value="all">All Status</option><option value="pending_review">Pending Review</option><option value="needs_correction">Not Approved — Incomplete</option><option value="inspection_pending">Inspection Pending</option><option value="awaiting_payment">Awaiting Payment</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></div>
+    <div class="date-export-controls renewal-export-controls"><label>Start Date<input type="date" id="startDate"></label><label>End Date<input type="date" id="endDate"></label><button type="button" class="csv-btn" id="exportCsvBtn"><i class="ri-file-excel-2-line"></i> Save CSV</button></div>
+    <div class="table-card"><table><thead><tr><th>Request</th><th>Franchise</th><th>Operator</th><th>Case</th><th>Expiration</th><th>Status</th><th>Submitted</th><th>Action</th></tr></thead><tbody id="renewalsTable"></tbody></table></div>
+  </main>
+</div>
+
+<div class="modal" id="reviewModal" hidden>
+  <div class="modal-box renewal-review-modal">
+    <div class="modal-head"><h3>Renewal Review</h3><button class="modal-close" data-close="reviewModal"><i class="ri-close-line"></i></button></div>
+    <div class="modal-body">
+      <section class="review-section"><div class="review-section-title"><span>1-4</span><div><h4>Operator Submitted Form</h4><p>Answers submitted for renewal and MTOP processing.</p></div></div><div class="review-info-grid" id="renewalDetails"></div></section>
+
+      <section class="review-section"><div class="review-section-title"><span>5</span><div><h4>Document Verification</h4><p>View each photocopy and mark its result.</p></div></div><div class="staff-field"><label>Franchise Status Check</label><select id="franchiseCheck"><option value="pending">Pending Check</option><option value="up_to_date">Up to Date</option><option value="expired">Expired</option><option value="revoked">Revoked</option></select></div><div id="renewalDocuments"></div></section>
+
+      <section class="review-section"><div class="review-section-title"><span>6</span><div><h4>Vehicle Inspection</h4><p>Confirm riding condition and passenger safety.</p></div></div><div class="inspection-grid" id="inspectionChecklist">
+        <label><input type="checkbox" data-inspection="riding_condition"> Riding Condition</label><label><input type="checkbox" data-inspection="brake_system"> Brake System</label><label><input type="checkbox" data-inspection="lights_signals"> Lights &amp; Signals</label><label><input type="checkbox" data-inspection="tires_wheels"> Tires / Wheels</label><label><input type="checkbox" data-inspection="general_cleanliness"> General Cleanliness</label><label><input type="checkbox" data-inspection="safety_compliance"> Safety Compliance</label>
+      </div><div class="staff-field"><label>Inspection Remarks</label><textarea id="inspectionRemarks" rows="3" placeholder="Record inspection findings..."></textarea></div></section>
+
+      <section class="review-section"><div class="review-section-title"><span>7</span><div><h4>Assessment &amp; Payment</h4><p>Payment is made at the Treasurer's Office.</p></div></div><div class="staff-grid"><label>Assessment Number<input id="assessmentNumber"></label><label>Assessment Date<input id="assessmentDate" type="date"></label><label>Assessed Amount<input id="assessedAmount" type="number" min="0" step="0.01"></label><label>Payment Status<select id="paymentStatus"><option value="pending">Pending</option><option value="paid">Paid</option></select></label><label>Payment OR Number<input id="paymentOrNumber"></label><label class="checkbox-field"><input id="temporaryMtop" type="checkbox"> Temporary MTOP Issued</label></div></section>
+
+      <section class="review-section"><div class="review-section-title"><span>8</span><div><h4>Renewal Confirmation</h4><p>Successful renewals receive a three-year expiration extension and MTOP issuance in 1–2 weeks.</p></div></div><div class="staff-grid"><label>MTOP Number<input id="mtopNumber"></label><label>Expected Release Date<input id="expectedRelease" type="date"></label></div><div class="staff-field"><label>Decision / Incomplete Requirements Reason</label><textarea id="decisionReason" rows="3" placeholder="Required when requirements are incomplete or renewal is not approved..."></textarea></div></section>
+
+      <div class="review-actions renewal-actions"><button class="btn-reject" id="incompleteBtn"><i class="ri-error-warning-line"></i> Not Approved — Incomplete</button><button class="btn-cancel" id="saveProgressBtn"><i class="ri-save-line"></i> Save Progress</button><button class="btn-accept" id="approveRenewalBtn"><i class="ri-check-double-line"></i> Approve Renewal</button></div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="../js/renewals.js"></script>
+<script type="module" src="../js/sidebar-user.js"></script>
+</body>
+</html>

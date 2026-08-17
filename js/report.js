@@ -1,537 +1,414 @@
 import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
+import { requireRole } from "./auth-guard.js";
 
-const currencyFormatter = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
-const dateFormatter = new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" });
+const currency = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
+const reportState = { current: null, access: null };
+
+function text(value, fallback = "—") {
+  const normalized = String(value ?? "").trim();
+  return normalized || fallback;
+}
+
+function formatDate(value, includeTime = false) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return text(value);
+  return includeTime
+    ? date.toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })
+    : date.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" });
+}
 
 function escapeHtml(value) {
-  var s = String(value ?? "");
-  return s.replace(/[&<>'"]/g, function(c) {
-    if (c === "\x26") return "\x26amp;";
-    if (c === "\x3C") return "\x26lt;";
-    if (c === "\x3E") return "\x26gt;";
-    if (c === "\x27") return "\x26#039;";
-    if (c === "\x22") return "\x26quot;";
-    return c;
-  });
+  return String(value ?? "").replace(/[&<>'"]/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;",
+  }[character]));
 }
 
-async function verifyAccess() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return window.location.replace("index.html");
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single();
-  if (!profile || !["admin", "staff"].includes(profile.role)) {
-    await supabase.auth.signOut();
-    return window.location.replace("index.html");
-  }
-  return session;
+function normalizeDate(value) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-// Data Loaders
+function selectedPeriod() {
+  const startValue = document.getElementById("reportStartDate")?.value || "";
+  const endValue = document.getElementById("reportEndDate")?.value || "";
+  const start = startValue ? new Date(`${startValue}T00:00:00`) : null;
+  const end = endValue ? new Date(`${endValue}T23:59:59.999`) : null;
+  if (start && end && start > end) throw new Error("Start date cannot be later than end date.");
+  return { start, end };
+}
 
-async function loadFranchises() {
-  const { data, error } = await supabase.from("franchises").select("*").order("created_at", { ascending: false });
-  if (error) throw error;
+function periodLabel(period) {
+  if (!period.start && !period.end) return "All available records";
+  return `${period.start ? formatDate(period.start) : "Beginning"} to ${period.end ? formatDate(period.end) : "Present"}`;
+}
+
+function withinPeriod(value, period) {
+  if (!period.start && !period.end) return true;
+  const date = normalizeDate(value);
+  if (!date) return false;
+  if (period.start && date < period.start) return false;
+  if (period.end && date > period.end) return false;
+  return true;
+}
+
+async function selectRows(table, columns = "*", options = {}) {
+  let query = supabase.from(table).select(columns);
+  if (options.order) query = query.order(options.order, { ascending: options.ascending ?? false });
+  if (options.limit) query = query.limit(options.limit);
+  const { data, error } = await query;
+  if (error) throw new Error(`${options.label || table}: ${error.message}`);
   return data || [];
 }
 
-async function loadOperators() {
-  const { data, error } = await supabase.from("operators").select("*").order("full_name");
-  if (error) throw error;
-  return data || [];
-}
-
-async function loadDrivers() {
-  const { data, error } = await supabase.from("drivers").select("*").order("full_name");
-  if (error) throw error;
-  return data || [];
-}
-
-async function loadViolations() {
-  const { data, error } = await supabase.from("violations").select("*").order("occurred_at", { ascending: false });
-  if (error) throw error;
-  return data || [];
-}
-
-async function loadPayments() {
-  const { data, error } = await supabase.from("payments").select("*").order("paid_at", { ascending: false });
-  if (error) throw error;
-  return data || [];
-}
-
-async function loadAuditLog() {
-  const { data, error } = await supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(100);
-  if (error) {
-    console.warn("audit_log table not available:", error.message);
-    return [];
-  }
-  return data || [];
-}
-
-// PDF Generation
-
-function generatePDF({ title, subtitle, headers, rows, filename }) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-
-  doc.setFontSize(18);
-  doc.setTextColor(15, 45, 107);
-  doc.text("TFRO - Lucena City", 14, 20);
-  doc.setFontSize(11);
-  doc.setTextColor(100, 116, 139);
-  doc.text(title, 14, 28);
-  if (subtitle) {
-    doc.setFontSize(9);
-    doc.text(subtitle, 14, 34);
-  }
-
-  doc.setDrawColor(219, 226, 234);
-  doc.line(14, 38, 196, 38);
-
-  doc.autoTable({
-    startY: 42,
-    head: [headers],
-    body: rows,
-    theme: "grid",
-    headStyles: {
-      fillColor: [15, 45, 107],
-      textColor: [255, 255, 255],
-      fontStyle: "bold",
-      fontSize: 9,
+const reportDefinitions = {
+  executive: {
+    title: "Dashboard Executive Summary",
+    description: "A consolidated overview of TFRO records, transactions, and pending work.",
+    icon: "ri-dashboard-line", accent: "blue", headers: ["Metric", "Value"],
+    sampleRows: [
+      ["SAMPLE • Active franchises", "128"], ["SAMPLE • Pending applications", "6"],
+      ["SAMPLE • Renewals this month", "14"], ["SAMPLE • Payments collected", currency.format(48500)],
+    ],
+    async load(period) {
+      const [franchises, applications, renewals, motors, operators, drivers, violations, payments] = await Promise.all([
+        selectRows("franchises", "status,created_at,application_date"),
+        selectRows("franchise_applications", "status,created_at"),
+        selectRows("franchise_renewals", "status,created_at"),
+        selectRows("change_motor_requests", "status,created_at"),
+        selectRows("operators", "status,created_at"),
+        selectRows("drivers", "compliance,created_at"),
+        selectRows("violations", "status,created_at,occurred_at,penalty"),
+        selectRows("payments", "status,created_at,paid_at,amount"),
+      ]);
+      const filter = (rows, fields) => rows.filter((row) => withinPeriod(fields.map((field) => row[field]).find(Boolean), period));
+      const filtered = {
+        franchises: filter(franchises, ["application_date", "created_at"]),
+        applications: filter(applications, ["created_at"]), renewals: filter(renewals, ["created_at"]),
+        motors: filter(motors, ["created_at"]), operators: filter(operators, ["created_at"]),
+        drivers: filter(drivers, ["created_at"]), violations: filter(violations, ["occurred_at", "created_at"]),
+        payments: filter(payments, ["paid_at", "created_at"]),
+      };
+      const totalPayments = filtered.payments.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+      return [
+        ["Franchise records", String(filtered.franchises.length)],
+        ["Franchise applications", String(filtered.applications.length)],
+        ["Pending franchise applications", String(filtered.applications.filter((row) => String(row.status).toLowerCase() === "pending").length)],
+        ["Franchise renewals", String(filtered.renewals.length)],
+        ["Change motor requests", String(filtered.motors.length)],
+        ["Registered operators", String(filtered.operators.length)],
+        ["Registered drivers", String(filtered.drivers.length)],
+        ["Recorded violations", String(filtered.violations.length)],
+        ["Payments received", String(filtered.payments.length)],
+        ["Total payment amount", currency.format(totalPayments)],
+      ];
     },
-    bodyStyles: {
-      fontSize: 8,
-      textColor: [30, 41, 59],
+  },
+  franchises: {
+    title: "Franchise Records Report", description: "Master list of franchises, operators, routes, status, and expiration dates.",
+    icon: "ri-file-list-3-line", accent: "green",
+    headers: ["Franchise No.", "Operator", "Route", "Type", "Status", "Application Date", "Expiration"],
+    sampleRows: [
+      ["SAMPLE-MTOP-2026-001", "Juan Dela Cruz", "Lucena Proper", "Renewal", "Active", "Aug 1, 2026", "Aug 1, 2029"],
+      ["SAMPLE-MTOP-2026-002", "Maria Santos", "Ibabang Dupay", "New", "Pending", "Aug 10, 2026", "—"],
+    ],
+    async load(period) {
+      const rows = await selectRows("franchises", "franchise_number,operator_name,route,application_type,status,application_date,expiration_date,created_at", { order: "created_at" });
+      return rows.filter((row) => withinPeriod(row.application_date || row.created_at, period)).map((row) => [
+        text(row.franchise_number), text(row.operator_name), text(row.route), text(row.application_type), text(row.status), formatDate(row.application_date), formatDate(row.expiration_date),
+      ]);
     },
-    alternateRowStyles: {
-      fillColor: [248, 250, 252],
+  },
+  applications: {
+    title: "Franchise Applications Report", description: "Submitted MTOP/franchise applications with verification and approval status.",
+    icon: "ri-file-add-line", accent: "teal",
+    headers: ["Application Code", "Franchise No.", "Operator", "Route", "Status", "Complete", "Submitted"],
+    sampleRows: [
+      ["SAMPLE-APP-001", "SAMPLE-MTOP-001", "Pedro Reyes", "Dalahican", "Pending", "Yes", "Aug 12, 2026"],
+      ["SAMPLE-APP-002", "—", "Ana Mendoza", "Cotta", "Needs correction", "No", "Aug 14, 2026"],
+    ],
+    async load(period) {
+      const rows = await selectRows("franchise_applications", "application_code,franchise_number,operator_name,route,status,info_complete,created_at", { order: "created_at" });
+      return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
+        text(row.application_code), text(row.franchise_number), text(row.operator_name), text(row.route), text(row.status), row.info_complete ? "Yes" : "No", formatDate(row.created_at),
+      ]);
     },
-    margin: { top: 42 },
-  });
+  },
+  renewals: {
+    title: "Franchise Renewals / MTOP Report", description: "Renewal requests, assessment, payment, MTOP issuance, and current status.",
+    icon: "ri-refresh-line", accent: "yellow",
+    headers: ["Renewal Code", "Franchise / MTOP", "Operator", "Renewal Type", "Status", "Payment", "Submitted"],
+    sampleRows: [
+      ["SAMPLE-REN-001", "SAMPLE-MTOP-101", "Roberto Garcia", "Regular", "Documents verified", "Pending", "Aug 8, 2026"],
+      ["SAMPLE-REN-002", "SAMPLE-MTOP-102", "Elena Flores", "Expired OR", "Awaiting payment", "Paid", "Aug 11, 2026"],
+    ],
+    async load(period) {
+      const rows = await selectRows("franchise_renewals", "renewal_code,franchise_id,franchise:franchises!franchise_renewals_franchise_id_fkey(franchise_number),operator_name,renewal_type,status,payment_status,created_at", { order: "created_at" });
+      return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
+        text(row.renewal_code), text(row.franchise?.franchise_number || row.franchise_id), text(row.operator_name), text(row.renewal_type), text(row.status), text(row.payment_status), formatDate(row.created_at),
+      ]);
+    },
+  },
+  motorRequests: {
+    title: "Change Motor Requests Report", description: "Change motor applications with old/new vehicle details and review status.",
+    icon: "ri-settings-5-line", accent: "orange",
+    headers: ["Request Code", "Franchise", "New Brand", "New Engine", "New Chassis", "Status", "Submitted"],
+    sampleRows: [
+      ["SAMPLE-MOTOR-001", "SAMPLE-MTOP-201", "Honda", "ENG-SAMPLE-1001", "CHS-SAMPLE-1001", "Reviewing", "Aug 9, 2026"],
+      ["SAMPLE-MOTOR-002", "SAMPLE-MTOP-202", "Kawasaki", "ENG-SAMPLE-1002", "CHS-SAMPLE-1002", "Approved", "Aug 13, 2026"],
+    ],
+    async load(period) {
+      const rows = await selectRows("change_motor_requests", "request_code,franchise_id,franchise:franchises!change_motor_requests_franchise_id_fkey(franchise_number),new_motor_brand,new_engine_number,new_chassis_number,status,created_at", { order: "created_at" });
+      return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
+        text(row.request_code), text(row.franchise?.franchise_number || row.franchise_id), text(row.new_motor_brand), text(row.new_engine_number), text(row.new_chassis_number), text(row.status), formatDate(row.created_at),
+      ]);
+    },
+  },
+  operators: {
+    title: "Operator Registry Report", description: "Registered operators with contact, franchise, verification, and account status.",
+    icon: "ri-user-star-line", accent: "green",
+    headers: ["Full Name", "Address", "Contact", "Franchise No.", "Status", "Verified", "Registered"],
+    sampleRows: [
+      ["SAMPLE • Juan Dela Cruz", "Brgy. 3, Lucena City", "0917-123-4567", "SAMPLE-MTOP-301", "Active", "Yes", "Jan 15, 2026"],
+      ["SAMPLE • Maria Santos", "Brgy. Cotta, Lucena City", "0918-222-3344", "SAMPLE-MTOP-302", "Active", "Yes", "Feb 2, 2026"],
+    ],
+    async load(period) {
+      const rows = await selectRows("operators", "full_name,address,contact_number,franchise_number,status,verified,created_at", { order: "created_at" });
+      return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
+        text(row.full_name), text(row.address), text(row.contact_number), text(row.franchise_number), text(row.status), row.verified ? "Yes" : "No", formatDate(row.created_at),
+      ]);
+    },
+  },
+  drivers: {
+    title: "Driver Registry Report", description: "Drivers under operators with license, expiration, and compliance information.",
+    icon: "ri-steering-2-line", accent: "purple",
+    headers: ["Full Name", "License No.", "Operator", "Contact", "License Status", "Expiration", "Compliance"],
+    sampleRows: [
+      ["SAMPLE • Ramon Bautista", "SAMPLE-D01-23-456789", "Juan Dela Cruz", "0919-111-2233", "Verified", "Dec 20, 2027", "Compliant"],
+      ["SAMPLE • Leo Ramos", "SAMPLE-D02-24-987654", "Maria Santos", "0920-444-5566", "Not verified", "Apr 5, 2027", "Compliant"],
+    ],
+    async load(period) {
+      const rows = await selectRows("drivers", "full_name,license_number,operator_name,contact_number,license_status,license_expiration,compliance,created_at", { order: "created_at" });
+      return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
+        text(row.full_name), text(row.license_number), text(row.operator_name), text(row.contact_number), text(row.license_status), formatDate(row.license_expiration), text(row.compliance),
+      ]);
+    },
+  },
+  violations: {
+    title: "Violations Report", description: "Violations, subjects, penalties, occurrence dates, and payment status.",
+    icon: "ri-alert-line", accent: "red",
+    headers: ["Subject", "Subject Type", "Violation", "Penalty", "Occurrence Date", "Status"],
+    sampleRows: [
+      ["SAMPLE • Ramon Bautista", "Driver", "Refusal to convey passenger", currency.format(200), "Aug 4, 2026", "Pending"],
+      ["SAMPLE • Juan Dela Cruz", "Operator", "Operating on banned day", currency.format(200), "Aug 7, 2026", "Paid"],
+    ],
+    async load(period) {
+      const rows = await selectRows("violations", "subject_name,subject_type,violation_type,penalty,occurred_at,status,created_at", { order: "occurred_at" });
+      return rows.filter((row) => withinPeriod(row.occurred_at || row.created_at, period)).map((row) => [
+        text(row.subject_name), text(row.subject_type), text(row.violation_type), currency.format(Number(row.penalty || 0)), formatDate(row.occurred_at), text(row.status),
+      ]);
+    },
+  },
+  payments: {
+    title: "Payments Report", description: "Treasurer payments, payors, receipts, payment types, and collection totals.",
+    icon: "ri-money-dollar-circle-line", accent: "green",
+    headers: ["Payor", "Receipt", "Payment Type", "Amount", "Status", "Paid Date"],
+    sampleRows: [
+      ["SAMPLE • Juan Dela Cruz", "SAMPLE-OR-2026-001", "Franchise renewal", currency.format(1500), "Paid", "Aug 10, 2026"],
+      ["SAMPLE • Maria Santos", "SAMPLE-OR-2026-002", "Violation penalty", currency.format(200), "Paid", "Aug 12, 2026"],
+    ],
+    async load(period) {
+      const rows = await selectRows("payments", "payer,receipt,payment_type,amount,status,paid_at,created_at", { order: "paid_at" });
+      return rows.filter((row) => withinPeriod(row.paid_at || row.created_at, period)).map((row) => [
+        text(row.payer), text(row.receipt), text(row.payment_type), currency.format(Number(row.amount || 0)), text(row.status), formatDate(row.paid_at),
+      ]);
+    },
+  },
+  notifications: {
+    title: "Notifications Report", description: "System notices, approval updates, read status, and delivery dates.",
+    icon: "ri-notification-3-line", accent: "blue",
+    headers: ["Title", "Message", "Type", "Read", "Created"],
+    sampleRows: [
+      ["SAMPLE • Renewal approved", "Your franchise renewal has been approved.", "Success", "Unread", "Aug 15, 2026, 9:30 AM"],
+      ["SAMPLE • Requirements incomplete", "Please upload the updated insurance document.", "Warning", "Read", "Aug 14, 2026, 2:15 PM"],
+    ],
+    async load(period) {
+      const rows = await selectRows("notifications", "title,message,type,is_read,created_at", { order: "created_at" });
+      return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
+        text(row.title), text(row.message), text(row.type), row.is_read ? "Read" : "Unread", formatDate(row.created_at, true),
+      ]);
+    },
+  },
+  audit: {
+    title: "Audit Log Report", description: "Administrative activity, user actions, affected records, and timestamps.",
+    icon: "ri-history-line", accent: "gray",
+    headers: ["User", "Role", "Action", "Type", "Record", "Date"],
+    sampleRows: [
+      ["SAMPLE • TFRO Admin", "Admin", "Approved renewal", "Approve", "SAMPLE-REN-001", "Aug 15, 2026, 10:15 AM"],
+      ["SAMPLE • TFRO Staff", "Staff", "Verified documents", "Verification", "SAMPLE-APP-001", "Aug 14, 2026, 3:40 PM"],
+    ],
+    async load(period) {
+      const rows = await selectRows("audit_logs", "user_name,role,action,action_type,record,created_at", { order: "created_at", limit: 1000 });
+      return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
+        text(row.user_name), text(row.role), text(row.action), text(row.action_type), text(row.record), formatDate(row.created_at, true),
+      ]);
+    },
+  },
+};
 
-  const pageCount = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(148, 163, 184);
-    doc.text(
-      "Generated on " + new Date().toLocaleString() + " | Page " + i + " of " + pageCount,
-      14,
-      286
-    );
-  }
-
-  doc.save(filename);
-}
-
-// Report Builders
-
-function buildFranchiseReport(data) {
-  const headers = ["#", "Franchise No.", "Operator", "Route", "Type", "Status", "Date"];
-  const rows = data.map(function(r, i) {
-    return [
-      String(i + 1), r.franchise_number, r.operator_name, r.route,
-      r.application_type, r.status, r.application_date,
-    ];
-  });
-  generatePDF({
-    title: "Franchise Records Report",
-    subtitle: "Total: " + data.length + " franchise(s)",
-    headers: headers,
-    rows: rows,
-    filename: "TFRO_Franchise_Report_" + new Date().toISOString().slice(0, 10) + ".pdf",
-  });
-}
-
-function buildOperatorReport(data) {
-  const headers = ["#", "Full Name", "Address", "Contact", "Franchise #", "Status"];
-  const rows = data.map(function(r, i) {
-    return [
-      String(i + 1), r.full_name, r.address, r.contact_number,
-      r.franchise_number || "\u2014", r.status,
-    ];
-  });
-  generatePDF({
-    title: "Operator Registry Report",
-    subtitle: "Total: " + data.length + " operator(s)",
-    headers: headers,
-    rows: rows,
-    filename: "TFRO_Operator_Report_" + new Date().toISOString().slice(0, 10) + ".pdf",
-  });
-}
-
-function buildDriverReport(data) {
-  const headers = ["#", "Full Name", "License No.", "Operator", "Contact", "Violations", "Compliance"];
-  const rows = data.map(function(r, i) {
-    return [
-      String(i + 1), r.full_name, r.license_number, r.operator_name,
-      r.contact_number, String(r.violation_count), r.compliance,
-    ];
-  });
-  generatePDF({
-    title: "Driver Registry Report",
-    subtitle: "Total: " + data.length + " driver(s)",
-    headers: headers,
-    rows: rows,
-    filename: "TFRO_Driver_Report_" + new Date().toISOString().slice(0, 10) + ".pdf",
-  });
-}
-
-function buildViolationsReport(data) {
-  const headers = ["#", "Subject", "Type", "Violation", "Penalty", "Date", "Status"];
-  const rows = data.map(function(r, i) {
-    return [
-      String(i + 1), r.subject_name || "\u2014", r.subject_type || "\u2014",
-      r.violation_type, currencyFormatter.format(r.penalty || 0),
-      new Date(r.occurred_at).toLocaleDateString(), r.status,
-    ];
-  });
-  generatePDF({
-    title: "Violations Report",
-    subtitle: "Total: " + data.length + " violation(s)",
-    headers: headers,
-    rows: rows,
-    filename: "TFRO_Violations_Report_" + new Date().toISOString().slice(0, 10) + ".pdf",
-  });
-}
-
-function buildFinancialReport(data) {
-  const total = data.reduce(function(sum, r) { return sum + Number(r.amount || 0); }, 0);
-  const headers = ["#", "Amount", "Date"];
-  const rows = data.map(function(r, i) {
-    return [
-      String(i + 1), currencyFormatter.format(r.amount || 0),
-      new Date(r.paid_at).toLocaleDateString(),
-    ];
-  });
-  generatePDF({
-    title: "Financial Transactions Report",
-    subtitle: "Total Payments: " + data.length + " | Total Collected: " + currencyFormatter.format(total),
-    headers: headers,
-    rows: rows,
-    filename: "TFRO_Financial_Report_" + new Date().toISOString().slice(0, 10) + ".pdf",
-  });
-}
-
-function buildMonthlySummaryReport(franchises, payments, violations) {
-  const now = new Date();
-  const monthName = now.toLocaleString("en", { month: "long", year: "numeric" });
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-
-  const monthlyFranchises = franchises.filter(function(r) { return r.application_date >= monthStart.slice(0, 10); });
-  const monthlyPayments = payments.filter(function(r) { return r.paid_at >= monthStart; });
-  const monthlyViolations = violations.filter(function(r) { return r.occurred_at >= monthStart; });
-  const monthlyRevenue = monthlyPayments.reduce(function(sum, r) { return sum + Number(r.amount || 0); }, 0);
-
-  const headers = ["Metric", "Count"];
-  const rows = [
-    ["New Franchise Applications", String(monthlyFranchises.length)],
-    ["Payments Received", String(monthlyPayments.length)],
-    ["Monthly Revenue", currencyFormatter.format(monthlyRevenue)],
-    ["Violations Recorded", String(monthlyViolations.length)],
-    ["Total Active Franchises", String(franchises.filter(function(r) { return r.status === "active"; }).length)],
-    ["Total Registered Operators", String(franchises.length)],
-  ];
-
-  generatePDF({
-    title: "Monthly Summary Report \u2014 " + monthName,
-    subtitle: "Overview of TFRO operations",
-    headers: headers,
-    rows: rows,
-    filename: "TFRO_Monthly_Summary_" + now.toISOString().slice(0, 7) + ".pdf",
-  });
-}
-
-function buildExpiringFranchisesReport(data) {
-  const headers = ["#", "Franchise No.", "Operator", "Route", "Expiration Date", "Days Left"];
-  const now = new Date();
-  const rows = data.map(function(r, i) {
-    const days = Math.ceil((new Date(r.expiration_date + "T00:00:00") - now) / 86400000);
-    return [
-      String(i + 1), r.franchise_number, r.operator_name, r.route,
-      r.expiration_date || "\u2014", days > 0 ? days + " day(s)" : "Expired",
-    ];
-  });
-  generatePDF({
-    title: "Expiring Franchises Report",
-    subtitle: "Total: " + data.length + " franchise(s) expiring soon",
-    headers: headers,
-    rows: rows,
-    filename: "TFRO_Expiring_Franchises_" + new Date().toISOString().slice(0, 10) + ".pdf",
-  });
-}
-
-function buildAuditLogReport(data) {
-  const headers = ["#", "Action", "Table", "Performed By", "Date"];
-  const rows = data.map(function(r, i) {
-    return [
-      String(i + 1), r.action || "\u2014", r.table_name || "\u2014",
-      r.performed_by || "\u2014", r.created_at ? new Date(r.created_at).toLocaleString() : "\u2014",
-    ];
-  });
-  generatePDF({
-    title: "Audit Log Report",
-    subtitle: "Total: " + data.length + " log entry(ies)",
-    headers: headers,
-    rows: rows,
-    filename: "TFRO_Audit_Log_" + new Date().toISOString().slice(0, 10) + ".pdf",
-  });
-}
-
-// Print Handler
-
-function printReport(title, headers, rows) {
-  const win = window.open("", "_blank");
-  const style = [
-    "<style>",
-    "body { font-family: Arial, sans-serif; padding: 20px; color: #1e293b; }",
-    "h1 { font-size: 22px; color: #0f2d6b; margin-bottom: 4px; }",
-    ".subtitle { color: #64748b; font-size: 13px; margin-bottom: 20px; }",
-    "table { width: 100%; border-collapse: collapse; font-size: 12px; }",
-    "th { background: #0f2d6b; color: white; padding: 10px; text-align: left; }",
-    "td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; }",
-    "tr:nth-child(even) td { background: #f8fafc; }",
-    ".footer { margin-top: 20px; font-size: 10px; color: #94a3b8; text-align: center; }",
-    "@media print { body { padding: 0; } }",
-    "</style>",
-  ].join("\n");
-  const tableRows = rows.map(function(r) {
-    return "<tr>" + r.map(function(c) { return "<td>" + escapeHtml(c) + "</td>"; }).join("") + "</tr>";
-  }).join("");
-  win.document.write([
-    "<!DOCTYPE html>",
-    "<html><head><title>" + title + "</title>" + style + "</head><body>",
-    "<h1>TFRO - Lucena City</h1>",
-    "<div class=\"subtitle\">" + title + "</div>",
-    "<table><thead><tr>" + headers.map(function(h) { return "<th>" + escapeHtml(h) + "</th>"; }).join("") + "</tr></thead>",
-    "<tbody>" + tableRows + "</tbody></table>",
-    "<div class=\"footer\">Generated on " + new Date().toLocaleString() + "</div>",
-    "<script>window.print();</script>",
-    "</body></html>",
-  ].join("\n"));
-  win.document.close();
-}
-
-// Modal Preview
-
-function showPreview(title, headers, rows) {
-  const modal = document.getElementById("reportModal");
-  const modalTitle = document.getElementById("modalTitle");
-  const modalBody = document.getElementById("modalBody");
-  const modalCount = document.getElementById("modalCount");
-
-  modalTitle.textContent = title;
-  modalCount.textContent = rows.length + " record(s)";
-
-  const tableHtml = [
-    "<table>",
-    "<thead><tr>" + headers.map(function(h) { return "<th>" + escapeHtml(h) + "</th>"; }).join("") + "</tr></thead>",
-    "<tbody>" + rows.map(function(r) {
-      return "<tr>" + r.map(function(c) { return "<td>" + escapeHtml(c) + "</td>"; }).join("") + "</tr>";
-    }).join("") + "</tbody>",
-    "</table>",
-  ].join("\n");
-  modalBody.innerHTML = tableHtml;
-  modal.hidden = false;
-}
-
-// Main Handler
-
-async function handleReport(action, reportType) {
-  try {
-    const session = await verifyAccess();
-    if (!session) return;
-
-    var data, title, headers, rows;
-
-    switch (reportType) {
-      case "franchise": {
-        data = await loadFranchises();
-        title = "Franchise Records Report";
-        headers = ["#", "Franchise No.", "Operator", "Route", "Type", "Status", "Date"];
-        rows = data.map(function(r, i) {
-          return [String(i + 1), r.franchise_number, r.operator_name, r.route, r.application_type, r.status, r.application_date];
-        });
-        if (action === "download") { buildFranchiseReport(data); }
-        break;
-      }
-      case "operator": {
-        data = await loadOperators();
-        title = "Operator Registry Report";
-        headers = ["#", "Full Name", "Address", "Contact", "Franchise #", "Status"];
-        rows = data.map(function(r, i) {
-          return [String(i + 1), r.full_name, r.address, r.contact_number, r.franchise_number || "\u2014", r.status];
-        });
-        if (action === "download") { buildOperatorReport(data); }
-        break;
-      }
-      case "driver": {
-        data = await loadDrivers();
-        title = "Driver Registry Report";
-        headers = ["#", "Full Name", "License No.", "Operator", "Contact", "Violations", "Compliance"];
-        rows = data.map(function(r, i) {
-          return [String(i + 1), r.full_name, r.license_number, r.operator_name, r.contact_number, String(r.violation_count), r.compliance];
-        });
-        if (action === "download") { buildDriverReport(data); }
-        break;
-      }
-      case "violation": {
-        data = await loadViolations();
-        title = "Violations Report";
-        headers = ["#", "Subject", "Type", "Violation", "Penalty", "Date", "Status"];
-        rows = data.map(function(r, i) {
-          return [String(i + 1), r.subject_name || "\u2014", r.subject_type || "\u2014", r.violation_type, currencyFormatter.format(r.penalty || 0), new Date(r.occurred_at).toLocaleDateString(), r.status];
-        });
-        if (action === "download") { buildViolationsReport(data); }
-        break;
-      }
-      case "financial": {
-        data = await loadPayments();
-        title = "Financial Transactions Report";
-        headers = ["#", "Amount", "Date"];
-        rows = data.map(function(r, i) {
-          return [String(i + 1), currencyFormatter.format(r.amount || 0), new Date(r.paid_at).toLocaleDateString()];
-        });
-        if (action === "download") { buildFinancialReport(data); }
-        break;
-      }
-      case "monthly": {
-        var f = await loadFranchises();
-        var p = await loadPayments();
-        var v = await loadViolations();
-        var now = new Date();
-        var monthName = now.toLocaleString("en", { month: "long", year: "numeric" });
-        var monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        var mF = f.filter(function(r) { return r.application_date >= monthStart.slice(0, 10); });
-        var mP = p.filter(function(r) { return r.paid_at >= monthStart; });
-        var mV = v.filter(function(r) { return r.occurred_at >= monthStart; });
-        var revenue = mP.reduce(function(sum, r) { return sum + Number(r.amount || 0); }, 0);
-        title = "Monthly Summary \u2014 " + monthName;
-        headers = ["Metric", "Count"];
-        rows = [
-          ["New Franchise Applications", String(mF.length)],
-          ["Payments Received", String(mP.length)],
-          ["Monthly Revenue", currencyFormatter.format(revenue)],
-          ["Violations Recorded", String(mV.length)],
-          ["Total Active Franchises", String(f.filter(function(r) { return r.status === "active"; }).length)],
-          ["Total Registered Operators", String(f.length)],
-        ];
-        if (action === "download") { buildMonthlySummaryReport(f, p, v); }
-        break;
-      }
-      case "expiring": {
-        data = await loadFranchises();
-        var now = new Date();
-        var expiring = data.filter(function(r) {
-          if (!r.expiration_date) return false;
-          var days = Math.ceil((new Date(r.expiration_date + "T00:00:00") - now) / 86400000);
-          return days >= 0 && days <= 90;
-        }).sort(function(a, b) { return new Date(a.expiration_date) - new Date(b.expiration_date); });
-        title = "Expiring Franchises Report";
-        headers = ["#", "Franchise No.", "Operator", "Route", "Expiration Date", "Days Left"];
-        rows = expiring.map(function(r, i) {
-          var days = Math.ceil((new Date(r.expiration_date + "T00:00:00") - now) / 86400000);
-          return [String(i + 1), r.franchise_number, r.operator_name, r.route, r.expiration_date || "\u2014", days > 0 ? days + " day(s)" : "Expired"];
-        });
-        if (action === "download") { buildExpiringFranchisesReport(expiring); }
-        break;
-      }
-      case "audit": {
-        data = await loadAuditLog();
-        title = "Audit Log Report";
-        headers = ["#", "Action", "Table", "Performed By", "Date"];
-        rows = data.map(function(r, i) {
-          return [String(i + 1), r.action || "\u2014", r.table_name || "\u2014", r.performed_by || "\u2014", r.created_at ? new Date(r.created_at).toLocaleString() : "\u2014"];
-        });
-        if (action === "download") { buildAuditLogReport(data); }
-        break;
-      }
-      default:
-        return;
-    }
-
-if (action === "view") {
-      showPreview(title, headers, rows);
-    } else if (action === "print") {
-      printReport(title, headers, rows);
-    } else if (action === "download") {
-      logAudit({
-        action: "Generated Report",
-        actionType: "create",
-        record: title,
-        description: `Generated and downloaded the ${title} (${data ? data.length : 0} records).`,
-      });
-    }
-  } catch (err) {
-    console.error("Report error:", err);
-    alert("Could not generate report: " + err.message);
-  }
-}
-
-// Report Card Definitions
-
-var reportCards = [
-  { title: "Franchise Records Report", desc: "Summary of all franchise applications, renewals, approvals, and rejections.", icon: "ri-file-list-3-line", bg: "background:#dbeafe;", color: "color:#1d4ed8;", report: "franchise" },
-  { title: "Operator Registry Report", desc: "Complete list of registered operators with franchise and contact details.", icon: "ri-user-star-line", bg: "background:#ccfbf1;", color: "color:#0f766e;", report: "operator" },
-  { title: "Driver Registry Report", desc: "Full driver listing with license information and compliance status.", icon: "ri-steering-2-line", bg: "background:#e0e7ff;", color: "color:#4338ca;", report: "driver" },
-  { title: "Violations Report", desc: "Detailed list of recorded violations, penalties, and enforcement actions.", icon: "ri-alert-line", bg: "background:#ffedd5;", color: "color:#ea580c;", report: "violation" },
-  { title: "Financial Transactions Report", desc: "Payment history, fee collections, receipts, and revenue summary.", icon: "ri-money-dollar-circle-line", bg: "background:#d1fae5;", color: "color:#047857;", report: "financial" },
-  { title: "Monthly Summary Report", desc: "Monthly overview of all TFRO operations.", icon: "ri-bar-chart-box-line", bg: "background:#cffafe;", color: "color:#0891b2;", report: "monthly" },
-  { title: "Expiring Franchises Report", desc: "Franchises expiring within 30, 60, and 90 days.", icon: "ri-calendar-close-line", bg: "background:#fef3c7;", color: "color:#d97706;", report: "expiring" },
-  { title: "Audit Log Report", desc: "System activity and user actions for accountability.", icon: "ri-history-line", bg: "background:#f3f4f6;", color: "color:#374151;", report: "audit" },
-];
+const accentStyles = {
+  blue: ["#dbeafe", "#1d4ed8"], green: ["#d1fae5", "#047857"], teal: ["#ccfbf1", "#0f766e"],
+  yellow: ["#fef3c7", "#b45309"], orange: ["#ffedd5", "#c2410c"], purple: ["#ede9fe", "#6d28d9"],
+  red: ["#fee2e2", "#b91c1c"], gray: ["#f1f5f9", "#475569"],
+};
 
 function renderReportCards() {
-  var grid = document.getElementById("reportsGrid");
-  var html = "";
-  for (var i = 0; i < reportCards.length; i++) {
-    var card = reportCards[i];
-    html += [
-      '<div class="report-card">',
-      '<div class="icon-box" style="' + card.bg + '">',
-      '<i class="' + card.icon + '" style="' + card.color + '"></i>',
-      "</div>",
-      "<h3>" + card.title + "</h3>",
-      "<p>" + card.desc + "</p>",
-      '<div class="card-actions">',
-      '<button class="download-btn" data-action="view" data-report="' + card.report + '"><i class="ri-eye-line"></i> View</button>',
-      '<button class="download-btn" data-action="download" data-report="' + card.report + '"><i class="ri-download-line"></i> Download PDF</button>',
-      '<button class="print-btn" data-action="print" data-report="' + card.report + '"><i class="ri-printer-line"></i> Print</button>',
-      "</div>",
-      "</div>",
-    ].join("\n");
-  }
-  grid.innerHTML = html;
+  const grid = document.getElementById("reportsGrid");
+  if (!grid) return;
+  grid.innerHTML = Object.entries(reportDefinitions).map(([key, report]) => {
+    const [background, color] = accentStyles[report.accent] || accentStyles.green;
+    return `<article class="report-card"><div class="icon-box" style="background:${background};color:${color}"><i class="${report.icon}"></i></div><h3>${escapeHtml(report.title)}</h3><p>${escapeHtml(report.description)}</p><div class="card-actions"><button type="button" class="download-btn report-action-btn" data-action="view" data-report="${key}"><i class="ri-eye-line"></i> View</button><button type="button" class="download-btn report-action-btn" data-action="pdf" data-report="${key}"><i class="ri-file-pdf-2-line"></i> Save PDF</button><button type="button" class="print-btn report-action-btn" data-action="print" data-report="${key}"><i class="ri-printer-line"></i> Print</button></div></article>`;
+  }).join("");
 }
 
-// Event Binding
+async function ensureAccess() {
+  if (reportState.access) return reportState.access;
+  const { user, profile } = await requireRole(["admin", "staff"]);
+  if (!user || !profile) return null;
+  reportState.access = { user, profile };
+  return reportState.access;
+}
 
-document.addEventListener("DOMContentLoaded", async function() {
-  await verifyAccess();
-  renderReportCards();
-  document.getElementById("reportsGrid").addEventListener("click", function(e) {
-    var btn = e.target.closest("button[data-action][data-report]");
-    if (!btn) return;
-    var action = btn.dataset.action;
-    var report = btn.dataset.report;
-    handleReport(action, report);
+function createTableHtml(headers, rows) {
+  if (!rows.length) return `<div class="empty-report-state"><i class="ri-inbox-2-line"></i>No records found for the selected report period.</div>`;
+  return `<table><thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}
+
+function showPreview(payload) {
+  reportState.current = payload;
+  document.getElementById("modalTitle").textContent = payload.title;
+  document.getElementById("modalCount").textContent = `${payload.rows.length} record(s) • ${payload.periodText}`;
+  const sampleBanner = payload.isSample ? '<div class="sample-report-banner"><i class="ri-flask-line"></i> SAMPLE DATA — FOR TESTING ONLY. These records are not stored in Supabase.</div>' : "";
+  document.getElementById("modalBody").innerHTML = sampleBanner + createTableHtml(payload.headers, payload.rows);
+  document.getElementById("reportModal").hidden = false;
+}
+
+function safeFilename(title) {
+  return `TFRO_${title.replace(/[^a-z0-9]+/gi, "_").replace(/^_|_$/g, "")}_${new Date().toISOString().slice(0, 10)}.pdf`;
+}
+
+function savePdf(payload) {
+  const JsPdf = window.jspdf?.jsPDF;
+  if (!JsPdf) throw new Error("The PDF library did not load. Check the internet connection and try again.");
+  const landscape = payload.headers.length > 6;
+  const doc = new JsPdf({ orientation: landscape ? "landscape" : "portrait", unit: "mm", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  doc.setTextColor(15, 77, 61); doc.setFontSize(17); doc.text("TFRO - Lucena City", 14, 18);
+  doc.setTextColor(30, 41, 59); doc.setFontSize(12); doc.text(payload.title, 14, 26);
+  doc.setTextColor(payload.isSample ? 180 : 100, payload.isSample ? 83 : 116, payload.isSample ? 9 : 139);
+  doc.setFontSize(9); doc.text(payload.isSample ? `SAMPLE DATA - FOR TESTING ONLY | Records: ${payload.rows.length}` : `Period: ${payload.periodText} | Records: ${payload.rows.length}`, 14, 32);
+  doc.autoTable({
+    startY: 37, head: [payload.headers],
+    body: payload.rows.length ? payload.rows : [["No records found for the selected report period.", ...payload.headers.slice(1).map(() => "")]],
+    theme: "grid", headStyles: { fillColor: [15, 118, 88], textColor: 255, fontSize: 8 },
+    bodyStyles: { fontSize: 7.5, textColor: [30, 41, 59] }, alternateRowStyles: { fillColor: [248, 250, 252] },
+    margin: { left: 10, right: 10 },
+    didDrawPage() {
+      doc.setFontSize(7.5); doc.setTextColor(100, 116, 139);
+      doc.text(`Generated ${new Date().toLocaleString("en-PH")}`, 10, doc.internal.pageSize.getHeight() - 7);
+      doc.text(`Page ${doc.internal.getCurrentPageInfo().pageNumber}`, pageWidth - 25, doc.internal.pageSize.getHeight() - 7);
+    },
   });
-});
+  doc.save(safeFilename(payload.title));
+}
 
-// Modal close
-document.getElementById("closeModalBtn")?.addEventListener("click", function() {
-  document.getElementById("reportModal").hidden = true;
-});
+function printReport(payload) {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) throw new Error("The print window was blocked. Allow pop-ups for this site and try again.");
+  printWindow.opener = null;
+  const table = payload.rows.length
+    ? `<table><thead><tr>${payload.headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${payload.rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table>`
+    : '<p class="empty">No records found for the selected report period.</p>';
+  printWindow.document.write(`<!doctype html><html><head><title>${escapeHtml(payload.title)}</title><style>@page{size:auto;margin:14mm}body{font:12px Arial,sans-serif;color:#17202a}h1{color:#0f4d3d;margin:0 0 4px}p{margin:0 0 18px;color:#5f6b76}.sample{padding:8px 10px;background:#fff4d6;border:1px solid #e8b94f;color:#7a4b00;font-weight:bold}table{width:100%;border-collapse:collapse}th,td{padding:7px;border:1px solid #b8c3cc;text-align:left;vertical-align:top}th{background:#0f7658;color:#fff}.empty{padding:35px;text-align:center;border:1px solid #ccd6dd}.footer{margin-top:14px;font-size:10px;color:#68737d}</style></head><body><h1>TFRO - Lucena City</h1><p>${escapeHtml(payload.title)}<br>Period: ${escapeHtml(payload.periodText)} · ${payload.rows.length} record(s)</p>${payload.isSample ? '<p class="sample">SAMPLE DATA — FOR TESTING ONLY. Not stored in Supabase.</p>' : ""}${table}<div class="footer">Generated ${escapeHtml(new Date().toLocaleString("en-PH"))}</div></body></html>`);
+  printWindow.document.close();
+  printWindow.addEventListener("load", () => { printWindow.focus(); printWindow.print(); }, { once: true });
+}
 
-document.getElementById("reportModal")?.addEventListener("click", function(e) {
-  if (e.target === e.currentTarget) {
-    document.getElementById("reportModal").hidden = true;
+async function loadPayload(reportKey) {
+  const report = reportDefinitions[reportKey];
+  if (!report) throw new Error("Unknown report type.");
+  const sampleMode = document.getElementById("sampleDataMode")?.checked ?? false;
+  const period = selectedPeriod();
+  const rows = sampleMode ? report.sampleRows : await report.load(period);
+  return {
+    key: reportKey, title: report.title, headers: report.headers, rows: rows || [],
+    periodText: sampleMode ? "Sample preview (date filter not applied)" : periodLabel(period),
+    isSample: sampleMode,
+  };
+}
+
+async function runReportAction(action, reportKey, button) {
+  const originalHtml = button?.innerHTML;
+  try {
+    if (button) { button.disabled = true; button.innerHTML = '<i class="ri-loader-4-line"></i> Loading'; }
+    if (!(await ensureAccess())) return;
+    const payload = await loadPayload(reportKey);
+    if (action === "view") showPreview(payload);
+    if (action === "pdf") savePdf(payload);
+    if (action === "print") printReport(payload);
+    if (action === "pdf" || action === "print") void logAudit({
+      action: action === "pdf" ? "Saved PDF Report" : "Printed Report", actionType: "create", record: payload.title,
+      description: `${action === "pdf" ? "Saved" : "Printed"} ${payload.title} for ${payload.periodText} (${payload.rows.length} records).`,
+    });
+  } catch (error) {
+    console.error("Report action failed:", error);
+    window.alert(`Could not generate the report. ${error.message}`);
+  } finally {
+    if (button) { button.disabled = false; button.innerHTML = originalHtml; }
   }
-});
+}
 
-// Logout
-document.getElementById("logoutBtn")?.addEventListener("click", async function() {
-  await supabase.auth.signOut();
-  localStorage.clear();
-  window.location.href = "index.html";
-});
+function closeModal() { document.getElementById("reportModal").hidden = true; }
+
+function runCurrentAction(action) {
+  if (!reportState.current) return;
+  try {
+    if (action === "pdf") savePdf(reportState.current);
+    if (action === "print") printReport(reportState.current);
+    void logAudit({
+      action: action === "pdf" ? "Saved PDF Report" : "Printed Report",
+      actionType: "create",
+      record: reportState.current.title,
+      description: `${action === "pdf" ? "Saved" : "Printed"} ${reportState.current.title} from the report preview.`,
+    });
+  } catch (error) {
+    console.error("Preview report action failed:", error);
+    window.alert(`Could not generate the report. ${error.message}`);
+  }
+}
+
+function bindEvents() {
+  document.getElementById("reportsGrid")?.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action][data-report]");
+    if (button) void runReportAction(button.dataset.action, button.dataset.report, button);
+  });
+  document.getElementById("resetReportDates")?.addEventListener("click", () => {
+    document.getElementById("reportStartDate").value = ""; document.getElementById("reportEndDate").value = "";
+  });
+  document.getElementById("closeModalBtn")?.addEventListener("click", closeModal);
+  document.getElementById("reportModal")?.addEventListener("click", (event) => { if (event.target === event.currentTarget) closeModal(); });
+  document.getElementById("modalSavePdfBtn")?.addEventListener("click", () => runCurrentAction("pdf"));
+  document.getElementById("modalPrintBtn")?.addEventListener("click", () => runCurrentAction("print"));
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeModal(); });
+}
+
+function initializeReports() {
+  renderReportCards();
+  bindEvents();
+  void ensureAccess().catch((error) => console.error("Report page authorization failed:", error));
+}
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initializeReports, { once: true });
+else initializeReports();

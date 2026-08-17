@@ -1,11 +1,15 @@
 import { supabase } from "./supabase.js";
+import { requireRole } from "./auth-guard.js";
 
-/* ROLE PROTECTION */
-const role = localStorage.getItem("role");
-if (role !== "operator") {
-  alert("Access Denied");
-  window.location.href = "index.html";
-}
+/* ROLE PROTECTION — server-verified, not localStorage */
+let currentUserId = null;
+let currentUserRole = "operator";
+requireRole(["operator"]).then(({ user, profile }) => {
+  if (!user) return;
+  currentUserId = user.id;
+  if (profile?.role) currentUserRole = profile.role;
+  loadProfile();
+});
 
 /* HELPERS */
 function initials(name = "") {
@@ -28,8 +32,6 @@ function setValue(id, value) {
   const el = document.getElementById(id);
   if (el) el.value = value || "";
 }
-
-let currentUserId = localStorage.getItem("userId") || null;
 
 /* TABS */
 const tabs = document.querySelectorAll(".tab[data-tab]");
@@ -87,104 +89,107 @@ async function loadProfile() {
 }
 
 /* SAVE PROFILE */
-profileForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
+if (profileForm) {
+  profileForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  const firstName = document.getElementById("firstName").value.trim();
-  const lastName = document.getElementById("lastName").value.trim();
-  const contactNumber = document.getElementById("contactNumber").value.trim();
-  const fullName = `${firstName} ${lastName}`.trim();
+    const firstName = document.getElementById("firstName").value.trim();
+    const lastName = document.getElementById("lastName").value.trim();
+    const contactNumber = document.getElementById("contactNumber").value.trim();
+    const fullName = `${firstName} ${lastName}`.trim();
 
-  if (!fullName) {
-    alert("Please enter your full name.");
-    return;
-  }
+    if (!fullName) {
+      alert("Please enter your full name.");
+      return;
+    }
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({ full_name: fullName, contact_number: contactNumber })
-    .eq("id", currentUserId);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ full_name: fullName, contact_number: contactNumber })
+      .eq("id", currentUserId);
 
-  if (error) {
-    console.error("Profile update error:", error);
-    alert("Failed to save profile: " + error.message);
-    return;
-  }
+    if (error) {
+      console.error("Profile update error:", error);
+      alert("Failed to save profile: " + error.message);
+      return;
+    }
 
-  alert("Profile updated successfully!");
-  loadProfile();
-});
+    alert("Profile updated successfully!");
+    loadProfile();
+  });
+}
 
 /* CHANGE PASSWORD */
-passwordForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
+if (passwordForm) {
+  passwordForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  const currentPassword = document.getElementById("currentPassword").value;
-  const newPassword = document.getElementById("newPassword").value;
-  const confirmPassword = document.getElementById("confirmPassword").value;
+    const currentPassword = document.getElementById("currentPassword").value;
+    const newPassword = document.getElementById("newPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
 
-  if (newPassword.length < 6) {
-    alert("New password must be at least 6 characters long.");
-    return;
-  }
+    if (newPassword.length < 6) {
+      alert("New password must be at least 6 characters long.");
+      return;
+    }
 
-  if (newPassword !== confirmPassword) {
-    alert("New passwords do not match. Please try again.");
-    return;
-  }
+    if (newPassword !== confirmPassword) {
+      alert("New passwords do not match. Please try again.");
+      return;
+    }
 
-  const submitBtn = passwordForm.querySelector('button[type="submit"]');
-  submitBtn.disabled = true;
-  submitBtn.textContent = "Updating...";
+    const submitBtn = passwordForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Updating...";
 
-  // 1) Re-authenticate with the current password to confirm identity.
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) {
-    alert("Session expired. Please sign in again.");
+    // 1) Re-authenticate with the current password to confirm identity.
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      alert("Session expired. Please sign in again.");
+      window.location.href = "index.html";
+      return;
+    }
+
+    const { error: reauthError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+
+    if (reauthError) {
+      alert("Current password is incorrect.");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Update Password";
+      return;
+    }
+
+    // 2) Update to the new password.
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (updateError) {
+      alert("Failed to update password: " + updateError.message);
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Update Password";
+      return;
+    }
+
+    // 3) Sign out and redirect to login so the user signs in with the new password.
+    await supabase.auth.signOut();
+    localStorage.removeItem("role");
+    localStorage.removeItem("userId");
+    alert("Password updated successfully! Please sign in again with your new password.");
     window.location.href = "index.html";
-    return;
-  }
-
-  const { error: reauthError } = await supabase.auth.signInWithPassword({
-    email: user.email,
-    password: currentPassword,
   });
-
-  if (reauthError) {
-    alert("Current password is incorrect.");
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Update Password";
-    return;
-  }
-
-  // 2) Update to the new password.
-  const { error: updateError } = await supabase.auth.updateUser({
-    password: newPassword,
-  });
-
-  if (updateError) {
-    alert("Failed to update password: " + updateError.message);
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Update Password";
-    return;
-  }
-
-  // 3) Sign out and redirect to login so the user signs in with the new password.
-  await supabase.auth.signOut();
-  localStorage.removeItem("role");
-  localStorage.removeItem("userId");
-  alert("Password updated successfully! Please sign in again with your new password.");
-  window.location.href = "index.html";
-});
+}
 
 /* LOGOUT */
 const logoutBtn = document.getElementById("logoutBtn");
-logoutBtn.addEventListener("click", async () => {
-  await supabase.auth.signOut();
-  localStorage.removeItem("role");
-  localStorage.removeItem("userId");
-  window.location.href = "index.html";
-});
-
-loadProfile();
-
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem("role");
+    localStorage.removeItem("userId");
+    window.location.href = "index.html";
+  });
+}

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TFRO Violations</title>
 
-<link rel="stylesheet" href="../css/violation.css">
+<link rel="stylesheet" href="../css/violation.css?v=20260817-4">
   <link rel="stylesheet" href="../css/tfro-theme.css">
 
   <!-- Remix Icons -->
@@ -14,7 +14,7 @@
     rel="stylesheet"
   />
 </head>
-<body>
+<body class="admin-sidebar">
 
 <div class="dashboard-container">
 
@@ -25,7 +25,7 @@
     <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
 
 <div>
-  <h2>TFRO</h2>
+  <h2>TFRO MIS</h2>
   <p>Lucena City</p>
 </div>
 
@@ -164,7 +164,13 @@
 
       </div>
 
-      <button class="add-btn" id="addViolationBtn">
+      <div class="date-export-controls">
+        <label>Start Date<input type="date" id="startDate"></label>
+        <label>End Date<input type="date" id="endDate"></label>
+        <button type="button" class="csv-btn" id="exportCsvBtn"><i class="ri-file-excel-2-line"></i> Save CSV</button>
+      </div>
+
+      <button type="button" class="add-btn" id="addViolationBtn" aria-controls="violationFormPanel" aria-expanded="false">
         <i class="ri-add-line"></i>
         Record Violation
       </button>
@@ -172,7 +178,7 @@
     </div>
 
     <section class="violation-form-panel" id="violationFormPanel" hidden>
-      <h2>Record Violation</h2>
+      <h2 id="violationFormTitle">Record Violation</h2>
       <form id="violationForm">
         <label>Subject name<input name="subject_name" required></label>
         <label>Subject type<select name="subject_type"><option value="driver">Driver</option><option value="operator">Operator</option></select></label>
@@ -181,7 +187,7 @@
         <label>Date<input name="occurred_date" type="date" required></label>
         <label>Status<select name="status"><option value="pending">Pending</option><option value="paid">Paid</option><option value="dismissed">Dismissed</option></select></label>
         <label>Description<input name="description"></label>
-        <div class="violation-form-actions"><button class="add-btn" type="submit">Save Violation</button><button type="button" id="cancelViolationBtn">Cancel</button></div>
+        <div class="violation-form-actions"><button class="add-btn" id="saveViolationBtn" type="submit">Save Violation</button><button type="button" id="cancelViolationBtn">Cancel</button></div>
       </form>
     </section>
 
@@ -212,7 +218,9 @@
 
 </div>
 
-<script type="module" src="../js/violation.js"></script>
+<div class="violation-toast" id="violationToast" hidden role="status" aria-live="polite"></div>
+
+<script type="module" src="../js/violation.js?v=20260817-4"></script>
 <script type="module" src="../js/sidebar-user.js"></script>
 <script>
 

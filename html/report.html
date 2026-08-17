@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Reports</title>
 
-<link rel="stylesheet" href="../css/report.css">
+<link rel="stylesheet" href="../css/report.css?v=20260817-3">
   <link rel="stylesheet" href="../css/tfro-theme.css">
 
   <!-- Remix Icons -->
@@ -18,7 +18,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
-<body>
+<body class="admin-sidebar">
 
 <div class="dashboard-container">
 
@@ -29,7 +29,7 @@
     <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
 
 <div>
-  <h2>TFRO</h2>
+  <h2>TFRO MIS</h2>
   <p>Lucena City</p>
 </div>
 
@@ -154,6 +154,36 @@
       </span>
     </div>
 
+    <section class="report-toolbar" aria-label="Report date filters">
+      <div class="report-toolbar-copy">
+        <strong>Report period</strong>
+        <span>Leave both dates empty to include all records.</span>
+      </div>
+      <label class="sample-mode-control">
+        <input type="checkbox" id="sampleDataMode" checked />
+        <span>
+          Sample preview mode
+          <small>Testing data only — nothing is saved to Supabase.</small>
+        </span>
+      </label>
+      <label>
+        <span>Start date</span>
+        <input type="date" id="reportStartDate" />
+      </label>
+      <label>
+        <span>End date</span>
+        <input type="date" id="reportEndDate" />
+      </label>
+      <button type="button" class="reset-filter-btn" id="resetReportDates">
+        <i class="ri-refresh-line"></i> Reset
+      </button>
+    </section>
+
+    <div class="report-actions-guide">
+      <i class="ri-cursor-line"></i>
+      <span><strong>Report actions:</strong> Use the three buttons at the bottom of every card — View, Save PDF, or Print.</span>
+    </div>
+
     <!-- REPORT CARDS -->
     <div class="reports-grid" id="reportsGrid">
 
@@ -168,6 +198,14 @@
           <button class="modal-close-btn" id="closeModalBtn">&times;</button>
         </div>
         <div class="report-modal-body" id="modalBody"></div>
+        <div class="report-modal-footer">
+          <button type="button" class="print-btn" id="modalPrintBtn">
+            <i class="ri-printer-line"></i> Print
+          </button>
+          <button type="button" class="download-btn" id="modalSavePdfBtn">
+            <i class="ri-file-pdf-2-line"></i> Save PDF
+          </button>
+        </div>
       </div>
     </div>
 
@@ -175,7 +213,7 @@
 
 </div>
 
-<script type="module" src="../js/report.js"></script>
+<script type="module" src="../js/report.js?v=20260817-3"></script>
 <script type="module" src="../js/sidebar-user.js"></script>
 
 <script>

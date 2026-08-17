@@ -1,5 +1,9 @@
+import { supabase } from "./supabase.js";
+import { requireRole } from "./auth-guard.js";
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  const { user } = await requireRole(["admin", "staff"]);
+  if (!user) return;
 
   /* SIDEBAR TOGGLE */
 
@@ -14,11 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* USER ROLE */
 
-  const userRole = "admin";
-  // change to:
-  // "staff"
-  // "operator"
-  // "driver"
+  const userRole = localStorage.getItem("role") || "";
 
   /* MENU ITEMS */
 
@@ -27,12 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const violationMenu = document.getElementById("violationMenu");
 
   /* ROLE ACCESS */
-
-  if(userRole === "admin"){
-    if(paymentMenu){
-      paymentMenu.style.display = "none";
-    }
-  }
 
   if(userRole === "operator"){
     if(paymentMenu){
@@ -61,12 +55,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const logoutBtn =
 document.getElementById("logoutBtn");
 
-logoutBtn.addEventListener("click", () => {
-
+if (logoutBtn) logoutBtn.addEventListener("click", async () => {
+  await supabase.auth.signOut();
   localStorage.removeItem("role");
-
+  localStorage.removeItem("userId");
   window.location.href = "index.html";
-
 });
+
+const notificationsBtn = document.getElementById("notificationsBtn");
+if (notificationsBtn) {
+  notificationsBtn.addEventListener("click", () => {
+    window.location.href = "notification.html";
+  });
+}
 
 });

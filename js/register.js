@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { destinationForRole, loadUserProfile } from "./auth-guard.js";
 
 /* PASSWORD VISIBILITY TOGGLE (shared for both password fields) */
 document.querySelectorAll(".toggle-pass").forEach((btn) => {
@@ -12,109 +13,245 @@ document.querySelectorAll(".toggle-pass").forEach((btn) => {
 
 const registerForm = document.getElementById("registerForm");
 const submitButton = document.getElementById("registerBtn");
+const defaultButtonHtml = '<i class="ri-user-add-line"></i> Create Account';
+const passwordInput = document.getElementById("password");
+const confirmPasswordInput = document.getElementById("confirmPassword");
+const passwordMatchStatus = document.getElementById("passwordMatchStatus");
+
+// Keep the browser checks aligned with the password rules shown in the form.
+const passwordRules = Object.freeze({
+  length: (value) => value.length >= 8,
+  lowercase: (value) => /[a-z]/.test(value),
+  uppercase: (value) => /[A-Z]/.test(value),
+  number: (value) => /[0-9]/.test(value),
+  symbol: (value) => /[^A-Za-z0-9\s]/.test(value),
+});
+
+function passwordMeetsRequirements(value) {
+  return Object.values(passwordRules).every((testRule) => testRule(value));
+}
+
+function updatePasswordChecklist() {
+  const value = passwordInput.value;
+
+  document.querySelectorAll("[data-password-rule]").forEach((item) => {
+    const ruleName = item.dataset.passwordRule;
+    const isMet = passwordRules[ruleName]?.(value) ?? false;
+    const icon = item.querySelector("i");
+
+    item.classList.toggle("met", isMet);
+    icon.className = isMet ? "ri-checkbox-circle-fill" : "ri-close-circle-line";
+  });
+}
+
+function updatePasswordMatchStatus() {
+  const confirmation = confirmPasswordInput.value;
+
+  passwordMatchStatus.classList.remove("match", "no-match");
+  if (!confirmation) {
+    passwordMatchStatus.textContent = "";
+    return;
+  }
+
+  const passwordsMatch = passwordInput.value === confirmation;
+  passwordMatchStatus.textContent = passwordsMatch
+    ? "Passwords match."
+    : "Passwords do not match.";
+  passwordMatchStatus.classList.add(passwordsMatch ? "match" : "no-match");
+}
+
+passwordInput.addEventListener("input", () => {
+  updatePasswordChecklist();
+  updatePasswordMatchStatus();
+});
+confirmPasswordInput.addEventListener("input", updatePasswordMatchStatus);
+updatePasswordChecklist();
+
+/**
+ * Extract a meaningful message from a Supabase Auth error.
+ *
+ * The supabase-js client often wraps the server response in an error with
+ * `.message` = "{}" (uppercase-literal). The real problem (e.g. "Error sending
+ * confirmation email") is inside the JSON body that came back from the Auth
+ * endpoint. We look up the original fetch response from the internal retry
+ * chain so the user sees a clear, actionable message instead of "{}".
+ */
+function extractAuthErrorMessage(error) {
+  // 1) Standard message field.
+  if (typeof error?.message === "string" && error.message && error.message !== "{}") {
+    return error.message;
+  }
+  if (typeof error?.error_description === "string" && error.error_description) {
+    return error.error_description;
+  }
+
+  // 2) supabase-js stores the failed fetch attempts on `data`/`data.response`
+  //    or in a `__isAuthError` internal shape. Walk known paths.
+  const candidates = [
+    error?.data,
+    error?.data?.response,
+    error?.data?.body,
+    error?.__body,
+    error?.body,
+  ];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    if (typeof candidate === "string") {
+      try {
+        const parsed = JSON.parse(candidate);
+        if (parsed?.msg) return parsed.msg;
+        if (parsed?.message) return parsed.message;
+      } catch {
+        if (candidate && candidate !== "{}") return candidate;
+      }
+    } else if (typeof candidate === "object") {
+      if (candidate.msg) return candidate.msg;
+      if (candidate.message) return candidate.message;
+      if (candidate.error_description) return candidate.error_description;
+    }
+  }
+
+  // 3) Known Supabase / GoTrue error code mapping to a friendly message.
+  const status = Number(error?.status);
+  const known = {
+    400: "The server rejected the request. Please check your details and try again.",
+    401: "You are not authorized to perform this action.",
+    422: "The email address is already registered or the password is too weak.",
+    429: "Too many attempts. Please wait a few minutes and try again.",
+    500: "Supabase reached Gmail, but Gmail rejected the saved SMTP login (535). Open Supabase Authentication > Emails > SMTP Settings and replace the password with a 16-character Google App Password. A Supabase Pro plan is not required.",
+  };
+  if (known[status]) return known[status];
+
+  return null;
+}
+
+function showRegistrationError(error) {
+  // Log the full error to the console for developers.
+  try {
+    console.error("Registration error details:", error);
+    // Try to print the nested fetch response body if available.
+    const flatten = {};
+    for (const key of Object.getOwnPropertyNames(error || {})) {
+      const value = error[key];
+      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+        flatten[key] = value;
+      }
+    }
+    console.error("Registration error (serialized):", flatten);
+  } catch {
+    console.error("Registration error (unserializable):", error);
+  }
+
+  const message = extractAuthErrorMessage(error);
+
+  if (message) {
+    // A real, meaningful error from Supabase Auth.
+    alert(`Registration failed: ${message}`);
+    return;
+  }
+
+  // Fallback: guide the user to the current Auth dependency without exposing
+  // provider credentials or internal server details.
+  alert(
+    "Registration could not be completed. Ask the administrator to check " +
+    "Supabase Authentication email delivery and Custom SMTP settings."
+  );
+}
 
 registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  const role = registerForm.querySelector('input[name="role"]:checked')?.value;
+  // Public registration is deliberately Operator-only. Staff and Administrator
+  // accounts are provisioned centrally; Drivers do not receive login accounts.
+  const role = "operator";
   const fullName = document.getElementById("fullName").value.trim();
   const email = document.getElementById("email").value.trim();
   const contactNumber = document.getElementById("contactNumber").value.trim();
-  const password = document.getElementById("password").value;
-  const confirmPassword = document.getElementById("confirmPassword").value;
+  const password = passwordInput.value;
+  const confirmPassword = confirmPasswordInput.value;
 
   /* VALIDATION */
-  if (!role) {
-    alert("Please select whether you are registering as a Driver or Operator.");
-    return;
-  }
-
   if (!fullName || !email || !contactNumber) {
     alert("Please fill in all the required fields.");
     return;
   }
 
-  if (password.length < 6) {
-    alert("Password must be at least 6 characters long.");
+  if (!passwordMeetsRequirements(password)) {
+    alert(
+      "Password must be at least 8 characters and include an uppercase letter, " +
+      "a lowercase letter, a number, and a symbol."
+    );
+    passwordInput.focus();
     return;
   }
 
   if (password !== confirmPassword) {
     alert("Passwords do not match. Please try again.");
+    confirmPasswordInput.focus();
     return;
   }
 
   submitButton.disabled = true;
   submitButton.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Creating account...';
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-// After the user clicks the confirmation link in their email, send them
-      // back to the login page. login.js will detect the session and sign them
-      // in automatically. Uses the current origin so it works locally or in
-      // any deployed environment.
-      emailRedirectTo: new URL("html/login.html", window.location.href).href,
-      data: {
-        role,
-        full_name: fullName,
-        contact_number: contactNumber,
+  let data;
+  let error;
+  try {
+    ({ data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        // This exact URL must be included in Supabase Authentication >
+        // URL Configuration > Redirect URLs.
+        emailRedirectTo: new URL("./login.html", window.location.href).href,
+        data: {
+          role,
+          full_name: fullName,
+          contact_number: contactNumber,
+        },
       },
-    },
-  });
+    }));
+  } catch (requestError) {
+    showRegistrationError(requestError);
+    submitButton.disabled = false;
+    submitButton.innerHTML = defaultButtonHtml;
+    return;
+  }
 
   if (error) {
-    console.error("Supabase sign-up error:", error);
-    alert(`Registration failed: ${error.message}`);
+    showRegistrationError(error);
     submitButton.disabled = false;
-    submitButton.innerHTML = '<i class="ri-user-add-line"></i> Create Account';
+    submitButton.innerHTML = defaultButtonHtml;
     return;
   }
 
   if (!data?.user) {
     alert("Something went wrong. Please try again.");
     submitButton.disabled = false;
-    submitButton.innerHTML = '<i class="ri-user-add-line"></i> Create Account';
+    submitButton.innerHTML = defaultButtonHtml;
     return;
   }
 
-  /*
-    Insert the profile row directly. If email confirmation is enabled, this may be
-    the primary sign-up and the user row is pending confirmation. In that case we
-    will still redirect and let login guide them after they confirm their email.
-  */
-  const { error: profileInsertError } = await supabase.from("profiles").upsert(
-    {
-      id: data.user.id,
-      role,
-      full_name: fullName,
-      contact_number: contactNumber,
-    },
-    { onConflict: "id" }
-  );
-
-  if (profileInsertError) {
-    console.error("Profile insert error:", profileInsertError);
-    // The auth account was created, but the profiles row could not be written
-    // (usually because supabase/setup-auth.sql has not been run yet). The login
-    // page will still work because it falls back to the role in user metadata.
-  }
-
-  localStorage.setItem("role", role);
-  localStorage.setItem("userId", data.user.id);
+  // The database auth trigger creates the profile from the sign-up metadata.
+  // Do not write profiles directly from the browser: role assignment is
+  // deliberately server-controlled.
 
   if (!data.session) {
     alert(
       "Account created! Please check your email to confirm your account before signing in."
     );
-window.location.href = "login.html";
+    window.location.href = "login.html";
+    return;
+  }
+
+  const { data: profile, error: profileError } = await loadUserProfile(data.user.id);
+  if (profileError || !profile) {
+    await supabase.auth.signOut({ scope: "local" });
+    alert("Account created, but its TFRO profile could not be loaded. Please sign in again.");
+    window.location.replace("login.html");
     return;
   }
 
   alert("Account created successfully!");
-  window.location.replace(
-    role === "operator" ? "operatorportal.html" : "driverportal.html"
-  );
+  window.location.replace(destinationForRole(profile.role));
 });
-

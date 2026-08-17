@@ -18,12 +18,20 @@ create table if not exists public.notifications (
 
 alter table public.notifications enable row level security;
 
--- Make this script safe to re-run: drop existing policies first.
-drop policy if exists "Staff can read all notifications" on public.notifications;
-drop policy if exists "Users can read their own notifications" on public.notifications;
-drop policy if exists "Users can update their own notifications" on public.notifications;
-drop policy if exists "Users can delete their own notifications" on public.notifications;
-drop policy if exists "Staff can create notifications" on public.notifications;
+-- Reset every notification policy first. This also recovers cleanly from
+-- earlier setup runs that created a policy before being interrupted.
+do $$
+declare
+  existing_policy record;
+begin
+  for existing_policy in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'notifications'
+  loop
+    execute format('drop policy if exists %I on public.notifications', existing_policy.policyname);
+  end loop;
+end;
+$$;
 
 -- Staff/admin can read all notifications.
 create policy "Staff can read all notifications"

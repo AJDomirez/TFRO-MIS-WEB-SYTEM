@@ -15,7 +15,7 @@
   />
 </head>
 
-<body>
+<body class="admin-sidebar">
 
 <div class="layout">
 
@@ -25,7 +25,7 @@
     <div class="logo">
       <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
       <div>
-        <h2>TFRO</h2>
+        <h2>TFRO MIS</h2>
         <p>Lucena City</p>
       </div>
     </div>
@@ -257,7 +257,7 @@
       </div>
       <p class="manage-note">
         <i class="ri-shield-check-line"></i>
-        Security-related records (login/logout, approvals, rejections, verifications, assignments, role changes) are protected and will be archived rather than permanently deleted.
+        Deleting selected logs or clearing logs by date permanently removes them and cannot be undone.
       </p>
     </div>
   </div>
@@ -290,7 +290,7 @@
     <div class="modal-body">
       <label for="clearDate">Delete all logs before:</label>
       <input type="date" id="clearDate" class="date-input">
-      <p class="manage-note">Protected security records will be archived instead of deleted.</p>
+      <p class="manage-note">All matching logs will be permanently deleted and cannot be recovered.</p>
       <div class="modal-actions">
         <button class="btn-cancel" data-close="clearModal">Cancel</button>
         <button class="btn-danger" id="confirmClearBtn"><i class="ri-delete-bin-line"></i> Clear Logs</button>
@@ -300,6 +300,7 @@
 </div>
 
 <script type="module" src="../js/auditlog.js"></script>
+<script type="module" src="../js/sidebar-user.js"></script>
 
 <script>
   const role = localStorage.getItem("role");

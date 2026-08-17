@@ -63,7 +63,7 @@ body{
   overflow:hidden;
   background:var(--green-900);
   /* account for the fixed nav so hero content isn't hidden behind it */
-  padding-top:78px;
+  padding-top:64px;
 }
 
 .slides{
@@ -137,7 +137,7 @@ body{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:16px 4%;
+  padding:9px 4%;
   /* semi-transparent glass over the hero */
   background:linear-gradient(180deg, rgba(6,35,26,0.55), rgba(6,35,26,0.14));
   backdrop-filter:blur(6px);
@@ -159,7 +159,7 @@ body{
 
 /* TFRO logo - clean white chip, subtle shadow */
 .tfro-logo{
-  height:46px;
+  height:38px;
   width:auto;
   object-fit:contain;
   border-radius:10px;
@@ -171,7 +171,7 @@ body{
 
 /* Lucena City logo - NO black border, NO dark shadow, original appearance */
 .lucena-logo{
-  height:46px;
+  height:38px;
   width:auto;
   object-fit:contain;
   background:transparent;
@@ -187,7 +187,7 @@ body{
 }
 .brand-text strong{
   display:block;
-  font-size:1.15rem;
+  font-size:0.95rem;
   letter-spacing:1px;
   font-weight:800;
   color:#ffffff;
@@ -269,7 +269,15 @@ body{
   cursor:pointer;
   align-items:center;
   justify-content:center;
+  flex:0 0 42px;
+  padding:0;
+  line-height:1;
+  -webkit-tap-highlight-color:transparent;
+  transition:background-color 0.2s ease, border-color 0.2s ease;
 }
+.hamburger:hover,
+.hamburger:focus-visible{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.75);outline:none;}
+.hamburger i{display:block;line-height:1;}
 
 /* ================= HERO CONTENT ================= */
 .hero-content{
@@ -641,10 +649,22 @@ footer{
     background:rgba(8,38,29,0.97);
     padding:20px 6%;
     gap:18px;
-    display:none;
+    display:flex;
     border-bottom:3px solid var(--yellow-500);
+    visibility:hidden;
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(-8px);
+    transform-origin:top;
+    transition:opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
   }
-.nav-links.open{display:flex;}
+  .nav-links.open{
+    visibility:visible;
+    opacity:1;
+    pointer-events:auto;
+    transform:translateY(0);
+    transition:opacity 0.18s ease, transform 0.18s ease;
+  }
   .nav-cta{display:flex;}
   .hamburger{display:flex;}
 }
@@ -663,6 +683,6 @@ footer{
   .btn{width:100%;justify-content:center;}
   .footer-grid{grid-template-columns:1fr;}
   .section{padding:60px 6%;}
-  .nav{padding:14px 4%;}
+  .nav{padding:9px 4%;}
   .btn-login{display:none;}
 }

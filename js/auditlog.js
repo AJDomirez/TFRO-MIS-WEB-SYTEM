@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { requireRole } from "./auth-guard.js";
 
 /* HELPERS */
 function initials(name = "") {
@@ -34,17 +35,8 @@ const searchInput = document.getElementById("searchInput");
 
 /* ---------- ROLE / ACCESS ---------- */
 async function loadSidebarUser() {
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) {
-    window.location.href = "index.html";
-    return;
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
+  const { user, profile } = await requireRole(["admin", "staff"]);
+  if (!user || !profile) return false;
 
   const fullName = profile?.full_name || user.user_metadata?.full_name || "";
   const role = profile?.role || localStorage.getItem("role") || "";
@@ -58,6 +50,7 @@ async function loadSidebarUser() {
   // Manage Logs is admin only
   const manageBtn = el("manageBtn");
   if (manageBtn) manageBtn.style.display = role === "admin" ? "" : "none";
+  return true;
 }
 
 /* ---------- ACTION TYPES / NORMALIZATION ---------- */
@@ -489,18 +482,11 @@ function clearOlderThan() {
   const cutoff = new Date(dateVal + "T00:00:00");
 
   const toRemove = logs.filter(
-    (l) => !l.is_archived && new Date(l.created_at).getTime() < cutoff.getTime() && !isProtected(l)
+    (l) => !l.is_archived && new Date(l.created_at).getTime() < cutoff.getTime()
   );
-  const protectedCount = logs.filter(
-    (l) => !l.is_archived && new Date(l.created_at).getTime() < cutoff.getTime() && isProtected(l)
-  ).length;
 
   if (!toRemove.length) {
-    alert(
-      protectedCount
-        ? `All ${protectedCount} older record(s) are protected and have been retained.`
-        : "No deletable logs found before that date."
-    );
+    alert("No logs found before that date.");
     el("clearModal").hidden = false;
     return;
   }
@@ -509,7 +495,6 @@ function clearOlderThan() {
   el("clearModal").hidden = true;
   el("confirmMessage").textContent =
     `This will permanently remove ${toRemove.length} audit record(s) before ${formatDateFull(cutoff)}. ` +
-    (protectedCount ? `${protectedCount} protected security record(s) will be retained. ` : "") +
     "This action cannot be undone.";
 
   window.__clearTarget = toRemove.map((l) => l.id);
@@ -523,13 +508,9 @@ function deleteSelected() {
     return;
   }
 
-  const selectedLogs = logs.filter((l) => ids.includes(String(l.id)));
-  const protectedCount = selectedLogs.filter((l) => isProtected(l)).length;
-
   el("confirmModal").hidden = false;
   el("confirmMessage").textContent =
     `This will permanently remove ${ids.length} selected audit record(s). ` +
-    (protectedCount ? `${protectedCount} protected security record(s) will be retained. ` : "") +
     "This action cannot be undone.";
 
   window.__clearTarget = ids;
@@ -542,42 +523,32 @@ async function confirmDelete() {
     return;
   }
 
-  // Archive protected records instead of deleting them
-  const protectedIds = ids.filter((id) => {
-    const log = logs.find((l) => String(l.id) === String(id));
-    return log && isProtected(log);
-  });
-  const deletableIds = ids.filter((id) => {
-    const log = logs.find((l) => String(l.id) === String(id));
-    return !log || !isProtected(log);
-  });
-
-  let archivedCount = 0;
-  if (protectedIds.length) {
-    const { error } = await supabase
-      .from("audit_logs")
-      .update({ is_archived: true })
-      .in("id", protectedIds);
-    if (!error) archivedCount = protectedIds.length;
+  // Request the affected IDs back: with RLS, a delete may otherwise report no
+  // error even when the database was not allowed to remove any rows.
+  const { data: deletedRows, error } = await supabase
+    .from("audit_logs")
+    .delete()
+    .in("id", ids)
+    .select("id");
+  if (error) {
+    alert("Failed to delete logs: " + error.message);
+    return;
   }
 
-  let deletedCount = 0;
-  if (deletableIds.length) {
-    const { error } = await supabase
-      .from("audit_logs")
-      .delete()
-      .in("id", deletableIds);
-    if (!error) deletedCount = deletableIds.length;
+  const deletedIds = new Set((deletedRows || []).map((row) => String(row.id)));
+  if (deletedIds.size !== ids.length) {
+    alert("The selected logs could not all be deleted. Please sign in as an Administrator and run supabase/setup-audit-logs.sql if the issue continues.");
+    await loadLogs();
+    return;
   }
 
   el("confirmModal").hidden = true;
   selectedIds.clear();
   window.__clearTarget = null;
-  alert(
-    `Deleted ${deletedCount} log(s).` +
-    (archivedCount ? ` ${archivedCount} protected security record(s) archived instead.` : "")
-  );
-  loadLogs();
+  // Update the visible list immediately after the database confirms deletion.
+  logs = logs.filter((log) => !deletedIds.has(String(log.id)));
+  updateSummary();
+  renderLogs();
 }
 
 /* ---------- EVENT BINDINGS ---------- */
@@ -611,6 +582,7 @@ function bindEvents() {
 
   // Manage
   el("manageBtn")?.addEventListener("click", openManage);
+  el("deleteSelectedBtn")?.addEventListener("click", deleteSelected);
   el("archiveOldBtn")?.addEventListener("click", archiveOldLogs);
   el("clearOlderBtn")?.addEventListener("click", openClearModal);
   el("clearAllBtn")?.addEventListener("click", deleteSelected);
@@ -645,5 +617,8 @@ function bindEvents() {
 }
 
 bindEvents();
-loadSidebarUser();
-loadLogs();
+(async () => {
+  const hasAccess = await loadSidebarUser();
+  if (!hasAccess) return;
+  await loadLogs();
+})();

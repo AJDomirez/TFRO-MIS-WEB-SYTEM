@@ -2,8 +2,10 @@
 -- TFRO-MIS Security Linter Remediation
 -- Fixes the Supabase database linter warnings:
 --   1. rls_policy_always_true  (audit_logs INSERT policy)
---   2. anon_security_definer_function_executable (is_tfro_staff)
---   3. authenticated_security_definer_function_executable (is_tfro_staff)
+--
+-- SECURITY DEFINER function hardening is now handled comprehensively by
+-- 20260814_harden_security_definer_functions.sql. Run that migration after
+-- this file and the other setup scripts.
 -- Run this once in the Supabase SQL Editor AFTER the other setup scripts.
 -- =========================================================
 
@@ -31,28 +33,7 @@ with check (
 );
 
 -- =========================================================
--- 2) FIX: is_tfro_staff() is SECURITY DEFINER and executable by anon
---    anon role should NOT be able to call it. Revoke EXECUTE from anon.
--- =========================================================
-
-revoke execute on function public.is_tfro_staff() from anon;
-
--- =========================================================
--- 3) is_tfro_staff() executable by authenticated (SECURITY DEFINER)
---    This function is REQUIRED by the app for role checks and by the
---    RLS policies themselves. It must remain callable by authenticated.
---    To reduce risk, we keep SECURITY DEFINER but ensure only the
---    authenticated role can call it (anon revoked above) and the
---    function only reads the profiles table (no writes).
---    Recommendation: keep it callable by authenticated only.
--- =========================================================
-
--- Ensure ONLY authenticated can execute (double-check anon/service_role).
-revoke execute on function public.is_tfro_staff() from anon, public;
-grant execute on function public.is_tfro_staff() to authenticated;
-
--- =========================================================
--- 4) NOTE: "Leaked Password Protection Disabled"
+-- 2) NOTE: "Leaked Password Protection Disabled"
 --    This is an Auth project setting, not a SQL change.
 --    Enable it manually in Supabase Dashboard:
 --    Authentication > Providers > Email > "Prevent an attacker from

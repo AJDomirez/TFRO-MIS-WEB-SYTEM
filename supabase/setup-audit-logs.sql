@@ -62,4 +62,3 @@ create policy "Allow admins update audit_logs"
         and p.role = 'admin'
     )
   );
-</content>

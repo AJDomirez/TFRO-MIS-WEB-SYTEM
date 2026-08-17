@@ -14,7 +14,7 @@
     rel="stylesheet"
   />
 </head>
-<body>
+<body class="admin-sidebar">
 
 <div class="dashboard-container">
 
@@ -25,7 +25,7 @@
     <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
 
 <div>
-  <h2>TFRO</h2>
+  <h2>TFRO MIS</h2>
   <p>Lucena City</p>
 </div>
 
@@ -178,6 +178,12 @@
           <option value="suspended">Suspended</option>
         </select>
 
+      </div>
+
+      <div class="date-export-controls">
+        <label>Start Date<input type="date" id="startDate"></label>
+        <label>End Date<input type="date" id="endDate"></label>
+        <button type="button" class="csv-btn" id="exportCsvBtn"><i class="ri-file-excel-2-line"></i> Save CSV</button>
       </div>
 
       <button class="add-btn" id="addOperatorBtn">

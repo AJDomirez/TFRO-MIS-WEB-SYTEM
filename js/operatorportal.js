@@ -1,12 +1,17 @@
 import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
+import { requireRole } from "./auth-guard.js";
 
-/* ROLE PROTECTION */
-const role = localStorage.getItem("role");
-if (role !== "operator") {
-  alert("Access Denied");
-  window.location.href = "index.html";
-}
+/* ROLE PROTECTION — server-verified, not localStorage */
+let currentUser = null;
+let currentProfile = null;
+let currentOperatorRecord = null;
+requireRole(["operator"]).then(({ user, profile }) => {
+  if (!user) return;
+  currentUser = user;
+  currentProfile = profile;
+  loadPortal();
+});
 
 /* HELPERS */
 function initials(name = "") {
@@ -43,10 +48,10 @@ function loadViolations(violations) {
   violations.forEach((v) => {
     table.innerHTML += `
       <tr>
-        <td>${v.violation_type || "—"}</td>
+        <td>${escapeHTML(v.violation_type || "—")}</td>
         <td>${v.occurred_at ? new Date(v.occurred_at).toLocaleDateString() : "—"}</td>
         <td>${money(v.penalty)}</td>
-        <td><span class="badge">${v.status || "—"}</span></td>
+        <td><span class="badge">${escapeHTML(v.status || "—")}</span></td>
       </tr>
     `;
   });
@@ -54,29 +59,40 @@ function loadViolations(violations) {
 
 /* LOAD DATA */
 async function loadPortal() {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) {
-    window.location.href = "index.html";
-    return;
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
+  const user = currentUser;
+  const profile = currentProfile;
+  if (!user) return;
 
   const fullName = profile?.full_name || user.user_metadata?.full_name || "Operator";
+
+  // Driver ownership is linked to the server-controlled operator record, not
+  // to an operator name supplied by the browser.
+  const { data: operatorRows, error: operatorError } = await supabase
+    .from("operators")
+    .select("id, user_id, full_name, status, verified")
+    .eq("user_id", user.id)
+    .eq("verified", true)
+    .eq("status", "active")
+    .order("verified", { ascending: false })
+    .order("id", { ascending: true });
+
+  if (operatorError) console.error("Could not load operator record:", operatorError);
+  currentOperatorRecord = (operatorRows || [])[0] || null;
+
+  if (!currentOperatorRecord) {
+    setDriverFormMessage(
+      "Your Operator record is not ready yet. Ask TFRO Staff to approve and link your Operator account before submitting a Driver."
+    );
+    const submitDriverBtn = document.getElementById("submitDriverBtn");
+    if (submitDriverBtn) submitDriverBtn.disabled = true;
+  }
 
   /* Sidebar + welcome */
   setText("userName", fullName);
   setText("userAvatar", initials(fullName));
   setText("welcomeName", fullName);
 
-/* Franchise (prefer FK operator_id, fallback to operator name) */
+  /* Franchise (prefer FK operator_id, fallback to operator name) */
   let franchise = null;
   const { data: franByUserId } = await supabase
     .from("franchises")
@@ -126,7 +142,7 @@ async function loadPortal() {
     }
   }
 
-/* Violations */
+  /* Violations */
   const { data: violations } = await supabase
     .from("violations")
     .select("violation_type, occurred_at, penalty, status")
@@ -134,70 +150,128 @@ async function loadPortal() {
     .eq("subject_type", "operator");
   loadViolations(violations || []);
 
-/* Change motor history */
+  /* Change motor history */
   loadChangeMotorHistory(user.id);
 
-  /* Assigned drivers */
-  loadAssignedDrivers(user.id);
+  /* Operator-owned Driver applications */
+  loadAssignedDrivers();
 }
 
 /* ============================================================
-   ASSIGNED DRIVERS
+   OPERATOR-OWNED DRIVER APPLICATIONS
    ============================================================ */
-async function loadAssignedDrivers(userId) {
+async function loadAssignedDrivers() {
   const table = document.getElementById("assignedDriversTable");
   if (!table) return;
 
-  // Find operator row(s) for this user
-  const { data: operatorRows } = await supabase
-    .from("operators")
-    .select("id")
-    .eq("user_id", userId);
-  const operatorIds = (operatorRows || []).map((o) => o.id);
-
-  // Look up active assignments by operator_user_id OR operator_id
-  let assignments = [];
-  if (operatorIds.length) {
-    const { data: byOpId } = await supabase
-      .from("driver_assignments")
-      .select("*, drivers(full_name, license_number)")
-      .in("operator_id", operatorIds)
-      .eq("status", "active");
-    assignments = assignments.concat(byOpId || []);
-  }
-  const { data: byUser } = await supabase
-    .from("driver_assignments")
-    .select("*, drivers(full_name, license_number)")
-    .eq("operator_user_id", userId)
-    .eq("status", "active");
-  assignments = assignments.concat(byUser || []);
-
-  // Deduplicate by id
-  const seen = new Set();
-  const unique = assignments.filter((a) => {
-    if (seen.has(a.id)) return false;
-    seen.add(a.id);
-    return true;
-  });
-
-  if (!unique.length) {
+  if (!currentOperatorRecord) {
     table.innerHTML =
-      '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">No drivers assigned yet.</td></tr>';
+      '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">Operator approval is required before adding a Driver.</td></tr>';
     return;
   }
 
-  table.innerHTML = unique.map((a) => {
-    const d = a.drivers || {};
+  const { data: drivers, error } = await supabase
+    .from("drivers")
+    .select("id, full_name, license_number, license_status, created_at")
+    .eq("operator_id", currentOperatorRecord.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Could not load Driver applications:", error);
+    table.innerHTML =
+      '<tr><td colspan="4" style="text-align:center;color:#b91c1c;">Could not load Driver applications.</td></tr>';
+    return;
+  }
+
+  if (!drivers?.length) {
+    table.innerHTML =
+      '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">No Driver applications yet.</td></tr>';
+    return;
+  }
+
+  table.innerHTML = drivers.map((driver) => {
+    const status = String(driver.license_status || "not_verified");
+    const label = status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const badgeClass = status === "verified" ? "approved" : "pending";
     return `
       <tr>
-        <td>${escapeHTML(d.full_name || "—")}</td>
-        <td>${escapeHTML(d.license_number || "—")}</td>
-        <td>${a.franchise_id ? "—" : "—"}</td>
-        <td>${a.assigned_at ? new Date(a.assigned_at).toLocaleDateString() : "—"}</td>
+        <td>${escapeHTML(driver.full_name || "—")}</td>
+        <td>${escapeHTML(driver.license_number || "—")}</td>
+        <td><span class="badge ${badgeClass}">${escapeHTML(label)}</span></td>
+        <td>${driver.created_at ? new Date(driver.created_at).toLocaleDateString() : "—"}</td>
       </tr>
     `;
   }).join("");
 }
+
+function setDriverFormMessage(message) {
+  const element = document.getElementById("driverFormMessage");
+  if (!element) return;
+  element.textContent = message || "";
+  element.hidden = !message;
+}
+
+async function submitDriverApplication(event) {
+  event.preventDefault();
+  if (!currentUser || !currentOperatorRecord) {
+    setDriverFormMessage(
+      "Your linked Operator record is required. Ask TFRO Staff to approve your Operator account."
+    );
+    return;
+  }
+
+  const form = event.currentTarget;
+  const entry = Object.fromEntries(new FormData(form));
+  const button = document.getElementById("submitDriverBtn");
+  setDriverFormMessage("");
+  button.disabled = true;
+  button.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Submitting...';
+
+  const driverRecord = {
+    full_name: entry.full_name.trim(),
+    license_number: entry.license_number.trim().toUpperCase(),
+    operator_name: currentOperatorRecord.full_name,
+    contact_number: entry.contact_number.trim(),
+    address: entry.address.trim(),
+    license_type: entry.license_type,
+    license_expiration: entry.license_expiration,
+    operator_id: currentOperatorRecord.id,
+    user_id: null,
+    franchise_id: null,
+    violation_count: 0,
+    compliance: "non-compliant",
+    license_status: "not_verified",
+    license_verified_at: null,
+  };
+
+  const { error } = await supabase.from("drivers").insert(driverRecord);
+  button.disabled = false;
+  button.innerHTML = '<i class="ri-user-add-line"></i> Submit Driver Application';
+
+  if (error) {
+    console.error("Driver application error:", error);
+    setDriverFormMessage(
+      error.code === "23505"
+        ? "That Driver's license number is already registered."
+        : `Could not submit the Driver application: ${error.message}`
+    );
+    return;
+  }
+
+  form.reset();
+  alert("Driver application submitted to TFRO Staff for verification.");
+  logAudit({
+    action: "Submitted Driver Application",
+    actionType: "create",
+    record: driverRecord.full_name,
+    description: `Submitted Driver ${driverRecord.full_name} with license ${driverRecord.license_number} for TFRO verification.`,
+  });
+  await loadAssignedDrivers();
+}
+
+document
+  .getElementById("driverApplicationForm")
+  ?.addEventListener("submit", submitDriverApplication);
 
 /* ============================================================
    CHANGE MOTOR / MTOP
@@ -305,8 +379,7 @@ async function submitChangeMotor() {
   let storagePath = null;
   let fileName = null;
   if (file) {
-    const safe = (franchise.franchise_number || "tfro").replace(/[^A-Za-z0-9_-]/g, "_");
-    storagePath = "change-motor/" + safe + "/" + Date.now() + "-" + file.name;
+    storagePath = "change-motor/" + franchise.id + "/" + Date.now() + "-" + file.name;
     const { error: uploadError } = await supabase.storage
       .from("franchise-documents")
       .upload(storagePath, file);
@@ -348,22 +421,8 @@ async function submitChangeMotor() {
     return;
   }
 
-  // Notify admins/staff (best-effort)
-  try {
-    const { data: admins } = await supabase.from("profiles").select("id").in("role", ["admin", "staff"]);
-    if (admins) {
-      for (const a of admins) {
-        await supabase.from("notifications").insert({
-          user_id: a.id,
-          message: "New Change Motor/MTOP request from " + (window.__currentUser || "an operator") + " (" + requestCode + ").",
-          link: "motorequests.html",
-          type: "info",
-        });
-      }
-    }
-  } catch (e) {
-    console.error("Notify admins error:", e);
-  }
+  // A database trigger notifies admin/staff without granting operators access
+  // to create notifications for other users.
 
   btn.disabled = false;
   btn.innerHTML = '<i class="ri-send-plane-line"></i> Submit Request';
@@ -373,7 +432,7 @@ async function submitChangeMotor() {
   document.getElementById("cmBrand").value = "";
   document.getElementById("cmSerial").value = "";
   fileInput.value = "";
-alert("Change Motor request submitted for review.");
+  alert("Change Motor request submitted for review.");
   logAudit({
     action: "Submitted Change Motor Request",
     actionType: "create",
@@ -395,6 +454,3 @@ logoutBtn.addEventListener("click", async () => {
   localStorage.removeItem("userId");
   window.location.href = "index.html";
 });
-
-loadPortal();
-

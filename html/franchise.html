@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TFRO-MIS Franchise Records</title>
 
-  <link rel="stylesheet" href="../css/franchise.css">
+  <link rel="stylesheet" href="../css/franchise.css?v=20260817-4">
   <link rel="stylesheet" href="../css/tfro-theme.css">
 
   <!-- Remix Icons -->
@@ -15,7 +15,7 @@
   />
 </head>
 
-<body>
+<body class="admin-sidebar">
 
 <div class="layout">
 
@@ -26,7 +26,7 @@
     <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
 
     <div>
-      <h2>TFRO-MIS</h2>
+      <h2>TFRO MIS</h2>
       <p>Lucena City</p>
     </div>
   </div>
@@ -132,7 +132,7 @@
         <p>Manage official franchise records and renewals</p>
       </div>
 
-      <button class="new-btn" id="newApplicationBtn">
+      <button type="button" class="new-btn" id="newApplicationBtn" aria-controls="applicationPanel" aria-expanded="false">
         <i class="ri-add-line"></i>
         Add Franchise
       </button>
@@ -159,6 +159,14 @@
           Name — Registered Operator / Franchise Owner
           <input name="operator_name" id="operator_name" required placeholder="Full name of the operator" autocomplete="organization">
           <span class="field-error" id="err-operator_name"></span>
+        </label>
+
+        <label class="full">
+          Linked Operator Portal Account
+          <select name="operator_id" id="operator_id">
+            <option value="">Not linked</option>
+          </select>
+          <small>Required before the Operator can submit renewal, Change Motor, or Driver requests.</small>
         </label>
 
         <!-- Date of Registration: Month / Day / Year -->
@@ -222,16 +230,15 @@
         </label>
 
         <label>
-          Application Type
+          Franchise Service
           <select name="application_type">
-            <option value="new">New application</option>
-            <option value="renewal">Renewal</option>
+            <option value="renewal" selected>Franchise Renewal</option>
           </select>
         </label>
 
         <label>
           Application Date
-          <input name="application_date" type="date">
+          <input name="application_date" id="application_date" type="date" required>
         </label>
 
         <label>
@@ -244,7 +251,8 @@
           <select name="status">
             <option value="pending">Pending</option>
             <option value="active">Approved</option>
-            <option value="rejected">Rejected</option>
+            <option value="suspended">Suspended</option>
+            <option value="revoked">Revoked</option>
             <option value="expired">Expired</option>
           </select>
         </label>
@@ -269,9 +277,16 @@
         <option value="all">All Status</option>
         <option value="active">Approved</option>
         <option value="pending">Pending</option>
-        <option value="rejected">Rejected</option>
+        <option value="suspended">Suspended</option>
+        <option value="revoked">Revoked</option>
         <option value="expired">Expired</option>
       </select>
+
+      <div class="date-export-controls">
+        <label>Start Date<input type="date" id="startDate"></label>
+        <label>End Date<input type="date" id="endDate"></label>
+        <button type="button" class="csv-btn" id="exportCsvBtn"><i class="ri-file-excel-2-line"></i> Save CSV</button>
+      </div>
 
     </div>
 
@@ -345,6 +360,14 @@
           Name — Registered Operator / Franchise Owner
           <input name="operator_name" id="edit_operator_name" required placeholder="Full name of the operator" autocomplete="organization">
           <span class="field-error" id="err-edit-operator_name"></span>
+        </label>
+
+        <label class="full">
+          Linked Operator Portal Account
+          <select name="operator_id" id="edit_operator_id">
+            <option value="">Not linked</option>
+          </select>
+          <small>Link the franchise to the correct authenticated Operator.</small>
         </label>
 
         <div class="date-field full">
@@ -429,7 +452,7 @@
 <!-- SUCCESS TOAST -->
 <div class="toast" id="toast" hidden></div>
 
-<script type="module" src="../js/franchise.js"></script>
+<script type="module" src="../js/franchise.js?v=20260817-4"></script>
 <script type="module" src="../js/sidebar-user.js"></script>
 <script>
   const role = localStorage.getItem("role");

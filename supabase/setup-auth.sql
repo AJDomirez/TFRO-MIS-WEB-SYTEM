@@ -14,23 +14,26 @@ alter table public.profiles add column if not exists contact_number text;
 
 alter table public.profiles enable row level security;
 
--- Make this script safe to re-run: drop existing policies first.
-drop policy if exists "Users can read their own profile" on public.profiles;
-drop policy if exists "Users can insert their own profile" on public.profiles;
-drop policy if exists "Users can update their own profile" on public.profiles;
+-- Reset every profile policy first. This avoids duplicate-policy errors when
+-- an earlier setup/migration was run only partially.
+do $$
+declare
+  existing_policy record;
+begin
+  for existing_policy in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'profiles'
+  loop
+    execute format('drop policy if exists %I on public.profiles', existing_policy.policyname);
+  end loop;
+end;
+$$;
 
 create policy "Users can read their own profile"
 on public.profiles
 for select
 to authenticated
 using ((select auth.uid()) = id);
-
--- Allow users to insert their own profile during registration.
-create policy "Users can insert their own profile"
-on public.profiles
-for insert
-to authenticated
-with check ((select auth.uid()) = id);
 
 -- Allow users to update their own profile.
 create policy "Users can update their own profile"
@@ -47,13 +50,20 @@ create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
+declare
+  requested_role text := coalesce(new.raw_user_meta_data->>'role', 'driver');
 begin
+  -- Public registration can never grant staff or administrator access.
+  if requested_role not in ('driver', 'operator') then
+    requested_role := 'driver';
+  end if;
+
   insert into public.profiles (id, role, full_name, contact_number)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'role', 'driver'),
+    requested_role,
     new.raw_user_meta_data->>'full_name',
     new.raw_user_meta_data->>'contact_number'
   )
@@ -66,6 +76,14 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
 after insert on auth.users
 for each row execute procedure public.handle_new_user();
+
+-- Browser clients may read their own profile and update only non-privileged
+-- fields. Profile creation and role assignment belong exclusively to the
+-- trusted auth trigger above.
+revoke all on table public.profiles from anon, authenticated;
+grant select on table public.profiles to authenticated;
+grant update (full_name, contact_number) on table public.profiles to authenticated;
+revoke all on function public.handle_new_user() from public, anon, authenticated;
 
 -- After creating users in Authentication > Users, add their roles like this:
 -- insert into public.profiles (id, role)

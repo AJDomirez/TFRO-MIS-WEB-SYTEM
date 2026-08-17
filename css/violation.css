@@ -309,3 +309,29 @@ th{
   background:#dbeafe;
 }
 
+.actions button[data-action="edit"]{
+  color:#0f7658;
+  border:1px solid #b7dccc;
+  background:#effaf5;
+}
+
+.violation-toast{
+  position:fixed;
+  right:24px;
+  bottom:24px;
+  z-index:1200;
+  max-width:360px;
+  padding:13px 17px;
+  border-left:4px solid #f4c430;
+  border-radius:9px;
+  background:#0f604a;
+  color:#fff;
+  box-shadow:0 12px 30px rgba(15,45,35,.25);
+  font-size:13px;
+  font-weight:700;
+}
+
+.violation-toast[hidden]{
+  display:none;
+}
+

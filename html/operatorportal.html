@@ -26,7 +26,7 @@
       <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
 
       <div>
-        <h2>TFRO</h2>
+        <h2>TFRO MIS</h2>
         <p>Lucena City</p>
       </div>
     </div>
@@ -37,6 +37,20 @@
         <a href="operatorportal.html">
           <i class="ri-file-list-3-line"></i>
           My Franchise
+        </a>
+      </li>
+
+      <li>
+        <a href="renewal.html">
+          <i class="ri-refresh-line"></i>
+          Franchise Renewal
+        </a>
+      </li>
+
+      <li>
+        <a href="notification.html">
+          <i class="ri-notification-3-line"></i>
+          Notifications
         </a>
       </li>
 
@@ -65,9 +79,9 @@
 
       </div>
 
-      <button class="logout-btn" id="logoutBtn">
+      <a class="logout-btn" id="logoutBtn" href="logout.html" aria-label="Sign out">
         <i class="ri-logout-box-r-line"></i>
-      </button>
+      </a>
 
     </div>
 
@@ -98,6 +112,25 @@
       </span>
 
     </div>
+
+    <!-- APPLICATION ACTIONS -->
+    <section class="operator-actions" aria-label="Operator applications">
+      <div class="operator-actions-heading">
+        <div><h3>Applications</h3><p>Start or track your TFRO requests.</p></div>
+        <a href="notification.html" class="notification-link"><i class="ri-notification-3-line"></i> View Notifications</a>
+      </div>
+      <div class="operator-action-grid">
+        <a href="renewal.html" class="operator-action-card">
+          <i class="ri-refresh-line"></i><div><strong>Renew Franchise</strong><span>Three-year franchise and MTOP renewal</span></div><i class="ri-arrow-right-line"></i>
+        </a>
+        <a href="#changeMotorCard" class="operator-action-card">
+          <i class="ri-settings-5-line"></i><div><strong>Change Motor</strong><span>Submit engine, chassis, or plate changes</span></div><i class="ri-arrow-right-line"></i>
+        </a>
+        <a href="#driverApplicationCard" class="operator-action-card">
+          <i class="ri-user-add-line"></i><div><strong>Add Driver</strong><span>Apply and submit Driver credentials</span></div><i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+    </section>
 
     <!-- FRANCHISE DETAILS -->
     <div class="info-card">
@@ -291,12 +324,67 @@
 
 </div>
 
-    <!-- ASSIGNED DRIVERS -->
+    <!-- DRIVER APPLICATION -->
+    <div class="table-card" id="driverApplicationCard">
+      <div class="card-header">
+        <div>
+          <h3>Apply a Driver</h3>
+          <p class="driver-application-note">
+            Submit the Driver's identity and license credentials for TFRO review.
+            Drivers do not receive an email or password and cannot sign in.
+          </p>
+        </div>
+        <span class="badge pending">Operator submission</span>
+      </div>
+
+      <form id="driverApplicationForm">
+        <div class="driver-form-grid">
+          <div class="driver-field">
+            <label for="driverFullName">Full Name</label>
+            <input id="driverFullName" name="full_name" type="text" required>
+          </div>
+          <div class="driver-field">
+            <label for="driverLicenseNumber">Driver's License Number</label>
+            <input id="driverLicenseNumber" name="license_number" type="text" required>
+          </div>
+          <div class="driver-field">
+            <label for="driverLicenseType">License Type</label>
+            <select id="driverLicenseType" name="license_type" required>
+              <option value="">Select license type</option>
+              <option value="Professional">Professional</option>
+              <option value="Non-Professional">Non-Professional</option>
+              <option value="Student Permit">Student Permit</option>
+            </select>
+          </div>
+          <div class="driver-field">
+            <label for="driverLicenseExpiration">License Expiration</label>
+            <input id="driverLicenseExpiration" name="license_expiration" type="date" required>
+          </div>
+          <div class="driver-field">
+            <label for="driverContactNumber">Contact Number</label>
+            <input id="driverContactNumber" name="contact_number" type="tel" pattern="[0-9+\-\s()]{7,15}" required>
+          </div>
+          <div class="driver-field driver-field-wide">
+            <label for="driverAddress">Address</label>
+            <input id="driverAddress" name="address" type="text" required>
+          </div>
+        </div>
+        <div class="driver-form-message" id="driverFormMessage" hidden></div>
+        <div class="driver-form-actions">
+          <button class="add-btn" id="submitDriverBtn" type="submit">
+            <i class="ri-user-add-line"></i>
+            Submit Driver Application
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- OPERATOR-OWNED DRIVERS -->
     <div class="table-card" id="assignedDriversCard">
 
       <div class="card-header">
-        <h3>Assigned Drivers</h3>
-        <span class="badge approved">Active</span>
+        <h3>My Driver Applications</h3>
+        <span class="badge approved">Operator-owned</span>
       </div>
 
       <table>
@@ -304,13 +392,13 @@
           <tr>
             <th>Driver Name</th>
             <th>Driver's License #</th>
-            <th>Status</th>
-            <th>Assigned Date</th>
+            <th>Verification Status</th>
+            <th>Date Applied</th>
           </tr>
         </thead>
         <tbody id="assignedDriversTable">
           <tr>
-            <td colspan="4" style="text-align:center;color:#94a3b8;">No drivers assigned yet.</td>
+            <td colspan="4" style="text-align:center;color:#94a3b8;">No Driver applications yet.</td>
           </tr>
         </tbody>
       </table>

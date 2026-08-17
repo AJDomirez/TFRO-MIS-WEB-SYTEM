@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store">
+  <title>Signing Out - TFRO MIS</title>
+</head>
+<body>
+  <p>Signing out...</p>
+  <script>
+    (() => {
+      const authStorageKey = "sb-nfbkolqnhlejcitjeagv-auth-token";
+      for (const storage of [window.localStorage, window.sessionStorage]) {
+        storage.removeItem("role");
+        storage.removeItem("userId");
+        Object.keys(storage)
+          .filter((key) => key === authStorageKey || key.startsWith(`${authStorageKey}.`))
+          .forEach((key) => storage.removeItem(key));
+      }
+      window.location.replace("index.html");
+    })();
+  </script>
+</body>
+</html>

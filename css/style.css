@@ -230,6 +230,67 @@ body{
   background:#e2eae5;
 }
 
+.password-requirements{
+  margin-top:10px;
+  padding:10px 12px;
+  border:1px solid #dbe6df;
+  border-radius:8px;
+  background:#f8faf9;
+  color:#52645c;
+  font-size:12px;
+  line-height:1.45;
+}
+
+.password-requirements strong{
+  display:block;
+  margin-bottom:5px;
+  color:#1c3a2e;
+}
+
+.password-requirements ul{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:3px 12px;
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+
+.password-requirements li{
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+.password-requirements li i{
+  flex:0 0 auto;
+  color:#b42318;
+}
+
+.password-requirements li.met{
+  color:#146a4f;
+}
+
+.password-requirements li.met i{
+  color:#178a5e;
+}
+
+.password-match-status{
+  display:block;
+  min-height:18px;
+  margin-top:6px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.password-match-status.match{
+  color:#147a55;
+}
+
+.password-match-status.no-match{
+  color:#b42318;
+}
+
 .login-btn{
   width:100%;
   padding:14px;
@@ -274,6 +335,12 @@ body{
   max-width:480px;
   max-height:90vh;
   overflow-y:auto;
+}
+
+@media (max-width:520px){
+  .password-requirements ul{
+    grid-template-columns:1fr;
+  }
 }
 
 .switch-link{

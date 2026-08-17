@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { requireRole } from "./auth-guard.js";
 
 /* HELPERS */
 function initials(name = "") {
@@ -25,17 +26,8 @@ const totalCount = document.getElementById("totalCount");
 
 /* SIDEBAR USER */
 async function loadSidebarUser() {
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) {
-    window.location.href = "index.html";
-    return null;
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
+  const { user, profile } = await requireRole(["admin", "staff", "operator"]);
+  if (!user || !profile) return null;
 
   const fullName = profile?.full_name || user.user_metadata?.full_name || "";
   const role = profile?.role || localStorage.getItem("role") || "";
@@ -90,6 +82,8 @@ function renderNotifications() {
 
         <div class="notification-message">${escapeHtml(n.message)}</div>
 
+        ${n.link ? `<button class="notification-view" data-link="${escapeHtml(n.link)}" data-id="${n.id}">View Request <i class="ri-arrow-right-line"></i></button>` : ""}
+
       </div>
 
       <button class="close-btn" data-id="${n.id}">
@@ -105,6 +99,14 @@ function renderNotifications() {
 
   container.querySelectorAll(".close-btn").forEach((btn) => {
     btn.addEventListener("click", () => removeNotification(Number(btn.dataset.id)));
+  });
+  container.querySelectorAll(".notification-view").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const link = btn.dataset.link || "";
+      if (!/^[a-z0-9_-]+\.html(?:[?#].*)?$/i.test(link)) return;
+      await supabase.from("notifications").update({ is_read: true }).eq("id", Number(btn.dataset.id));
+      window.location.href = link;
+    });
   });
 }
 
@@ -175,6 +177,9 @@ if (logoutBtn) {
   });
 }
 
-loadSidebarUser();
-loadNotifications();
+(async () => {
+  const user = await loadSidebarUser();
+  if (!user) return;
+  await loadNotifications();
+})();
 

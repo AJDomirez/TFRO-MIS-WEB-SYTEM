@@ -1,7 +1,10 @@
 import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
+import { requireRole } from "./auth-guard.js";
+import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
 
 let franchises = [];
+let operatorAccounts = [];
 let editingId = null;
 let deleteTargetId = null;
 
@@ -34,6 +37,12 @@ function formatRegistrationDate(row) {
   const y = Number(row.registration_year);
   if (m && d && y && MONTH_NAMES[m]) return `${MONTH_NAMES[m]} ${d}, ${y}`;
   return "—";
+}
+
+function todayForInput() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
 }
 
 /* ---------- Toast ---------- */
@@ -138,17 +147,14 @@ function validateCommon(entry, errPrefix) {
 }
 
 /* ---------- Table rendering ---------- */
-function renderTable() {
-  const table = el("franchiseTable");
+function filteredFranchises() {
   const searchInput = el("searchInput");
   const statusFilter = el("statusFilter");
-  if (!table) return;
-
   const term = searchInput ? searchInput.value.trim().toLowerCase() : "";
   const filter = statusFilter ? statusFilter.value : "all";
-
-  const rows = franchises.filter((row) => {
+  return franchises.filter((row) => {
     if (row.is_archived) return false;
+    if (!isWithinDateRange(row.application_date || row.created_at)) return false;
     const matchesStatus = filter === "all" || displayStatus(row.status) === filter;
     if (!term) return matchesStatus;
     const searchable = [
@@ -163,6 +169,12 @@ function renderTable() {
     ].map((v) => (v || "").toLowerCase());
     return matchesStatus && searchable.some((value) => value.includes(term));
   });
+}
+
+function renderTable() {
+  const table = el("franchiseTable");
+  if (!table) return;
+  const rows = filteredFranchises();
 
   table.innerHTML = rows.length ? rows.map((row) => {
     const status = displayStatus(row.status);
@@ -201,12 +213,32 @@ async function loadFranchises() {
   renderTable();
 }
 
+async function loadOperatorAccounts() {
+  const { data, error } = await supabase
+    .from("operators")
+    .select("user_id, full_name, verified, status")
+    .not("user_id", "is", null)
+    .eq("verified", true)
+    .eq("status", "active")
+    .order("full_name");
+  if (error) throw error;
+  const seen = new Set();
+  operatorAccounts = (data || []).filter((row) => {
+    if (seen.has(row.user_id)) return false;
+    seen.add(row.user_id);
+    return true;
+  });
+  const options = '<option value="">Not linked</option>' + operatorAccounts.map((row) =>
+    `<option value="${escapeHtml(row.user_id)}">${escapeHtml(row.full_name)}</option>`
+  ).join("");
+  if (el("operator_id")) el("operator_id").innerHTML = options;
+  if (el("edit_operator_id")) el("edit_operator_id").innerHTML = options;
+}
+
 async function verifyAccess() {
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) return window.location.replace("index.html");
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", sessionData.session.user.id).single();
-  if (!profile || !["admin", "staff"].includes(profile.role)) { await supabase.auth.signOut(); return window.location.replace("index.html"); }
-  await loadFranchises();
+  const { user } = await requireRole(["admin", "staff"]);
+  if (!user) return;
+  await Promise.all([loadFranchises(), loadOperatorAccounts()]);
 }
 
 /* ---------- Add form ---------- */
@@ -217,6 +249,7 @@ function readAddForm() {
     franchise_number: (entry.franchise_number || "").trim(),
     previous_registration: (entry.previous_registration || "").trim(),
     operator_name: (entry.operator_name || "").trim(),
+    operator_id: entry.operator_id || null,
     registration_month: entry.registration_month ? Number(entry.registration_month) : null,
     registration_day: entry.registration_day ? Number(entry.registration_day) : null,
     registration_year: entry.registration_year ? Number(entry.registration_year) : null,
@@ -226,8 +259,8 @@ function readAddForm() {
     plate_number: (entry.plate_number || "").trim().toUpperCase(),
     contact_number: (entry.contact_number || "").trim(),
     route: (entry.route || "").trim(),
-    application_type: entry.application_type || "new",
-    application_date: entry.application_date || null,
+    application_type: "renewal",
+    application_date: entry.application_date || todayForInput(),
     expiration_date: entry.expiration_date || null,
     status: entry.status || "pending",
   };
@@ -235,7 +268,10 @@ function readAddForm() {
 
 function resetAddForm() {
   const form = el("franchiseForm");
-  if (form) form.reset();
+  if (!form) return;
+  form.reset();
+  const applicationDate = el("application_date");
+  if (applicationDate) applicationDate.value = todayForInput();
 }
 
 function openAddForm() {
@@ -248,18 +284,29 @@ function openAddForm() {
   if (saveBtn) saveBtn.textContent = "Save Franchise";
   const panel = el("applicationPanel");
   if (panel) {
-    panel.hidden = false;
+    panel.removeAttribute("hidden");
+    el("newApplicationBtn")?.setAttribute("aria-expanded", "true");
     panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 }
 
-function onAddSubmit(event) {
+async function onAddSubmit(event) {
   event.preventDefault();
   clearAllErrors("err-");
   const entry = readAddForm();
   if (!validateCommon(entry, "err")) return;
 
-  supabase.from("franchises").insert({ ...entry, is_archived: false }).then(({ error }) => {
+  const saveButton = el("saveBtn");
+  if (saveButton) {
+    saveButton.disabled = true;
+    saveButton.textContent = "Saving...";
+  }
+  try {
+    const { data: savedFranchise, error } = await supabase
+      .from("franchises")
+      .insert({ ...entry, is_archived: false })
+      .select("*")
+      .single();
     if (error) {
       if (error.code === "23505") {
         setFieldError("err-franchise_number", el("franchise_number"), "This Fn# already exists. Use a unique franchise number.");
@@ -268,18 +315,28 @@ function onAddSubmit(event) {
       }
       return;
     }
+    franchises.unshift(savedFranchise);
     resetAddForm();
     const panel = el("applicationPanel");
     if (panel) panel.hidden = true;
-    loadFranchises();
+    el("newApplicationBtn")?.setAttribute("aria-expanded", "false");
+    renderTable();
     showToast("Franchise added successfully.");
-    logAudit({
+    void logAudit({
       action: "Created Franchise",
       actionType: "create",
       record: entry.franchise_number,
       description: `Created franchise record ${entry.franchise_number} for ${entry.operator_name}.`,
     });
-  });
+  } catch (error) {
+    console.error("Unexpected franchise save error:", error);
+    alert(`Could not save franchise: ${error.message}`);
+  } finally {
+    if (saveButton) {
+      saveButton.disabled = false;
+      saveButton.textContent = "Save Franchise";
+    }
+  }
 }
 
 /* ---------- View modal ---------- */
@@ -314,6 +371,7 @@ function openEditForm(row) {
   el("edit_franchise_number").value = row.franchise_number || "";
   el("edit_previous_registration").value = row.previous_registration || "";
   el("edit_operator_name").value = row.operator_name || "";
+  el("edit_operator_id").value = row.operator_id || "";
   el("edit_registration_month").value = row.registration_month || "";
   el("edit_registration_day").value = row.registration_day || "";
   el("edit_registration_year").value = row.registration_year || "";
@@ -330,6 +388,7 @@ function readEditForm() {
     franchise_number: el("edit_franchise_number").value.trim(),
     previous_registration: el("edit_previous_registration").value.trim(),
     operator_name: el("edit_operator_name").value.trim(),
+    operator_id: el("edit_operator_id").value || null,
     registration_month: el("edit_registration_month").value ? Number(el("edit_registration_month").value) : null,
     registration_day: el("edit_registration_day").value ? Number(el("edit_registration_day").value) : null,
     registration_year: el("edit_registration_year").value ? Number(el("edit_registration_year").value) : null,
@@ -417,14 +476,48 @@ function onTableClick(event) {
 /* ---------- Event bindings ---------- */
 function bindEvents() {
   el("newApplicationBtn")?.addEventListener("click", openAddForm);
-  el("cancelApplicationBtn")?.addEventListener("click", () => { resetAddForm(); const p = el("applicationPanel"); if (p) p.hidden = true; editingId = null; });
+  el("cancelApplicationBtn")?.addEventListener("click", () => {
+    resetAddForm();
+    const panel = el("applicationPanel");
+    if (panel) panel.hidden = true;
+    el("newApplicationBtn")?.setAttribute("aria-expanded", "false");
+    editingId = null;
+  });
   el("franchiseForm")?.addEventListener("submit", onAddSubmit);
   el("editForm")?.addEventListener("submit", onEditSubmit);
   el("confirmDeleteBtn")?.addEventListener("click", confirmDelete);
+  el("operator_id")?.addEventListener("change", () => {
+    const account = operatorAccounts.find((row) => row.user_id === el("operator_id").value);
+    if (account) el("operator_name").value = account.full_name;
+  });
+  el("edit_operator_id")?.addEventListener("change", () => {
+    const account = operatorAccounts.find((row) => row.user_id === el("edit_operator_id").value);
+    if (account) el("edit_operator_name").value = account.full_name;
+  });
 
   el("franchiseTable")?.addEventListener("click", onTableClick);
   el("searchInput")?.addEventListener("input", renderTable);
   el("statusFilter")?.addEventListener("change", renderTable);
+  bindDateCsvExport({
+    getRows: filteredFranchises,
+    render: renderTable,
+    filename: "tfro_franchise_database",
+    columns: [
+      { header: "Franchise Number", value: (row) => row.franchise_number },
+      { header: "Previous Registration", value: (row) => row.previous_registration },
+      { header: "Operator Name", value: (row) => row.operator_name },
+      { header: "Registration Date", value: formatRegistrationDate },
+      { header: "Application Date", value: (row) => row.application_date },
+      { header: "Expiration Date", value: (row) => row.expiration_date },
+      { header: "Address", value: (row) => row.address },
+      { header: "Contact Number", value: (row) => row.contact_number },
+      { header: "Engine Number", value: (row) => row.engine_number },
+      { header: "Chassis Number", value: (row) => row.chassis_number },
+      { header: "Plate Number", value: (row) => row.plate_number },
+      { header: "Route", value: (row) => row.route },
+      { header: "Status", value: (row) => displayStatus(row.status) },
+    ],
+  });
 
   // Close buttons (data-close="modalId")
   document.querySelectorAll("[data-close]").forEach((btn) => {

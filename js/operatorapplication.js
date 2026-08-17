@@ -1,12 +1,16 @@
 import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
+import { requireRole } from "./auth-guard.js";
 
-/* ROLE PROTECTION */
-const role = localStorage.getItem("role");
-if (role !== "operator") {
-  alert("Access Denied");
-  window.location.href = "index.html";
-}
+/* ROLE PROTECTION — server-verified, not localStorage */
+let currentUser = null;
+let currentProfile = null;
+requireRole(["operator"]).then(({ user, profile }) => {
+  if (!user) return;
+  currentUser = user;
+  currentProfile = profile;
+  loadUser();
+});
 
 /* HELPERS */
 function initials(name = "") {
@@ -40,7 +44,11 @@ function showStatus(message, type) {
   if (!card) return;
   card.hidden = false;
   card.className = "app-status-card " + (type || "pending");
-  card.innerHTML = `<i class="ri-information-line"></i><span>${message}</span>`;
+  const icon = document.createElement("i");
+  icon.className = "ri-information-line";
+  const text = document.createElement("span");
+  text.textContent = message;
+  card.replaceChildren(icon, text);
 }
 
 function clearStatus() {
@@ -50,22 +58,16 @@ function clearStatus() {
 
 /* Initialize sidebar user */
 async function loadUser() {
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) {
-    window.location.href = "index.html";
-    return;
-  }
+  const user = currentUser;
+  const profile = currentProfile;
+  if (!user) return;
   currentUserId = user.id;
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
   fullName = profile?.full_name || user.user_metadata?.full_name || "Operator";
   setText("userName", fullName);
   setText("userAvatar", initials(fullName));
   const nameInput = document.getElementById("operatorNameInput");
   if (nameInput) nameInput.value = fullName;
+  checkExistingApplication();
 }
 
 /* File selection handling */
@@ -155,6 +157,7 @@ function validateForm(entry) {
   if (!entry.chassis_number) errors.push("Chassis No. is required.");
   if (!entry.plate_number) errors.push("Plate No. is required.");
   if (!entry.contact_number) errors.push("Contact Number is required.");
+  if (!entry.route) errors.push("Route is required.");
   return errors;
 }
 
@@ -165,7 +168,8 @@ function missingDocs() {
 
 /* Upload a single PDF to storage */
 async function uploadDoc(docType, file, applicationId) {
-  const path = `applications/${applicationId}/${docType}-${Date.now()}-${file.name}`;
+  const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const path = `applications/${applicationId}/${docType}-${Date.now()}-${safeFileName}`;
   const { error } = await supabase.storage
     .from("franchise-documents")
     .upload(path, file, { contentType: "application/pdf", upsert: false });
@@ -175,6 +179,11 @@ async function uploadDoc(docType, file, applicationId) {
 
 /* Submit application */
 async function submitApplication() {
+  if (!currentUserId) {
+    alert("Your session is still loading. Please wait a moment and try again.");
+    return;
+  }
+
   const entry = readForm();
   const errors = validateForm(entry);
   const missing = missingDocs();
@@ -191,6 +200,9 @@ async function submitApplication() {
   btn.disabled = true;
   btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Submitting...';
 
+  let createdApplicationId = null;
+  const uploadedPaths = [];
+
   try {
     // 1) Insert the application record (status pending_review)
     const { data: appData, error: appError } = await supabase
@@ -206,11 +218,13 @@ async function submitApplication() {
 
     if (appError) throw appError;
     const applicationId = appData.id;
+    createdApplicationId = applicationId;
 
     // 2) Upload each PDF and record in franchise_documents
     for (const docType of DOC_TYPES) {
       const file = selectedFiles[docType];
       const storagePath = await uploadDoc(docType, file, applicationId);
+      uploadedPaths.push(storagePath);
       const { error: docError } = await supabase
         .from("franchise_documents")
         .insert({
@@ -243,6 +257,26 @@ alert("Application submitted successfully! Pending review by TFRO.");
     });
   } catch (err) {
     console.error("Submit error:", err);
+
+    // A failed multi-file upload must not leave an unusable pending
+    // application behind. The stabilization migration grants operators
+    // narrowly scoped cleanup access for their own pending applications.
+    if (uploadedPaths.length) {
+      const { error: storageCleanupError } = await supabase.storage
+        .from("franchise-documents")
+        .remove(uploadedPaths);
+      if (storageCleanupError) console.error("Upload cleanup error:", storageCleanupError);
+    }
+    if (createdApplicationId) {
+      const { error: applicationCleanupError } = await supabase
+        .from("franchise_applications")
+        .delete()
+        .eq("id", createdApplicationId)
+        .eq("operator_id", currentUserId)
+        .eq("status", "pending_review");
+      if (applicationCleanupError) console.error("Application cleanup error:", applicationCleanupError);
+    }
+
     alert("Failed to submit application: " + err.message);
     btn.disabled = false;
     btn.innerHTML = '<i class="ri-send-plane-line"></i> Submit Application';
@@ -285,4 +319,3 @@ document.getElementById("logoutBtn")?.addEventListener("click", async () => {
 /* INIT */
 document.getElementById("submitApplicationBtn").addEventListener("click", submitApplication);
 bindFileInputs();
-loadUser().then(() => checkExistingApplication());

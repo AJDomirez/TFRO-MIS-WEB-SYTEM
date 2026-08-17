@@ -1,8 +1,14 @@
 import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
+import { requireRole } from "./auth-guard.js";
+import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
 
 let requests = [];
 let currentReq = null;
+
+function operatorName(request) {
+  return request.operator_name || request.operator_profile?.full_name || "Operator";
+}
 
 function el(id) { return document.getElementById(id); }
 
@@ -27,45 +33,42 @@ function statusBadge(status) {
 }
 
 async function verifyAccess() {
-  var sess = await supabase.auth.getSession();
-  if (!sess || !sess.data || !sess.data.session) { window.location.replace("index.html"); return; }
-  var profile = await supabase.from("profiles").select("role").eq("id", sess.data.session.user.id).single();
-  if (!profile || !profile.data || !["admin", "staff"].includes(profile.data.role)) {
-    await supabase.auth.signOut();
-    window.location.replace("index.html");
-    return;
-  }
-  return profile.data;
+  const { profile } = await requireRole(["admin", "staff"]);
+  return profile;
 }
 
 async function loadRequests() {
   var res = await supabase
     .from("change_motor_requests")
-    .select("*")
+    .select("*, operator_profile:profiles!change_motor_requests_operator_id_fkey(full_name)")
     .order("created_at", { ascending: false });
   if (res.error) { console.error(res.error); return alert("Could not load requests: " + res.error.message); }
   requests = res.data || [];
   renderTable();
 }
 
-function renderTable() {
-  var table = el("motorTable");
+function filteredRequests() {
   var term = (el("searchInput").value || "").trim().toLowerCase();
   var filter = el("statusFilter").value;
-
-  var rows = requests.filter(function (r) {
+  return requests.filter(function (r) {
+    if (!isWithinDateRange(r.created_at)) return false;
     var ok = filter === "all" || r.status === filter;
     if (!ok) return false;
     if (!term) return true;
-    return [r.request_code, r.new_engine_number, r.new_plate_number, String(r.id)]
+    return [r.request_code, operatorName(r), r.new_engine_number, r.new_plate_number, String(r.id)]
       .some(function (v) { return String(v || "").toLowerCase().includes(term); });
   });
+}
+
+function renderTable() {
+  var table = el("motorTable");
+  var rows = filteredRequests();
 
   table.innerHTML = rows.length
     ? rows.map(function (r) {
         return "<tr>" +
           "<td>" + escapeHTML(r.request_code || r.id) + "</td>" +
-          "<td>" + escapeHTML(r.operator_name) + "</td>" +
+          "<td>" + escapeHTML(operatorName(r)) + "</td>" +
           "<td>" + escapeHTML(r.old_engine_number) + "</td>" +
           "<td>" + escapeHTML(r.new_engine_number) + "</td>" +
           "<td>" + escapeHTML(r.new_plate_number) + "</td>" +
@@ -84,31 +87,33 @@ async function openReview(id) {
   if (!currentReq) return;
 
   // Resolve operator name via profiles / operators
-  var operatorName = currentReq.operator_name || "Operator";
-  if (!operatorName) {
+  var resolvedOperatorName = operatorName(currentReq);
+  if (!resolvedOperatorName || resolvedOperatorName === "Operator") {
     var prof = await supabase.from("profiles").select("full_name").eq("id", currentReq.operator_id).maybeSingle();
-    if (prof.data && prof.data.full_name) operatorName = prof.data.full_name;
+    if (prof.data && prof.data.full_name) resolvedOperatorName = prof.data.full_name;
   }
+  if (!resolvedOperatorName) resolvedOperatorName = "Operator";
 
-  var docHtml = currentReq.supporting_storage_path
-    ? '<a href="' + getPublicUrl(currentReq.supporting_storage_path) + '" target="_blank" class="doc-link"><i class="ri-file-download-line"></i> ' + escapeHTML(currentReq.supporting_file_name || "Supporting Document") + "</a>"
+  var signedUrl = currentReq.supporting_storage_path ? await getSignedUrl(currentReq.supporting_storage_path) : null;
+  var docHtml = signedUrl
+    ? '<a href="' + escapeHTML(signedUrl) + '" target="_blank" rel="noopener" class="doc-link"><i class="ri-file-download-line"></i> ' + escapeHTML(currentReq.supporting_file_name || "Supporting Document") + "</a>"
     : '<span class="doc-missing">No supporting document</span>';
 
   el("reviewBody").innerHTML =
     '<div class="review-info-grid">' +
-      detail("Request #", currentReq.request_code || currentReq.id) +
-      detail("Operator", operatorName) +
-      detail("Status", statusBadge(currentReq.status)) +
+      safeDetail("Request #", currentReq.request_code || currentReq.id) +
+      safeDetail("Operator", resolvedOperatorName) +
+      safeDetail("Status", statusBadge(currentReq.status), true) +
       detail("Date Submitted", currentReq.created_at ? new Date(currentReq.created_at).toLocaleString() : "—") +
-      detail("Current Engine", currentReq.old_engine_number) +
-      detail("Current Chassis", currentReq.old_chassis_number) +
-      detail("Current Plate", currentReq.old_plate_number) +
-      detail("New Engine", currentReq.new_engine_number) +
-      detail("New Chassis", currentReq.new_chassis_number) +
-      detail("New Plate", currentReq.new_plate_number) +
-      detail("Motor Brand", currentReq.new_motor_brand) +
-      detail("Motor Serial", currentReq.new_motor_serial) +
-      detail("Supporting Doc", docHtml) +
+      safeDetail("Current Engine", currentReq.old_engine_number) +
+      safeDetail("Current Chassis", currentReq.old_chassis_number) +
+      safeDetail("Current Plate", currentReq.old_plate_number) +
+      safeDetail("New Engine", currentReq.new_engine_number) +
+      safeDetail("New Chassis", currentReq.new_chassis_number) +
+      safeDetail("New Plate", currentReq.new_plate_number) +
+      safeDetail("Motor Brand", currentReq.new_motor_brand) +
+      safeDetail("Motor Serial", currentReq.new_motor_serial) +
+      safeDetail("Supporting Doc", docHtml, true) +
     "</div>" +
     renderMotorActions(currentReq);
 
@@ -121,6 +126,20 @@ async function openReview(id) {
   });
 
   el("reviewModal").hidden = false;
+}
+
+async function getSignedUrl(path) {
+  var result = await supabase.storage.from("franchise-documents").createSignedUrl(path, 3600);
+  if (result.error) {
+    console.error("Could not create document URL:", result.error);
+    return null;
+  }
+  return result.data && result.data.signedUrl;
+}
+
+function safeDetail(label, value, isHtml) {
+  var output = value || "—";
+  return '<div><label>' + escapeHTML(label) + '</label><strong>' + (isHtml ? output : escapeHTML(output)) + "</strong></div>";
 }
 
 function detail(label, value) {
@@ -150,60 +169,14 @@ function renderMotorActions(r) {
 
 async function approveRequest() {
   if (!currentReq) return;
-  var sess = await supabase.auth.getUser();
-  var user = sess.data && sess.data.user;
-  if (!user) { window.location.href = "index.html"; return; }
-
-  var adminName = null;
-  var prof = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
-  if (prof.data && prof.data.full_name) adminName = prof.data.full_name;
 
   try {
-    // 1) Update request status
-    var up = await supabase.from("change_motor_requests").update({
-      status: "approved",
-      admin_id: user.id,
-      admin_name: adminName,
-      admin_reviewed_at: new Date().toISOString(),
-    }).eq("id", currentReq.id);
-    if (up.error) throw up.error;
-
-    // 2) Update the franchise record (new vehicle info)
-    var franUpdate = {};
-    if (currentReq.new_engine_number) franUpdate.engine_number = currentReq.new_engine_number;
-    if (currentReq.new_chassis_number) franUpdate.chassis_number = currentReq.new_chassis_number;
-    if (currentReq.new_plate_number) franUpdate.plate_number = currentReq.new_plate_number;
-    if (Object.keys(franUpdate).length) {
-      var fu = await supabase.from("franchises").update(franUpdate).eq("id", currentReq.franchise_id);
-      if (fu.error) throw fu.error;
-    }
-
-    // 3) Insert into change_motor_history (preserve old info)
-    await supabase.from("change_motor_history").insert({
-      franchise_id: currentReq.franchise_id,
-      old_engine_number: currentReq.old_engine_number,
-      old_chassis_number: currentReq.old_chassis_number,
-      old_plate_number: currentReq.old_plate_number,
-      new_engine_number: currentReq.new_engine_number,
-      new_chassis_number: currentReq.new_chassis_number,
-      new_plate_number: currentReq.new_plate_number,
-      changed_by: user.id,
+    // Apply the request as a single database transaction so status, franchise,
+    // history, tricycle, and notification records cannot diverge.
+    var result = await supabase.rpc("approve_change_motor_request", {
+      p_request_id: currentReq.id,
     });
-
-    // 4) Update / insert the tricycle record (is_current)
-    var tric = await supabase
-      .from("tricycles")
-      .update({ engine_number: currentReq.new_engine_number, chassis_number: currentReq.new_chassis_number, plate_number: currentReq.new_plate_number })
-      .eq("franchise_id", currentReq.franchise_id).eq("is_current", true);
-    if (tric.error) console.error("Tricycle update:", tric.error);
-
-    // 5) Notify operator
-    await supabase.from("notifications").insert({
-      user_id: currentReq.operator_id,
-      message: "Your Change Motor/MTOP request (" + (currentReq.request_code || "#" + currentReq.id) + ") has been approved.",
-      link: "operatorportal.html",
-      type: "success",
-    });
+    if (result.error) throw result.error;
 
 alert("Request approved. The franchise/tricycle records have been updated and old info preserved in history.");
     currentReq.status = "approved";
@@ -239,13 +212,6 @@ async function rejectRequest() {
     }).eq("id", currentReq.id);
     if (up.error) throw up.error;
 
-    await supabase.from("notifications").insert({
-      user_id: currentReq.operator_id,
-      message: "Your Change Motor/MTOP request (" + (currentReq.request_code || "#" + currentReq.id) + ") was rejected: " + reason,
-      link: "operatorportal.html",
-      type: "warning",
-    });
-
 alert("Request rejected. The operator has been notified.");
     el("rejectModal").hidden = true;
     el("rejectReason").value = "";
@@ -265,6 +231,26 @@ alert("Request rejected. The operator has been notified.");
 function bindEvents() {
   el("searchInput").addEventListener("input", renderTable);
   el("statusFilter").addEventListener("change", renderTable);
+  bindDateCsvExport({
+    getRows: filteredRequests,
+    render: renderTable,
+    filename: "tfro_change_motor_requests",
+    columns: [
+      { header: "Request Number", value: (row) => row.request_code || row.id },
+      { header: "Operator", value: operatorName },
+      { header: "Old Engine Number", value: (row) => row.old_engine_number },
+      { header: "Old Chassis Number", value: (row) => row.old_chassis_number },
+      { header: "Old Plate Number", value: (row) => row.old_plate_number },
+      { header: "New Engine Number", value: (row) => row.new_engine_number },
+      { header: "New Chassis Number", value: (row) => row.new_chassis_number },
+      { header: "New Plate Number", value: (row) => row.new_plate_number },
+      { header: "Motor Brand", value: (row) => row.new_motor_brand },
+      { header: "Motor Serial", value: (row) => row.new_motor_serial },
+      { header: "Status", value: (row) => row.status },
+      { header: "Rejection Reason", value: (row) => row.rejection_reason },
+      { header: "Submitted At", value: (row) => row.created_at },
+    ],
+  });
   el("motorTable").addEventListener("click", function (e) {
     var btn = e.target.closest("button[data-action]");
     if (!btn) return;
@@ -281,9 +267,11 @@ function bindEvents() {
   });
 }
 
-function init() {
+async function init() {
   bindEvents();
-  verifyAccess().then(loadRequests);
+  var profile = await verifyAccess();
+  if (!profile) return;
+  await loadRequests();
 }
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

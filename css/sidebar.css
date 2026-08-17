@@ -127,6 +127,11 @@ body{
   font-size:18px;
 }
 
+.menu-item span{
+  font-size:13px;
+  font-weight:500;
+}
+
 /* USER SECTION */
 
 .user-section{

@@ -40,6 +40,61 @@
 .menu-item{
   color:#e5f5ee !important;
 }
+body.admin-sidebar .menu li a,
+body.admin-sidebar .franchise-menu-toggle{
+  min-height:30px;
+  font-size:12px !important;
+  line-height:1.2;
+  padding:5px 10px !important;
+}
+body.admin-sidebar .menu li{
+  margin-bottom:1px !important;
+}
+body.admin-sidebar .menu{
+  padding:6px 0 !important;
+}
+body.admin-sidebar .franchise-submenu li a{
+  padding:4px 8px !important;
+}
+body.admin-sidebar .franchise-submenu{
+  margin:1px 0 2px !important;
+}
+body.admin-sidebar .logo{
+  margin-bottom:10px !important;
+  padding:0 !important;
+}
+body.admin-sidebar .sidebar-logo{
+  width:32px !important;
+  height:32px !important;
+}
+body.admin-sidebar .logo h2{
+  font-size:13px !important;
+}
+body.admin-sidebar .logo p{
+  font-size:10px !important;
+}
+body.admin-sidebar .sidebar-user{
+  padding:8px !important;
+}
+body.admin-sidebar .user-avatar{
+  width:28px !important;
+  height:28px !important;
+}
+body.admin-sidebar .sidebar-user h4{
+  font-size:11px !important;
+}
+body.admin-sidebar .sidebar-user p{
+  font-size:10px !important;
+}
+body.admin-sidebar .menu li a i{
+  font-size:15px !important;
+}
+body.admin-sidebar .franchise-submenu li a i{
+  font-size:13px !important;
+}
+body.admin-sidebar .franchise-menu-arrow{
+  font-size:14px !important;
+}
 .menu li a:hover,
 .menu li.active a,
 .menu-item:hover,
@@ -50,6 +105,23 @@
 .menu li.active a{
   border-left:3px solid #f4c430;
 }
+
+/* Collapsible franchise navigation section */
+.franchise-menu-toggle{
+  width:100%; display:flex; align-items:center; gap:10px; padding:12px 16px;
+  border:0; border-radius:10px; background:transparent; color:#e5f5ee;
+  font:inherit; text-align:left; cursor:pointer;
+}
+.franchise-menu-toggle:hover,
+.franchise-menu.open > .franchise-menu-toggle{background:rgba(244,196,48,0.18); color:#fff;}
+.franchise-menu-arrow{margin-left:auto; transition:transform .2s ease;}
+.franchise-menu.open .franchise-menu-arrow{transform:rotate(180deg);}
+.franchise-submenu{display:none; list-style:none; margin:3px 0 7px; padding:0 0 0 13px;}
+.franchise-menu.open .franchise-submenu{display:block;}
+.franchise-submenu li{margin:2px 0 !important;}
+.franchise-submenu li a{padding:10px 12px !important; font-size:13px !important; border-left:0 !important;}
+.franchise-submenu li a i{font-size:1.1rem;}
+.franchise-submenu li.active a{background:rgba(244,196,48,0.24) !important; border-left:3px solid #f4c430 !important;}
 
 /* Sidebar user/avatar */
 .user-avatar,
@@ -68,6 +140,42 @@
 }
 .logout-btn{
   color:#e5f5ee !important;
+}
+
+/* Keep the administration navigation fixed on every admin/staff page. */
+body.admin-sidebar .sidebar{
+  position:fixed !important;
+  inset:0 auto 0 0 !important;
+  z-index:100 !important;
+  width:240px !important;
+  height:100vh !important;
+  min-height:100vh !important;
+  overflow:hidden !important;
+  display:flex !important;
+  flex-direction:column !important;
+  flex-shrink:0;
+}
+body.admin-sidebar .menu{
+  flex:1 !important;
+  min-height:0;
+}
+body.admin-sidebar .sidebar-user{
+  margin-top:auto !important;
+  flex-shrink:0;
+}
+body.admin-sidebar .sidebar-user h4,
+body.admin-sidebar .sidebar-user p{
+  font-size:12px !important;
+  line-height:1.2;
+}
+body.admin-sidebar .layout > .main-content,
+body.admin-sidebar .dashboard-container > .main-content{
+  margin-left:240px !important;
+  width:calc(100% - 240px);
+  min-width:0;
+  max-width:calc(100% - 240px);
+  box-sizing:border-box;
+  overflow-x:hidden;
 }
 
 /* --- Topbar / card accents --- */
@@ -103,6 +211,37 @@
 .btn-primary:hover{
   background:linear-gradient(135deg,#146a4f,#178a5e) !important;
   box-shadow:0 6px 16px rgba(11,61,46,0.32) !important;
+}
+
+/* Admin actions: keep labels legible on every page, regardless of the
+   page-specific button styles loaded before this shared theme. */
+body.admin-sidebar button,
+body.admin-sidebar .actions button,
+body.admin-sidebar .form-actions button,
+body.admin-sidebar .modal-actions button{
+  font-weight:700;
+  line-height:1.25;
+}
+body.admin-sidebar .btn-submit,
+body.admin-sidebar .btn-accept,
+body.admin-sidebar .btn-primary,
+body.admin-sidebar .add-btn,
+body.admin-sidebar .save-btn{
+  background:#146a4f !important;
+  color:#ffffff !important;
+  text-shadow:none;
+}
+body.admin-sidebar .btn-reject,
+body.admin-sidebar .btn-danger,
+body.admin-sidebar .actions button[data-action="delete"]{
+  background:#b42318 !important;
+  color:#ffffff !important;
+}
+body.admin-sidebar .btn-cancel,
+body.admin-sidebar .form-actions button[type="button"]:not(.btn-reject):not(.btn-danger){
+  background:#ffffff !important;
+  border:1px solid #587066 !important;
+  color:#173d2e !important;
 }
 
 /* --- Accent numbers / headings that were blue --- */
@@ -173,4 +312,119 @@
 /* Body background — light green-white office feel */
 body{
   background:#f7faf8 !important;
+}
+/* Shared date-range and CSV controls used by the Franchise database pages. */
+.date-export-controls {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+body.admin-sidebar .toolbar {
+  justify-content: flex-start;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 100%;
+}
+
+body.admin-sidebar .toolbar-left {
+  display: flex;
+  flex: 1 1 300px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+body.admin-sidebar .toolbar > .date-export-controls {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+body.admin-sidebar .toolbar > .add-btn { flex: 0 0 auto; }
+
+body.admin-sidebar .table-card {
+  max-width: 100%;
+  overflow-x: auto !important;
+}
+
+.date-export-controls label {
+  display: grid;
+  gap: 4px;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.date-export-controls input[type="date"] {
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.date-export-controls .csv-btn {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid #166534;
+  border-radius: 8px;
+  background: #166534;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.date-export-controls .csv-btn:hover { background: #14532d; }
+.date-export-controls .csv-btn:disabled { cursor: not-allowed; opacity: .55; }
+.date-export-controls .input-invalid { border-color: #dc2626; box-shadow: 0 0 0 2px rgba(220, 38, 38, .12); }
+.renewal-export-controls { justify-content: flex-end; margin-bottom: 16px; }
+
+.review-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.review-info-grid > div {
+  padding: 11px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #f8fafc;
+}
+
+.review-info-grid > div > label {
+  display: block;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.review-info-grid > div > strong { color: #0f172a; overflow-wrap: anywhere; }
+
+@media (max-width: 1280px) {
+  body.admin-sidebar .toolbar > .date-export-controls {
+    flex: 1 1 420px;
+    margin-left: 0;
+  }
+  body.admin-sidebar .toolbar > .add-btn { margin-left: auto; }
+}
+
+@media (max-width: 900px) {
+  body.admin-sidebar .toolbar-left { flex-basis: 100%; }
+  .date-export-controls { width: 100%; margin-left: 0; }
+  .date-export-controls label { flex: 1 1 calc(50% - 5px); }
+  .date-export-controls input[type="date"] { width: 100%; }
+  .date-export-controls .csv-btn { flex: 1 1 100%; }
+  body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
 }

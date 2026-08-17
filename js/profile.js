@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { requireRole } from "./auth-guard.js";
 
 /* HELPERS */
 function initials(name = "") {
@@ -24,12 +25,6 @@ function setValue(id, value) {
 
 let currentUserId = null;
 let currentUserRole = localStorage.getItem("role") || "";
-
-/* HIDE PAYMENTS MENU FOR ADMIN (kept from original page) */
-const paymentMenu = document.getElementById("paymentMenu");
-if (paymentMenu && currentUserRole === "admin") {
-  paymentMenu.style.display = "none";
-}
 
 /* ROLE LABEL */
 function roleLabel(role) {
@@ -62,15 +57,8 @@ await supabase.from("audit_logs").insert({
 
 /* LOAD PROFILE */
 async function loadProfile() {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) {
-    alert("Please sign in to continue.");
-    window.location.href = "index.html";
-    return;
-  }
+  const { user } = await requireRole(["admin", "staff"]);
+  if (!user) return;
   currentUserId = user.id;
 
 // Select only well-known columns so a missing 'contact_number' column

@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { destinationForRole, loadUserProfile } from "./auth-guard.js";
 
 // Password visibility toggle
 const togglePassword = document.getElementById("togglePassword");
@@ -11,13 +12,6 @@ if (togglePassword && passwordInput) {
   });
 }
 
-const destinations = {
-  admin: "dashboard.html",
-  staff: "dashboard.html",
-  operator: "operatorportal.html",
-  driver: "driverportal.html",
-};
-
 const loginForm = document.getElementById("loginForm");
 const submitButton = loginForm.querySelector('button[type="submit"]');
 
@@ -25,36 +19,19 @@ const submitButton = loginForm.querySelector('button[type="submit"]');
 async function routeUser(user) {
   // 1) Try to load the role from the profiles table.
   let role = null;
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  const { data: profile, error: profileError } = await loadUserProfile(user.id);
 
-  if (!profileError && profile && destinations[profile.role]) {
+  if (!profileError && profile && destinationForRole(profile.role) !== "login.html") {
     role = profile.role;
-  }
-
-  // 2) Fallback: use the role captured in user metadata at signup time.
-  //    This covers the case where the profiles table/trigger has not been set up.
-  if (!role && user.user_metadata?.role && destinations[user.user_metadata.role]) {
-    role = user.user_metadata.role;
-
-    // Best-effort repair: write the missing profile row so future logins work.
-    await supabase.from("profiles").upsert(
-      {
-        id: user.id,
-        role,
-        full_name: user.user_metadata.full_name || null,
-        contact_number: user.user_metadata.contact_number || null,
-      },
-      { onConflict: "id" }
-    );
   }
 
   if (!role) {
     await supabase.auth.signOut();
-    alert("This account has no TFRO role. Ask an administrator to assign one.");
+    alert(
+      profile?.role === "driver"
+        ? "Drivers do not sign in. Your Operator manages your driver application and credentials."
+        : "This account has no authorized TFRO role. Contact the TFRO administrator."
+    );
     return false;
   }
 
@@ -64,7 +41,7 @@ async function routeUser(user) {
 
   // Insert an audit log entry for the successful login.
   const fullName = profile?.full_name || user.user_metadata?.full_name || "";
-await supabase
+  await supabase
     .from("audit_logs")
     .insert({
       user_name: fullName || user.email,
@@ -77,8 +54,50 @@ await supabase
     .then(() => {})
     .catch((err) => console.error("Audit log insert failed:", err));
 
-  window.location.href = destinations[role];
+  window.location.replace(destinationForRole(role));
   return true;
+}
+
+// Map Supabase Auth sign-in errors to user-friendly messages.
+function friendlyLoginError(error) {
+  const message = (error && (error.message || error.error_description)) || "";
+  const lower = String(message).toLowerCase();
+
+  // "Invalid login credentials" — provided by Supabase when the email is not
+  // registered OR the password is wrong. The message is intentionally generic
+  // for security.
+  if (lower.includes("invalid login credentials")) {
+    return "Login failed: Incorrect email or password. Please try again.";
+  }
+
+  // "Email not confirmed" — user registered but hasn't clicked the confirmation link.
+  if (lower.includes("email not confirmed") || lower.includes("confirmation email")) {
+    return "Login failed: Your email has not been confirmed yet. Please check your inbox for the confirmation link.";
+  }
+
+  // "User already registered" — treated as login failure to avoid revealing
+  // whether an email exists, but it usually means the user is trying to register.
+  if (lower.includes("user already registered")) {
+    return "Login failed: No account found with these details. Please double-check your email and password, or create a new account.";
+  }
+
+  // Weak password, too many attempts, etc.
+  if (lower.includes("password should be at least")) {
+    return "Login failed: Password must be at least 6 characters.";
+  }
+  if (lower.includes("rate limit") || lower.includes("too many") || error?.status === 429) {
+    return "Login failed: Too many attempts. Please wait a minute and try again.";
+  }
+
+  // Server-side / unhandled error.
+  if (error?.status === 500 || error?.status === 502 || error?.status === 503) {
+    return "Login failed: The authentication server is currently unavailable. Please try again later.";
+  }
+
+  // Return original message if useful, otherwise generic.
+  return message && message !== "{}"
+    ? `Login failed: ${message}`
+    : "Login failed. Please check your email and password and try again.";
 }
 
 loginForm.addEventListener("submit", async (event) => {
@@ -90,14 +109,24 @@ loginForm.addEventListener("submit", async (event) => {
   submitButton.disabled = true;
   submitButton.textContent = "Signing in...";
 
-  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  let authData;
+  let authError;
+  try {
+    ({ data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    }));
+  } catch (requestError) {
+    console.error("Supabase sign-in request failed:", requestError);
+    alert(friendlyLoginError(requestError));
+    submitButton.disabled = false;
+    submitButton.textContent = "Sign In";
+    return;
+  }
 
   if (authError || !authData.user) {
     console.error("Supabase sign-in error:", authError);
-    alert(`Login failed: ${authError?.message || "No user was returned."}`);
+    alert(friendlyLoginError(authError));
     submitButton.disabled = false;
     submitButton.textContent = "Sign In";
     return;
@@ -113,8 +142,12 @@ loginForm.addEventListener("submit", async (event) => {
 // Auto sign-in: if the user is redirected back here after confirming their
 // email (Supabase puts the session in the URL), sign them in automatically.
 (async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.user) {
-    await routeUser(session.user);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      await routeUser(session.user);
+    }
+  } catch (error) {
+    console.error("Could not restore the existing session:", error);
   }
 })();

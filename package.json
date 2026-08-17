@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "TFRO Integrated Management Information System - Lucena City",
   "scripts": {
-    "start": "npx http-server ./ -p 5500 -c-1 -o /html/index.html"
+    "start": "node server.js",
+    "check": "node scripts/validate-project.js",
+    "test": "npm run check"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.111.0"

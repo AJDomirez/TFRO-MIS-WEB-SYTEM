@@ -1,5 +1,16 @@
 # Setting Up Custom SMTP in Supabase
 
+## Current E-TFRO issue (2026-08-16)
+
+Supabase Auth logs show Gmail rejecting confirmation mail with
+`535 5.7.8 Username and Password not accepted`. Replace the saved SMTP
+password with a Gmail **App Password**; do not use the account's normal
+password. Registration cannot finish while email confirmation is enabled and
+this SMTP error remains.
+
+Custom SMTP is available on Supabase Free projects; a Pro subscription is not
+required. Never save an SMTP password in this repository or share it in chat.
+
 To customize the email **source** (the "from" name and address) and send emails
 from your own email service, you must configure a custom SMTP server in Supabase.
 By default Supabase uses its built-in email service, which does not let you
@@ -28,26 +39,28 @@ Choose an email provider and create SMTP credentials. Common options:
 | Brevo     | smtp-relay.brevo.com | 587 | 465 |
 
 **Important for Gmail:** you must create an **App Password** (not your normal
-password). Enable 2-Step Verification on the Google account, then go to
-Google Account → Security → App passwords → generate one for "Mail".
+password). Enable 2-Step Verification on the Google account, then open
+<https://myaccount.google.com/apppasswords> and create an app password named
+`TFRO Supabase`. Copy the generated 16-character password for the next step.
 
 ---
 
 ## Step 2 — Configure SMTP in Supabase
 1. Go to your **Supabase Dashboard**.
-2. Open **Project Settings** (gear icon) → **Authentication** → **SMTP**.
+2. Open **Authentication → Emails → SMTP Settings**.
 3. Toggle **"Enable Custom SMTP"** to **ON**.
 4. Fill in:
    - **Sender email:** e.g. `tfrolucena2025@gmail.com`
    - **Sender name:** e.g. `TFRO Lucena City`
    - **Host:** e.g. `smtp.gmail.com`
-   - **Port:** `465` (SSL) or `587` (STARTTLS)
+   - **Port:** `587` (STARTTLS)
    - **Username:** your full email address
-   - **Password:** your app password / SMTP password
+   - **Password:** the 16-character Google App Password (paste without spaces)
 5. Click **Save**.
 
-> Free-tier Supabase projects do **not** support custom SMTP. If that's the case,
-> you'll need to upgrade to Pro to use custom SMTP.
+> Supabase supports custom SMTP for production Auth mail. Review the project's
+> Auth email rate limits after connecting the provider; the default custom-SMTP
+> limit is 30 new users per hour.
 
 ---
 
@@ -80,4 +93,9 @@ Now that SMTP is enabled, you can fully control the email source and design:
 - **Login fails after clicking link:** make sure the redirect URL is added under
   Authentication → URL Configuration → Redirect URLs (e.g. `http://127.0.0.1:5500/html/login.html`).
 - **"Access denied" from Gmail:** use an App Password and ensure 2-Step Verification is on.
-- **SMTP not saving on free plan:** custom SMTP requires the Supabase **Pro** plan.
+- **Still receiving 535 errors:** delete the saved SMTP password, generate a
+  new Gmail App Password, and paste it without spaces.
+- **App passwords option is missing:** enable Google 2-Step Verification first.
+  Google Workspace administrators can also disable App Passwords; in that case
+  use a transactional SMTP provider such as Resend, Postmark, SendGrid, or
+  Brevo instead of Gmail.

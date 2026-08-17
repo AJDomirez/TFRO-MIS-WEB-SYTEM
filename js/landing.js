@@ -27,6 +27,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (hamburger && navLinks) {
     hamburger.addEventListener("click", () => {
       const isOpen = navLinks.classList.toggle("open");
+      hamburger.setAttribute("aria-expanded", String(isOpen));
+      hamburger.setAttribute("aria-label", isOpen ? "Close navigation menu" : "Open navigation menu");
       // Swap the hamburger / close icon
       hamburger.querySelector("i").className = isOpen
         ? "ri-close-line"
@@ -38,6 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
       link.addEventListener("click", () => {
         navLinks.classList.remove("open");
         hamburger.querySelector("i").className = "ri-menu-line";
+        hamburger.setAttribute("aria-expanded", "false");
+        hamburger.setAttribute("aria-label", "Open navigation menu");
       });
     });
   }

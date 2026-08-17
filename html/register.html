@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TFRO Register</title>
 
-  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/style.css?v=20260817-6">
 
   <!-- Remix Icons -->
   <link
@@ -34,8 +34,8 @@
       <h1>Create Your TFRO Account</h1>
 
       <p>
-        Register as a tricycle operator or driver to access franchise records,
-        compliance status, and payment transactions.
+        Register as a tricycle operator to manage your franchise and submit
+        driver applications. Drivers do not need a login account.
       </p>
     </div>
 
@@ -51,32 +51,26 @@
 
       <form id="registerForm">
 
-        <!-- ROLE SELECTOR -->
+        <!-- Public registration is Operator-only. -->
         <div class="input-group">
-          <label>I am a...</label>
+          <label>Account Type</label>
 
           <div class="role-selector">
-
             <label class="role-card">
-              <input type="radio" name="role" value="driver" required />
-              <div class="role-card-inner">
-                <i class="ri-user-line"></i>
-                <strong>Driver</strong>
-                <span>Operate a tricycle unit</span>
-              </div>
-            </label>
-
-            <label class="role-card">
-              <input type="radio" name="role" value="operator" />
+              <input type="radio" name="role" value="operator" checked required />
               <div class="role-card-inner">
                 <i class="ri-focus-3-line"></i>
                 <strong>Operator</strong>
-                <span>Own a franchise</span>
+                <span>Own a franchise and manage Driver applications</span>
               </div>
             </label>
 
           </div>
         </div>
+
+        <p class="account-note">
+          TFRO Staff and Administrator accounts are created internally.
+        </p>
 
         <div class="input-group">
           <label>Full Name</label>
@@ -116,13 +110,45 @@
               type="password"
               id="password"
               placeholder="Create a password"
-              minlength="6"
+              minlength="8"
+              autocomplete="new-password"
+              aria-describedby="passwordRequirements"
               required
             />
 
             <button type="button" class="toggle-pass" data-target="password">
               <i class="ri-eye-line"></i>
             </button>
+          </div>
+
+          <div
+            class="password-requirements"
+            id="passwordRequirements"
+            aria-live="polite"
+          >
+            <strong>Password must include:</strong>
+            <ul>
+              <li data-password-rule="length">
+                <i class="ri-close-circle-line" aria-hidden="true"></i>
+                At least 8 characters
+              </li>
+              <li data-password-rule="lowercase">
+                <i class="ri-close-circle-line" aria-hidden="true"></i>
+                One lowercase letter
+              </li>
+              <li data-password-rule="uppercase">
+                <i class="ri-close-circle-line" aria-hidden="true"></i>
+                One uppercase letter
+              </li>
+              <li data-password-rule="number">
+                <i class="ri-close-circle-line" aria-hidden="true"></i>
+                One number
+              </li>
+              <li data-password-rule="symbol">
+                <i class="ri-close-circle-line" aria-hidden="true"></i>
+                One symbol (for example: ! @ # $ %)
+              </li>
+            </ul>
           </div>
         </div>
 
@@ -133,6 +159,9 @@
               type="password"
               id="confirmPassword"
               placeholder="Repeat your password"
+              minlength="8"
+              autocomplete="new-password"
+              aria-describedby="passwordMatchStatus"
               required
             />
 
@@ -140,6 +169,11 @@
               <i class="ri-eye-line"></i>
             </button>
           </div>
+          <small
+            class="password-match-status"
+            id="passwordMatchStatus"
+            aria-live="polite"
+          ></small>
         </div>
 
         <button type="submit" class="login-btn" id="registerBtn">
@@ -174,7 +208,8 @@ Already have an account?
 
 </div>
 
-<script type="module" src="../js/register.js"></script>
+<!-- Version query ensures browsers fetch the current registration error handling. -->
+<script type="module" src="../js/register.js?v=20260817-6"></script>
 <script src="../js/trike-drive.js"></script>
 
 </body>

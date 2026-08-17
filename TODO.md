@@ -28,4 +28,3 @@
 - [x] Add audit logging to `js/operatorportal.js` (Submitted Change Motor Request)
 - [x] Verified existing audit logging in `js/franchise.js`, `js/driver.js`, `js/application.js`, `js/motorequests.js`
 - [x] Verified `audit_logs` schema matches `logAudit` helper and `auditlog.js` page
-</content>

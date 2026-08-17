@@ -31,7 +31,7 @@
         </div>
 
         <div class="logo-text">
-          <h2>TFRO</h2>
+          <h2>TFRO MIS</h2>
           <p>Lucena City</p>
         </div>
 
@@ -66,7 +66,7 @@
         <span>Drivers</span>
       </a>
 
-      <a href="violation.html" class="menu-item">
+      <a href="violation.html" class="menu-item" id="violationMenu">
         <i class="ri-alert-line"></i>
         <span>Violations</span>
       </a>
@@ -77,7 +77,7 @@
         <span>Payments</span>
       </a>
 
-      <a href="report.html" class="menu-item">
+      <a href="report.html" class="menu-item" id="reportMenu">
         <i class="ri-bar-chart-box-line"></i>
         <span>Reports</span>
       </a>
@@ -128,7 +128,7 @@
           Monday, May 16, 2026
         </div>
 
-        <button class="notification-btn">
+        <button class="notification-btn" id="notificationsBtn" type="button" aria-label="View notifications">
           <i class="ri-notification-3-line"></i>
           <span class="notif-dot"></span>
         </button>
@@ -161,24 +161,7 @@
 </div>
 
 
-<script src="../js/sidebar.js"></script>
-
-
-<script>
-
-  const role = localStorage.getItem("role");
-
-  alert(role);
-
-  const paymentMenu =
-    document.getElementById("paymentMenu");
-
-  if(role === "admin"){
-    paymentMenu.style.display = "none";
-  }
-
-</script>
-
+<script type="module" src="../js/sidebar.js"></script>
 
 
 </body>
