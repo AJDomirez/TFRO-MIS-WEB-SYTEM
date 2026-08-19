@@ -353,6 +353,38 @@ body{
 .inline-form-message{margin:0 0 14px;padding:11px 13px;border:1px solid #efb4b4;border-left:4px solid #c62828;border-radius:8px;background:#fff1f1;color:#a11f1f;font-size:13px;font-weight:700;line-height:1.45;}
 .inline-form-message[hidden]{display:none;}
 
+.forgot-password-link{
+  display:block;
+  margin:8px 0 0 auto;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#147a55;
+  font:inherit;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+}
+.forgot-password-link:hover{text-decoration:underline;}
+.recovery-panel[hidden],.recovery-panel form[hidden]{display:none;}
+.recovery-panel h3{margin:12px 0 7px;color:#123328;font-size:22px;}
+.recovery-panel>p{margin-bottom:22px;color:#6b8177;font-size:14px;line-height:1.5;}
+.recovery-back,.resend-code-btn{
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#147a55;
+  font:inherit;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+}
+.recovery-back:hover,.resend-code-btn:hover{text-decoration:underline;}
+.resend-code-btn{display:block;margin:14px auto 0;}
+.recovery-code-input{text-align:center;font-size:22px !important;font-weight:800;letter-spacing:.35em;font-variant-numeric:tabular-nums;}
+.recovery-password-help{display:block;margin:-7px 0 16px;color:#64748b;font-size:12px;line-height:1.4;}
+.inline-form-message.success{border-color:#9bd8b8;border-left-color:#178a5e;background:#effaf4;color:#126642;}
+
 @media (max-width:520px){
   .password-requirements ul{
     grid-template-columns:1fr;

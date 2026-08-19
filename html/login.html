@@ -76,6 +76,9 @@
               <i class="ri-eye-line"></i>
             </button>
           </div>
+          <button type="button" class="forgot-password-link" id="forgotPasswordBtn">
+            Forgot your password?
+          </button>
         </div>
 
         <div class="input-group">
@@ -91,6 +94,46 @@
         <span>Operator without an account? <a href="register.html">Sign up here</a></span>
 
       </form>
+
+      <section class="recovery-panel" id="recoveryPanel" hidden aria-labelledby="recoveryTitle">
+        <button type="button" class="recovery-back" id="recoveryBackBtn">
+          <i class="ri-arrow-left-line"></i> Back to sign in
+        </button>
+        <h3 id="recoveryTitle">Recover Operator Account</h3>
+        <p>We will send a six-digit verification code to the email registered to the Operator account.</p>
+
+        <div class="inline-form-message" id="recoveryMessage" hidden role="alert" aria-live="polite"></div>
+
+        <form id="recoveryRequestForm">
+          <div class="input-group">
+            <label for="recoveryEmail">Registered Email Address</label>
+            <input type="email" id="recoveryEmail" autocomplete="email" placeholder="operator@example.com" required />
+          </div>
+          <button type="submit" class="login-btn" id="sendRecoveryCodeBtn">
+            <i class="ri-mail-send-line"></i> Send Verification Code
+          </button>
+        </form>
+
+        <form id="recoveryVerifyForm" hidden>
+          <div class="input-group">
+            <label for="recoveryCode">Six-Digit Email Code</label>
+            <input type="text" id="recoveryCode" class="recovery-code-input" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required />
+          </div>
+          <div class="input-group">
+            <label for="recoveryPassword">New Password</label>
+            <input type="password" id="recoveryPassword" minlength="8" autocomplete="new-password" placeholder="Create a strong password" required />
+          </div>
+          <div class="input-group">
+            <label for="recoveryPasswordConfirm">Confirm New Password</label>
+            <input type="password" id="recoveryPasswordConfirm" minlength="8" autocomplete="new-password" placeholder="Repeat your new password" required />
+          </div>
+          <small class="recovery-password-help">Use at least 8 characters with uppercase, lowercase, number, and symbol.</small>
+          <button type="submit" class="login-btn" id="verifyRecoveryCodeBtn">
+            <i class="ri-shield-check-line"></i> Verify and Change Password
+          </button>
+          <button type="button" class="resend-code-btn" id="resendRecoveryCodeBtn">Send a new code</button>
+        </form>
+      </section>
 
     </div>
 
