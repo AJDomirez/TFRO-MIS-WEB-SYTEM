@@ -4,7 +4,12 @@
    logged-in profile. Include after supabase.js on any page
    that shows a sidebar user widget.
    ========================================================= */
-import { supabase } from "./supabase.js";
+let supabaseClientPromise;
+
+function getSupabaseClient() {
+  supabaseClientPromise ||= import("./supabase.js").then((module) => module.supabase);
+  return supabaseClientPromise;
+}
 
 // Apply the fixed admin navigation immediately, before the profile request
 // completes, so the sidebar does not jump or reflow on page load.
@@ -75,6 +80,7 @@ function setupAdminNavigation() {
     ? page
     : `<li class="${page.href === currentPage ? "active" : ""}"><a href="${page.href}"><i class="${page.icon}"></i><span>${page.label}</span></a></li>`
   ).join("");
+  menu.dataset.navigationReady = "true";
 
   const parentItem = menu.querySelector(".franchise-menu");
   const toggle = parentItem.querySelector(".franchise-menu-toggle");
@@ -97,6 +103,7 @@ function setupOperatorNavigation() {
   ];
   menu.dataset.operatorMenuReady = "true";
   menu.innerHTML = pages.map((page) => `<li class="${page.href === activePage ? "active" : ""}"><a href="${page.href}"><i class="${page.icon}"></i><span>${page.label}</span></a></li>`).join("");
+  menu.dataset.navigationReady = "true";
 }
 
 function setupStaffNavigation() {
@@ -111,9 +118,11 @@ function setupStaffNavigation() {
   ];
   menu.dataset.staffMenuReady = "true";
   menu.innerHTML = pages.map((page) => `<li class="${page.href === currentPage ? "active" : ""}"><a href="${page.href}"><i class="${page.icon}"></i><span>${page.label}</span></a></li>`).join("");
+  menu.dataset.navigationReady = "true";
 }
 
 async function loadSidebarUser() {
+  const supabase = await getSupabaseClient();
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) return;
 
@@ -177,7 +186,7 @@ function setupSharedTableSearch() {
 function initializeSidebar() {
   if (savedRole === "operator") setupOperatorNavigation();
   else if (savedRole === "staff") setupStaffNavigation();
-  else setupAdminNavigation();
+  else if (savedRole === "admin") setupAdminNavigation();
   loadSidebarUser();
   setupSharedTableSearch();
 }

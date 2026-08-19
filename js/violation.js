@@ -8,6 +8,7 @@ let catalog = [];
 let currentUserId = null;
 let editingViolationId = null;
 let toastTimer = null;
+let canManageViolations = false;
 
 const table = document.getElementById("violationsTable");
 const formPanel = document.getElementById("violationFormPanel");
@@ -63,9 +64,9 @@ function render() {
       <td>${new Date(row.occurred_at).toLocaleDateString("en-PH")}</td>
       <td><span class="status ${status}">${escapeHtml(row.status)}</span></td>
       <td><div class="actions">
-        <button type="button" data-action="edit" data-id="${row.id}" title="Edit violation" aria-label="Edit violation for ${escapeHtml(row.subject_name || "record")}">
+        ${canManageViolations ? `<button type="button" data-action="edit" data-id="${row.id}" title="Edit violation" aria-label="Edit violation for ${escapeHtml(row.subject_name || "record")}">
           <i class="ri-pencil-line"></i>
-        </button>
+        </button>` : ""}
         <button type="button" data-action="notice" data-id="${row.id}" title="Print violation notice"><i class="ri-printer-line"></i></button>
       </div></td>
     </tr>`;
@@ -214,8 +215,12 @@ async function saveViolation(event) {
 }
 
 function bindEvents() {
-  document.getElementById("addViolationBtn").addEventListener("click", () => setFormMode("add"));
-  document.getElementById("cancelViolationBtn").addEventListener("click", closeViolationForm);
+  if (canManageViolations) {
+    document.getElementById("addViolationBtn").addEventListener("click", () => setFormMode("add"));
+    document.getElementById("cancelViolationBtn").addEventListener("click", closeViolationForm);
+    form.addEventListener("submit", saveViolation);
+    document.getElementById("violationCode").addEventListener("change", applyCatalogSelection);
+  }
   document.getElementById("searchInput").addEventListener("input", render);
   document.getElementById("statusFilter").addEventListener("change", render);
   table.addEventListener("click", (event) => {
@@ -226,9 +231,6 @@ function bindEvents() {
     if (button.dataset.action === "edit") setFormMode("edit", row);
     if (button.dataset.action === "notice") printNotice(row);
   });
-  form.addEventListener("submit", saveViolation);
-  document.getElementById("violationCode").addEventListener("change", applyCatalogSelection);
-
   bindDateCsvExport({
     getRows: filteredViolations,
     render,
@@ -250,12 +252,15 @@ function bindEvents() {
 }
 
 async function initialize() {
-  bindEvents();
-  const { user } = await requireRole(["staff"]);
+  const { user, profile } = await requireRole(["admin", "staff"]);
   if (user) {
     currentUserId = user.id;
+    canManageViolations = profile?.role === "staff";
+    document.getElementById("addViolationBtn").hidden = !canManageViolations;
+    if (!canManageViolations) formPanel.hidden = true;
+    bindEvents();
     try { await Promise.all([loadCatalog(), loadViolations()]); }
-    catch (error) { console.error(error); window.alert(`Could not load staff violation data: ${error.message}`); }
+    catch (error) { console.error(error); window.alert(`Could not load violation data: ${error.message}`); }
   }
 }
 
