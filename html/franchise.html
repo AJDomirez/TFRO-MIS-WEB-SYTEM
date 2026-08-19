@@ -424,14 +424,14 @@
 <div class="modal" id="deleteModal" hidden>
   <div class="modal-box modal-small">
     <div class="modal-head">
-      <h3>Delete Franchise Record?</h3>
+      <h3>Remove Franchise Record?</h3>
       <button class="modal-close" data-close="deleteModal"><i class="ri-close-line"></i></button>
     </div>
     <div class="modal-body">
-      <p class="delete-message" id="deleteMessage">Are you sure you want to delete this franchise record? This action cannot be undone.</p>
+      <p class="delete-message" id="deleteMessage">Remove this franchise from active records? Its transaction history will be retained.</p>
       <div class="form-actions delete-actions">
         <button type="button" class="btn-cancel" data-close="deleteModal">Cancel</button>
-        <button type="button" class="btn-danger" id="confirmDeleteBtn">Delete</button>
+        <button type="button" class="btn-danger" id="confirmDeleteBtn">Remove</button>
       </div>
     </div>
   </div>
@@ -440,7 +440,7 @@
 <!-- SUCCESS TOAST -->
 <div class="toast" id="toast" hidden></div>
 
-<script type="module" src="../js/franchise.js?v=20260817-230000"></script>
+<script type="module" src="../js/franchise.js?v=20260819-171500"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-170000"></script>
 <script>
   const role = localStorage.getItem("role");

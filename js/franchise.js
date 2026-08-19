@@ -450,31 +450,52 @@ closeModal("editModal");
 function openDeleteModal(row) {
   deleteTargetId = row.id;
   const msg = el("deleteMessage");
-  if (msg) msg.textContent = `Are you sure you want to delete franchise ${row.franchise_number}? This action cannot be undone.`;
+  if (msg) msg.textContent = `Remove franchise ${row.franchise_number} from active records? Its transaction history will be retained.`;
   openModal("deleteModal");
 }
 
-function confirmDelete() {
+async function confirmDelete() {
   if (!deleteTargetId) { closeModal("deleteModal"); return; }
   const target = franchises.find((r) => String(r.id) === String(deleteTargetId));
-  supabase.from("franchises").delete().eq("id", deleteTargetId).then(({ error }) => {
+  const confirmButton = el("confirmDeleteBtn");
+  if (confirmButton) {
+    confirmButton.disabled = true;
+    confirmButton.textContent = "Removing...";
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("franchises")
+      .update({ is_archived: true })
+      .eq("id", deleteTargetId)
+      .select("id")
+      .maybeSingle();
     if (error) {
-      alert(`Could not delete franchise: ${error.message}`);
-      return;
+      throw error;
     }
+    if (!data) throw new Error("The record was not updated. Check your administrator permissions.");
+
     deleteTargetId = null;
     closeModal("deleteModal");
-    loadFranchises();
-    showToast("Franchise record deleted.");
-    logAudit({
-      action: "Deleted Franchise",
-      actionType: "delete",
+    await loadFranchises();
+    showToast("Franchise removed from active records.");
+    await logAudit({
+      action: "Archived Franchise",
+      actionType: "update",
       record: target ? target.franchise_number : null,
       description: target
-        ? `Deleted franchise record ${target.franchise_number} for ${target.operator_name}.`
-        : "Deleted a franchise record.",
+        ? `Archived franchise record ${target.franchise_number} for ${target.operator_name}.`
+        : "Archived a franchise record.",
     });
-  });
+  } catch (error) {
+    console.error("Could not archive franchise:", error);
+    alert(`Could not remove franchise: ${error.message}`);
+  } finally {
+    if (confirmButton) {
+      confirmButton.disabled = false;
+      confirmButton.textContent = "Remove";
+    }
+  }
 }
 
 /* ---------- Table actions ---------- */
