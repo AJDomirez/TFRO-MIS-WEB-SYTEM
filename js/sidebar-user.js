@@ -45,14 +45,11 @@ function setupAdminNavigation() {
 
   const franchisePages = [
     { href: "franchise.html", icon: "ri-file-list-3-line", label: "Franchise Records" },
-    { href: "application.html", icon: "ri-file-add-line", label: "Applications" },
     { href: "renewals.html", icon: "ri-refresh-line", label: "Franchise Renewals" },
     { href: "motorequests.html", icon: "ri-settings-5-line", label: "Change Motor Requests" },
   ];
   const pages = [
     { href: "dashboard.html", icon: "ri-dashboard-line", label: "Dashboard" },
-    { href: "operator.html", icon: "ri-user-star-line", label: "Operators" },
-    { href: "driver.html", icon: "ri-steering-2-line", label: "Drivers" },
     { href: "violation.html", icon: "ri-alert-line", label: "Violations" },
     { href: "report.html", icon: "ri-bar-chart-line", label: "Reports" },
     { href: "notification.html", icon: "ri-notification-3-line", label: "Notifications" },
