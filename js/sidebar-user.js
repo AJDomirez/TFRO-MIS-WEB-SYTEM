@@ -96,13 +96,16 @@ function setupOperatorNavigation() {
   const currentPage = window.location.pathname.split("/").pop() || "operatorportal.html";
   const activePage = currentPage === "operatorapplication.html" ? "operatorportal.html" : currentPage;
   const pages = [
-    { href: "operatorportal.html", icon: "ri-home-4-line", label: "Home" },
+    { href: "operatorportal.html", icon: "ri-file-list-3-line", label: "My Franchise" },
     { href: "renewal.html", icon: "ri-refresh-line", label: "Franchise Renewal" },
     { href: "notification.html", icon: "ri-notification-3-line", label: "Notifications" },
     { href: "operatorprofile.html", icon: "ri-user-settings-line", label: "My Profile" },
   ];
   menu.dataset.operatorMenuReady = "true";
-  menu.innerHTML = pages.map((page) => `<li class="${page.href === activePage ? "active" : ""}"><a href="${page.href}"><i class="${page.icon}"></i><span>${page.label}</span></a></li>`).join("");
+  menu.innerHTML = pages.map((page) => {
+    const active = page.href === activePage;
+    return `<li class="${active ? "active" : ""}"><a href="${page.href}"${active ? ' aria-current="page"' : ""}><i class="${page.icon}"></i><span>${page.label}</span></a></li>`;
+  }).join("");
   menu.dataset.navigationReady = "true";
 }
 

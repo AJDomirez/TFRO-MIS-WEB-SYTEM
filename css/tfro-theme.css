@@ -255,14 +255,78 @@ body.operator-sidebar .sidebar{
   display:flex;
   flex-direction:column;
   z-index:100;
+  padding:20px 16px !important;
 }
 body.operator-sidebar .menu{
   flex:0 0 auto;
   overflow:visible;
+  display:grid;
+  gap:6px;
+  width:100%;
+}
+body.operator-sidebar .menu li{
+  margin:0 !important;
+}
+body.operator-sidebar .menu li a{
+  width:100%;
+  min-height:48px;
+  padding:11px 13px !important;
+}
+body.operator-sidebar .menu li a > i{
+  width:22px;
+  flex:0 0 22px;
+  text-align:center;
+  font-size:19px;
+}
+body.operator-sidebar .menu li a > span{
+  min-width:0;
 }
 body.operator-sidebar .sidebar-user{
   margin-top:auto;
   flex-shrink:0;
+  width:100%;
+  min-width:0;
+  gap:10px;
+  padding:13px 9px !important;
+  border-radius:12px;
+}
+body.operator-sidebar .sidebar-user .user-left{
+  flex:1 1 auto;
+  min-width:0;
+  gap:10px;
+}
+body.operator-sidebar .sidebar-user .user-avatar{
+  width:40px;
+  height:40px;
+  flex:0 0 40px;
+  font-size:13px;
+}
+body.operator-sidebar .sidebar-user .user-details{
+  min-width:0;
+  flex:1 1 auto;
+}
+body.operator-sidebar .sidebar-user .user-details h4{
+  margin:0;
+  font-size:12px !important;
+  line-height:1.2;
+  overflow-wrap:anywhere;
+}
+body.operator-sidebar .sidebar-user .user-details p{
+  margin:2px 0 0;
+  font-size:11px !important;
+  line-height:1.15;
+}
+body.operator-sidebar .sidebar-user .logout-btn{
+  width:38px;
+  height:38px;
+  flex:0 0 38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+  border:1px solid rgba(229,245,238,.2);
+  text-decoration:none;
+  font-size:19px;
 }
 body.operator-sidebar .layout > .main-content,
 body.operator-sidebar .dashboard-container > .main-content{
