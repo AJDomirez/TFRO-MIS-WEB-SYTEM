@@ -34,40 +34,49 @@ function roleLabel(role) {
   return map[role] || role || "User";
 }
 
-function setupFranchiseMenu() {
-  const franchiseLink = document.querySelector('.menu a[href="franchise.html"]');
-  const parentItem = franchiseLink?.closest("li");
-  if (!parentItem || parentItem.dataset.franchiseMenuReady) return;
+function setupAdminNavigation() {
+  const menu = document.querySelector(".sidebar .menu");
+  if (!menu || menu.dataset.adminMenuReady) return;
 
-  const pages = [
+  const franchisePages = [
     { href: "franchise.html", icon: "ri-file-list-3-line", label: "Franchise Records" },
+    { href: "application.html", icon: "ri-file-add-line", label: "Applications" },
     { href: "renewals.html", icon: "ri-refresh-line", label: "Franchise Renewals" },
     { href: "motorequests.html", icon: "ri-settings-5-line", label: "Change Motor Requests" },
+  ];
+  const pages = [
+    { href: "dashboard.html", icon: "ri-dashboard-line", label: "Dashboard" },
     { href: "operator.html", icon: "ri-user-star-line", label: "Operators" },
     { href: "driver.html", icon: "ri-steering-2-line", label: "Drivers" },
     { href: "violation.html", icon: "ri-alert-line", label: "Violations" },
+    { href: "report.html", icon: "ri-bar-chart-line", label: "Reports" },
+    { href: "notification.html", icon: "ri-notification-3-line", label: "Notifications" },
+    { href: "auditlog.html", icon: "ri-history-line", label: "Audit Log" },
+    { href: "profile.html", icon: "ri-user-settings-line", label: "Profile" },
   ];
   const currentPage = window.location.pathname.split("/").pop() || "franchise.html";
-  const isSectionPage = pages.some((page) => page.href === currentPage);
-
-  // Remove the former standalone entries so they exist only within Franchises.
-  const hiddenPages = new Set(["application.html"]);
-  document.querySelectorAll(".menu > li").forEach((item) => {
-    if (item === parentItem) return;
-    const href = item.querySelector("a")?.getAttribute("href");
-    if (pages.some((page) => page.href === href) || hiddenPages.has(href)) item.remove();
-  });
-
-  parentItem.dataset.franchiseMenuReady = "true";
-  parentItem.className = `franchise-menu${isSectionPage ? " open" : ""}`;
-  parentItem.innerHTML = `
-    <button class="franchise-menu-toggle" type="button" aria-expanded="${isSectionPage}">
+  const isFranchisePage = franchisePages.some((page) => page.href === currentPage);
+  const franchiseItem = `
+  <li class="franchise-menu${isFranchisePage ? " open" : ""}">
+    <button class="franchise-menu-toggle" type="button" aria-expanded="${isFranchisePage}">
       <i class="ri-file-list-3-line"></i><span>Franchises</span><i class="ri-arrow-down-s-line franchise-menu-arrow"></i>
     </button>
     <ul class="franchise-submenu">
-      ${pages.map((page) => `<li class="${page.href === currentPage ? "active" : ""}"><a href="${page.href}"><i class="${page.icon}"></i><span>${page.label}</span></a></li>`).join("")}
-    </ul>`;
+      ${franchisePages.map((page) => `<li class="${page.href === currentPage ? "active" : ""}"><a href="${page.href}"><i class="${page.icon}"></i><span>${page.label}</span></a></li>`).join("")}
+    </ul>
+  </li>`;
 
+  menu.dataset.adminMenuReady = "true";
+  menu.innerHTML = [
+    pages[0],
+    franchiseItem,
+    ...pages.slice(1),
+  ].map((page) => typeof page === "string"
+    ? page
+    : `<li class="${page.href === currentPage ? "active" : ""}"><a href="${page.href}"><i class="${page.icon}"></i><span>${page.label}</span></a></li>`
+  ).join("");
+
+  const parentItem = menu.querySelector(".franchise-menu");
   const toggle = parentItem.querySelector(".franchise-menu-toggle");
   toggle.addEventListener("click", () => {
     const isOpen = parentItem.classList.toggle("open");
@@ -122,6 +131,7 @@ async function loadSidebarUser() {
   }
   if (role === "operator") setupOperatorNavigation();
   if (role === "staff") setupStaffNavigation();
+  if (role === "admin") setupAdminNavigation();
 
   const nameEl = document.getElementById("userName");
   const roleEl = document.getElementById("userRole");
@@ -167,7 +177,7 @@ function setupSharedTableSearch() {
 function initializeSidebar() {
   if (savedRole === "operator") setupOperatorNavigation();
   else if (savedRole === "staff") setupStaffNavigation();
-  else setupFranchiseMenu();
+  else setupAdminNavigation();
   loadSidebarUser();
   setupSharedTableSearch();
 }

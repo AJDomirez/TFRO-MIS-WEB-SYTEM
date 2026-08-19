@@ -42,10 +42,10 @@
 }
 body.admin-sidebar .menu li a,
 body.admin-sidebar .franchise-menu-toggle{
-  min-height:30px;
-  font-size:12px !important;
+  min-height:36px;
+  font-size:13px !important;
   line-height:1.2;
-  padding:5px 10px !important;
+  padding:7px 10px !important;
 }
 body.admin-sidebar .menu li{
   margin-bottom:1px !important;
@@ -130,23 +130,28 @@ body.operator-sidebar .logo::after{
   background:#f4c430;
 }
 body.admin-sidebar .menu li a,
+body.admin-sidebar .franchise-menu-toggle,
 body.operator-sidebar .menu li a{
   position:relative;
   border:1px solid transparent;
   transition:background .18s ease,color .18s ease,transform .18s ease,border-color .18s ease !important;
 }
 body.admin-sidebar .menu li a:hover,
+body.admin-sidebar .franchise-menu-toggle:hover,
 body.operator-sidebar .menu li a:hover{
   border-color:rgba(244,196,48,.2);
   transform:translateX(2px);
 }
 body.admin-sidebar .menu li a:hover i,
+body.admin-sidebar .franchise-menu-toggle:hover > i:first-child,
 body.operator-sidebar .menu li a:hover i,
 body.admin-sidebar .menu li.active > a i,
+body.admin-sidebar .franchise-menu.open > .franchise-menu-toggle > i:first-child,
 body.operator-sidebar .menu li.active > a i{
   color:#f4c430 !important;
 }
 body.admin-sidebar .menu li.active > a,
+body.admin-sidebar .franchise-menu.open > .franchise-menu-toggle,
 body.operator-sidebar .menu li.active > a{
   background:linear-gradient(90deg,rgba(244,196,48,.24),rgba(244,196,48,.08)) !important;
   border-color:rgba(244,196,48,.28);
