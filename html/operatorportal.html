@@ -6,7 +6,7 @@
   <title>Operator Portal</title>
 
 <link rel="stylesheet" href="../css/operatorportal.css">
-  <link rel="stylesheet" href="../css/tfro-theme.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-030000">
 
   <!-- Remix Icons -->
   <link
@@ -15,7 +15,7 @@
   />
 </head>
 
-<body>
+<body class="operator-sidebar">
 
 <div class="dashboard-container">
 
@@ -181,48 +181,6 @@
 
     </div>
 
-    <!-- PAYMENT HISTORY -->
-    <div class="table-card">
-
-      <div class="table-header">
-        <h3>Payment History</h3>
-      </div>
-
-      <table>
-
-        <thead>
-          <tr>
-            <th>Receipt</th>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-
-        <tbody>
-
-          <tr>
-            <td class="receipt">
-              OR-2024-0441
-            </td>
-
-            <td>Franchise Renewal</td>
-
-            <td>₱3,500</td>
-
-            <td>
-              <span class="badge paid">
-                Paid
-              </span>
-            </td>
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-
 <!-- VIOLATIONS -->
     <div class="table-card">
 
@@ -264,6 +222,12 @@
         </p>
 
         <div class="cm-grid">
+          <div class="cm-field"><label>Operator</label><input type="text" id="cmOperatorName" readonly></div>
+          <div class="cm-field"><label>Franchise Number</label><input type="text" id="cmFranchiseNumber" readonly></div>
+          <div class="cm-field"><label>Current Engine No.</label><input type="text" id="cmCurrentEngine" readonly></div>
+          <div class="cm-field"><label>Current Chassis No.</label><input type="text" id="cmCurrentChassis" readonly></div>
+          <div class="cm-field"><label>Current Plate No.</label><input type="text" id="cmCurrentPlate" readonly></div>
+          <div class="cm-field"><label>Assigned Route</label><input type="text" id="cmAssignedRoute" readonly></div>
           <div class="cm-field">
             <label>New Engine No.</label>
             <input type="text" id="cmEngine" placeholder="New engine number">
@@ -287,6 +251,10 @@
           <div class="cm-field">
             <label>Supporting Document (PDF)</label>
             <input type="file" id="cmDoc" accept="application/pdf">
+          </div>
+          <div class="cm-field">
+            <label>Operator 2×2 Picture</label>
+            <input type="file" id="cmPicture" accept="image/jpeg,image/png" required>
           </div>
         </div>
 
@@ -312,11 +280,12 @@
               <th>New Plate</th>
               <th>Status</th>
               <th>Date</th>
+              <th>Form</th>
             </tr>
           </thead>
           <tbody id="cmHistoryTable">
             <tr>
-              <td colspan="6" style="text-align:center;color:#94a3b8;">No change motor requests.</td>
+              <td colspan="7" style="text-align:center;color:#94a3b8;">No change motor requests.</td>
             </tr>
           </tbody>
         </table>
@@ -339,6 +308,9 @@
 
       <form id="driverApplicationForm">
         <div class="driver-form-grid">
+          <div class="driver-field"><label for="driverOperatorName">Operator</label><input id="driverOperatorName" type="text" readonly></div>
+          <div class="driver-field"><label for="driverFranchiseNumber">Franchise Number</label><input id="driverFranchiseNumber" type="text" readonly></div>
+          <div class="driver-field driver-field-wide"><label for="driverAssignedRoute">Assigned Route</label><input id="driverAssignedRoute" type="text" readonly></div>
           <div class="driver-field">
             <label for="driverFullName">Full Name</label>
             <input id="driverFullName" name="full_name" type="text" required>
@@ -368,9 +340,14 @@
             <label for="driverAddress">Address</label>
             <input id="driverAddress" name="address" type="text" required>
           </div>
+          <div class="driver-field driver-field-wide">
+            <label for="driverPicture">Driver 2×2 Picture</label>
+            <input id="driverPicture" name="picture" type="file" accept="image/jpeg,image/png" required>
+          </div>
         </div>
         <div class="driver-form-message" id="driverFormMessage" hidden></div>
         <div class="driver-form-actions">
+          <button class="page-button page-button-back" id="cancelDriverEditBtn" type="button" hidden>Cancel Edit</button>
           <button class="add-btn" id="submitDriverBtn" type="submit">
             <i class="ri-user-add-line"></i>
             Submit Driver Application
@@ -394,11 +371,12 @@
             <th>Driver's License #</th>
             <th>Verification Status</th>
             <th>Date Applied</th>
+            <th>Form</th>
           </tr>
         </thead>
         <tbody id="assignedDriversTable">
           <tr>
-            <td colspan="4" style="text-align:center;color:#94a3b8;">No Driver applications yet.</td>
+            <td colspan="5" style="text-align:center;color:#94a3b8;">No Driver applications yet.</td>
           </tr>
         </tbody>
       </table>
@@ -409,7 +387,8 @@
 
 </div>
 
-<script type="module" src="../js/operatorportal.js"></script>
+<script type="module" src="../js/operatorportal.js?v=20260817-213000"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 
 </body>
 </html>

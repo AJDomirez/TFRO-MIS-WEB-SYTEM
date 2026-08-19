@@ -6,7 +6,7 @@
   <title>Drivers - TFRO</title>
 
 <link rel="stylesheet" href="../css/driver.css">
-  <link rel="stylesheet" href="../css/tfro-theme.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
 
   <link
     href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
@@ -217,12 +217,12 @@
 
 <!-- ASSIGN DRIVER MODAL -->
 <div class="modal" id="driverFormModal" hidden>
-  <div class="modal-box">
+  <div class="modal-box driver-form-modal-box">
     <div class="modal-head">
       <h3>Submitted Driver Application</h3>
       <button class="modal-close" data-close="driverFormModal"><i class="ri-close-line"></i></button>
     </div>
-    <div class="modal-body"><div class="review-info-grid" id="driverFormDetails"></div></div>
+    <div class="modal-body driver-form-modal-body"><div class="driver-submission-preview" id="driverSubmissionPreview"><img id="driverFormPicture" class="driver-form-picture" alt="Submitted Driver 2 by 2 picture" hidden><div class="review-info-grid" id="driverFormDetails"></div></div><div class="form-actions driver-form-modal-actions"><button type="button" class="btn-primary" id="printDriverFormBtn"><i class="ri-printer-line"></i> View / Save PDF / Print</button></div></div>
   </div>
 </div>
 
@@ -246,8 +246,8 @@
   </div>
 </div>
 
-<script type="module" src="../js/driver.js"></script>
-<script type="module" src="../js/sidebar-user.js"></script>
+<script type="module" src="../js/driver.js?v=20260817-233000"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 
 <script>
 

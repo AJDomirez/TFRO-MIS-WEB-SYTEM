@@ -2,7 +2,7 @@
 -- Each row gives one Supabase Auth account permission to use a TFRO portal.
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  role text not null check (role in ('admin', 'staff', 'operator', 'driver')),
+  role text not null check (role in ('admin', 'staff', 'operator')),
   full_name text,
   contact_number text,
   created_at timestamptz not null default now()
@@ -53,11 +53,11 @@ security definer
 set search_path = public, pg_temp
 as $$
 declare
-  requested_role text := coalesce(new.raw_user_meta_data->>'role', 'driver');
+  requested_role text := coalesce(new.raw_user_meta_data->>'role', 'operator');
 begin
   -- Public registration can never grant staff or administrator access.
-  if requested_role not in ('driver', 'operator') then
-    requested_role := 'driver';
+  if requested_role <> 'operator' then
+    requested_role := 'operator';
   end if;
 
   insert into public.profiles (id, role, full_name, contact_number)

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TFRO Violations</title>
 
-<link rel="stylesheet" href="../css/violation.css?v=20260817-4">
-  <link rel="stylesheet" href="../css/tfro-theme.css">
+<link rel="stylesheet" href="../css/violation.css?v=20260818-051500">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
 
   <!-- Remix Icons -->
   <link
@@ -135,10 +135,17 @@
     <!-- TOPBAR -->
     <div class="topbar">
       <div>
-        <h1>Violations & Compliance</h1>
-        <p>Track operator and driver violations</p>
+        <h1>TFRO Staff — Violations</h1>
+        <p>Encode tickets, issue notices, and monitor violation settlement</p>
       </div>
     </div>
+
+    <section class="staff-summary" aria-label="Violation summary">
+      <article><i class="ri-file-warning-line"></i><div><strong id="violationTotal">0</strong><span>Total tickets</span></div></article>
+      <article><i class="ri-time-line"></i><div><strong id="violationPending">0</strong><span>Pending payment</span></div></article>
+      <article><i class="ri-checkbox-circle-line"></i><div><strong id="violationPaid">0</strong><span>Paid tickets</span></div></article>
+      <article><i class="ri-money-peso-circle-line"></i><div><strong id="violationAmount">₱0.00</strong><span>Total assessed</span></div></article>
+    </section>
 
     <!-- TOOLBAR -->
     <div class="toolbar">
@@ -182,8 +189,13 @@
       <form id="violationForm">
         <label>Subject name<input name="subject_name" required></label>
         <label>Subject type<select name="subject_type"><option value="driver">Driver</option><option value="operator">Operator</option></select></label>
-        <label>Violation type<input name="violation_type" required placeholder="No Helmet"></label>
-        <label>Penalty (PHP)<input name="penalty" type="number" min="0" step="0.01" required></label>
+        <label>Violation code<select name="violation_code" id="violationCode" required><option value="">Select official violation</option></select></label>
+        <label>Violation<input name="violation_type" required readonly></label>
+        <label>Classification<select name="classification"><option value="with_franchise">With Franchise</option><option value="colorum">Colorum</option><option value="temporary">Temporary</option></select></label>
+        <label>Franchise number<input name="franchise_number" placeholder="Required when applicable"></label>
+        <label>Ticket number<input name="ticket_number" required></label>
+        <label>Apprehending officer/s<input name="apprehending_officers" required></label>
+        <label>Penalty (PHP)<input name="penalty" type="number" min="0" step="0.01" required readonly></label>
         <label>Date<input name="occurred_date" type="date" required></label>
         <label>Status<select name="status"><option value="pending">Pending</option><option value="paid">Paid</option><option value="dismissed">Dismissed</option></select></label>
         <label>Description<input name="description"></label>
@@ -199,8 +211,9 @@
         <thead>
           <tr>
             <th>Subject</th>
-            <th>Type</th>
-            <th>Violation</th>
+            <th>Class / Franchise</th>
+            <th>Code / Violation</th>
+            <th>Ticket / Apprehender</th>
             <th>Penalty</th>
             <th>Date</th>
             <th>Status</th>
@@ -220,20 +233,8 @@
 
 <div class="violation-toast" id="violationToast" hidden role="status" aria-live="polite"></div>
 
-<script type="module" src="../js/violation.js?v=20260817-4"></script>
-<script type="module" src="../js/sidebar-user.js"></script>
-<script>
-
-  const role = localStorage.getItem("role");
-
-  const paymentMenu =
-    document.getElementById("paymentMenu");
-
-  if(role === "admin"){
-    paymentMenu.style.display = "none";
-  }
-
-</script>
+<script type="module" src="../js/violation.js?v=20260818-051500"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 </body>
 </html>
 

@@ -47,4 +47,3 @@ export async function logAudit({ action, actionType, record = null, description 
     console.error("Audit log insert failed:", err);
   }
 }
-</content>

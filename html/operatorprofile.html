@@ -6,7 +6,7 @@
   <title>Operator Profile</title>
 
 <link rel="stylesheet" href="../css/operatorprofile.css">
-  <link rel="stylesheet" href="../css/tfro-theme.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-030000">
 
   <!-- Remix Icons -->
   <link
@@ -15,7 +15,7 @@
   />
 </head>
 
-<body>
+<body class="operator-sidebar">
 
 <div class="dashboard-container">
 
@@ -141,12 +141,23 @@
           </div>
 
           <div class="form-group full">
+            <label>Home Address</label>
+            <input type="text" id="address">
+          </div>
+
+          <div class="form-group full">
+            <label>Franchise Number</label>
+            <input type="text" id="franchiseNumber" disabled>
+          </div>
+
+          <div class="form-group full">
             <label>Role</label>
             <input type="text" id="role" disabled>
           </div>
 
         </div>
 
+        <div class="inline-profile-message" id="profileMessage" hidden role="alert"></div>
         <button type="submit" class="save-btn">
           Save Changes
         </button>
@@ -178,6 +189,7 @@
           <input type="password" id="confirmPassword" placeholder="Repeat new password" required>
         </div>
 
+        <div class="inline-profile-message" id="passwordMessage" hidden role="alert"></div>
         <button type="submit" class="save-btn">
           Update Password
         </button>
@@ -191,6 +203,7 @@
 </div>
 
 <script type="module" src="../js/operatorprofile.js"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 
 </body>
 </html>

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TFRO Login</title>
 
-  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/style.css?v=20260818-023000">
 
   <!-- Remix Icons -->
   <link
@@ -78,6 +78,12 @@
           </div>
         </div>
 
+        <div class="input-group">
+          <label>Operator Franchise Number <small>(operators only)</small></label>
+          <input type="text" id="franchiseNumber" placeholder="FR-2026-0001" autocomplete="off" />
+        </div>
+
+        <div class="inline-form-message" id="loginMessage" hidden role="alert"></div>
         <button type="submit" class="login-btn">
           <i class="ri-login-box-line"></i>
           Sign In

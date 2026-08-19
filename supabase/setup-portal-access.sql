@@ -2,19 +2,10 @@
 --   setup-auth.sql, setup-drivers.sql, setup-operators.sql,
 --   setup-franchises.sql, setup-violations.sql
 --
--- Grants drivers and operators read access to their own records.
+-- Grants operators read access to their own records.
 -- Records are matched by full_name because that is how the tables are linked.
 
--- DRIVERS: a driver can read their own record (matched by full_name in profiles)
 drop policy if exists "Drivers can read their own record" on public.drivers;
-create policy "Drivers can read their own record"
-on public.drivers
-for select
-to authenticated
-using (
-  (select role from public.profiles where id = auth.uid()) = 'driver'
-  and full_name = (select full_name from public.profiles where id = auth.uid())
-);
 
 -- OPERATORS: an operator can read their own record
 drop policy if exists "Operators can read their own record" on public.operators;
@@ -38,7 +29,7 @@ using (
   and operator_name = (select full_name from public.profiles where id = auth.uid())
 );
 
--- VIOLATIONS: a driver/operator can read violations under their own name
+-- VIOLATIONS: an operator can read violations under their own name
 drop policy if exists "Users can read their own violations" on public.violations;
 create policy "Users can read their own violations"
 on public.violations

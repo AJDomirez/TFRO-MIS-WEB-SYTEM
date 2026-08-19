@@ -1,7 +1,7 @@
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;}
 .back-link{display:inline-flex;align-items:center;gap:7px;color:#176b48;text-decoration:none;font-weight:700;}
-.process-summary{display:grid;grid-template-columns:repeat(8,minmax(110px,1fr));gap:10px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px;}
-.process-summary div{min-width:110px;background:#fff;border:1px solid #dce8e1;border-radius:12px;padding:13px 10px;display:flex;align-items:center;gap:8px;color:#173d2f;font-size:.78rem;font-weight:700;}
+.process-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:20px;}
+.process-summary div{background:#fff;border:1px solid #dce8e1;border-radius:12px;padding:13px 10px;display:flex;align-items:center;gap:8px;color:#173d2f;font-size:.78rem;font-weight:700;}
 .process-summary strong,.step-number{width:27px;height:27px;min-width:27px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#126b2a;color:#fff;font-size:.8rem;}
 .process-summary .staff-step{background:#f7faf8;color:#64748b;}
 .renewal-card{background:#fff;border-radius:15px;padding:24px;margin-bottom:22px;box-shadow:0 2px 10px rgba(11,61,46,.06);border:1px solid #e9f1ec;}
@@ -11,6 +11,7 @@
 .card-title small{color:#71847b;}
 .card-icon{font-size:1.4rem;color:#178a5e;}
 .section-divider{border-top:1px solid #e2eae5;padding-top:22px;margin:24px 0 18px;}
+.renewal-page[hidden]{display:none;}
 .renewal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
 .renewal-grid .full{grid-column:1/-1;}
 .renewal-grid label{font-size:.82rem;font-weight:700;color:#1c3a2e;}
@@ -29,13 +30,20 @@
 .renewal-alert.approved{background:#e7f6ee;border-color:#b7e3cd;color:#0b5c41;}
 .renewal-alert.rejected{background:#fdeaea;border-color:#f0b9b9;color:#9c2f2f;}
 .form-error{background:#fdeaea;color:#9c2f2f;border:1px solid #f0b9b9;padding:12px 16px;border-radius:10px;margin-top:16px;font-size:.88rem;}
-.submit-row{display:flex;justify-content:flex-end;margin-top:20px;}
+.renewal-pagination{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;margin-top:22px;padding-top:18px;border-top:1px solid #e2eae5;}
+.renewal-pagination>span{text-align:center;color:#64748b;font-size:.85rem;font-weight:700;}
+.page-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 20px;border-radius:10px;font-weight:700;cursor:pointer;}
+.page-button-back{justify-self:start;border:1px solid #b9c9c0;background:#fff;color:#176b48;}
+.page-button-next{justify-self:end;border:0;background:#176b48;color:#fff;}
+.page-button:disabled{opacity:.45;cursor:not-allowed;}
 .btn-submit{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(135deg,#178a5e,#1ea86f);color:#fff;border:none;padding:13px 28px;border-radius:11px;font-weight:700;cursor:pointer;border-bottom:3px solid #f4c430;}
+.renewal-pagination .btn-submit{justify-self:end;}
+.renewal-pagination [hidden]{display:none;}
 .btn-submit:disabled{opacity:.55;cursor:not-allowed;}
 .table-wrap{overflow-x:auto;}
 .status-pill{display:inline-flex;padding:5px 10px;border-radius:99px;font-size:.75rem;font-weight:700;text-transform:capitalize;}
 .status-pill.approved{background:#dcfce7;color:#15803d;}
 .status-pill.rejected{background:#fee2e2;color:#b91c1c;}
 .status-pill.pending{background:#fef3c7;color:#92400e;}
-@media(max-width:900px){.renewal-grid,.renewal-documents{grid-template-columns:1fr;}.renewal-grid .full{grid-column:auto;}.topbar{align-items:flex-start;}.back-link{display:none;}}
-@media(max-width:600px){.renewal-card{padding:17px}.card-title{align-items:flex-start}.renewal-documents label{flex-direction:column;align-items:flex-start}.renewal-documents input{max-width:100%}.btn-submit{width:100%;justify-content:center;}}
+@media(max-width:900px){.process-summary{grid-template-columns:repeat(2,minmax(0,1fr));}.renewal-grid,.renewal-documents{grid-template-columns:1fr;}.renewal-grid .full{grid-column:auto;}.topbar{align-items:flex-start;}.back-link{display:none;}}
+@media(max-width:600px){.process-summary{grid-template-columns:1fr;}.renewal-card{padding:17px}.card-title{align-items:flex-start}.renewal-documents label{flex-direction:column;align-items:flex-start}.renewal-documents input{max-width:100%}.renewal-pagination{grid-template-columns:1fr 1fr}.renewal-pagination>span{grid-column:1/-1;grid-row:1}.page-button-back{grid-column:1;grid-row:2;width:100%}.page-button-next,.renewal-pagination .btn-submit{grid-column:2;grid-row:2;width:100%}.btn-submit{justify-content:center;}}

@@ -3,6 +3,11 @@ import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
 
+async function openSavedSubmissionForm(options) {
+  const { openSubmissionForm } = await import("./submission-form.js");
+  openSubmissionForm(options);
+}
+
 const DOC_LABELS = {
   voters_certificate: "Latest Voter's Certificate", cedula: "Latest Cedula",
   barangay_clearance: "Barangay Clearance", drivers_license: "Driver's License",
@@ -115,6 +120,28 @@ async function openReview(id) {
   byId("reviewModal").hidden = false;
 }
 
+async function printCurrentRenewal() {
+  if (!currentRenewal) return;
+  const picture = currentDocuments.find((doc) => doc.doc_type === "picture_2x2");
+  await openSavedSubmissionForm({
+    title: "Franchise Renewal Application", reference: currentRenewal.renewal_code,
+    filename: `TFRO-Renewal-${currentRenewal.renewal_code}`,
+    pictureUrl: picture ? await signedUrl(picture.storage_path) : "",
+    fields: [
+      { label: "Operator", value: currentRenewal.operator_name }, { label: "Contact", value: currentRenewal.operator_contact },
+      { label: "Address", value: currentRenewal.operator_address }, { label: "Renewal Type", value: TYPE_LABELS[currentRenewal.renewal_type] || currentRenewal.renewal_type },
+      { label: "Current Expiration", value: currentRenewal.current_expiration_date }, { label: "Driver", value: currentRenewal.driver_name },
+      { label: "Driver License", value: currentRenewal.driver_license_number }, { label: "Plate", value: currentRenewal.plate_number },
+      { label: "Engine", value: currentRenewal.engine_number }, { label: "Chassis", value: currentRenewal.chassis_number },
+      { label: "Voter's Certificate", value: currentRenewal.voters_certificate_number }, { label: "Cedula", value: currentRenewal.cedula_number },
+      { label: "Barangay Clearance", value: currentRenewal.barangay_clearance_number }, { label: "PMBL Certificate", value: currentRenewal.pmbl_certificate_number },
+      { label: "Current OR", value: currentRenewal.current_or_number }, { label: "Current CR", value: currentRenewal.current_cr_number },
+      { label: "OR Registration", value: currentRenewal.or_registration_class }, { label: "CR Registration", value: currentRenewal.cr_registration_class },
+      { label: "Status", value: labelStatus(currentRenewal.status) }, { label: "Submitted", value: new Date(currentRenewal.created_at).toLocaleString() },
+    ],
+  });
+}
+
 function inspectionResults() {
   return Object.fromEntries(INSPECTION_KEYS.map((key) => [key, document.querySelector(`[data-inspection="${key}"]`).checked]));
 }
@@ -203,15 +230,19 @@ async function approveRenewal() {
       p_expected_release_date: byId("expectedRelease").value,
     });
     if (error) throw error;
+    const emailDelivery = await supabase.functions.invoke("send-renewal-approval", {
+      body: { renewal_id: currentRenewal.id },
+    });
+    if (emailDelivery.error) console.warn("Approval email remains queued:", emailDelivery.error);
     await logAudit({ action: "Approved Franchise Renewal", actionType: "approve", record: currentRenewal.renewal_code, description: `Approved ${currentRenewal.renewal_code}; new expiration ${data}.` });
-    alert(`Renewal approved. New expiration: ${data}. MTOP issuance is expected in 1–2 weeks.`);
+    alert(`Renewal approved. The Franchise Record now expires on ${data}. The Operator received an account notification${emailDelivery.error ? "; the approval email remains queued" : " and approval email"}. The Operator must bring all original requirements and valid ID to TFRO in person.`);
     byId("reviewModal").hidden = true;
     await loadRenewals();
   } catch (error) { alert(`Could not approve renewal: ${error.message}`); }
 }
 
 async function init() {
-  const auth = await requireRole(["admin", "staff"]);
+  const auth = await requireRole(["admin"]);
   if (!auth.user) return;
   currentProfile = auth.profile;
   await loadRenewals();
@@ -251,5 +282,6 @@ document.querySelectorAll("[data-close]").forEach((button) => button.addEventLis
 byId("saveProgressBtn").addEventListener("click", handleSaveProgress);
 byId("incompleteBtn").addEventListener("click", markIncomplete);
 byId("approveRenewalBtn").addEventListener("click", approveRenewal);
+byId("printRenewalBtn").addEventListener("click", printCurrentRenewal);
 byId("logoutBtn").addEventListener("click", () => signOutAndRedirect("index.html"));
 init();

@@ -17,6 +17,13 @@ const defaultButtonHtml = '<i class="ri-user-add-line"></i> Create Account';
 const passwordInput = document.getElementById("password");
 const confirmPasswordInput = document.getElementById("confirmPassword");
 const passwordMatchStatus = document.getElementById("passwordMatchStatus");
+const registerMessage = document.getElementById("registerMessage");
+
+function showRegisterWarning(message) {
+  registerMessage.textContent = message;
+  registerMessage.hidden = false;
+  registerMessage.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
 
 // Keep the browser checks aligned with the password rules shown in the form.
 const passwordRules = Object.freeze({
@@ -146,13 +153,13 @@ function showRegistrationError(error) {
 
   if (message) {
     // A real, meaningful error from Supabase Auth.
-    alert(`Registration failed: ${message}`);
+    showRegisterWarning(`Registration failed: ${message}`);
     return;
   }
 
   // Fallback: guide the user to the current Auth dependency without exposing
   // provider credentials or internal server details.
-  alert(
+  showRegisterWarning(
     "Registration could not be completed. Ask the administrator to check " +
     "Supabase Authentication email delivery and Custom SMTP settings."
   );
@@ -160,6 +167,7 @@ function showRegistrationError(error) {
 
 registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  registerMessage.hidden = true;
 
   // Public registration is deliberately Operator-only. Staff and Administrator
   // accounts are provisioned centrally; Drivers do not receive login accounts.
@@ -167,17 +175,19 @@ registerForm.addEventListener("submit", async (event) => {
   const fullName = document.getElementById("fullName").value.trim();
   const email = document.getElementById("email").value.trim();
   const contactNumber = document.getElementById("contactNumber").value.trim();
+  const address = document.getElementById("address").value.trim();
+  const franchiseNumber = document.getElementById("franchiseNumber").value.trim().toUpperCase();
   const password = passwordInput.value;
   const confirmPassword = confirmPasswordInput.value;
 
   /* VALIDATION */
-  if (!fullName || !email || !contactNumber) {
-    alert("Please fill in all the required fields.");
+  if (!fullName || !email || !contactNumber || !address || !franchiseNumber) {
+    showRegisterWarning("Please fill in all the required fields.");
     return;
   }
 
   if (!passwordMeetsRequirements(password)) {
-    alert(
+    showRegisterWarning(
       "Password must be at least 8 characters and include an uppercase letter, " +
       "a lowercase letter, a number, and a symbol."
     );
@@ -186,7 +196,7 @@ registerForm.addEventListener("submit", async (event) => {
   }
 
   if (password !== confirmPassword) {
-    alert("Passwords do not match. Please try again.");
+    showRegisterWarning("Passwords do not match. Please try again.");
     confirmPasswordInput.focus();
     return;
   }
@@ -208,6 +218,8 @@ registerForm.addEventListener("submit", async (event) => {
           role,
           full_name: fullName,
           contact_number: contactNumber,
+          address,
+          franchise_number: franchiseNumber,
         },
       },
     }));
@@ -226,7 +238,7 @@ registerForm.addEventListener("submit", async (event) => {
   }
 
   if (!data?.user) {
-    alert("Something went wrong. Please try again.");
+    showRegisterWarning("Something went wrong. Please try again.");
     submitButton.disabled = false;
     submitButton.innerHTML = defaultButtonHtml;
     return;
@@ -247,7 +259,7 @@ registerForm.addEventListener("submit", async (event) => {
   const { data: profile, error: profileError } = await loadUserProfile(data.user.id);
   if (profileError || !profile) {
     await supabase.auth.signOut({ scope: "local" });
-    alert("Account created, but its TFRO profile could not be loaded. Please sign in again.");
+    showRegisterWarning("Account created, but its TFRO profile could not be loaded. Please sign in again.");
     window.location.replace("login.html");
     return;
   }

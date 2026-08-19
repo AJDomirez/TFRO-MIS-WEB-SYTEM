@@ -6,7 +6,7 @@ begin;
 
 -- ---------------------------------------------------------------------------
 -- Profiles: role assignment is server-controlled. New public registrations may
--- only become driver/operator; staff and admin roles must be assigned by an
+-- only become operators; staff and admin roles must be assigned by an
 -- administrator in SQL/Dashboard, never by browser metadata or profile updates.
 -- ---------------------------------------------------------------------------
 create or replace function public.handle_new_user()
@@ -16,10 +16,10 @@ security definer
 set search_path = public
 as $$
 declare
-  requested_role text := coalesce(new.raw_user_meta_data ->> 'role', 'driver');
+  requested_role text := coalesce(new.raw_user_meta_data ->> 'role', 'operator');
 begin
-  if requested_role not in ('driver', 'operator') then
-    requested_role := 'driver';
+  if requested_role <> 'operator' then
+    requested_role := 'operator';
   end if;
 
   insert into public.profiles (id, role, full_name, contact_number)

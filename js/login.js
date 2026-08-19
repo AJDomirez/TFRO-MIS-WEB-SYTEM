@@ -14,9 +14,15 @@ if (togglePassword && passwordInput) {
 
 const loginForm = document.getElementById("loginForm");
 const submitButton = loginForm.querySelector('button[type="submit"]');
+const loginMessage = document.getElementById("loginMessage");
+
+function showLoginWarning(message) {
+  loginMessage.textContent = message;
+  loginMessage.hidden = false;
+}
 
 // Resolve the user's role and route them to the correct portal.
-async function routeUser(user) {
+async function routeUser(user, suppliedFranchiseNumber = "") {
   // 1) Try to load the role from the profiles table.
   let role = null;
   const { data: profile, error: profileError } = await loadUserProfile(user.id);
@@ -27,12 +33,31 @@ async function routeUser(user) {
 
   if (!role) {
     await supabase.auth.signOut();
-    alert(
-      profile?.role === "driver"
-        ? "Drivers do not sign in. Your Operator manages your driver application and credentials."
-        : "This account has no authorized TFRO role. Contact the TFRO administrator."
-    );
+    showLoginWarning("This account has no authorized TFRO role. Only Operators, Administrators, and TFRO Staff can sign in.");
     return false;
+  }
+
+  if (role === "operator") {
+    const franchiseNumber = suppliedFranchiseNumber.trim().toUpperCase();
+    if (!franchiseNumber) {
+      await supabase.auth.signOut({ scope: "local" });
+      showLoginWarning("Login failed: Enter your Operator Franchise Number.");
+      return false;
+    }
+
+    const { data: operator, error: operatorError } = await supabase
+      .from("operators")
+      .select("franchise_number")
+      .eq("user_id", user.id)
+      .order("id", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (operatorError || !operator || String(operator.franchise_number || "").trim().toUpperCase() !== franchiseNumber) {
+      await supabase.auth.signOut({ scope: "local" });
+      showLoginWarning("Login failed: The franchise number does not match this Operator account.");
+      return false;
+    }
   }
 
   // Kept temporarily because the existing portal pages use this value for their UI.
@@ -102,9 +127,11 @@ function friendlyLoginError(error) {
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  loginMessage.hidden = true;
 
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
+  const franchiseNumber = document.getElementById("franchiseNumber").value;
 
   submitButton.disabled = true;
   submitButton.textContent = "Signing in...";
@@ -118,7 +145,7 @@ loginForm.addEventListener("submit", async (event) => {
     }));
   } catch (requestError) {
     console.error("Supabase sign-in request failed:", requestError);
-    alert(friendlyLoginError(requestError));
+    showLoginWarning(friendlyLoginError(requestError));
     submitButton.disabled = false;
     submitButton.textContent = "Sign In";
     return;
@@ -126,13 +153,13 @@ loginForm.addEventListener("submit", async (event) => {
 
   if (authError || !authData.user) {
     console.error("Supabase sign-in error:", authError);
-    alert(friendlyLoginError(authError));
+    showLoginWarning(friendlyLoginError(authError));
     submitButton.disabled = false;
     submitButton.textContent = "Sign In";
     return;
   }
 
-  const success = await routeUser(authData.user);
+  const success = await routeUser(authData.user, franchiseNumber);
   if (!success) {
     submitButton.disabled = false;
     submitButton.textContent = "Sign In";
@@ -145,7 +172,8 @@ loginForm.addEventListener("submit", async (event) => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
-      await routeUser(session.user);
+      const profileResult = await loadUserProfile(session.user.id);
+      if (profileResult.data?.role !== "operator") await routeUser(session.user);
     }
   } catch (error) {
     console.error("Could not restore the existing session:", error);

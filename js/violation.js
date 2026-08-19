@@ -4,6 +4,8 @@ import { requireRole } from "./auth-guard.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
 
 let violations = [];
+let catalog = [];
+let currentUserId = null;
 let editingViolationId = null;
 let toastTimer = null;
 
@@ -39,19 +41,24 @@ function filteredViolations() {
   const status = document.getElementById("statusFilter").value;
   return violations.filter((row) => isWithinDateRange(row.occurred_at)
     && (status === "all" || row.status === status)
-    && [row.subject_name || "", row.violation_type || "", row.description || ""]
+    && [row.subject_name || "", row.violation_code || "", row.ticket_number || "", row.violation_type || "", row.description || ""]
       .some((value) => value.toLowerCase().includes(term)));
 }
 
 function render() {
   const rows = filteredViolations();
+  document.getElementById("violationTotal").textContent = violations.length;
+  document.getElementById("violationPending").textContent = violations.filter((row) => row.status === "pending").length;
+  document.getElementById("violationPaid").textContent = violations.filter((row) => row.status === "paid").length;
+  document.getElementById("violationAmount").textContent = money.format(violations.reduce((sum, row) => sum + Number(row.penalty || 0), 0));
   table.innerHTML = rows.length ? rows.map((row) => {
     const subjectType = ["driver", "operator"].includes(row.subject_type) ? row.subject_type : "";
     const status = ["pending", "paid", "dismissed"].includes(row.status) ? row.status : "";
     return `<tr>
       <td>${escapeHtml(row.subject_name || "—")}</td>
-      <td><span class="type ${subjectType}">${escapeHtml(row.subject_type || "—")}</span></td>
-      <td>${escapeHtml(row.violation_type)}</td>
+      <td><span class="type ${subjectType}">${escapeHtml(row.classification || row.subject_type || "—")}</span><br><small>${escapeHtml(row.franchise_number || "No franchise")}</small></td>
+      <td><strong>${escapeHtml(row.violation_code || "—")}</strong><br>${escapeHtml(row.violation_type)}</td>
+      <td><strong>${escapeHtml(row.ticket_number || "—")}</strong><br><small>${escapeHtml(row.apprehending_officers || "—")}</small></td>
       <td>${money.format(Number(row.penalty || 0))}</td>
       <td>${new Date(row.occurred_at).toLocaleDateString("en-PH")}</td>
       <td><span class="status ${status}">${escapeHtml(row.status)}</span></td>
@@ -59,9 +66,17 @@ function render() {
         <button type="button" data-action="edit" data-id="${row.id}" title="Edit violation" aria-label="Edit violation for ${escapeHtml(row.subject_name || "record")}">
           <i class="ri-pencil-line"></i>
         </button>
+        <button type="button" data-action="notice" data-id="${row.id}" title="Print violation notice"><i class="ri-printer-line"></i></button>
       </div></td>
     </tr>`;
-  }).join("") : '<tr><td colspan="7">No violations found.</td></tr>';
+  }).join("") : '<tr><td colspan="8">No violations found.</td></tr>';
+}
+
+function printNotice(row) {
+  const tab = window.open("", "_blank");
+  if (!tab) return window.alert("Please allow pop-ups to print the violation notice.");
+  tab.document.write(`<!doctype html><html><head><title>Violation Notice ${escapeHtml(row.ticket_number || "")}</title><style>body{font-family:Arial,sans-serif;color:#172033}.page{max-width:760px;margin:25px auto;border:1px solid #aebbb5;padding:28px}.head{border-top:12px solid #0b5c41;border-bottom:5px solid #f4c430;padding:16px 0}.head h1{font-size:20px;margin:0}.title{text-align:center;letter-spacing:4px;text-decoration:underline;margin:30px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{border-bottom:1px solid #555;padding:8px 0}.field b{display:block;font-size:11px;color:#5b6870;text-transform:uppercase}table{width:100%;border-collapse:collapse;margin:24px 0}th,td{border:1px solid #555;padding:10px;text-align:left}.sign{display:flex;justify-content:space-between;margin-top:55px;text-align:center}@media print{.page{border:0;margin:0}}</style></head><body><main class="page"><header class="head"><h1>TRICYCLE FRANCHISING AND REGULATORY OFFICE</h1><p>City Government of Lucena</p></header><h2 class="title">NOTICE OF VIOLATION</h2><section class="grid"><div class="field"><b>Ticket number</b>${escapeHtml(row.ticket_number || "—")}</div><div class="field"><b>Violation date</b>${new Date(row.occurred_at).toLocaleDateString("en-PH")}</div><div class="field"><b>Name</b>${escapeHtml(row.subject_name)}</div><div class="field"><b>Classification</b>${escapeHtml(row.classification || row.subject_type)}</div><div class="field"><b>Franchise number</b>${escapeHtml(row.franchise_number || "—")}</div><div class="field"><b>Apprehending officer/s</b>${escapeHtml(row.apprehending_officers || "—")}</div></section><table><tr><th>Code</th><th>Violation</th><th>Penalty</th></tr><tr><td>${escapeHtml(row.violation_code || "—")}</td><td>${escapeHtml(row.violation_type)}</td><td>${money.format(Number(row.penalty || 0))}</td></tr></table><p><strong>Status:</strong> ${escapeHtml(row.status)}</p><div class="sign"><p>_________________________<br>Operator / Driver</p><p>_________________________<br>TFRO Personnel</p></div></main><script>window.onload=()=>window.print()<\/script></body></html>`);
+  tab.document.close();
 }
 
 async function loadViolations() {
@@ -78,6 +93,21 @@ async function loadViolations() {
   render();
 }
 
+async function loadCatalog() {
+  const { data, error } = await supabase.from("violation_catalog").select("code, violation, penalty").eq("active", true).order("code");
+  if (error) throw error;
+  catalog = data || [];
+  document.getElementById("violationCode").innerHTML = '<option value="">Select official violation</option>' + catalog.map((item) =>
+    `<option value="${escapeHtml(item.code)}">${escapeHtml(item.code)} — ${escapeHtml(item.violation)} (${money.format(Number(item.penalty))})</option>`
+  ).join("");
+}
+
+function applyCatalogSelection() {
+  const item = catalog.find((entry) => entry.code === form.elements.violation_code.value);
+  form.elements.violation_type.value = item?.violation || "";
+  form.elements.penalty.value = item ? Number(item.penalty) : "";
+}
+
 function setFormMode(mode, row = null) {
   form.reset();
   editingViolationId = mode === "edit" ? row.id : null;
@@ -87,14 +117,19 @@ function setFormMode(mode, row = null) {
   if (mode === "edit") {
     form.elements.subject_name.value = row.subject_name || "";
     form.elements.subject_type.value = row.subject_type || "driver";
+    form.elements.violation_code.value = row.violation_code || "";
     form.elements.violation_type.value = row.violation_type || "";
+    form.elements.classification.value = row.classification || "with_franchise";
+    form.elements.franchise_number.value = row.franchise_number || "";
+    form.elements.ticket_number.value = row.ticket_number || "";
+    form.elements.apprehending_officers.value = row.apprehending_officers || "";
     form.elements.penalty.value = Number(row.penalty || 0);
     form.elements.occurred_date.value = dateForInput(row.occurred_at);
     form.elements.status.value = row.status || "pending";
     form.elements.description.value = row.description || "";
   } else {
     form.elements.occurred_date.value = dateForInput();
-    form.elements.penalty.value = "0";
+    form.elements.penalty.value = "";
     form.elements.status.value = "pending";
   }
 
@@ -115,13 +150,20 @@ function readEntry() {
   const values = Object.fromEntries(new FormData(form));
   const penalty = Number(values.penalty);
   if (!values.subject_name?.trim()) throw new Error("Subject name is required.");
+  if (!values.violation_code) throw new Error("Select an official violation code.");
   if (!values.violation_type?.trim()) throw new Error("Violation type is required.");
   if (!values.occurred_date) throw new Error("Violation date is required.");
   if (!Number.isFinite(penalty) || penalty < 0) throw new Error("Penalty must be zero or greater.");
   return {
     subject_name: values.subject_name.trim(),
     subject_type: values.subject_type,
+    violation_code: values.violation_code,
     violation_type: values.violation_type.trim(),
+    classification: values.classification,
+    franchise_number: values.franchise_number?.trim() || null,
+    ticket_number: values.ticket_number?.trim() || null,
+    apprehending_officers: values.apprehending_officers?.trim() || null,
+    recorded_by: currentUserId,
     description: values.description?.trim() || null,
     penalty,
     status: values.status,
@@ -177,12 +219,15 @@ function bindEvents() {
   document.getElementById("searchInput").addEventListener("input", render);
   document.getElementById("statusFilter").addEventListener("change", render);
   table.addEventListener("click", (event) => {
-    const button = event.target.closest("button[data-action='edit']");
+    const button = event.target.closest("button[data-action]");
     if (!button) return;
     const row = violations.find((item) => String(item.id) === String(button.dataset.id));
-    if (row) setFormMode("edit", row);
+    if (!row) return;
+    if (button.dataset.action === "edit") setFormMode("edit", row);
+    if (button.dataset.action === "notice") printNotice(row);
   });
   form.addEventListener("submit", saveViolation);
+  document.getElementById("violationCode").addEventListener("change", applyCatalogSelection);
 
   bindDateCsvExport({
     getRows: filteredViolations,
@@ -190,12 +235,15 @@ function bindEvents() {
     filename: "tfro_violations",
     columns: [
       { header: "Violation Date", value: (row) => row.occurred_at },
+      { header: "Code", value: (row) => row.violation_code },
+      { header: "Ticket Number", value: (row) => row.ticket_number },
       { header: "Subject Classification", value: (row) => row.subject_type },
       { header: "Name", value: (row) => row.subject_name },
       { header: "Violation", value: (row) => row.violation_type },
       { header: "Description", value: (row) => row.description },
       { header: "Penalty", value: (row) => row.penalty },
       { header: "Status", value: (row) => row.status },
+      { header: "Apprehending Officers", value: (row) => row.apprehending_officers },
       { header: "Created At", value: (row) => row.created_at },
     ],
   });
@@ -203,8 +251,12 @@ function bindEvents() {
 
 async function initialize() {
   bindEvents();
-  const { user } = await requireRole(["admin", "staff"]);
-  if (user) await loadViolations();
+  const { user } = await requireRole(["staff"]);
+  if (user) {
+    currentUserId = user.id;
+    try { await Promise.all([loadCatalog(), loadViolations()]); }
+    catch (error) { console.error(error); window.alert(`Could not load staff violation data: ${error.message}`); }
+  }
 }
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize, { once: true });

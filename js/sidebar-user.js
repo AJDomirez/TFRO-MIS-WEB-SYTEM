@@ -11,6 +11,7 @@ import { supabase } from "./supabase.js";
 const savedRole = localStorage.getItem("role") || "";
 if (savedRole) {
   document.body.classList.toggle("admin-sidebar", ["admin", "staff"].includes(savedRole));
+  document.body.classList.toggle("operator-sidebar", savedRole === "operator");
 }
 
 function initials(name = "") {
@@ -27,9 +28,8 @@ function initials(name = "") {
 function roleLabel(role) {
   const map = {
     admin: "Administrator",
-    staff: "Staff",
+    staff: "TFRO Staff",
     operator: "Operator",
-    driver: "Driver",
   };
   return map[role] || role || "User";
 }
@@ -79,6 +79,7 @@ function setupOperatorNavigation() {
   const menu = document.querySelector(".sidebar .menu");
   if (!menu || menu.dataset.operatorMenuReady) return;
   const currentPage = window.location.pathname.split("/").pop() || "operatorportal.html";
+  const activePage = currentPage === "operatorapplication.html" ? "operatorportal.html" : currentPage;
   const pages = [
     { href: "operatorportal.html", icon: "ri-home-4-line", label: "Home" },
     { href: "renewal.html", icon: "ri-refresh-line", label: "Franchise Renewal" },
@@ -86,6 +87,20 @@ function setupOperatorNavigation() {
     { href: "operatorprofile.html", icon: "ri-user-settings-line", label: "My Profile" },
   ];
   menu.dataset.operatorMenuReady = "true";
+  menu.innerHTML = pages.map((page) => `<li class="${page.href === activePage ? "active" : ""}"><a href="${page.href}"><i class="${page.icon}"></i><span>${page.label}</span></a></li>`).join("");
+}
+
+function setupStaffNavigation() {
+  const menu = document.querySelector(".sidebar .menu");
+  if (!menu || menu.dataset.staffMenuReady) return;
+  const currentPage = window.location.pathname.split("/").pop() || "violation.html";
+  const pages = [
+    { href: "violation.html", icon: "ri-alert-line", label: "Violations" },
+    { href: "payment.html", icon: "ri-money-dollar-circle-line", label: "Payments" },
+    { href: "notification.html", icon: "ri-notification-3-line", label: "Notices" },
+    { href: "profile.html", icon: "ri-user-settings-line", label: "Profile" },
+  ];
+  menu.dataset.staffMenuReady = "true";
   menu.innerHTML = pages.map((page) => `<li class="${page.href === currentPage ? "active" : ""}"><a href="${page.href}"><i class="${page.icon}"></i><span>${page.label}</span></a></li>`).join("");
 }
 
@@ -103,8 +118,10 @@ async function loadSidebarUser() {
   const role = profile?.role || localStorage.getItem("role") || "";
   if (role) {
     document.body.classList.toggle("admin-sidebar", ["admin", "staff"].includes(role));
+    document.body.classList.toggle("operator-sidebar", role === "operator");
   }
   if (role === "operator") setupOperatorNavigation();
+  if (role === "staff") setupStaffNavigation();
 
   const nameEl = document.getElementById("userName");
   const roleEl = document.getElementById("userRole");
@@ -115,10 +132,44 @@ async function loadSidebarUser() {
   if (avatarEl) avatarEl.textContent = initials(fullName || roleLabel(role));
 }
 
+function normalizeSearchText(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function applySharedTableSearch(input) {
+  // Run after each page's own search renderer so this becomes a consistent
+  // final filter without replacing page-specific status/date filtering.
+  window.setTimeout(() => {
+    const query = normalizeSearchText(input.value);
+    document.querySelectorAll("main table tbody").forEach((body) => {
+      const rows = [...body.querySelectorAll("tr")];
+      rows.forEach((row) => {
+        const isMessageRow = row.cells.length === 1 && row.cells[0]?.colSpan > 1;
+        row.hidden = Boolean(query) && !isMessageRow && !normalizeSearchText(row.textContent).includes(query);
+      });
+    });
+  }, 0);
+}
+
+function setupSharedTableSearch() {
+  document.querySelectorAll('#searchInput, input[type="search"][data-table-search]').forEach((input) => {
+    if (input.dataset.sharedSearchReady) return;
+    input.dataset.sharedSearchReady = "true";
+    input.addEventListener("input", () => applySharedTableSearch(input));
+  });
+}
+
 function initializeSidebar() {
-  if (savedRole !== "operator") setupFranchiseMenu();
-  else setupOperatorNavigation();
+  if (savedRole === "operator") setupOperatorNavigation();
+  else if (savedRole === "staff") setupStaffNavigation();
+  else setupFranchiseMenu();
   loadSidebarUser();
+  setupSharedTableSearch();
 }
 
 // Module scripts are deferred, but this also supports pages that load the

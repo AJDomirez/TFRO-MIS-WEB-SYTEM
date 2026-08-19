@@ -106,6 +106,63 @@ body.admin-sidebar .franchise-menu-arrow{
   border-left:3px solid #f4c430;
 }
 
+/* Minimal yellow navigation details for Administrator and Operator portals. */
+body.admin-sidebar .sidebar,
+body.operator-sidebar .sidebar{
+  border-right:1px solid rgba(244,196,48,.38) !important;
+  box-shadow:8px 0 24px rgba(5,42,30,.12);
+}
+body.admin-sidebar .logo,
+body.operator-sidebar .logo{
+  position:relative;
+  padding-bottom:12px !important;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+body.admin-sidebar .logo::after,
+body.operator-sidebar .logo::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-1px;
+  width:42px;
+  height:2px;
+  border-radius:2px;
+  background:#f4c430;
+}
+body.admin-sidebar .menu li a,
+body.operator-sidebar .menu li a{
+  position:relative;
+  border:1px solid transparent;
+  transition:background .18s ease,color .18s ease,transform .18s ease,border-color .18s ease !important;
+}
+body.admin-sidebar .menu li a:hover,
+body.operator-sidebar .menu li a:hover{
+  border-color:rgba(244,196,48,.2);
+  transform:translateX(2px);
+}
+body.admin-sidebar .menu li a:hover i,
+body.operator-sidebar .menu li a:hover i,
+body.admin-sidebar .menu li.active > a i,
+body.operator-sidebar .menu li.active > a i{
+  color:#f4c430 !important;
+}
+body.admin-sidebar .menu li.active > a,
+body.operator-sidebar .menu li.active > a{
+  background:linear-gradient(90deg,rgba(244,196,48,.24),rgba(244,196,48,.08)) !important;
+  border-color:rgba(244,196,48,.28);
+  box-shadow:inset 3px 0 #f4c430;
+}
+body.admin-sidebar .sidebar-user,
+body.operator-sidebar .sidebar-user{
+  border-top:1px solid rgba(244,196,48,.3) !important;
+  background:rgba(4,45,32,.2) !important;
+}
+body.admin-sidebar .logout-btn:hover,
+body.operator-sidebar .logout-btn:hover{
+  color:#f4c430 !important;
+  background:rgba(244,196,48,.12) !important;
+}
+
 /* Collapsible franchise navigation section */
 .franchise-menu-toggle{
   width:100%; display:flex; align-items:center; gap:10px; padding:12px 16px;
@@ -176,6 +233,178 @@ body.admin-sidebar .dashboard-container > .main-content{
   max-width:calc(100% - 240px);
   box-sizing:border-box;
   overflow-x:hidden;
+}
+
+/* Keep Operator navigation fixed and non-scrollable on every Operator page. */
+body.operator-sidebar .sidebar{
+  position:fixed;
+  inset:0 auto 0 0;
+  width:240px;
+  height:100vh;
+  min-height:100vh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  z-index:100;
+}
+body.operator-sidebar .menu{
+  flex:0 0 auto;
+  overflow:visible;
+}
+body.operator-sidebar .sidebar-user{
+  margin-top:auto;
+  flex-shrink:0;
+}
+body.operator-sidebar .layout > .main-content,
+body.operator-sidebar .dashboard-container > .main-content{
+  margin-left:240px;
+  width:calc(100% - 240px);
+  min-width:0;
+}
+
+/* Operator portal phone layout: compact header + fixed bottom navigation. */
+@media (max-width:768px){
+  body.operator-sidebar{
+    overflow-x:hidden;
+    padding:0;
+  }
+  body.operator-sidebar .sidebar{
+    position:fixed !important;
+    inset:0 0 auto 0 !important;
+    width:100% !important;
+    height:64px !important;
+    min-height:64px !important;
+    padding:9px 14px !important;
+    overflow:visible !important;
+    flex-direction:row !important;
+    align-items:center;
+    border-right:0 !important;
+    border-bottom:1px solid rgba(244,196,48,.38);
+    box-shadow:0 5px 18px rgba(5,42,30,.16);
+  }
+  body.operator-sidebar .logo{
+    margin:0 !important;
+    padding:0 !important;
+    border:0;
+    gap:9px;
+  }
+  body.operator-sidebar .logo::after{display:none;}
+  body.operator-sidebar .sidebar-logo{width:38px;height:38px;border-radius:9px;}
+  body.operator-sidebar .logo h2{font-size:14px;line-height:1.15;}
+  body.operator-sidebar .logo p{font-size:10px;}
+  body.operator-sidebar .menu{
+    position:fixed !important;
+    inset:auto 0 0 0 !important;
+    z-index:120;
+    width:100%;
+    height:72px;
+    margin:0 !important;
+    padding:5px max(6px,env(safe-area-inset-right)) calc(5px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left)) !important;
+    display:grid !important;
+    grid-auto-flow:column;
+    grid-auto-columns:minmax(0,1fr);
+    gap:3px;
+    overflow:visible !important;
+    background:linear-gradient(180deg,#0f5b43,#0b3d2e);
+    border-top:2px solid #f4c430;
+    box-shadow:0 -5px 18px rgba(5,42,30,.18);
+  }
+  body.operator-sidebar .menu li{margin:0 !important;min-width:0;}
+  body.operator-sidebar .menu li a{
+    height:60px;
+    min-height:60px;
+    padding:6px 3px !important;
+    border:0 !important;
+    border-radius:9px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    overflow:hidden;
+    font-size:10px !important;
+    line-height:1.1;
+    text-align:center;
+    white-space:normal;
+  }
+  body.operator-sidebar .menu li a:hover{transform:none;}
+  body.operator-sidebar .menu li a i{font-size:20px !important;line-height:1;}
+  body.operator-sidebar .menu li.active > a{
+    box-shadow:inset 0 3px #f4c430;
+    background:rgba(244,196,48,.19) !important;
+  }
+  body.operator-sidebar .sidebar-user{
+    margin:0 0 0 auto !important;
+    padding:0 !important;
+    border:0 !important;
+    background:transparent !important;
+  }
+  body.operator-sidebar .sidebar-user .user-left{display:none;}
+  body.operator-sidebar .logout-btn{
+    width:42px;
+    height:42px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    font-size:20px;
+  }
+  body.operator-sidebar .layout > .main-content,
+  body.operator-sidebar .dashboard-container > .main-content{
+    margin-left:0 !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0;
+    padding:84px 14px 94px !important;
+    overflow-x:hidden;
+  }
+  body.operator-sidebar .topbar{margin-bottom:14px;padding:0 0 12px;}
+  body.operator-sidebar .topbar h1{font-size:23px !important;line-height:1.2;}
+  body.operator-sidebar .topbar p{font-size:13px;line-height:1.45;}
+  body.operator-sidebar .info-grid,
+  body.operator-sidebar .form-grid,
+  body.operator-sidebar .profile-grid,
+  body.operator-sidebar .renewal-grid,
+  body.operator-sidebar .summary-grid{
+    grid-template-columns:1fr !important;
+  }
+  body.operator-sidebar .info-card,
+  body.operator-sidebar .table-card,
+  body.operator-sidebar .form-card,
+  body.operator-sidebar .welcome-card{
+    padding:16px !important;
+    border-radius:12px !important;
+  }
+  body.operator-sidebar .table-card,
+  body.operator-sidebar .table-wrap,
+  body.operator-sidebar .table-responsive{
+    max-width:100%;
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch;
+  }
+  body.operator-sidebar table{min-width:680px;}
+  body.operator-sidebar input,
+  body.operator-sidebar select,
+  body.operator-sidebar textarea,
+  body.operator-sidebar button{max-width:100%;font-size:16px;}
+  body.operator-sidebar input,
+  body.operator-sidebar select{min-height:46px;}
+  body.operator-sidebar .modal{padding:10px;}
+  body.operator-sidebar .modal-content,
+  body.operator-sidebar .report-modal-content{
+    width:calc(100vw - 20px) !important;
+    max-width:calc(100vw - 20px) !important;
+    max-height:calc(100dvh - 100px) !important;
+  }
+}
+
+@media (max-width:390px){
+  body.operator-sidebar .sidebar{padding-inline:10px !important;}
+  body.operator-sidebar .logo p{display:none;}
+  body.operator-sidebar .menu li a{font-size:9px !important;}
+  body.operator-sidebar .menu li a i{font-size:19px !important;}
+  body.operator-sidebar .layout > .main-content,
+  body.operator-sidebar .dashboard-container > .main-content{padding-inline:10px !important;}
 }
 
 /* --- Topbar / card accents --- */
@@ -421,6 +650,11 @@ body.admin-sidebar .table-card {
 }
 
 @media (max-width: 900px) {
+  body.operator-sidebar .layout > .main-content,
+  body.operator-sidebar .dashboard-container > .main-content{
+    margin-left:0;
+    width:100%;
+  }
   body.admin-sidebar .toolbar-left { flex-basis: 100%; }
   .date-export-controls { width: 100%; margin-left: 0; }
   .date-export-controls label { flex: 1 1 calc(50% - 5px); }

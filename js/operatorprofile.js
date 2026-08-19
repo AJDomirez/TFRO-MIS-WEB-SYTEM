@@ -38,6 +38,13 @@ const tabs = document.querySelectorAll(".tab[data-tab]");
 const profileForm = document.getElementById("profileForm");
 const passwordForm = document.getElementById("passwordForm");
 
+function showProfileWarning(targetId, message) {
+  const element = document.getElementById(targetId);
+  if (!element) return;
+  element.textContent = message;
+  element.hidden = false;
+}
+
 function switchTab(name) {
   tabs.forEach((tab) => {
     tab.classList.toggle("active", tab.dataset.tab === name);
@@ -68,6 +75,14 @@ async function loadProfile() {
     .eq("id", user.id)
     .maybeSingle();
 
+  const { data: operator } = await supabase
+    .from("operators")
+    .select("address, franchise_number")
+    .eq("user_id", user.id)
+    .order("id", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
   const fullName = profile?.full_name || user.user_metadata?.full_name || "";
   const contact = profile?.contact_number || user.user_metadata?.contact_number || "";
   const email = user.email || "";
@@ -77,6 +92,8 @@ async function loadProfile() {
   setValue("lastName", names.slice(1).join(" ") || "");
   setValue("email", email);
   setValue("contactNumber", contact);
+  setValue("address", operator?.address || "");
+  setValue("franchiseNumber", operator?.franchise_number || "");
   setValue("role", "Operator");
 
   /* Display headers */
@@ -92,14 +109,21 @@ async function loadProfile() {
 if (profileForm) {
   profileForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    document.getElementById("profileMessage").hidden = true;
 
     const firstName = document.getElementById("firstName").value.trim();
     const lastName = document.getElementById("lastName").value.trim();
     const contactNumber = document.getElementById("contactNumber").value.trim();
+    const address = document.getElementById("address").value.trim();
     const fullName = `${firstName} ${lastName}`.trim();
 
     if (!fullName) {
-      alert("Please enter your full name.");
+      showProfileWarning("profileMessage", "Please enter your full name.");
+      return;
+    }
+
+    if (!address) {
+      showProfileWarning("profileMessage", "Please enter your home address.");
       return;
     }
 
@@ -110,7 +134,18 @@ if (profileForm) {
 
     if (error) {
       console.error("Profile update error:", error);
-      alert("Failed to save profile: " + error.message);
+      showProfileWarning("profileMessage", "Failed to save profile: " + error.message);
+      return;
+    }
+
+    const { error: operatorError } = await supabase
+      .from("operators")
+      .update({ full_name: fullName, contact_number: contactNumber, address })
+      .eq("user_id", currentUserId);
+
+    if (operatorError) {
+      console.error("Operator record update error:", operatorError);
+      showProfileWarning("profileMessage", "Profile was updated, but the Operator record could not be synchronized: " + operatorError.message);
       return;
     }
 
@@ -123,18 +158,19 @@ if (profileForm) {
 if (passwordForm) {
   passwordForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    document.getElementById("passwordMessage").hidden = true;
 
     const currentPassword = document.getElementById("currentPassword").value;
     const newPassword = document.getElementById("newPassword").value;
     const confirmPassword = document.getElementById("confirmPassword").value;
 
     if (newPassword.length < 6) {
-      alert("New password must be at least 6 characters long.");
+      showProfileWarning("passwordMessage", "New password must be at least 6 characters long.");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert("New passwords do not match. Please try again.");
+      showProfileWarning("passwordMessage", "New passwords do not match. Please try again.");
       return;
     }
 
@@ -145,7 +181,7 @@ if (passwordForm) {
     // 1) Re-authenticate with the current password to confirm identity.
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      alert("Session expired. Please sign in again.");
+      showProfileWarning("passwordMessage", "Session expired. Please sign in again.");
       window.location.href = "index.html";
       return;
     }
@@ -156,7 +192,7 @@ if (passwordForm) {
     });
 
     if (reauthError) {
-      alert("Current password is incorrect.");
+      showProfileWarning("passwordMessage", "Current password is incorrect.");
       submitBtn.disabled = false;
       submitBtn.textContent = "Update Password";
       return;
@@ -168,7 +204,7 @@ if (passwordForm) {
     });
 
     if (updateError) {
-      alert("Failed to update password: " + updateError.message);
+      showProfileWarning("passwordMessage", "Failed to update password: " + updateError.message);
       submitBtn.disabled = false;
       submitBtn.textContent = "Update Password";
       return;

@@ -35,7 +35,7 @@ const searchInput = document.getElementById("searchInput");
 
 /* ---------- ROLE / ACCESS ---------- */
 async function loadSidebarUser() {
-  const { user, profile } = await requireRole(["admin", "staff"]);
+  const { user, profile } = await requireRole(["admin"]);
   if (!user || !profile) return false;
 
   const fullName = profile?.full_name || user.user_metadata?.full_name || "";
@@ -295,13 +295,13 @@ function updateSummary() {
   const today = active.filter((l) => new Date(l.created_at).getTime() >= todayStart);
   const admin = active.filter((l) => (l.role || "").toLowerCase() === "admin");
   const operator = active.filter((l) => (l.role || "").toLowerCase() === "operator");
-  const driver = active.filter((l) => (l.role || "").toLowerCase() === "driver");
+  const staff = active.filter((l) => (l.role || "").toLowerCase() === "staff");
 
   setText("sumTotal", active.length);
   setText("sumToday", today.length);
   setText("sumAdmin", admin.length);
   setText("sumOperator", operator.length);
-  setText("sumDriver", driver.length);
+  setText("sumStaff", staff.length);
 }
 
 /* ---------- DETAIL MODAL ---------- */

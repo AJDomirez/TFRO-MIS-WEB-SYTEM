@@ -1,5 +1,17 @@
 .workflow-legend{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:#fff;border:1px solid #e1ebe5;border-radius:12px;padding:13px 16px;margin-bottom:18px;font-size:.78rem;font-weight:700;color:#285443;}
 .workflow-legend i{color:#15915e;}
+.main-content{min-width:0;}
+.main-content>.topbar{padding:4px 2px 14px;margin-bottom:18px;}
+.main-content>.workflow-legend{box-shadow:0 3px 12px rgba(20,72,52,.04);}
+.main-content>.toolbar{min-height:70px;padding:13px 455px 13px 14px;margin-bottom:18px;background:#fff;border:1px solid #e1ebe5;border-radius:12px;box-shadow:0 3px 12px rgba(20,72,52,.04);}
+.main-content>.toolbar .search-box{flex:1 1 280px;max-width:390px;min-height:42px;}
+.main-content>.toolbar #statusFilter{min-width:190px;min-height:42px;background:#fff;}
+.renewal-export-controls{position:relative;z-index:2;margin-top:-88px;margin-right:14px;margin-bottom:31px;align-items:end;}
+.renewal-export-controls input[type="date"]{min-width:134px;min-height:42px;}
+.renewal-export-controls .csv-btn{min-height:42px;white-space:nowrap;}
+.main-content>.table-card{margin-top:0;border:1px solid #e1ebe5;border-radius:12px;background:#fff;box-shadow:0 5px 18px rgba(20,72,52,.05);}
+.main-content>.table-card table{min-width:940px;}
+.main-content>.table-card thead th{white-space:nowrap;background:#f6faf8;}
 .renewal-review-modal{max-width:1050px;}
 .review-section{border:1px solid #e1ebe5;border-radius:13px;padding:17px;margin-top:16px;background:#fbfdfc;}
 .review-section-title{display:flex;align-items:center;gap:10px;margin-bottom:15px;}
@@ -22,5 +34,6 @@
 .renewal-actions{position:sticky;bottom:-22px;background:#fff;padding:16px 0 4px;z-index:2;}
 .status-badge{display:inline-flex;padding:5px 10px;border-radius:99px;font-size:.74rem;font-weight:700;text-transform:capitalize;}
 .status-badge.approved{background:#dcfce7;color:#15803d;}.status-badge.rejected{background:#fee2e2;color:#b91c1c;}.status-badge.pending{background:#fef3c7;color:#92400e;}
-@media(max-width:800px){.staff-grid,.inspection-grid{grid-template-columns:1fr 1fr}.renewal-doc-row{grid-template-columns:1fr}.renewal-actions{position:static;flex-direction:column}.renewal-actions button{width:100%;justify-content:center}}
+@media(max-width:1180px){.main-content>.toolbar{padding-right:14px}.renewal-export-controls{position:static;margin:0 0 18px;justify-content:flex-start}.renewal-export-controls label{flex:1}.renewal-export-controls input[type="date"]{width:100%}}
+@media(max-width:800px){.staff-grid,.inspection-grid{grid-template-columns:1fr 1fr}.renewal-doc-row{grid-template-columns:1fr}.renewal-actions{position:static;flex-direction:column}.renewal-actions button{width:100%;justify-content:center}.main-content>.toolbar .search-box,.main-content>.toolbar #statusFilter{width:100%;max-width:none}.renewal-export-controls{align-items:stretch}.renewal-export-controls label{flex:1 1 140px}.renewal-export-controls .csv-btn{flex:1 1 100%}}
 @media(max-width:520px){.staff-grid,.inspection-grid{grid-template-columns:1fr}}

@@ -6,7 +6,7 @@
   <title>TFRO Audit Log</title>
 
   <link rel="stylesheet" href="../css/auditlog.css">
-  <link rel="stylesheet" href="../css/tfro-theme.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
 
   <!-- Remix Icons -->
   <link
@@ -133,8 +133,8 @@
       <div class="summary-card">
         <div class="summary-icon"><i class="ri-steering-2-line"></i></div>
         <div>
-          <span class="summary-value" id="sumDriver">0</span>
-          <span class="summary-label">Driver Actions</span>
+          <span class="summary-value" id="sumStaff">0</span>
+          <span class="summary-label">TFRO Staff Actions</span>
         </div>
       </div>
     </div>
@@ -152,7 +152,6 @@
           <option value="all">All</option>
           <option value="admin">Admin</option>
           <option value="operator">Operator</option>
-          <option value="driver">Driver</option>
           <option value="staff">Staff</option>
         </select>
       </div>
@@ -300,7 +299,7 @@
 </div>
 
 <script type="module" src="../js/auditlog.js"></script>
-<script type="module" src="../js/sidebar-user.js"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 
 <script>
   const role = localStorage.getItem("role");

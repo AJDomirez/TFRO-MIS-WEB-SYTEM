@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TFRO Dashboard</title>
 
-<link rel="stylesheet" href="../css/dashboard.css">
-  <link rel="stylesheet" href="../css/tfro-theme.css">
+<link rel="stylesheet" href="../css/dashboard.css?v=20260817-234500">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
 
   <!-- Remix Icons -->
   <link
@@ -166,14 +166,26 @@
 
       <div class="card">
         <i class="ri-time-line orange"></i>
-        <h2 id="pendingApplications">—</h2>
-        <p>Pending Applications</p>
+        <h2 id="pendingRenewals">—</h2>
+        <p>Pending Renewals</p>
       </div>
 
       <div class="card">
-        <i class="ri-money-php-circle-line teal"></i>
-        <h2>₱250k</h2>
-        <p>Monthly Collections</p>
+        <i class="ri-error-warning-line teal"></i>
+        <h2 id="totalViolations">—</h2>
+        <p>Total Violations</p>
+      </div>
+
+      <div class="card">
+        <i class="ri-notification-3-line orange"></i>
+        <h2 id="pendingViolations">—</h2>
+        <p>Pending Violations</p>
+      </div>
+
+      <div class="card">
+        <i class="ri-money-peso-circle-line green"></i>
+        <h2 id="violationCollections">—</h2>
+        <p>Violation Payments</p>
       </div>
 
     </div>
@@ -182,7 +194,7 @@
     <div class="charts-grid">
 
       <div class="chart-card">
-        <h3>Monthly Applications</h3>
+        <h3>Monthly Submissions</h3>
         <canvas id="applicationsChart"></canvas>
       </div>
 
@@ -219,8 +231,8 @@
 
 </div>
 
-<script type="module" src="../js/dashboard.js"></script>
-<script type="module" src="../js/sidebar-user.js"></script>
+<script type="module" src="../js/dashboard.js?v=20260818-043000"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 
 <script>
 

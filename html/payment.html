@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Payments</title>
 
-<link rel="stylesheet" href="../css/payment.css">
-  <link rel="stylesheet" href="../css/tfro-theme.css">
+<link rel="stylesheet" href="../css/payment.css?v=20260818-051500">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
 
   <!-- Remix Icons -->
   <link
@@ -136,8 +136,8 @@
     <!-- TOPBAR -->
     <div class="topbar">
       <div>
-        <h1>Payments & Fees</h1>
-        <p>Track payment transactions and fee collections</p>
+        <h1>TFRO Staff — Violation Payments</h1>
+        <p>Prepare orders of payment and record official receipts</p>
       </div>
     </div>
 
@@ -157,6 +157,11 @@
       <div class="card">
         <h2 id="overdueCount">0</h2>
         <p>Overdue Payments</p>
+      </div>
+
+      <div class="card">
+        <h2 id="apprehenderShare">₱0.00</h2>
+        <p>20% Apprehender Allocation</p>
       </div>
 
     </div>
@@ -229,16 +234,19 @@
       <h2 id="paymentModalTitle">Record Payment</h2>
       <button type="button" class="modal-close" id="closePaymentModal" aria-label="Close">&times;</button>
     </div>
+    <label>Violation notice<select id="paymentViolation" name="violation_id"><option value="">Select an unpaid violation</option></select></label>
     <label>Payer name<input id="paymentPayer" name="payer" required maxlength="100" autocomplete="name"></label>
-    <label>Payment type<select name="type" required><option value="renewal">Renewal</option><option value="application">Application</option><option value="penalty">Penalty</option></select></label>
+    <label>Official receipt number<input name="receipt" required maxlength="50" placeholder="City Treasurer OR number"></label>
+    <label>Date paid<input name="paid_date" type="date" required></label>
+    <label>Payment type<select name="type" required><option value="penalty">Violation penalty</option></select></label>
     <label>Amount<input name="amount" type="number" min="0.01" step="0.01" required></label>
     <label>Status<select name="status" required><option value="paid">Paid</option><option value="pending">Pending</option><option value="overdue">Overdue</option></select></label>
     <div class="payment-modal-actions"><button type="button" id="cancelPaymentBtn">Cancel</button><button type="submit" class="add-btn">Save Payment</button></div>
   </form>
 </div>
 
-<script type="module" src="../js/payment.js"></script>
-<script type="module" src="../js/sidebar-user.js"></script>
+<script type="module" src="../js/payment.js?v=20260818-051500"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 
 </body>
 </html>

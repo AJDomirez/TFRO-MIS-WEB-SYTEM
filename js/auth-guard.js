@@ -3,7 +3,7 @@ import { SUPABASE_URL } from "./supabase-config.js";
 
 export const ROLE_DESTINATIONS = Object.freeze({
   admin: "dashboard.html",
-  staff: "dashboard.html",
+  staff: "violation.html",
   operator: "operatorportal.html",
 });
 

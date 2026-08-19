@@ -1,5 +1,5 @@
 import { supabase } from "./supabase.js";
-import { logAudit } from "./audit-helper.js";
+import { logAudit } from "./audit-helper.js?v=20260818-010500";
 import { requireRole } from "./auth-guard.js";
 
 const currency = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
@@ -68,10 +68,6 @@ const reportDefinitions = {
     title: "Dashboard Executive Summary",
     description: "A consolidated overview of TFRO records, transactions, and pending work.",
     icon: "ri-dashboard-line", accent: "blue", headers: ["Metric", "Value"],
-    sampleRows: [
-      ["SAMPLE • Active franchises", "128"], ["SAMPLE • Pending applications", "6"],
-      ["SAMPLE • Renewals this month", "14"], ["SAMPLE • Payments collected", currency.format(48500)],
-    ],
     async load(period) {
       const [franchises, applications, renewals, motors, operators, drivers, violations, payments] = await Promise.all([
         selectRows("franchises", "status,created_at,application_date"),
@@ -110,10 +106,6 @@ const reportDefinitions = {
     title: "Franchise Records Report", description: "Master list of franchises, operators, routes, status, and expiration dates.",
     icon: "ri-file-list-3-line", accent: "green",
     headers: ["Franchise No.", "Operator", "Route", "Type", "Status", "Application Date", "Expiration"],
-    sampleRows: [
-      ["SAMPLE-MTOP-2026-001", "Juan Dela Cruz", "Lucena Proper", "Renewal", "Active", "Aug 1, 2026", "Aug 1, 2029"],
-      ["SAMPLE-MTOP-2026-002", "Maria Santos", "Ibabang Dupay", "New", "Pending", "Aug 10, 2026", "—"],
-    ],
     async load(period) {
       const rows = await selectRows("franchises", "franchise_number,operator_name,route,application_type,status,application_date,expiration_date,created_at", { order: "created_at" });
       return rows.filter((row) => withinPeriod(row.application_date || row.created_at, period)).map((row) => [
@@ -125,10 +117,6 @@ const reportDefinitions = {
     title: "Franchise Applications Report", description: "Submitted MTOP/franchise applications with verification and approval status.",
     icon: "ri-file-add-line", accent: "teal",
     headers: ["Application Code", "Franchise No.", "Operator", "Route", "Status", "Complete", "Submitted"],
-    sampleRows: [
-      ["SAMPLE-APP-001", "SAMPLE-MTOP-001", "Pedro Reyes", "Dalahican", "Pending", "Yes", "Aug 12, 2026"],
-      ["SAMPLE-APP-002", "—", "Ana Mendoza", "Cotta", "Needs correction", "No", "Aug 14, 2026"],
-    ],
     async load(period) {
       const rows = await selectRows("franchise_applications", "application_code,franchise_number,operator_name,route,status,info_complete,created_at", { order: "created_at" });
       return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
@@ -140,10 +128,6 @@ const reportDefinitions = {
     title: "Franchise Renewals / MTOP Report", description: "Renewal requests, assessment, payment, MTOP issuance, and current status.",
     icon: "ri-refresh-line", accent: "yellow",
     headers: ["Renewal Code", "Franchise / MTOP", "Operator", "Renewal Type", "Status", "Payment", "Submitted"],
-    sampleRows: [
-      ["SAMPLE-REN-001", "SAMPLE-MTOP-101", "Roberto Garcia", "Regular", "Documents verified", "Pending", "Aug 8, 2026"],
-      ["SAMPLE-REN-002", "SAMPLE-MTOP-102", "Elena Flores", "Expired OR", "Awaiting payment", "Paid", "Aug 11, 2026"],
-    ],
     async load(period) {
       const rows = await selectRows("franchise_renewals", "renewal_code,franchise_id,franchise:franchises!franchise_renewals_franchise_id_fkey(franchise_number),operator_name,renewal_type,status,payment_status,created_at", { order: "created_at" });
       return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
@@ -155,10 +139,6 @@ const reportDefinitions = {
     title: "Change Motor Requests Report", description: "Change motor applications with old/new vehicle details and review status.",
     icon: "ri-settings-5-line", accent: "orange",
     headers: ["Request Code", "Franchise", "New Brand", "New Engine", "New Chassis", "Status", "Submitted"],
-    sampleRows: [
-      ["SAMPLE-MOTOR-001", "SAMPLE-MTOP-201", "Honda", "ENG-SAMPLE-1001", "CHS-SAMPLE-1001", "Reviewing", "Aug 9, 2026"],
-      ["SAMPLE-MOTOR-002", "SAMPLE-MTOP-202", "Kawasaki", "ENG-SAMPLE-1002", "CHS-SAMPLE-1002", "Approved", "Aug 13, 2026"],
-    ],
     async load(period) {
       const rows = await selectRows("change_motor_requests", "request_code,franchise_id,franchise:franchises!change_motor_requests_franchise_id_fkey(franchise_number),new_motor_brand,new_engine_number,new_chassis_number,status,created_at", { order: "created_at" });
       return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
@@ -170,10 +150,6 @@ const reportDefinitions = {
     title: "Operator Registry Report", description: "Registered operators with contact, franchise, verification, and account status.",
     icon: "ri-user-star-line", accent: "green",
     headers: ["Full Name", "Address", "Contact", "Franchise No.", "Status", "Verified", "Registered"],
-    sampleRows: [
-      ["SAMPLE • Juan Dela Cruz", "Brgy. 3, Lucena City", "0917-123-4567", "SAMPLE-MTOP-301", "Active", "Yes", "Jan 15, 2026"],
-      ["SAMPLE • Maria Santos", "Brgy. Cotta, Lucena City", "0918-222-3344", "SAMPLE-MTOP-302", "Active", "Yes", "Feb 2, 2026"],
-    ],
     async load(period) {
       const rows = await selectRows("operators", "full_name,address,contact_number,franchise_number,status,verified,created_at", { order: "created_at" });
       return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
@@ -185,10 +161,6 @@ const reportDefinitions = {
     title: "Driver Registry Report", description: "Drivers under operators with license, expiration, and compliance information.",
     icon: "ri-steering-2-line", accent: "purple",
     headers: ["Full Name", "License No.", "Operator", "Contact", "License Status", "Expiration", "Compliance"],
-    sampleRows: [
-      ["SAMPLE • Ramon Bautista", "SAMPLE-D01-23-456789", "Juan Dela Cruz", "0919-111-2233", "Verified", "Dec 20, 2027", "Compliant"],
-      ["SAMPLE • Leo Ramos", "SAMPLE-D02-24-987654", "Maria Santos", "0920-444-5566", "Not verified", "Apr 5, 2027", "Compliant"],
-    ],
     async load(period) {
       const rows = await selectRows("drivers", "full_name,license_number,operator_name,contact_number,license_status,license_expiration,compliance,created_at", { order: "created_at" });
       return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
@@ -200,10 +172,6 @@ const reportDefinitions = {
     title: "Violations Report", description: "Violations, subjects, penalties, occurrence dates, and payment status.",
     icon: "ri-alert-line", accent: "red",
     headers: ["Subject", "Subject Type", "Violation", "Penalty", "Occurrence Date", "Status"],
-    sampleRows: [
-      ["SAMPLE • Ramon Bautista", "Driver", "Refusal to convey passenger", currency.format(200), "Aug 4, 2026", "Pending"],
-      ["SAMPLE • Juan Dela Cruz", "Operator", "Operating on banned day", currency.format(200), "Aug 7, 2026", "Paid"],
-    ],
     async load(period) {
       const rows = await selectRows("violations", "subject_name,subject_type,violation_type,penalty,occurred_at,status,created_at", { order: "occurred_at" });
       return rows.filter((row) => withinPeriod(row.occurred_at || row.created_at, period)).map((row) => [
@@ -215,44 +183,10 @@ const reportDefinitions = {
     title: "Payments Report", description: "Treasurer payments, payors, receipts, payment types, and collection totals.",
     icon: "ri-money-dollar-circle-line", accent: "green",
     headers: ["Payor", "Receipt", "Payment Type", "Amount", "Status", "Paid Date"],
-    sampleRows: [
-      ["SAMPLE • Juan Dela Cruz", "SAMPLE-OR-2026-001", "Franchise renewal", currency.format(1500), "Paid", "Aug 10, 2026"],
-      ["SAMPLE • Maria Santos", "SAMPLE-OR-2026-002", "Violation penalty", currency.format(200), "Paid", "Aug 12, 2026"],
-    ],
     async load(period) {
       const rows = await selectRows("payments", "payer,receipt,payment_type,amount,status,paid_at,created_at", { order: "paid_at" });
       return rows.filter((row) => withinPeriod(row.paid_at || row.created_at, period)).map((row) => [
         text(row.payer), text(row.receipt), text(row.payment_type), currency.format(Number(row.amount || 0)), text(row.status), formatDate(row.paid_at),
-      ]);
-    },
-  },
-  notifications: {
-    title: "Notifications Report", description: "System notices, approval updates, read status, and delivery dates.",
-    icon: "ri-notification-3-line", accent: "blue",
-    headers: ["Title", "Message", "Type", "Read", "Created"],
-    sampleRows: [
-      ["SAMPLE • Renewal approved", "Your franchise renewal has been approved.", "Success", "Unread", "Aug 15, 2026, 9:30 AM"],
-      ["SAMPLE • Requirements incomplete", "Please upload the updated insurance document.", "Warning", "Read", "Aug 14, 2026, 2:15 PM"],
-    ],
-    async load(period) {
-      const rows = await selectRows("notifications", "title,message,type,is_read,created_at", { order: "created_at" });
-      return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
-        text(row.title), text(row.message), text(row.type), row.is_read ? "Read" : "Unread", formatDate(row.created_at, true),
-      ]);
-    },
-  },
-  audit: {
-    title: "Audit Log Report", description: "Administrative activity, user actions, affected records, and timestamps.",
-    icon: "ri-history-line", accent: "gray",
-    headers: ["User", "Role", "Action", "Type", "Record", "Date"],
-    sampleRows: [
-      ["SAMPLE • TFRO Admin", "Admin", "Approved renewal", "Approve", "SAMPLE-REN-001", "Aug 15, 2026, 10:15 AM"],
-      ["SAMPLE • TFRO Staff", "Staff", "Verified documents", "Verification", "SAMPLE-APP-001", "Aug 14, 2026, 3:40 PM"],
-    ],
-    async load(period) {
-      const rows = await selectRows("audit_logs", "user_name,role,action,action_type,record,created_at", { order: "created_at", limit: 1000 });
-      return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
-        text(row.user_name), text(row.role), text(row.action), text(row.action_type), text(row.record), formatDate(row.created_at, true),
       ]);
     },
   },
@@ -269,13 +203,38 @@ function renderReportCards() {
   if (!grid) return;
   grid.innerHTML = Object.entries(reportDefinitions).map(([key, report]) => {
     const [background, color] = accentStyles[report.accent] || accentStyles.green;
-    return `<article class="report-card"><div class="icon-box" style="background:${background};color:${color}"><i class="${report.icon}"></i></div><h3>${escapeHtml(report.title)}</h3><p>${escapeHtml(report.description)}</p><div class="card-actions"><button type="button" class="download-btn report-action-btn" data-action="view" data-report="${key}"><i class="ri-eye-line"></i> View</button><button type="button" class="download-btn report-action-btn" data-action="pdf" data-report="${key}"><i class="ri-file-pdf-2-line"></i> Save PDF</button><button type="button" class="print-btn report-action-btn" data-action="print" data-report="${key}"><i class="ri-printer-line"></i> Print</button></div></article>`;
+    return `<article class="report-card"><div class="icon-box" style="background:${background};color:${color}"><i class="${report.icon}"></i></div><h3>${escapeHtml(report.title)}</h3><p>${escapeHtml(report.description)}</p><div class="card-actions"><button type="button" class="download-btn report-action-btn" data-action="view" data-report="${key}"><i class="ri-eye-line"></i> View</button><button type="button" class="print-btn report-action-btn" data-action="csv" data-report="${key}"><i class="ri-file-excel-2-line"></i> CSV</button><button type="button" class="download-btn report-action-btn" data-action="pdf" data-report="${key}"><i class="ri-file-pdf-2-line"></i> PDF</button><button type="button" class="print-btn report-action-btn" data-action="print" data-report="${key}"><i class="ri-printer-line"></i> Print</button></div></article>`;
   }).join("");
+}
+
+async function loadAnalytics() {
+  const warning = document.getElementById("analyticsWarning");
+  const metrics = [
+    ["analyticsOperators", "operators"], ["analyticsDrivers", "drivers"],
+    ["analyticsRenewals", "franchise_renewals"], ["analyticsMotors", "change_motor_requests"],
+    ["analyticsViolations", "violations"],
+  ];
+  const period = selectedPeriod();
+  metrics.forEach(([id]) => { document.getElementById(id).textContent = "…"; });
+  const results = await Promise.allSettled(metrics.map(async ([, table]) => {
+    let query = supabase.from(table).select("id", { count: "exact", head: true });
+    if (period.start) query = query.gte("created_at", period.start.toISOString());
+    if (period.end) query = query.lte("created_at", period.end.toISOString());
+    const result = await query;
+    if (result.error) throw result.error;
+    return result.count ?? 0;
+  }));
+  results.forEach((result, index) => {
+    document.getElementById(metrics[index][0]).textContent = result.status === "fulfilled" ? result.value : "—";
+  });
+  const failed = results.filter((result) => result.status === "rejected").length;
+  warning.hidden = failed === 0;
+  warning.textContent = failed ? `${failed} analytics metric(s) could not be loaded. Check your database access settings.` : "";
 }
 
 async function ensureAccess() {
   if (reportState.access) return reportState.access;
-  const { user, profile } = await requireRole(["admin", "staff"]);
+  const { user, profile } = await requireRole(["admin"]);
   if (!user || !profile) return null;
   reportState.access = { user, profile };
   return reportState.access;
@@ -290,13 +249,25 @@ function showPreview(payload) {
   reportState.current = payload;
   document.getElementById("modalTitle").textContent = payload.title;
   document.getElementById("modalCount").textContent = `${payload.rows.length} record(s) • ${payload.periodText}`;
-  const sampleBanner = payload.isSample ? '<div class="sample-report-banner"><i class="ri-flask-line"></i> SAMPLE DATA — FOR TESTING ONLY. These records are not stored in Supabase.</div>' : "";
-  document.getElementById("modalBody").innerHTML = sampleBanner + createTableHtml(payload.headers, payload.rows);
+  document.getElementById("modalBody").innerHTML = createTableHtml(payload.headers, payload.rows);
   document.getElementById("reportModal").hidden = false;
 }
 
 function safeFilename(title) {
   return `TFRO_${title.replace(/[^a-z0-9]+/gi, "_").replace(/^_|_$/g, "")}_${new Date().toISOString().slice(0, 10)}.pdf`;
+}
+
+function csvCell(value) { return `"${String(value ?? "").replace(/"/g, '""')}"`; }
+
+function saveCsv(payload) {
+  const lines = [payload.headers, ...payload.rows].map((row) => row.map(csvCell).join(","));
+  const blob = new Blob([`\uFEFF${lines.join("\r\n")}`], { type: "text/csv;charset=utf-8" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  link.download = safeFilename(payload.title).replace(/\.pdf$/i, ".csv");
+  document.body.appendChild(link); link.click(); link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function savePdf(payload) {
@@ -307,8 +278,8 @@ function savePdf(payload) {
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setTextColor(15, 77, 61); doc.setFontSize(17); doc.text("TFRO - Lucena City", 14, 18);
   doc.setTextColor(30, 41, 59); doc.setFontSize(12); doc.text(payload.title, 14, 26);
-  doc.setTextColor(payload.isSample ? 180 : 100, payload.isSample ? 83 : 116, payload.isSample ? 9 : 139);
-  doc.setFontSize(9); doc.text(payload.isSample ? `SAMPLE DATA - FOR TESTING ONLY | Records: ${payload.rows.length}` : `Period: ${payload.periodText} | Records: ${payload.rows.length}`, 14, 32);
+  doc.setTextColor(100, 116, 139);
+  doc.setFontSize(9); doc.text(`Period: ${payload.periodText} | Records: ${payload.rows.length}`, 14, 32);
   doc.autoTable({
     startY: 37, head: [payload.headers],
     body: payload.rows.length ? payload.rows : [["No records found for the selected report period.", ...payload.headers.slice(1).map(() => "")]],
@@ -331,7 +302,7 @@ function printReport(payload) {
   const table = payload.rows.length
     ? `<table><thead><tr>${payload.headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${payload.rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table>`
     : '<p class="empty">No records found for the selected report period.</p>';
-  printWindow.document.write(`<!doctype html><html><head><title>${escapeHtml(payload.title)}</title><style>@page{size:auto;margin:14mm}body{font:12px Arial,sans-serif;color:#17202a}h1{color:#0f4d3d;margin:0 0 4px}p{margin:0 0 18px;color:#5f6b76}.sample{padding:8px 10px;background:#fff4d6;border:1px solid #e8b94f;color:#7a4b00;font-weight:bold}table{width:100%;border-collapse:collapse}th,td{padding:7px;border:1px solid #b8c3cc;text-align:left;vertical-align:top}th{background:#0f7658;color:#fff}.empty{padding:35px;text-align:center;border:1px solid #ccd6dd}.footer{margin-top:14px;font-size:10px;color:#68737d}</style></head><body><h1>TFRO - Lucena City</h1><p>${escapeHtml(payload.title)}<br>Period: ${escapeHtml(payload.periodText)} · ${payload.rows.length} record(s)</p>${payload.isSample ? '<p class="sample">SAMPLE DATA — FOR TESTING ONLY. Not stored in Supabase.</p>' : ""}${table}<div class="footer">Generated ${escapeHtml(new Date().toLocaleString("en-PH"))}</div></body></html>`);
+  printWindow.document.write(`<!doctype html><html><head><title>${escapeHtml(payload.title)}</title><style>@page{size:auto;margin:14mm}body{font:12px Arial,sans-serif;color:#17202a}h1{color:#0f4d3d;margin:0 0 4px}p{margin:0 0 18px;color:#5f6b76}table{width:100%;border-collapse:collapse}th,td{padding:7px;border:1px solid #b8c3cc;text-align:left;vertical-align:top}th{background:#0f7658;color:#fff}.empty{padding:35px;text-align:center;border:1px solid #ccd6dd}.footer{margin-top:14px;font-size:10px;color:#68737d}</style></head><body><h1>TFRO - Lucena City</h1><p>${escapeHtml(payload.title)}<br>Period: ${escapeHtml(payload.periodText)} · ${payload.rows.length} record(s)</p>${table}<div class="footer">Generated ${escapeHtml(new Date().toLocaleString("en-PH"))}</div></body></html>`);
   printWindow.document.close();
   printWindow.addEventListener("load", () => { printWindow.focus(); printWindow.print(); }, { once: true });
 }
@@ -339,13 +310,11 @@ function printReport(payload) {
 async function loadPayload(reportKey) {
   const report = reportDefinitions[reportKey];
   if (!report) throw new Error("Unknown report type.");
-  const sampleMode = document.getElementById("sampleDataMode")?.checked ?? false;
   const period = selectedPeriod();
-  const rows = sampleMode ? report.sampleRows : await report.load(period);
+  const rows = await report.load(period);
   return {
     key: reportKey, title: report.title, headers: report.headers, rows: rows || [],
-    periodText: sampleMode ? "Sample preview (date filter not applied)" : periodLabel(period),
-    isSample: sampleMode,
+    periodText: periodLabel(period),
   };
 }
 
@@ -356,11 +325,12 @@ async function runReportAction(action, reportKey, button) {
     if (!(await ensureAccess())) return;
     const payload = await loadPayload(reportKey);
     if (action === "view") showPreview(payload);
+    if (action === "csv") saveCsv(payload);
     if (action === "pdf") savePdf(payload);
     if (action === "print") printReport(payload);
-    if (action === "pdf" || action === "print") void logAudit({
-      action: action === "pdf" ? "Saved PDF Report" : "Printed Report", actionType: "create", record: payload.title,
-      description: `${action === "pdf" ? "Saved" : "Printed"} ${payload.title} for ${payload.periodText} (${payload.rows.length} records).`,
+    if (["csv", "pdf", "print"].includes(action)) void logAudit({
+      action: action === "print" ? "Printed Report" : `Saved ${action.toUpperCase()} Report`, actionType: "create", record: payload.title,
+      description: `${action === "print" ? "Printed" : `Saved ${action.toUpperCase()}`} ${payload.title} for ${payload.periodText} (${payload.rows.length} records).`,
     });
   } catch (error) {
     console.error("Report action failed:", error);
@@ -376,12 +346,13 @@ function runCurrentAction(action) {
   if (!reportState.current) return;
   try {
     if (action === "pdf") savePdf(reportState.current);
+    if (action === "csv") saveCsv(reportState.current);
     if (action === "print") printReport(reportState.current);
     void logAudit({
-      action: action === "pdf" ? "Saved PDF Report" : "Printed Report",
+      action: action === "print" ? "Printed Report" : `Saved ${action.toUpperCase()} Report`,
       actionType: "create",
       record: reportState.current.title,
-      description: `${action === "pdf" ? "Saved" : "Printed"} ${reportState.current.title} from the report preview.`,
+      description: `${action === "print" ? "Printed" : `Saved ${action.toUpperCase()}`} ${reportState.current.title} from the report preview.`,
     });
   } catch (error) {
     console.error("Preview report action failed:", error);
@@ -396,10 +367,15 @@ function bindEvents() {
   });
   document.getElementById("resetReportDates")?.addEventListener("click", () => {
     document.getElementById("reportStartDate").value = ""; document.getElementById("reportEndDate").value = "";
+    void loadAnalytics();
   });
+  document.getElementById("refreshAnalytics")?.addEventListener("click", () => void loadAnalytics());
+  document.getElementById("reportStartDate")?.addEventListener("change", () => void loadAnalytics());
+  document.getElementById("reportEndDate")?.addEventListener("change", () => void loadAnalytics());
   document.getElementById("closeModalBtn")?.addEventListener("click", closeModal);
   document.getElementById("reportModal")?.addEventListener("click", (event) => { if (event.target === event.currentTarget) closeModal(); });
   document.getElementById("modalSavePdfBtn")?.addEventListener("click", () => runCurrentAction("pdf"));
+  document.getElementById("modalSaveCsvBtn")?.addEventListener("click", () => runCurrentAction("csv"));
   document.getElementById("modalPrintBtn")?.addEventListener("click", () => runCurrentAction("print"));
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeModal(); });
 }
@@ -407,7 +383,11 @@ function bindEvents() {
 function initializeReports() {
   renderReportCards();
   bindEvents();
-  void ensureAccess().catch((error) => console.error("Report page authorization failed:", error));
+  void ensureAccess().then((access) => { if (access) return loadAnalytics(); }).catch((error) => {
+    console.error("Report page authorization failed:", error);
+    const warning = document.getElementById("analyticsWarning");
+    warning.hidden = false; warning.textContent = `Analytics could not load: ${error.message}`;
+  });
 }
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initializeReports, { once: true });

@@ -17,7 +17,7 @@
 ## Additional System-Wide Theme Conversion
 - [x] Create `css/tfro-theme.css` (green/yellow override loaded after each page CSS)
 - [x] Add `tfro-theme.css` link + TFRO logo to all admin pages (dashboard, profile, franchise, operator, driver, violation, payment, report, notification, auditlog)
-- [x] Add `tfro-theme.css` link + TFRO logo to portal pages (driverportal, operatorportal, driverprofile, operatorprofile)
+- [x] Add `tfro-theme.css` link + TFRO logo to Operator portal pages
 - [x] Add TFRO logo to auth pages (login, register)
 
 ## Audit Logging Instrumentation

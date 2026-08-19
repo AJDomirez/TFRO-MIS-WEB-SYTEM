@@ -45,7 +45,7 @@ function docStatusBadge(app) {
 }
 
 async function verifyAccess() {
-  const { profile } = await requireRole(["admin", "staff"]);
+  const { profile } = await requireRole(["admin"]);
   return profile;
 }
 

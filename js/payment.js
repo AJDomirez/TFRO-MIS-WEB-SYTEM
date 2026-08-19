@@ -2,6 +2,8 @@ import { supabase } from "./supabase.js";
 import { requireRole } from "./auth-guard.js";
 
 let payments = [];
+let pendingViolations = [];
+let currentUserId = null;
 const table = document.getElementById("paymentsTable");
 const modal = document.getElementById("paymentModal");
 const form = document.getElementById("paymentForm");
@@ -12,7 +14,8 @@ function escapeHtml(value) {
 }
 
 async function verifyAccess() {
-  const { user } = await requireRole(["admin", "staff"]);
+  const { user } = await requireRole(["staff"]);
+  currentUserId = user?.id || null;
   return Boolean(user);
 }
 
@@ -27,7 +30,9 @@ function loadTable(rows) {
 }
 
 function updateTotals() {
-  document.getElementById("totalCollected").textContent = peso(payments.filter((p) => p.status === "paid").reduce((sum, p) => sum + Number(p.amount), 0));
+  const collected = payments.filter((p) => p.status === "paid").reduce((sum, p) => sum + Number(p.amount), 0);
+  document.getElementById("totalCollected").textContent = peso(collected);
+  document.getElementById("apprehenderShare").textContent = peso(collected * 0.20);
   document.getElementById("pendingCount").textContent = payments.filter((p) => p.status === "pending").length;
   document.getElementById("overdueCount").textContent = payments.filter((p) => p.status === "overdue").length;
 }
@@ -43,10 +48,16 @@ function applyFilters() {
 }
 
 async function loadPayments() {
-  const { data, error } = await supabase.from("payments")
-    .select("id, receipt, payer, payment_type, amount, status, paid_at")
-    .order("paid_at", { ascending: false });
+  const [{ data, error }, violationResult] = await Promise.all([
+    supabase.from("payments").select("id, receipt, payer, payment_type, amount, status, paid_at, violation_id, violations(violation_code, violation_type, ticket_number, classification, franchise_number, apprehending_officers)").order("paid_at", { ascending: false }),
+    supabase.from("violations").select("id, subject_name, violation_code, violation_type, ticket_number, penalty, classification, franchise_number, apprehending_officers").eq("status", "pending").order("occurred_at", { ascending: false }),
+  ]);
   if (error) return alert("Could not load payments: " + error.message);
+  if (violationResult.error) return alert("Could not load unpaid violations: " + violationResult.error.message);
+  pendingViolations = violationResult.data || [];
+  document.getElementById("paymentViolation").innerHTML = '<option value="">Select an unpaid violation</option>' + pendingViolations.map((v) =>
+    `<option value="${escapeHtml(v.id)}">${escapeHtml(v.ticket_number || "No ticket")} · ${escapeHtml(v.violation_code || "")}: ${escapeHtml(v.subject_name)} · ${peso(v.penalty)}</option>`
+  ).join("");
   payments = (data || []).map((p) => ({
     ...p,
     receipt: p.receipt || `LEGACY-${p.id}`,
@@ -60,7 +71,8 @@ async function loadPayments() {
 }
 
 function receiptMarkup(p) {
-  return `<main style="font-family:Arial,sans-serif;max-width:600px;margin:40px auto;color:#172033"><h1>TFRO Lucena City</h1><h2>Official Receipt</h2><hr><p><strong>Receipt no.:</strong> ${escapeHtml(p.receipt)}</p><p><strong>Payer:</strong> ${escapeHtml(p.payer)}</p><p><strong>Payment type:</strong> ${escapeHtml(p.type)}</p><p><strong>Date:</strong> ${escapeHtml(p.date)}</p><p><strong>Status:</strong> ${escapeHtml(p.status)}</p><h2>Total: ${peso(p.amount)}</h2></main>`;
+  const violation = p.violations;
+  return `<main style="font-family:Arial,sans-serif;max-width:760px;margin:40px auto;color:#172033;border:1px solid #bbb;padding:32px"><header style="border-top:12px solid #0b5c41;border-bottom:4px solid #f4c430;padding:16px 0"><h1 style="margin:0">TRICYCLE FRANCHISING AND REGULATORY OFFICE</h1><p>City Government of Lucena</p></header><h2 style="text-align:center;letter-spacing:5px;text-decoration:underline">ORDER OF PAYMENT</h2><p><strong>OR no.:</strong> ${escapeHtml(p.receipt)} &nbsp; <strong>Date paid:</strong> ${escapeHtml(p.date)}</p><p><strong>Payor:</strong> ${escapeHtml(p.payer)}</p>${violation ? `<p><strong>Ticket:</strong> ${escapeHtml(violation.ticket_number || "—")} &nbsp; <strong>Classification:</strong> ${escapeHtml(violation.classification || "—")} &nbsp; <strong>Franchise:</strong> ${escapeHtml(violation.franchise_number || "—")}</p><p><strong>Apprehending officer/s:</strong> ${escapeHtml(violation.apprehending_officers || "—")}</p><table style="width:100%;border-collapse:collapse"><tr><th style="border:1px solid #555;padding:8px">Code</th><th style="border:1px solid #555;padding:8px">Violation</th><th style="border:1px solid #555;padding:8px">Penalty</th></tr><tr><td style="border:1px solid #555;padding:8px">${escapeHtml(violation.violation_code)}</td><td style="border:1px solid #555;padding:8px">${escapeHtml(violation.violation_type)}</td><td style="border:1px solid #555;padding:8px">${peso(p.amount)}</td></tr></table>` : ""}<p><strong>Status:</strong> ${escapeHtml(p.status)}</p><h2>Total Amount Due: ${peso(p.amount)}</h2><p><strong>20% allocation:</strong> ${peso(Number(p.amount) * 0.20)}</p><br><p style="text-align:center">Assessed by: ____________________<br>TFRO Personnel</p></main>`;
 }
 
 function openReceipt(payment, shouldPrint) {
@@ -73,21 +85,30 @@ function openReceipt(payment, shouldPrint) {
 
 function closeModal() { modal.hidden = true; form.reset(); }
 
-document.getElementById("recordPaymentBtn").addEventListener("click", () => { modal.hidden = false; document.getElementById("paymentPayer").focus(); });
+document.getElementById("recordPaymentBtn").addEventListener("click", () => { modal.hidden = false; form.elements.paid_date.value = new Date().toISOString().slice(0, 10); document.getElementById("paymentViolation").focus(); });
 document.getElementById("closePaymentModal").addEventListener("click", closeModal);
 document.getElementById("cancelPaymentBtn").addEventListener("click", closeModal);
+document.getElementById("paymentViolation").addEventListener("change", (event) => {
+  const violation = pendingViolations.find((row) => String(row.id) === event.target.value);
+  if (!violation) return;
+  form.elements.payer.value = violation.subject_name || "";
+  form.elements.type.value = "penalty";
+  form.elements.amount.value = Number(violation.penalty || 0);
+});
 modal.addEventListener("click", (event) => { if (event.target === modal) closeModal(); });
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const data = Object.fromEntries(new FormData(form));
-  const receipt = `OR-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+  const receipt = data.receipt.trim();
   const { error } = await supabase.from("payments").insert({
     receipt,
     payer: data.payer.trim(),
     payment_type: data.type,
     amount: Number(data.amount),
     status: data.status,
-    paid_at: new Date().toISOString(),
+    paid_at: `${data.paid_date}T00:00:00+08:00`,
+    violation_id: data.violation_id || null,
+    recorded_by: currentUserId,
   });
   if (error) return alert("Could not save payment: " + error.message);
   closeModal();

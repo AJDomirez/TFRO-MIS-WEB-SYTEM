@@ -211,6 +211,12 @@ async function loadFranchises() {
   }
   franchises = data || [];
   renderTable();
+  const selector = el("edit_record_selector");
+  if (selector) {
+    selector.innerHTML = '<option value="">Select a franchise...</option>' + franchises.map((row) =>
+      `<option value="${row.id}">${escapeHtml(row.franchise_number)} — ${escapeHtml(row.operator_name || "No operator")}</option>`
+    ).join("");
+  }
 }
 
 async function loadOperatorAccounts() {
@@ -236,7 +242,7 @@ async function loadOperatorAccounts() {
 }
 
 async function verifyAccess() {
-  const { user } = await requireRole(["admin", "staff"]);
+  const { user } = await requireRole(["admin"]);
   if (!user) return;
   await Promise.all([loadFranchises(), loadOperatorAccounts()]);
 }
@@ -367,6 +373,7 @@ function showView(row) {
 /* ---------- Edit modal ---------- */
 function openEditForm(row) {
   editingId = row.id;
+  if (el("edit_record_selector")) el("edit_record_selector").value = String(row.id);
   clearAllErrors("err-edit-");
   el("edit_franchise_number").value = row.franchise_number || "";
   el("edit_previous_registration").value = row.previous_registration || "";
@@ -381,6 +388,17 @@ function openEditForm(row) {
   el("edit_plate_number").value = row.plate_number || "";
   el("edit_contact_number").value = row.contact_number || "";
   openModal("editModal");
+}
+
+function openEditChooser() {
+  if (!franchises.length) {
+    showToast("No franchise records are available to edit.");
+    return;
+  }
+  editingId = null;
+  el("editForm")?.reset();
+  openModal("editModal");
+  el("edit_record_selector")?.focus();
 }
 
 function readEditForm() {
@@ -475,7 +493,11 @@ function onTableClick(event) {
 
 /* ---------- Event bindings ---------- */
 function bindEvents() {
-  el("newApplicationBtn")?.addEventListener("click", openAddForm);
+  el("newApplicationBtn")?.addEventListener("click", openEditChooser);
+  el("edit_record_selector")?.addEventListener("change", (event) => {
+    const row = franchises.find((item) => String(item.id) === event.target.value);
+    if (row) openEditForm(row);
+  });
   el("cancelApplicationBtn")?.addEventListener("click", () => {
     resetAddForm();
     const panel = el("applicationPanel");

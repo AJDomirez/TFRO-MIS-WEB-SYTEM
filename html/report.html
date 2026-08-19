@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Reports</title>
 
-<link rel="stylesheet" href="../css/report.css?v=20260817-3">
-  <link rel="stylesheet" href="../css/tfro-theme.css">
+<link rel="stylesheet" href="../css/report.css?v=20260818-004500">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
 
   <!-- Remix Icons -->
   <link
@@ -141,17 +141,8 @@
     <div class="topbar">
       <div>
         <h1>Reports & Documentation</h1>
-        <p>Generate downloadable PDF reports and printable documents</p>
+        <p>View data analytics and generate CSV, PDF, or printable reports</p>
       </div>
-    </div>
-
-    <!-- NOTICE -->
-    <div class="notice">
-      <i class="ri-information-line"></i>
-
-      <span>
-        Select a report type to generate a downloadable PDF or printable document.
-      </span>
     </div>
 
     <section class="report-toolbar" aria-label="Report date filters">
@@ -159,13 +150,6 @@
         <strong>Report period</strong>
         <span>Leave both dates empty to include all records.</span>
       </div>
-      <label class="sample-mode-control">
-        <input type="checkbox" id="sampleDataMode" checked />
-        <span>
-          Sample preview mode
-          <small>Testing data only — nothing is saved to Supabase.</small>
-        </span>
-      </label>
       <label>
         <span>Start date</span>
         <input type="date" id="reportStartDate" />
@@ -179,10 +163,20 @@
       </button>
     </section>
 
-    <div class="report-actions-guide">
-      <i class="ri-cursor-line"></i>
-      <span><strong>Report actions:</strong> Use the three buttons at the bottom of every card — View, Save PDF, or Print.</span>
-    </div>
+    <section class="analytics-section" aria-labelledby="analyticsTitle">
+      <div class="analytics-heading">
+        <div><h2 id="analyticsTitle">Data Analytics</h2><p>Live totals for the selected report period</p></div>
+        <button type="button" class="reset-filter-btn" id="refreshAnalytics"><i class="ri-refresh-line"></i> Refresh data</button>
+      </div>
+      <div class="analytics-grid" id="analyticsGrid">
+        <article><i class="ri-user-star-line"></i><strong id="analyticsOperators">—</strong><span>Operators</span></article>
+        <article><i class="ri-steering-2-line"></i><strong id="analyticsDrivers">—</strong><span>Drivers</span></article>
+        <article><i class="ri-refresh-line"></i><strong id="analyticsRenewals">—</strong><span>Renewals</span></article>
+        <article><i class="ri-settings-5-line"></i><strong id="analyticsMotors">—</strong><span>Change Motor</span></article>
+        <article><i class="ri-alert-line"></i><strong id="analyticsViolations">—</strong><span>Violations</span></article>
+      </div>
+      <p class="analytics-warning" id="analyticsWarning" hidden></p>
+    </section>
 
     <!-- REPORT CARDS -->
     <div class="reports-grid" id="reportsGrid">
@@ -199,6 +193,9 @@
         </div>
         <div class="report-modal-body" id="modalBody"></div>
         <div class="report-modal-footer">
+          <button type="button" class="print-btn" id="modalSaveCsvBtn">
+            <i class="ri-file-excel-2-line"></i> Save CSV
+          </button>
           <button type="button" class="print-btn" id="modalPrintBtn">
             <i class="ri-printer-line"></i> Print
           </button>
@@ -213,8 +210,8 @@
 
 </div>
 
-<script type="module" src="../js/report.js?v=20260817-3"></script>
-<script type="module" src="../js/sidebar-user.js"></script>
+<script type="module" src="../js/report.js?v=20260818-011500"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 
 <script>
 

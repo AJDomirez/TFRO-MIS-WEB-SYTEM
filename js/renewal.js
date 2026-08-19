@@ -2,6 +2,11 @@ import { supabase } from "./supabase.js";
 import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
 
+async function openSavedSubmissionForm(options) {
+  const { openSubmissionForm } = await import("./submission-form.js");
+  openSubmissionForm(options);
+}
+
 const BASE_DOCUMENTS = [
   "voters_certificate", "cedula", "barangay_clearance", "drivers_license",
   "picture_2x2", "pmbl_certification",
@@ -13,6 +18,10 @@ let currentProfile = null;
 let currentFranchise = null;
 let currentRenewal = null;
 let operatorDrivers = [];
+let renewalHistoryRows = [];
+let renewalPage = 1;
+const RENEWAL_PAGE_COUNT = 4;
+const RENEWAL_PAGE_TITLES = ["Renewal Details", "Operator Information", "Vehicle & Driver Information", "Required Documents"];
 
 const byId = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" })[char]);
@@ -21,6 +30,27 @@ function setError(message) {
   const element = byId("renewalError");
   element.textContent = message || "";
   element.hidden = !message;
+}
+
+function showRenewalPage(page) {
+  renewalPage = Math.min(RENEWAL_PAGE_COUNT, Math.max(1, page));
+  document.querySelectorAll("[data-renewal-page]").forEach((element) => {
+    element.hidden = Number(element.dataset.renewalPage) !== renewalPage;
+  });
+  byId("renewalBackBtn").disabled = renewalPage === 1;
+  byId("renewalNextBtn").hidden = renewalPage === RENEWAL_PAGE_COUNT;
+  byId("submitRenewalBtn").hidden = renewalPage !== RENEWAL_PAGE_COUNT;
+  byId("renewalStepNumber").textContent = renewalPage;
+  byId("renewalStepTitle").textContent = RENEWAL_PAGE_TITLES[renewalPage - 1];
+  byId("renewalPageStatus").textContent = `Step ${renewalPage} of ${RENEWAL_PAGE_COUNT}`;
+}
+
+function pageIsValid() {
+  const page = document.querySelector(`[data-renewal-page="${renewalPage}"]`);
+  const invalid = [...page.querySelectorAll("input, select")].find((field) => !field.checkValidity());
+  if (!invalid) return true;
+  invalid.reportValidity();
+  return false;
 }
 
 function statusLabel(status) {
@@ -59,6 +89,7 @@ async function loadFranchise() {
   }
   byId("franchiseNumber").value = data.franchise_number || "";
   byId("currentExpiration").value = data.expiration_date || "";
+  byId("assignedRoute").value = data.route || "";
   byId("operatorName").value = data.operator_name || currentProfile.full_name || "";
   byId("operatorContact").value = data.contact_number || currentProfile.contact_number || "";
   byId("operatorAddress").value = data.address || "";
@@ -98,6 +129,7 @@ async function loadHistory() {
     return;
   }
   const renewals = data || [];
+  renewalHistoryRows = renewals;
   currentRenewal = renewals.find((renewal) => !["approved", "rejected"].includes(renewal.status)) || null;
   const table = byId("renewalHistory");
   table.innerHTML = renewals.length ? renewals.map((renewal) => `
@@ -107,7 +139,8 @@ async function loadHistory() {
       <td><span class="status-pill ${statusClass(renewal.status)}">${escapeHtml(statusLabel(renewal.status))}</span></td>
       <td>${escapeHtml(renewal.decision_reason || (renewal.status === "approved" ? `MTOP ${renewal.mtop_number || "for issuance"}; expected ${renewal.expected_release_date || "within 1–2 weeks"}` : "Awaiting TFRO processing"))}</td>
       <td>${new Date(renewal.created_at).toLocaleDateString()}</td>
-    </tr>`).join("") : '<tr><td colspan="5">No renewal requests yet.</td></tr>';
+      <td><button type="button" class="page-button page-button-back" data-renewal-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i> View / PDF</button></td>
+    </tr>`).join("") : '<tr><td colspan="6">No renewal requests yet.</td></tr>';
 
   if (!currentRenewal) return;
   const banner = byId("renewalStatus");
@@ -123,6 +156,32 @@ async function loadHistory() {
     byId("renewalFormCard").style.opacity = ".65";
     byId("renewalForm").querySelectorAll("input, select, button").forEach((element) => { element.disabled = true; });
   }
+}
+
+async function showRenewalSubmission(renewal) {
+  const { data: picture } = await supabase.from("renewal_documents")
+    .select("storage_path").eq("renewal_id", renewal.id).eq("doc_type", "picture_2x2").maybeSingle();
+  let pictureUrl = "";
+  if (picture?.storage_path) {
+    const signed = await supabase.storage.from("franchise-documents").createSignedUrl(picture.storage_path, 600);
+    pictureUrl = signed.data?.signedUrl || "";
+  }
+  await openSavedSubmissionForm({
+    title: "Franchise Renewal Application", reference: renewal.renewal_code,
+    filename: `TFRO-Renewal-${renewal.renewal_code}`, pictureUrl,
+    fields: [
+      { label: "Operator", value: renewal.operator_name }, { label: "Contact", value: renewal.operator_contact },
+      { label: "Address", value: renewal.operator_address }, { label: "Renewal Type", value: TYPE_LABELS[renewal.renewal_type] || renewal.renewal_type },
+      { label: "Current Expiration", value: renewal.current_expiration_date }, { label: "Driver", value: renewal.driver_name },
+      { label: "Driver License", value: renewal.driver_license_number }, { label: "Plate Number", value: renewal.plate_number },
+      { label: "Engine Number", value: renewal.engine_number }, { label: "Chassis Number", value: renewal.chassis_number },
+      { label: "Voter's Certificate", value: renewal.voters_certificate_number }, { label: "Cedula", value: renewal.cedula_number },
+      { label: "Barangay Clearance", value: renewal.barangay_clearance_number }, { label: "PMBL Certificate", value: renewal.pmbl_certificate_number },
+      { label: "Current OR", value: renewal.current_or_number }, { label: "Current CR", value: renewal.current_cr_number },
+      { label: "OR Registration", value: renewal.or_registration_class }, { label: "CR Registration", value: renewal.cr_registration_class },
+      { label: "Status", value: statusLabel(renewal.status) }, { label: "Submitted", value: new Date(renewal.created_at).toLocaleString() },
+    ],
+  });
 }
 
 function prefillRenewal(renewal) {
@@ -162,7 +221,9 @@ function validateFiles(files, resubmitting) {
   const missing = required.filter((docType) => !uploadedTypes.has(docType));
   if (missing.length) return "Please upload all required documents for this renewal case.";
   const invalid = files.find(({ file }) => file.size > 5 * 1024 * 1024 || !["application/pdf", "image/jpeg", "image/png"].includes(file.type));
-  return invalid ? `${invalid.file.name} must be a PDF, JPG, or PNG no larger than 5 MB.` : "";
+  if (invalid) return `${invalid.file.name} must be a PDF, JPG, or PNG no larger than 5 MB.`;
+  const invalidPicture = files.find(({ docType, file }) => docType === "picture_2x2" && !["image/jpeg", "image/png"].includes(file.type));
+  return invalidPicture ? "The 2×2 picture must be a JPG or PNG image." : "";
 }
 
 async function uploadDocuments(renewalId, files) {
@@ -256,6 +317,17 @@ async function init() {
 
 byId("renewalType").addEventListener("change", updateCaseRequirements);
 byId("driverId").addEventListener("change", selectDriver);
+byId("renewalBackBtn").addEventListener("click", () => showRenewalPage(renewalPage - 1));
+byId("renewalNextBtn").addEventListener("click", () => {
+  if (pageIsValid()) showRenewalPage(renewalPage + 1);
+});
 byId("renewalForm").addEventListener("submit", submitRenewal);
+byId("renewalHistory").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-renewal-form]");
+  if (!button) return;
+  const renewal = renewalHistoryRows.find((row) => String(row.id) === button.dataset.renewalForm);
+  if (renewal) showRenewalSubmission(renewal);
+});
 byId("logoutBtn").addEventListener("click", () => signOutAndRedirect("index.html"));
+showRenewalPage(1);
 init();

@@ -276,3 +276,5 @@ body{
   }
 
 }
+.inline-profile-message{grid-column:1/-1;margin:8px 0 14px;padding:11px 13px;border:1px solid #efb4b4;border-left:4px solid #c62828;border-radius:8px;background:#fff1f1;color:#a11f1f;font-size:13px;font-weight:700;line-height:1.45;}
+.inline-profile-message[hidden]{display:none;}

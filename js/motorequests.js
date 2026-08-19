@@ -2,6 +2,7 @@ import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
+import { openSubmissionForm } from "./submission-form.js";
 
 let requests = [];
 let currentReq = null;
@@ -33,7 +34,7 @@ function statusBadge(status) {
 }
 
 async function verifyAccess() {
-  const { profile } = await requireRole(["admin", "staff"]);
+  const { profile } = await requireRole(["admin"]);
   return profile;
 }
 
@@ -115,6 +116,7 @@ async function openReview(id) {
       safeDetail("Motor Serial", currentReq.new_motor_serial) +
       safeDetail("Supporting Doc", docHtml, true) +
     "</div>" +
+    '<div class="review-actions"><button type="button" class="btn-cancel" id="printMotorFormBtn"><i class="ri-printer-line"></i> View / Save PDF</button></div>' +
     renderMotorActions(currentReq);
 
   var acceptBtn = el("reviewBody").querySelector("#acceptBtn");
@@ -251,6 +253,7 @@ function bindEvents() {
       { header: "Submitted At", value: (row) => row.created_at },
     ],
   });
+  el("reviewBody").querySelector("#printMotorFormBtn")?.addEventListener("click", () => printMotorForm(resolvedOperatorName));
   el("motorTable").addEventListener("click", function (e) {
     var btn = e.target.closest("button[data-action]");
     if (!btn) return;
@@ -272,6 +275,24 @@ async function init() {
   var profile = await verifyAccess();
   if (!profile) return;
   await loadRequests();
+}
+
+async function printMotorForm(resolvedOperatorName) {
+  if (!currentReq) return;
+  openSubmissionForm({
+    title: "Change Motor / MTOP Request Form", reference: currentReq.request_code || currentReq.id,
+    filename: `TFRO-Change-Motor-${currentReq.request_code || currentReq.id}`,
+    pictureUrl: await getSignedUrl(currentReq.picture_storage_path),
+    fields: [
+      { label: "Operator", value: resolvedOperatorName }, { label: "Status", value: currentReq.status },
+      { label: "Current Engine", value: currentReq.old_engine_number }, { label: "New Engine", value: currentReq.new_engine_number },
+      { label: "Current Chassis", value: currentReq.old_chassis_number }, { label: "New Chassis", value: currentReq.new_chassis_number },
+      { label: "Current Plate", value: currentReq.old_plate_number }, { label: "New Plate", value: currentReq.new_plate_number },
+      { label: "Motor Brand", value: currentReq.new_motor_brand }, { label: "Motor Serial", value: currentReq.new_motor_serial },
+      { label: "Supporting Document", value: currentReq.supporting_file_name },
+      { label: "Rejection Reason", value: currentReq.rejection_reason }, { label: "Submitted", value: currentReq.created_at ? new Date(currentReq.created_at).toLocaleString() : "—" },
+    ],
+  });
 }
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

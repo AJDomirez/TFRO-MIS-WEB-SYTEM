@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TFRO Register</title>
 
-  <link rel="stylesheet" href="../css/style.css?v=20260817-6">
+  <link rel="stylesheet" href="../css/style.css?v=20260818-023000">
 
   <!-- Remix Icons -->
   <link
@@ -52,7 +52,7 @@
       <form id="registerForm">
 
         <!-- Public registration is Operator-only. -->
-        <div class="input-group">
+        <div class="input-group register-full">
           <label>Account Type</label>
 
           <div class="role-selector">
@@ -68,7 +68,7 @@
           </div>
         </div>
 
-        <p class="account-note">
+        <p class="account-note register-full">
           TFRO Staff and Administrator accounts are created internally.
         </p>
 
@@ -101,6 +101,16 @@
             pattern="[0-9+\-\s()]{7,15}"
             required
           />
+        </div>
+
+        <div class="input-group">
+          <label>Home Address</label>
+          <input type="text" id="address" placeholder="Complete address" autocomplete="street-address" required />
+        </div>
+
+        <div class="input-group register-full">
+          <label>Operator Franchise Number</label>
+          <input type="text" id="franchiseNumber" placeholder="FR-2026-0001" autocomplete="off" required />
         </div>
 
         <div class="input-group">
@@ -176,12 +186,13 @@
           ></small>
         </div>
 
-        <button type="submit" class="login-btn" id="registerBtn">
+        <div class="inline-form-message register-full" id="registerMessage" hidden role="alert"></div>
+        <button type="submit" class="login-btn register-full" id="registerBtn">
           <i class="ri-user-add-line"></i>
           Create Account
         </button>
 
-        <span class="switch-link">
+        <span class="switch-link register-full">
 Already have an account?
           <a href="login.html">Sign in here</a>
         </span>

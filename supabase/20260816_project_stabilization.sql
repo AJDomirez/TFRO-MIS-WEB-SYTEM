@@ -5,7 +5,7 @@
 
 -- ---------------------------------------------------------------------------
 -- Registration: only the trusted auth trigger may create profiles or assign
--- roles. Public sign-up metadata is restricted to driver/operator.
+-- roles. Public sign-up metadata is restricted to operator.
 -- ---------------------------------------------------------------------------
 create or replace function public.handle_new_user()
 returns trigger
@@ -14,10 +14,10 @@ security definer
 set search_path = public, pg_temp
 as $$
 declare
-  requested_role text := coalesce(new.raw_user_meta_data ->> 'role', 'driver');
+  requested_role text := coalesce(new.raw_user_meta_data ->> 'role', 'operator');
 begin
-  if requested_role not in ('driver', 'operator') then
-    requested_role := 'driver';
+  if requested_role <> 'operator' then
+    requested_role := 'operator';
   end if;
 
   insert into public.profiles (id, role, full_name, contact_number)
