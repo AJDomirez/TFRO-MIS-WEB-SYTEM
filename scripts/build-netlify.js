@@ -23,6 +23,12 @@ for (const file of publicRootFiles) {
   fs.copyFileSync(path.join(root, file), path.join(output, file));
 }
 
+// Provide an email-client-safe logo URL without spaces in the filename.
+fs.copyFileSync(
+  path.join(root, "Logo", "TFRO Logo.jpg"),
+  path.join(output, "Logo", "tfro-logo.jpg"),
+);
+
 const forbiddenExtensions = new Set([".md", ".sql", ".toml"]);
 const forbiddenFiles = new Set(["package.json", "package-lock.json", "server.js"]);
 
