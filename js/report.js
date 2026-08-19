@@ -19,6 +19,16 @@ function formatDate(value, includeTime = false) {
     : date.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" });
 }
 
+function ageFromBirthDate(value) {
+  if (!value) return "—";
+  const birthDate = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(birthDate.getTime()) || birthDate > new Date()) return "—";
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  if (today.getMonth() < birthDate.getMonth() || (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate())) age -= 1;
+  return String(age);
+}
+
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>'"]/g, (character) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;",
@@ -105,11 +115,13 @@ const reportDefinitions = {
   franchises: {
     title: "Franchise Records Report", description: "Master list of franchises, operators, routes, status, and expiration dates.",
     icon: "ri-file-list-3-line", accent: "green",
-    headers: ["Franchise No.", "Operator", "Route", "Type", "Status", "Application Date", "Expiration"],
+    headers: ["Franchise No.", "Previous Registration", "Operator", "Registration Date", "Previous MTOP Expiry", "Current MTOP Expiry", "Address", "Age", "Birthplace", "Birthdate", "Civil Status", "Barangay Clearance / Cedula", "Contact", "TODA", "OR Number", "Motorcycle", "Year Model", "Engine", "Engine CR", "Chassis", "Chassis CR", "Plate", "Driver", "Driver Contact", "Route", "Status"],
     async load(period) {
-      const rows = await selectRows("franchises", "franchise_number,operator_name,route,application_type,status,application_date,expiration_date,created_at", { order: "created_at" });
+      const rows = await selectRows("franchises", "franchise_number,previous_registration,operator_name,registration_month,registration_day,registration_year,previous_mtop_expiration,expiration_date,address,birth_date,birth_place,civil_status,barangay_clearance_cedula,contact_number,toda_name,official_receipt_number,motorcycle_brand,motorcycle_year_model,engine_number,engine_cr_number,chassis_number,chassis_cr_number,plate_number,driver_name,driver_contact_number,route,status,application_date,created_at", { order: "created_at" });
       return rows.filter((row) => withinPeriod(row.application_date || row.created_at, period)).map((row) => [
-        text(row.franchise_number), text(row.operator_name), text(row.route), text(row.application_type), text(row.status), formatDate(row.application_date), formatDate(row.expiration_date),
+        text(row.franchise_number), text(row.previous_registration), text(row.operator_name),
+        row.registration_month && row.registration_day && row.registration_year ? `${row.registration_month}/${row.registration_day}/${row.registration_year}` : "—",
+        formatDate(row.previous_mtop_expiration), formatDate(row.expiration_date), text(row.address), ageFromBirthDate(row.birth_date), text(row.birth_place), formatDate(row.birth_date), text(row.civil_status), text(row.barangay_clearance_cedula), text(row.contact_number), text(row.toda_name), text(row.official_receipt_number), text(row.motorcycle_brand), text(row.motorcycle_year_model), text(row.engine_number), text(row.engine_cr_number), text(row.chassis_number), text(row.chassis_cr_number), text(row.plate_number), text(row.driver_name), text(row.driver_contact_number), text(row.route), text(row.status),
       ]);
     },
   },

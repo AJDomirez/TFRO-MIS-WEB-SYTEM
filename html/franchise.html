@@ -137,6 +137,16 @@
           <input name="previous_registration" placeholder="e.g. FR-2020-0342 / None" autocomplete="off">
         </label>
 
+        <label>
+          Previous MTOP Expiration
+          <input name="previous_mtop_expiration" id="previous_mtop_expiration" type="date">
+        </label>
+
+        <label>
+          Current MTOP Expiry <small>(previous expiry + 3 years)</small>
+          <input name="expiration_date" id="expiration_date" type="date">
+        </label>
+
         <label class="full">
           Name — Registered Operator / Franchise Owner
           <input name="operator_name" id="operator_name" required placeholder="Full name of the operator" autocomplete="organization">
@@ -181,17 +191,28 @@
           <input name="address" placeholder="Complete operator address" autocomplete="street-address">
         </label>
 
+        <label>Birthdate<input name="birth_date" id="birth_date" type="date" autocomplete="bday"></label>
+        <label>Birthplace<input name="birth_place" placeholder="City / municipality of birth"></label>
+        <label>Civil Status<select name="civil_status"><option value="">Select status</option><option value="Single">Single</option><option value="Married">Married</option><option value="Widowed">Widowed</option><option value="Separated">Separated</option></select></label>
+        <label>Barangay Clearance / Cedula<input name="barangay_clearance_cedula" placeholder="Document or reference number"></label>
+        <label>Motorcycle Brand / Model<input name="motorcycle_brand" placeholder="e.g. Honda TMX"></label>
+        <label>Motorcycle Year Model<input name="motorcycle_year_model" type="number" min="1900" max="2100" placeholder="YYYY"></label>
+
         <label>
           Engine No.
           <input name="engine_number" id="engine_number" placeholder="Engine number" autocomplete="off">
           <span class="field-error" id="err-engine_number"></span>
         </label>
 
+        <label>Engine Number (CR)<input name="engine_cr_number" placeholder="Engine number on CR" autocomplete="off"></label>
+
         <label>
           Chassis No.
           <input name="chassis_number" id="chassis_number" placeholder="Chassis number" autocomplete="off">
           <span class="field-error" id="err-chassis_number"></span>
         </label>
+
+        <label>Chassis Number (CR)<input name="chassis_cr_number" placeholder="Chassis number on CR" autocomplete="off"></label>
 
         <label>
           Plate No.
@@ -204,6 +225,11 @@
           <input name="contact_number" id="contact_number" placeholder="09XX-XXX-XXXX" autocomplete="tel-national">
           <span class="field-error" id="err-contact_number"></span>
         </label>
+
+        <label>TODA Name<input name="toda_name" placeholder="TODA association name"></label>
+        <label>Official Receipt Number<input name="official_receipt_number" placeholder="OR number from receipt"></label>
+        <label>Driver Name<input name="driver_name" placeholder="Assigned driver name"></label>
+        <label>Driver Contact Number<input name="driver_contact_number" id="driver_contact_number" placeholder="09XX-XXX-XXXX" autocomplete="tel-national"><span class="field-error" id="err-driver_contact_number"></span></label>
 
         <!-- Existing admin functionality (integrated) -->
         <label>
@@ -221,11 +247,6 @@
         <label>
           Application Date
           <input name="application_date" id="application_date" type="date" required>
-        </label>
-
-        <label>
-          Expiry Date <small>(optional)</small>
-          <input name="expiration_date" type="date">
         </label>
 
         <label>
@@ -286,11 +307,26 @@
             <th>Month</th>
             <th>Day</th>
             <th>Year</th>
+            <th>Previous MTOP Expiry</th>
+            <th>Current MTOP Expiry</th>
             <th>Address</th>
+            <th>Age</th>
+            <th>Birthplace</th>
+            <th>Birthdate</th>
+            <th>Civil Status</th>
+            <th>Barangay Clearance / Cedula</th>
+            <th>Motorcycle Brand / Model</th>
+            <th>Year Model</th>
             <th>Engine No.</th>
+            <th>Engine No. (CR)</th>
             <th>Chassis No.</th>
+            <th>Chassis No. (CR)</th>
             <th>Plate No.</th>
             <th>Contact Number</th>
+            <th>TODA Name</th>
+            <th>OR Number</th>
+            <th>Driver Name</th>
+            <th>Driver Contact</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -333,6 +369,7 @@
             <option value="">Select a franchise...</option>
           </select>
         </label>
+
         <label class="full">
           Fn# — Franchise Number
           <input name="franchise_number" id="edit_franchise_number" required placeholder="FR-2026-0001" autocomplete="off">
@@ -343,6 +380,9 @@
           Previous Registration
           <input name="previous_registration" id="edit_previous_registration" placeholder="e.g. FR-2020-0342 / None" autocomplete="off">
         </label>
+
+        <label>Previous MTOP Expiration<input name="previous_mtop_expiration" id="edit_previous_mtop_expiration" type="date"></label>
+        <label>Current MTOP Expiry <small>(previous expiry + 3 years)</small><input name="expiration_date" id="edit_expiration_date" type="date"></label>
 
         <label class="full">
           Name — Registered Operator / Franchise Owner
@@ -387,17 +427,28 @@
           <input name="address" id="edit_address" placeholder="Complete operator address" autocomplete="street-address">
         </label>
 
+        <label>Birthdate<input name="birth_date" id="edit_birth_date" type="date" autocomplete="bday"></label>
+        <label>Birthplace<input name="birth_place" id="edit_birth_place" placeholder="City / municipality of birth"></label>
+        <label>Civil Status<select name="civil_status" id="edit_civil_status"><option value="">Select status</option><option value="Single">Single</option><option value="Married">Married</option><option value="Widowed">Widowed</option><option value="Separated">Separated</option></select></label>
+        <label>Barangay Clearance / Cedula<input name="barangay_clearance_cedula" id="edit_barangay_clearance_cedula" placeholder="Document or reference number"></label>
+        <label>Motorcycle Brand / Model<input name="motorcycle_brand" id="edit_motorcycle_brand" placeholder="e.g. Honda TMX"></label>
+        <label>Motorcycle Year Model<input name="motorcycle_year_model" id="edit_motorcycle_year_model" type="number" min="1900" max="2100" placeholder="YYYY"></label>
+
         <label>
           Engine No.
           <input name="engine_number" id="edit_engine_number" placeholder="Engine number" autocomplete="off">
           <span class="field-error" id="err-edit-engine_number"></span>
         </label>
 
+        <label>Engine Number (CR)<input name="engine_cr_number" id="edit_engine_cr_number" placeholder="Engine number on CR"></label>
+
         <label>
           Chassis No.
           <input name="chassis_number" id="edit_chassis_number" placeholder="Chassis number" autocomplete="off">
           <span class="field-error" id="err-edit-chassis_number"></span>
         </label>
+
+        <label>Chassis Number (CR)<input name="chassis_cr_number" id="edit_chassis_cr_number" placeholder="Chassis number on CR" autocomplete="off"></label>
 
         <label>
           Plate No.
@@ -410,6 +461,11 @@
           <input name="contact_number" id="edit_contact_number" placeholder="09XX-XXX-XXXX" autocomplete="tel-national">
           <span class="field-error" id="err-edit-contact_number"></span>
         </label>
+
+        <label>TODA Name<input name="toda_name" id="edit_toda_name" placeholder="TODA association name"></label>
+        <label>Official Receipt Number<input name="official_receipt_number" id="edit_official_receipt_number" placeholder="OR number from receipt"></label>
+        <label>Driver Name<input name="driver_name" id="edit_driver_name" placeholder="Assigned driver name"></label>
+        <label>Driver Contact Number<input name="driver_contact_number" id="edit_driver_contact_number" placeholder="09XX-XXX-XXXX" autocomplete="tel-national"><span class="field-error" id="err-edit-driver_contact_number"></span></label>
 
         <div class="form-actions">
           <button type="submit" class="new-btn">Save Changes</button>
@@ -440,7 +496,7 @@
 <!-- SUCCESS TOAST -->
 <div class="toast" id="toast" hidden></div>
 
-<script type="module" src="../js/franchise.js?v=20260819-171500"></script>
+<script type="module" src="../js/franchise.js?v=20260819-174500"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-170000"></script>
 <script>
   const role = localStorage.getItem("role");

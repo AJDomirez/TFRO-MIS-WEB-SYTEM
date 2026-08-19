@@ -39,6 +39,29 @@ function formatRegistrationDate(row) {
   return "—";
 }
 
+function formatDate(value) {
+  if (!value) return "—";
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function ageFromBirthDate(value) {
+  if (!value) return "—";
+  const birthDate = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(birthDate.getTime()) || birthDate > new Date()) return "—";
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  if (today.getMonth() < birthDate.getMonth() || (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate())) age -= 1;
+  return String(age);
+}
+
+function expirationThreeYearsAfter(value) {
+  if (!value) return "";
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return "";
+  return `${String(year + 3).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 function todayForInput() {
   const now = new Date();
   const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
@@ -131,6 +154,14 @@ function validateCommon(entry, errPrefix) {
     setFieldError(`${errPrefix}-contact_number`, el(editingId ? "edit_contact_number" : "contact_number"), "");
   }
 
+  const driverContactInput = el(editingId ? "edit_driver_contact_number" : "driver_contact_number");
+  if (entry.driver_contact_number && !PHONE_RE.test(entry.driver_contact_number.trim())) {
+    setFieldError(`${errPrefix}-driver_contact_number`, driverContactInput, "Enter a valid PH mobile number.");
+    valid = false;
+  } else {
+    setFieldError(`${errPrefix}-driver_contact_number`, driverContactInput, "");
+  }
+
   // Engine / Chassis / Plate — no invalid characters
   [["engine_number", "edit_engine_number", "engine_number"], ["chassis_number", "edit_chassis_number", "chassis_number"], ["plate_number", "edit_plate_number", "plate_number"]].forEach(([key, editId, addId]) => {
     const val = entry[key] || "";
@@ -166,6 +197,13 @@ function filteredFranchises() {
       row.chassis_number,
       row.contact_number,
       row.address,
+      row.birth_place,
+      row.barangay_clearance_cedula,
+      row.motorcycle_brand,
+      row.toda_name,
+      row.official_receipt_number,
+      row.driver_name,
+      row.driver_contact_number,
     ].map((v) => (v || "").toLowerCase());
     return matchesStatus && searchable.some((value) => value.includes(term));
   });
@@ -186,11 +224,26 @@ function renderTable() {
       <td>${escapeHtml(monthName(row.registration_month))}</td>
       <td>${escapeHtml(row.registration_day) || "—"}</td>
       <td>${escapeHtml(row.registration_year) || "—"}</td>
+      <td>${escapeHtml(formatDate(row.previous_mtop_expiration))}</td>
+      <td>${escapeHtml(formatDate(row.expiration_date))}</td>
       <td>${escapeHtml(row.address) || "—"}</td>
+      <td>${escapeHtml(ageFromBirthDate(row.birth_date))}</td>
+      <td>${escapeHtml(row.birth_place) || "—"}</td>
+      <td>${escapeHtml(formatDate(row.birth_date))}</td>
+      <td>${escapeHtml(row.civil_status) || "—"}</td>
+      <td>${escapeHtml(row.barangay_clearance_cedula) || "—"}</td>
+      <td>${escapeHtml(row.motorcycle_brand) || "—"}</td>
+      <td>${escapeHtml(row.motorcycle_year_model) || "—"}</td>
       <td>${escapeHtml(row.engine_number) || "—"}</td>
+      <td>${escapeHtml(row.engine_cr_number) || "—"}</td>
       <td>${escapeHtml(row.chassis_number) || "—"}</td>
+      <td>${escapeHtml(row.chassis_cr_number) || "—"}</td>
       <td>${escapeHtml(row.plate_number) || "—"}</td>
       <td>${escapeHtml(row.contact_number) || "—"}</td>
+      <td>${escapeHtml(row.toda_name) || "—"}</td>
+      <td>${escapeHtml(row.official_receipt_number) || "—"}</td>
+      <td>${escapeHtml(row.driver_name) || "—"}</td>
+      <td>${escapeHtml(row.driver_contact_number) || "—"}</td>
       <td>
         <div class="actions">
           <button data-action="view" data-id="${row.id}" title="View"><i class="ri-eye-line"></i></button>
@@ -199,7 +252,7 @@ function renderTable() {
         </div>
       </td>
     </tr>`;
-  }).join("") : '<tr><td colspan="13">No franchise records found.</td></tr>';
+  }).join("") : '<tr><td colspan="28">No franchise records found.</td></tr>';
 }
 
 async function loadFranchises() {
@@ -254,16 +307,29 @@ function readAddForm() {
   return {
     franchise_number: (entry.franchise_number || "").trim(),
     previous_registration: (entry.previous_registration || "").trim(),
+    previous_mtop_expiration: entry.previous_mtop_expiration || null,
     operator_name: (entry.operator_name || "").trim(),
     operator_id: entry.operator_id || null,
     registration_month: entry.registration_month ? Number(entry.registration_month) : null,
     registration_day: entry.registration_day ? Number(entry.registration_day) : null,
     registration_year: entry.registration_year ? Number(entry.registration_year) : null,
     address: (entry.address || "").trim(),
+    birth_date: entry.birth_date || null,
+    birth_place: (entry.birth_place || "").trim(),
+    civil_status: (entry.civil_status || "").trim(),
+    barangay_clearance_cedula: (entry.barangay_clearance_cedula || "").trim(),
+    motorcycle_brand: (entry.motorcycle_brand || "").trim(),
+    motorcycle_year_model: entry.motorcycle_year_model ? Number(entry.motorcycle_year_model) : null,
     engine_number: (entry.engine_number || "").trim().toUpperCase(),
+    engine_cr_number: (entry.engine_cr_number || "").trim().toUpperCase(),
     chassis_number: (entry.chassis_number || "").trim().toUpperCase(),
+    chassis_cr_number: (entry.chassis_cr_number || "").trim().toUpperCase(),
     plate_number: (entry.plate_number || "").trim().toUpperCase(),
     contact_number: (entry.contact_number || "").trim(),
+    toda_name: (entry.toda_name || "").trim(),
+    official_receipt_number: (entry.official_receipt_number || "").trim(),
+    driver_name: (entry.driver_name || "").trim(),
+    driver_contact_number: (entry.driver_contact_number || "").trim(),
     route: (entry.route || "").trim(),
     application_type: "renewal",
     application_date: entry.application_date || todayForInput(),
@@ -355,11 +421,26 @@ function showView(row) {
     ["Month", monthName(row.registration_month)],
     ["Day", row.registration_day || "—"],
     ["Year", row.registration_year || "—"],
+    ["Previous MTOP Expiration", formatDate(row.previous_mtop_expiration)],
+    ["Current MTOP Expiry", formatDate(row.expiration_date)],
     ["Address", row.address || "—"],
+    ["Age", ageFromBirthDate(row.birth_date)],
+    ["Birthplace", row.birth_place || "—"],
+    ["Birthdate", formatDate(row.birth_date)],
+    ["Civil Status", row.civil_status || "—"],
+    ["Barangay Clearance / Cedula", row.barangay_clearance_cedula || "—"],
+    ["Motorcycle Brand / Model", row.motorcycle_brand || "—"],
+    ["Motorcycle Year Model", row.motorcycle_year_model || "—"],
     ["Engine No.", row.engine_number || "—"],
+    ["Engine No. (CR)", row.engine_cr_number || "—"],
     ["Chassis No.", row.chassis_number || "—"],
+    ["Chassis No. (CR)", row.chassis_cr_number || "—"],
     ["Plate No.", row.plate_number || "—"],
     ["Contact Number", row.contact_number || "—"],
+    ["TODA Name", row.toda_name || "—"],
+    ["Official Receipt Number", row.official_receipt_number || "—"],
+    ["Driver Name", row.driver_name || "—"],
+    ["Driver Contact", row.driver_contact_number || "—"],
   ];
   const viewBody = el("viewBody");
   if (viewBody) {
@@ -377,16 +458,30 @@ function openEditForm(row) {
   clearAllErrors("err-edit-");
   el("edit_franchise_number").value = row.franchise_number || "";
   el("edit_previous_registration").value = row.previous_registration || "";
+  el("edit_previous_mtop_expiration").value = row.previous_mtop_expiration || "";
+  el("edit_expiration_date").value = row.expiration_date || "";
   el("edit_operator_name").value = row.operator_name || "";
   el("edit_operator_id").value = row.operator_id || "";
   el("edit_registration_month").value = row.registration_month || "";
   el("edit_registration_day").value = row.registration_day || "";
   el("edit_registration_year").value = row.registration_year || "";
   el("edit_address").value = row.address || "";
+  el("edit_birth_date").value = row.birth_date || "";
+  el("edit_birth_place").value = row.birth_place || "";
+  el("edit_civil_status").value = row.civil_status || "";
+  el("edit_barangay_clearance_cedula").value = row.barangay_clearance_cedula || "";
+  el("edit_motorcycle_brand").value = row.motorcycle_brand || "";
+  el("edit_motorcycle_year_model").value = row.motorcycle_year_model || "";
   el("edit_engine_number").value = row.engine_number || "";
+  el("edit_engine_cr_number").value = row.engine_cr_number || "";
   el("edit_chassis_number").value = row.chassis_number || "";
+  el("edit_chassis_cr_number").value = row.chassis_cr_number || "";
   el("edit_plate_number").value = row.plate_number || "";
   el("edit_contact_number").value = row.contact_number || "";
+  el("edit_toda_name").value = row.toda_name || "";
+  el("edit_official_receipt_number").value = row.official_receipt_number || "";
+  el("edit_driver_name").value = row.driver_name || "";
+  el("edit_driver_contact_number").value = row.driver_contact_number || "";
   openModal("editModal");
 }
 
@@ -405,16 +500,30 @@ function readEditForm() {
   return {
     franchise_number: el("edit_franchise_number").value.trim(),
     previous_registration: el("edit_previous_registration").value.trim(),
+    previous_mtop_expiration: el("edit_previous_mtop_expiration").value || null,
+    expiration_date: el("edit_expiration_date").value || null,
     operator_name: el("edit_operator_name").value.trim(),
     operator_id: el("edit_operator_id").value || null,
     registration_month: el("edit_registration_month").value ? Number(el("edit_registration_month").value) : null,
     registration_day: el("edit_registration_day").value ? Number(el("edit_registration_day").value) : null,
     registration_year: el("edit_registration_year").value ? Number(el("edit_registration_year").value) : null,
     address: el("edit_address").value.trim(),
+    birth_date: el("edit_birth_date").value || null,
+    birth_place: el("edit_birth_place").value.trim(),
+    civil_status: el("edit_civil_status").value,
+    barangay_clearance_cedula: el("edit_barangay_clearance_cedula").value.trim(),
+    motorcycle_brand: el("edit_motorcycle_brand").value.trim(),
+    motorcycle_year_model: el("edit_motorcycle_year_model").value ? Number(el("edit_motorcycle_year_model").value) : null,
     engine_number: el("edit_engine_number").value.trim().toUpperCase(),
+    engine_cr_number: el("edit_engine_cr_number").value.trim().toUpperCase(),
     chassis_number: el("edit_chassis_number").value.trim().toUpperCase(),
+    chassis_cr_number: el("edit_chassis_cr_number").value.trim().toUpperCase(),
     plate_number: el("edit_plate_number").value.trim().toUpperCase(),
     contact_number: el("edit_contact_number").value.trim(),
+    toda_name: el("edit_toda_name").value.trim(),
+    official_receipt_number: el("edit_official_receipt_number").value.trim(),
+    driver_name: el("edit_driver_name").value.trim(),
+    driver_contact_number: el("edit_driver_contact_number").value.trim(),
   };
 }
 
@@ -529,6 +638,12 @@ function bindEvents() {
   el("franchiseForm")?.addEventListener("submit", onAddSubmit);
   el("editForm")?.addEventListener("submit", onEditSubmit);
   el("confirmDeleteBtn")?.addEventListener("click", confirmDelete);
+  el("previous_mtop_expiration")?.addEventListener("change", (event) => {
+    el("expiration_date").value = expirationThreeYearsAfter(event.target.value);
+  });
+  el("edit_previous_mtop_expiration")?.addEventListener("change", (event) => {
+    el("edit_expiration_date").value = expirationThreeYearsAfter(event.target.value);
+  });
   el("operator_id")?.addEventListener("change", () => {
     const account = operatorAccounts.find((row) => row.user_id === el("operator_id").value);
     if (account) el("operator_name").value = account.full_name;
@@ -553,10 +668,23 @@ function bindEvents() {
       { header: "Application Date", value: (row) => row.application_date },
       { header: "Expiration Date", value: (row) => row.expiration_date },
       { header: "Address", value: (row) => row.address },
+      { header: "Age", value: (row) => ageFromBirthDate(row.birth_date) },
+      { header: "Birthplace", value: (row) => row.birth_place },
+      { header: "Birthdate", value: (row) => row.birth_date },
+      { header: "Civil Status", value: (row) => row.civil_status },
+      { header: "Barangay Clearance / Cedula", value: (row) => row.barangay_clearance_cedula },
       { header: "Contact Number", value: (row) => row.contact_number },
+      { header: "Motorcycle Brand / Model", value: (row) => row.motorcycle_brand },
+      { header: "Motorcycle Year Model", value: (row) => row.motorcycle_year_model },
       { header: "Engine Number", value: (row) => row.engine_number },
+      { header: "Engine Number (CR)", value: (row) => row.engine_cr_number },
       { header: "Chassis Number", value: (row) => row.chassis_number },
+      { header: "Chassis Number (CR)", value: (row) => row.chassis_cr_number },
       { header: "Plate Number", value: (row) => row.plate_number },
+      { header: "TODA Name", value: (row) => row.toda_name },
+      { header: "Official Receipt Number", value: (row) => row.official_receipt_number },
+      { header: "Driver Name", value: (row) => row.driver_name },
+      { header: "Driver Contact", value: (row) => row.driver_contact_number },
       { header: "Route", value: (row) => row.route },
       { header: "Status", value: (row) => displayStatus(row.status) },
     ],
