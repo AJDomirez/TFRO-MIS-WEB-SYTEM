@@ -1,0 +1,237 @@
+m<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TFRO Dashboard</title>
+
+<link rel="stylesheet" href="../css/dashboard.css?v=20260817-234500">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="admin-sidebar">
+
+<div class="dashboard-container">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+<div class="logo">
+      <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
+      <div>
+        <h2>TFRO MIS</h2>
+        <p>Lucena City</p>
+      </div>
+    </div>
+
+
+<ul class="menu">
+
+  <li class="active">
+    <a href="dashboard.html">
+      <i class="ri-dashboard-line"></i>
+      Dashboard
+    </a>
+  </li>
+
+  <li id="franchiseMenu">
+    <a href="franchise.html">
+      <i class="ri-file-list-3-line"></i>
+      Franchises
+    </a>
+  </li>
+
+  <li id="violationMenu">
+    <a href="violation.html">
+      <i class="ri-alert-line"></i>
+      Violations
+    </a>
+  </li>
+
+  <li id="paymentMenu">
+    <a href="payment.html">
+      <i class="ri-money-php-circle-line"></i>
+      Payments
+    </a>
+  </li>
+
+  <li id="reportMenu">
+    <a href="report.html">
+      <i class="ri-bar-chart-line"></i>
+      Reports
+    </a>
+  </li>
+
+  <li id="notificationMenu">
+        <a href="notification.html">
+          <i class="ri-notification-3-line"></i>
+          Notifications
+        </a>
+      </li>
+
+  <li id="auditlogMenu"> 
+        <a href="auditlog.html"> 
+        <i class="ri-history-line">
+            </i> Audit Log </a> 
+    </li>
+
+   <li id="profileMenu">
+        <a href="profile.html">
+          <i class="ri-user-settings-line"></i>
+          Profile
+        </a>
+      </li>
+
+</ul>
+
+<!-- USER PROFILE -->
+<div class="user-section">
+
+      <div class="user-info">
+
+        <div class="avatar" id="userAvatar">
+          U
+        </div>
+
+        <div>
+          <h4 id="userName">User</h4>
+          <p id="userRole">Administrator</p>
+        </div>
+
+      </div>
+
+      <button class="logout-btn" id="logoutBtn">
+        <i class="ri-logout-box-r-line"></i>
+      </button>
+
+    </div>
+
+
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Welcome back Administrator</p>
+      </div>
+    </div>
+
+    <!-- NOTICE -->
+    <div class="notice">
+      <i class="ri-alarm-warning-line"></i>
+      <span><strong id="expiringCount">0</strong> franchises are expiring within 14 days.</span>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats-grid">
+
+      <div class="card">
+        <i class="ri-file-list-3-line blue"></i>
+        <h2 id="totalFranchises">—</h2>
+        <p>Total Franchises</p>
+      </div>
+
+      <div class="card">
+        <i class="ri-checkbox-circle-line green"></i>
+        <h2 id="activeFranchises">—</h2>
+        <p>Active Franchises</p>
+      </div>
+
+      <div class="card">
+        <i class="ri-time-line orange"></i>
+        <h2 id="pendingRenewals">—</h2>
+        <p>Pending Renewals</p>
+      </div>
+
+      <div class="card">
+        <i class="ri-error-warning-line teal"></i>
+        <h2 id="totalViolations">—</h2>
+        <p>Total Violations</p>
+      </div>
+
+      <div class="card">
+        <i class="ri-notification-3-line orange"></i>
+        <h2 id="pendingViolations">—</h2>
+        <p>Pending Violations</p>
+      </div>
+
+      <div class="card">
+        <i class="ri-wallet-3-line green"></i>
+        <h2 id="violationCollections">—</h2>
+        <p>Violation Payments</p>
+      </div>
+
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-grid">
+
+      <div class="chart-card">
+        <h3>Monthly Submissions</h3>
+        <canvas id="applicationsChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Violation Types</h3>
+        <canvas id="violationsChart"></canvas>
+      </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+
+      <div class="table-header">
+        <h3>Expiring Franchises</h3>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Franchise #</th>
+            <th>Operator</th>
+            <th>Route</th>
+            <th>Expires In</th>
+          </tr>
+        </thead>
+
+        <tbody id="expiringRows"></tbody>
+      </table>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script type="module" src="../js/dashboard.js?v=20260818-043000"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
+
+<script>
+
+  const role = localStorage.getItem("role");
+
+  const paymentMenu =
+    document.getElementById("paymentMenu");
+
+  if(role === "admin"){
+    paymentMenu.style.display = "none";
+  }
+
+</script>
+
+</body>
+</html>

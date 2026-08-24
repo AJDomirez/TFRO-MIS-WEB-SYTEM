@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TFRO-MIS Franchise Records</title>
+
+  <link rel="stylesheet" href="../css/franchise.css?v=20260817-4">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+</head>
+
+<body class="admin-sidebar">
+
+<div class="layout">
+
+ <!-- SIDEBAR -->
+<aside class="sidebar">
+
+  <div class="logo">
+    <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
+
+    <div>
+      <h2>TFRO MIS</h2>
+      <p>Lucena City</p>
+    </div>
+  </div>
+
+  <ul class="menu">
+    <li>
+      <a href="dashboard.html">
+        <i class="ri-dashboard-line"></i>
+        Dashboard
+      </a>
+    </li>
+    <li class="active">
+      <a href="franchise.html">
+        <i class="ri-file-list-3-line"></i>
+        Franchises
+      </a>
+    </li>
+    <li>
+      <a href="motorequests.html">
+        <i class="ri-settings-5-line"></i>
+        Change Motor Requests
+      </a>
+    </li>
+    <li>
+      <a href="violation.html">
+        <i class="ri-alert-line"></i>
+        Violations
+      </a>
+    </li>
+<li id="paymentMenu">
+      <a href="payment.html">
+        <i class="ri-money-dollar-circle-line"></i>
+        Payments
+      </a>
+    </li>
+    <li>
+      <a href="report.html">
+        <i class="ri-bar-chart-line"></i>
+        Reports
+      </a>
+    </li>
+    <li>
+      <a href="notification.html">
+        <i class="ri-notification-3-line"></i>
+        Notifications
+      </a>
+    </li>
+    <li>
+      <a href="auditlog.html">
+        <i class="ri-history-line"></i>
+        Audit Log
+      </a>
+    </li>
+    <li>
+      <a href="profile.html">
+        <i class="ri-user-settings-line"></i>
+        Profile
+      </a>
+    </li>
+  </ul>
+
+  <!-- USER PROFILE -->
+  <div class="sidebar-user">
+    <div class="user-left">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <div class="user-details">
+        <h4 id="userName">User</h4>
+        <p id="userRole">—</p>
+      </div>
+    </div>
+    <button class="logout-btn" id="logoutBtn">
+      <i class="ri-logout-box-r-line"></i>
+    </button>
+  </div>
+
+</aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div>
+        <h1>Franchise Records</h1>
+        <p>Manage official franchise records and renewals</p>
+      </div>
+
+      <button type="button" class="new-btn" id="newApplicationBtn" aria-controls="editModal" aria-expanded="false">
+        <i class="ri-edit-line"></i>
+        Edit Franchise
+      </button>
+    </header>
+
+    <!-- ADD / EDIT PANEL -->
+    <section class="application-panel" id="applicationPanel" hidden>
+      <h2 id="formTitle">Add Franchise</h2>
+      <p class="panel-note">Name refers to the registered Operator / franchise owner.</p>
+<form id="franchiseForm">
+
+        <label class="full">
+          Fn# — Franchise Number
+          <input name="franchise_number" id="franchise_number" required placeholder="FR-2026-0001" autocomplete="off">
+          <span class="field-error" id="err-franchise_number"></span>
+        </label>
+
+        <label class="full">
+          Previous Registration
+          <input name="previous_registration" placeholder="e.g. FR-2020-0342 / None" autocomplete="off">
+        </label>
+
+        <label>
+          Previous MTOP Expiration
+          <input name="previous_mtop_expiration" id="previous_mtop_expiration" type="date">
+        </label>
+
+        <label>
+          Current MTOP Expiry <small>(previous expiry + 3 years)</small>
+          <input name="expiration_date" id="expiration_date" type="date">
+        </label>
+
+        <label class="full">
+          Name — Registered Operator / Franchise Owner
+          <input name="operator_name" id="operator_name" required placeholder="Full name of the operator" autocomplete="organization">
+          <span class="field-error" id="err-operator_name"></span>
+        </label>
+
+        <label class="full">
+          Linked Operator Portal Account
+          <select name="operator_id" id="operator_id">
+            <option value="">Not linked</option>
+          </select>
+          <small>Required before the Operator can submit renewal, Change Motor, or Driver requests.</small>
+        </label>
+
+        <!-- Date of Registration: Month / Day / Year -->
+        <div class="date-field full">
+          <span class="date-label">Date of Registration</span>
+          <div class="date-row">
+            <select name="registration_month" id="registration_month" required autocomplete="off">
+              <option value="" disabled selected>Month</option>
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+            <input type="number" name="registration_day" id="registration_day" min="1" max="31" placeholder="Day" required autocomplete="off">
+            <input type="number" name="registration_year" id="registration_year" min="1900" max="2100" placeholder="Year" required autocomplete="off">
+          </div>
+          <span class="field-error" id="err-registration_date"></span>
+        </div>
+
+        <label class="full">
+          Address
+          <input name="address" placeholder="Complete operator address" autocomplete="street-address">
+        </label>
+
+        <label>Birthdate<input name="birth_date" id="birth_date" type="date" autocomplete="bday"></label>
+        <label>Birthplace<input name="birth_place" placeholder="City / municipality of birth"></label>
+        <label>Civil Status<select name="civil_status"><option value="">Select status</option><option value="Single">Single</option><option value="Married">Married</option><option value="Widowed">Widowed</option><option value="Separated">Separated</option></select></label>
+        <label>Barangay Clearance / Cedula<input name="barangay_clearance_cedula" placeholder="Document or reference number"></label>
+        <label>Motorcycle Brand / Model<input name="motorcycle_brand" placeholder="e.g. Honda TMX"></label>
+        <label>Motorcycle Year Model<input name="motorcycle_year_model" type="number" min="1900" max="2100" placeholder="YYYY"></label>
+
+        <label>
+          Engine No.
+          <input name="engine_number" id="engine_number" placeholder="Engine number" autocomplete="off">
+          <span class="field-error" id="err-engine_number"></span>
+        </label>
+
+        <label>Engine Number (CR)<input name="engine_cr_number" placeholder="Engine number on CR" autocomplete="off"></label>
+
+        <label>
+          Chassis No.
+          <input name="chassis_number" id="chassis_number" placeholder="Chassis number" autocomplete="off">
+          <span class="field-error" id="err-chassis_number"></span>
+        </label>
+
+        <label>Chassis Number (CR)<input name="chassis_cr_number" placeholder="Chassis number on CR" autocomplete="off"></label>
+
+        <label>
+          Plate No.
+          <input name="plate_number" id="plate_number" placeholder="Plate number" autocomplete="off">
+          <span class="field-error" id="err-plate_number"></span>
+        </label>
+
+        <label>
+          Contact Number
+          <input name="contact_number" id="contact_number" placeholder="09XX-XXX-XXXX" autocomplete="tel-national">
+          <span class="field-error" id="err-contact_number"></span>
+        </label>
+
+        <label>TODA Name<input name="toda_name" placeholder="TODA association name"></label>
+        <label>Official Receipt Number<input name="official_receipt_number" placeholder="OR number from receipt"></label>
+        <label>Driver Name<input name="driver_name" placeholder="Assigned driver name"></label>
+        <label>Driver Contact Number<input name="driver_contact_number" id="driver_contact_number" placeholder="09XX-XXX-XXXX" autocomplete="tel-national"><span class="field-error" id="err-driver_contact_number"></span></label>
+
+        <!-- Existing admin functionality (integrated) -->
+        <label>
+          Route
+          <input name="route" placeholder="Assigned route (optional)">
+        </label>
+
+        <label>
+          Franchise Service
+          <select name="application_type">
+            <option value="renewal" selected>Franchise Renewal</option>
+          </select>
+        </label>
+
+        <label>
+          Application Date
+          <input name="application_date" id="application_date" type="date" required>
+        </label>
+
+        <label>
+          Status
+          <select name="status">
+            <option value="pending">Pending</option>
+            <option value="active">Approved</option>
+            <option value="suspended">Suspended</option>
+            <option value="revoked">Revoked</option>
+            <option value="expired">Expired</option>
+          </select>
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" class="new-btn" id="saveBtn">Save Franchise</button>
+          <button type="button" id="cancelApplicationBtn">Cancel</button>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+
+      <div class="search-box">
+        <i class="ri-search-line"></i>
+        <input type="text" id="searchInput" placeholder="Search Fn#, name, plate, engine, chassis...">
+      </div>
+
+      <select id="statusFilter">
+        <option value="all">All Status</option>
+        <option value="active">Approved</option>
+        <option value="pending">Pending</option>
+        <option value="suspended">Suspended</option>
+        <option value="revoked">Revoked</option>
+        <option value="expired">Expired</option>
+      </select>
+
+      <div class="date-export-controls">
+        <label>Start Date<input type="date" id="startDate"></label>
+        <label>End Date<input type="date" id="endDate"></label>
+        <button type="button" class="csv-btn" id="exportCsvBtn"><i class="ri-file-excel-2-line"></i> Save CSV</button>
+      </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Fn#</th>
+            <th>Previous Registration</th>
+            <th>Name</th>
+            <th>Date of Registration</th>
+            <th>Month</th>
+            <th>Day</th>
+            <th>Year</th>
+            <th>Previous MTOP Expiry</th>
+            <th>Current MTOP Expiry</th>
+            <th>Address</th>
+            <th>Age</th>
+            <th>Birthplace</th>
+            <th>Birthdate</th>
+            <th>Civil Status</th>
+            <th>Barangay Clearance / Cedula</th>
+            <th>Motorcycle Brand / Model</th>
+            <th>Year Model</th>
+            <th>Engine No.</th>
+            <th>Engine No. (CR)</th>
+            <th>Chassis No.</th>
+            <th>Chassis No. (CR)</th>
+            <th>Plate No.</th>
+            <th>Contact Number</th>
+            <th>TODA Name</th>
+            <th>OR Number</th>
+            <th>Driver Name</th>
+            <th>Driver Contact</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody id="franchiseTable">
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </main>
+
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal" id="viewModal" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Franchise Details</h3>
+      <button class="modal-close" data-close="viewModal"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body" id="viewBody"></div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal" id="editModal" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Edit Franchise</h3>
+      <button class="modal-close" data-close="editModal"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="editForm">
+        <label class="full">
+          Select Franchise Record
+          <select id="edit_record_selector" required>
+            <option value="">Select a franchise...</option>
+          </select>
+        </label>
+
+        <label class="full">
+          Fn# — Franchise Number
+          <input name="franchise_number" id="edit_franchise_number" required placeholder="FR-2026-0001" autocomplete="off">
+          <span class="field-error" id="err-edit-franchise_number"></span>
+        </label>
+
+        <label class="full">
+          Previous Registration
+          <input name="previous_registration" id="edit_previous_registration" placeholder="e.g. FR-2020-0342 / None" autocomplete="off">
+        </label>
+
+        <label>Previous MTOP Expiration<input name="previous_mtop_expiration" id="edit_previous_mtop_expiration" type="date"></label>
+        <label>Current MTOP Expiry <small>(previous expiry + 3 years)</small><input name="expiration_date" id="edit_expiration_date" type="date"></label>
+
+        <label class="full">
+          Name — Registered Operator / Franchise Owner
+          <input name="operator_name" id="edit_operator_name" required placeholder="Full name of the operator" autocomplete="organization">
+          <span class="field-error" id="err-edit-operator_name"></span>
+        </label>
+
+        <label class="full">
+          Linked Operator Portal Account
+          <select name="operator_id" id="edit_operator_id">
+            <option value="">Not linked</option>
+          </select>
+          <small>Link the franchise to the correct authenticated Operator.</small>
+        </label>
+
+        <div class="date-field full">
+          <span class="date-label">Date of Registration</span>
+          <div class="date-row">
+            <select name="registration_month" id="edit_registration_month" required autocomplete="off">
+              <option value="" disabled>Month</option>
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+            <input type="number" name="registration_day" id="edit_registration_day" min="1" max="31" placeholder="Day" required autocomplete="off">
+            <input type="number" name="registration_year" id="edit_registration_year" min="1900" max="2100" placeholder="Year" required autocomplete="off">
+          </div>
+          <span class="field-error" id="err-edit-registration_date"></span>
+        </div>
+
+        <label class="full">
+          Address
+          <input name="address" id="edit_address" placeholder="Complete operator address" autocomplete="street-address">
+        </label>
+
+        <label>Birthdate<input name="birth_date" id="edit_birth_date" type="date" autocomplete="bday"></label>
+        <label>Birthplace<input name="birth_place" id="edit_birth_place" placeholder="City / municipality of birth"></label>
+        <label>Civil Status<select name="civil_status" id="edit_civil_status"><option value="">Select status</option><option value="Single">Single</option><option value="Married">Married</option><option value="Widowed">Widowed</option><option value="Separated">Separated</option></select></label>
+        <label>Barangay Clearance / Cedula<input name="barangay_clearance_cedula" id="edit_barangay_clearance_cedula" placeholder="Document or reference number"></label>
+        <label>Motorcycle Brand / Model<input name="motorcycle_brand" id="edit_motorcycle_brand" placeholder="e.g. Honda TMX"></label>
+        <label>Motorcycle Year Model<input name="motorcycle_year_model" id="edit_motorcycle_year_model" type="number" min="1900" max="2100" placeholder="YYYY"></label>
+
+        <label>
+          Engine No.
+          <input name="engine_number" id="edit_engine_number" placeholder="Engine number" autocomplete="off">
+          <span class="field-error" id="err-edit-engine_number"></span>
+        </label>
+
+        <label>Engine Number (CR)<input name="engine_cr_number" id="edit_engine_cr_number" placeholder="Engine number on CR"></label>
+
+        <label>
+          Chassis No.
+          <input name="chassis_number" id="edit_chassis_number" placeholder="Chassis number" autocomplete="off">
+          <span class="field-error" id="err-edit-chassis_number"></span>
+        </label>
+
+        <label>Chassis Number (CR)<input name="chassis_cr_number" id="edit_chassis_cr_number" placeholder="Chassis number on CR" autocomplete="off"></label>
+
+        <label>
+          Plate No.
+          <input name="plate_number" id="edit_plate_number" placeholder="Plate number" autocomplete="off">
+          <span class="field-error" id="err-edit-plate_number"></span>
+        </label>
+
+        <label>
+          Contact Number
+          <input name="contact_number" id="edit_contact_number" placeholder="09XX-XXX-XXXX" autocomplete="tel-national">
+          <span class="field-error" id="err-edit-contact_number"></span>
+        </label>
+
+        <label>TODA Name<input name="toda_name" id="edit_toda_name" placeholder="TODA association name"></label>
+        <label>Official Receipt Number<input name="official_receipt_number" id="edit_official_receipt_number" placeholder="OR number from receipt"></label>
+        <label>Driver Name<input name="driver_name" id="edit_driver_name" placeholder="Assigned driver name"></label>
+        <label>Driver Contact Number<input name="driver_contact_number" id="edit_driver_contact_number" placeholder="09XX-XXX-XXXX" autocomplete="tel-national"><span class="field-error" id="err-edit-driver_contact_number"></span></label>
+
+        <div class="form-actions">
+          <button type="submit" class="new-btn">Save Changes</button>
+          <button type="button" data-close="editModal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRMATION MODAL -->
+<div class="modal" id="deleteModal" hidden>
+  <div class="modal-box modal-small">
+    <div class="modal-head">
+      <h3>Remove Franchise Record?</h3>
+      <button class="modal-close" data-close="deleteModal"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <p class="delete-message" id="deleteMessage">Remove this franchise from active records? Its transaction history will be retained.</p>
+      <div class="form-actions delete-actions">
+        <button type="button" class="btn-cancel" data-close="deleteModal">Cancel</button>
+        <button type="button" class="btn-danger" id="confirmDeleteBtn">Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS TOAST -->
+<div class="toast" id="toast" hidden></div>
+
+<script type="module" src="../js/franchise.js?v=20260819-174500"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
+<script>
+  const role = localStorage.getItem("role");
+  const paymentMenu = document.getElementById("paymentMenu");
+  if (role === "admin") {
+    paymentMenu.style.display = "none";
+  }
+</script>
+</body>
+</html>
+

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Franchise Renewal - TFRO</title>
+  <link rel="stylesheet" href="../css/operatorportal.css">
+  <link rel="stylesheet" href="../css/renewal.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-030000">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body class="operator-sidebar">
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <div class="logo">
+      <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo">
+      <div><h2>TFRO MIS</h2><p>Lucena City</p></div>
+    </div>
+    <ul class="menu">
+      <li><a href="operatorportal.html"><i class="ri-home-4-line"></i> Home</a></li>
+      <li class="active"><a href="renewal.html"><i class="ri-refresh-line"></i> Franchise Renewal</a></li>
+      <li><a href="notification.html"><i class="ri-notification-3-line"></i> Notifications</a></li>
+      <li><a href="operatorprofile.html"><i class="ri-user-settings-line"></i> My Profile</a></li>
+    </ul>
+    <div class="sidebar-user">
+      <div class="user-left">
+        <div class="user-avatar" id="userAvatar">OP</div>
+        <div class="user-details"><h4 id="userName">Operator</h4><p>Operator</p></div>
+      </div>
+      <a class="logout-btn" id="logoutBtn" href="logout.html" aria-label="Sign out"><i class="ri-logout-box-r-line"></i></a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div><h1>Franchise Renewal</h1><p>Renewal is valid for three years from the current expiration date.</p></div>
+      <a class="back-link" href="operatorportal.html"><i class="ri-arrow-left-line"></i> Back to Home</a>
+    </header>
+
+    <section class="process-summary">
+      <div><strong>1</strong><span>Renewal Details</span></div>
+      <div><strong>2</strong><span>Operator Information</span></div>
+      <div><strong>3</strong><span>Vehicle &amp; Driver</span></div>
+      <div><strong>4</strong><span>Required Documents</span></div>
+      <div class="staff-step"><strong>5</strong><span>Document Verification</span></div>
+      <div class="staff-step"><strong>6</strong><span>Vehicle Inspection</span></div>
+      <div class="staff-step"><strong>7</strong><span>Assessment &amp; Payment</span></div>
+      <div class="staff-step"><strong>8</strong><span>Renewal Confirmation</span></div>
+    </section>
+
+    <div class="renewal-alert" id="renewalStatus" hidden></div>
+
+    <section class="renewal-card" id="renewalFormCard">
+      <div class="card-title"><div><span class="step-number" id="renewalStepNumber">1</span><h2 id="renewalStepTitle">Renewal Details</h2></div><small>Fields marked * are required</small></div>
+      <form id="renewalForm">
+        <div class="case-guidance renewal-in-person-notice"><strong>In-person originals required:</strong> Upload clear copies here, then bring every original requirement and a valid ID to the TFRO office for final verification and MTOP release.</div>
+        <div class="renewal-page" data-renewal-page="1">
+        <div class="renewal-grid">
+          <label>Franchise / MTOP Number<input id="franchiseNumber" readonly required></label>
+          <label>Current Expiration Date<input id="currentExpiration" type="date" readonly required></label>
+          <label class="full">Assigned Route<input id="assignedRoute" readonly></label>
+          <label class="full">Renewal Case
+            <select id="renewalType" required>
+              <option value="regular">Case 1 — Updated and complete requirements</option>
+              <option value="expired_or">Case 2 — Expired Official Receipt</option>
+              <option value="change_motor">Case 3 — Change Motor / Private OR and CR</option>
+            </select>
+          </label>
+          <label class="full" id="changeMotorRequestField" hidden>Related Change Motor Request
+            <select id="changeMotorRequestId"><option value="">Select a submitted Change Motor request</option></select>
+            <small>Case 3 can be submitted while the motor request is under review, but renewal approval waits for TFRO approval of that request.</small>
+          </label>
+        </div>
+        </div>
+
+        <div class="renewal-page" data-renewal-page="2" hidden>
+        <div class="renewal-grid">
+          <label>Full Name<input id="operatorName" readonly required></label>
+          <label>Contact Number<input id="operatorContact" readonly required></label>
+          <label class="full">Address<input id="operatorAddress" readonly required></label>
+          <label>Voter's Certificate Number<input id="votersNumber"></label>
+          <label>Community Tax Certificate / Cedula<input id="cedulaNumber"></label>
+          <label>Barangay Clearance Number<input id="barangayNumber"></label>
+        </div>
+        </div>
+
+        <div class="renewal-page" data-renewal-page="3" hidden>
+        <div class="renewal-grid">
+          <label class="full">Registered Driver
+            <select id="driverId" required><option value="">Select your Driver</option></select>
+          </label>
+          <label>Driver's Name<input id="driverName" readonly required></label>
+          <label>Driver's License Number<input id="driverLicense" readonly required></label>
+          <label>Plate Number<input id="plateNumber" required></label>
+          <label>Engine Number<input id="engineNumber" required></label>
+          <label>Chassis Number<input id="chassisNumber" required></label>
+          <label>PMBL Certificate Number<input id="pmblNumber"></label>
+          <label>Current OR Number<input id="orNumber"></label>
+          <label>Current CR Number<input id="crNumber"></label>
+          <label>OR Registration
+            <select id="orClass" required><option value="for_hire">For Hire</option><option value="expired">Expired</option><option value="private">Private</option></select>
+          </label>
+          <label>CR Registration
+            <select id="crClass" required><option value="for_hire">For Hire</option><option value="private">Private</option></select>
+          </label>
+        </div>
+        </div>
+
+        <div class="renewal-page" data-renewal-page="4" hidden>
+        <p class="document-note" id="documentNote">Upload clear PDF or image photocopies. Regular renewal requires all nine documents.</p>
+        <div class="renewal-documents" id="documentList">
+          <label data-doc="voters_certificate"><span><i class="ri-file-text-line"></i> Latest Voter's Certificate *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
+          <label data-doc="cedula"><span><i class="ri-file-text-line"></i> Latest Cedula *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
+          <label data-doc="barangay_clearance"><span><i class="ri-file-text-line"></i> Barangay Clearance *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
+          <label data-doc="drivers_license"><span><i class="ri-id-card-line"></i> Driver's License *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
+          <label data-doc="picture_2x2"><span><i class="ri-image-line"></i> 2×2 Picture *</span><input type="file" accept="image/jpeg,image/png" required></label>
+          <label data-doc="pmbl_certification"><span><i class="ri-file-shield-2-line"></i> PMBL Certification *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
+          <label class="updated-document" data-doc="official_receipt"><span><i class="ri-receipt-line"></i> Official Receipt — For Hire</span><input type="file" accept="application/pdf,image/jpeg,image/png"></label>
+          <label class="updated-document" data-doc="certificate_registration"><span><i class="ri-file-list-3-line"></i> Certificate of Registration — For Hire</span><input type="file" accept="application/pdf,image/jpeg,image/png"></label>
+          <label class="updated-document" data-doc="insurance"><span><i class="ri-shield-check-line"></i> Insurance with Third-Party &amp; Passenger Liability</span><input type="file" accept="application/pdf,image/jpeg,image/png"></label>
+        </div>
+
+        <div class="case-guidance" id="caseGuidance"></div>
+        </div>
+        <div class="form-error" id="renewalError" hidden></div>
+        <div class="renewal-pagination" aria-label="Renewal form navigation">
+          <button class="page-button page-button-back" id="renewalBackBtn" type="button"><i class="ri-arrow-left-line"></i> Back</button>
+          <span id="renewalPageStatus" aria-live="polite">Step 1 of 4</span>
+          <button class="page-button page-button-next" id="renewalNextBtn" type="button">Next <i class="ri-arrow-right-line"></i></button>
+          <button class="btn-submit" id="submitRenewalBtn" type="submit" hidden><i class="ri-send-plane-line"></i> Submit Renewal</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="renewal-card">
+      <div class="card-title"><div><i class="ri-history-line card-icon"></i><h2>Renewal History</h2></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Request</th><th>Case</th><th>Status</th><th>Reason / Next Step</th><th>Date</th><th>Form</th></tr></thead><tbody id="renewalHistory"><tr><td colspan="6">No renewal requests yet.</td></tr></tbody></table></div>
+    </section>
+  </main>
+</div>
+<script type="module" src="../js/renewal.js?v=20260824-231000"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TFRO Login</title>
+
+  <link rel="stylesheet" href="../css/style.css?v=20260824-021500">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+</head>
+<body>
+
+<div class="container">
+
+  <div class="left-panel">
+
+<a href="index.html" class="logo" style="text-decoration:none;cursor:pointer;">
+      <div class="logo-icon">
+        <img class="auth-tfro-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
+      </div>
+
+      <div>
+        <h2>TFRO MIS</h2>
+        <p>Lucena City</p>
+      </div>
+    </a>
+
+    <div class="auth-trike-feature" aria-hidden="true">
+      <span class="auth-trike-centerline"></span>
+      <div class="auth-trike-arrival">
+        <img src="../Tricycle Image.png" alt="" draggable="false" />
+      </div>
+    </div>
+
+    <div class="hero">
+      <h1>Tricycle Franchising & Regulatory Management</h1>
+
+      <p>
+        A centralized digital platform for the TFRO of Lucena City to manage
+        franchise applications, operator records, driver compliance,
+        violations, and payment transactions.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <div class="login-box">
+
+      <h2>Welcome Back</h2>
+      <p>Sign in as an Administrator, TFRO Staff member, or Operator</p>
+
+      <form id="loginForm">
+
+        <div class="input-group">
+          <label>Email Address</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="you@tfro.gov.ph"
+            required
+          />
+        </div>
+
+        <div class="input-group">
+          <label>Password</label>
+          <div class="password-box">
+            <input
+              type="password"
+              id="password"
+              placeholder="Enter your password"
+              required
+            />
+
+            <button type="button" id="togglePassword">
+              <i class="ri-eye-line"></i>
+            </button>
+          </div>
+          <button type="button" class="forgot-password-link" id="forgotPasswordBtn">
+            Forgot your password?
+          </button>
+        </div>
+
+        <div class="input-group">
+          <label>Operator Franchise Number <small>(operators only)</small></label>
+          <input type="text" id="franchiseNumber" placeholder="FR-2026-0001" autocomplete="off" />
+        </div>
+
+        <div class="inline-form-message" id="loginMessage" hidden role="alert"></div>
+        <button type="submit" class="login-btn">
+          <i class="ri-login-box-line"></i>
+          Sign In
+        </button>
+        <span>Operator without an account? <a href="register.html">Sign up here</a></span>
+
+      </form>
+
+      <section class="recovery-panel" id="recoveryPanel" hidden aria-labelledby="recoveryTitle">
+        <button type="button" class="recovery-back" id="recoveryBackBtn">
+          <i class="ri-arrow-left-line"></i> Back to sign in
+        </button>
+        <h3 id="recoveryTitle">Recover Operator Account</h3>
+        <p>We will send a six-digit verification code to the email registered to the Operator account.</p>
+
+        <div class="inline-form-message" id="recoveryMessage" hidden role="alert" aria-live="polite"></div>
+
+        <form id="recoveryRequestForm">
+          <div class="input-group">
+            <label for="recoveryEmail">Registered Email Address</label>
+            <input type="email" id="recoveryEmail" autocomplete="email" placeholder="operator@example.com" required />
+          </div>
+          <button type="submit" class="login-btn" id="sendRecoveryCodeBtn">
+            <i class="ri-mail-send-line"></i> Send Verification Code
+          </button>
+        </form>
+
+        <form id="recoveryVerifyForm" hidden>
+          <div class="input-group">
+            <label for="recoveryCode">Six-Digit Email Code</label>
+            <input type="text" id="recoveryCode" class="recovery-code-input" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required />
+          </div>
+          <div class="input-group">
+            <label for="recoveryPassword">New Password</label>
+            <input type="password" id="recoveryPassword" minlength="8" autocomplete="new-password" placeholder="Create a strong password" required />
+          </div>
+          <div class="input-group">
+            <label for="recoveryPasswordConfirm">Confirm New Password</label>
+            <input type="password" id="recoveryPasswordConfirm" minlength="8" autocomplete="new-password" placeholder="Repeat your new password" required />
+          </div>
+          <small class="recovery-password-help">Use at least 8 characters with uppercase, lowercase, number, and symbol.</small>
+          <button type="submit" class="login-btn" id="verifyRecoveryCodeBtn">
+            <i class="ri-shield-check-line"></i> Verify and Change Password
+          </button>
+          <button type="button" class="resend-code-btn" id="resendRecoveryCodeBtn">Send a new code</button>
+        </form>
+      </section>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Animated decorative tricycle (background only) -->
+<div class="trike-scene" aria-hidden="true">
+  <div class="tricycle" id="driveTricycle">
+    <img
+      class="trike-asset"
+      src="../Tricycle Image.png"
+      alt="TFRO Philippine Tricycle"
+      draggable="false"
+    />
+  </div>
+</div>
+
+<script type="module" src="../js/login.js?v=20260824-044500"></script>
+<script src="../js/trike-drive.js"></script>
+
+</body>
+</html>

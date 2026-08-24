@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reports</title>
+
+<link rel="stylesheet" href="../css/report.css?v=20260818-004500">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+
+  <!-- jsPDF + autoTable for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="admin-sidebar">
+
+<div class="dashboard-container">
+
+  <!-- SIDEBAR -->
+<aside class="sidebar">
+
+<div class="logo">
+    <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
+
+<div>
+  <h2>TFRO MIS</h2>
+  <p>Lucena City</p>
+</div>
+
+  </div>
+
+
+<ul class="menu">
+
+  <li id="dashboardMenu">
+    <a href="dashboard.html">
+      <i class="ri-dashboard-line"></i>
+      Dashboard
+    </a>
+  </li>
+
+  <li id="franchiseMenu">
+    <a href="franchise.html">
+      <i class="ri-file-list-3-line"></i>
+      Franchises
+    </a>
+  </li>
+
+  <li id="violationMenu">
+    <a href="violation.html">
+      <i class="ri-alert-line"></i>
+      Violations
+    </a>
+  </li>
+
+  <li id="paymentMenu">
+    <a href="payment.html">
+      <i class="ri-money-dollar-circle-line"></i>
+      Payments
+    </a>
+  </li>
+
+  <li class="active">
+    <a href="report.html">
+      <i class="ri-bar-chart-line"></i>
+      Reports
+    </a>
+  </li>
+
+  <li id="notificationMenu">
+        <a href="notification.html">
+          <i class="ri-notification-3-line"></i>
+          Notifications
+        </a>
+      </li>
+
+  <li id="auditlogMenu"> 
+        <a href="auditlog.html"> 
+        <i class="ri-history-line">
+            </i> Audit Log </a> 
+    </li>
+
+   <li id="profileMenu">
+        <a href="profile.html">
+          <i class="ri-user-settings-line"></i>
+          Profile
+        </a>
+      </li>
+
+</ul>
+
+<!-- USER PROFILE -->
+<div class="sidebar-user">
+
+  <div class="user-left">
+
+<div class="user-avatar" id="userAvatar">
+      U
+    </div>
+
+    <div class="user-details">
+      <h4 id="userName">User</h4>
+      <p id="userRole">—</p>
+    </div>
+
+  </div>
+
+  <button class="logout-btn" id="logoutBtn">
+    <i class="ri-logout-box-r-line"></i>
+  </button>
+
+</div>
+
+
+</aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div>
+        <h1>Reports & Documentation</h1>
+        <p>View data analytics and generate CSV, PDF, or printable reports</p>
+      </div>
+    </div>
+
+    <section class="report-toolbar" aria-label="Report date filters">
+      <div class="report-toolbar-copy">
+        <strong>Report period</strong>
+        <span>Leave both dates empty to include all records.</span>
+      </div>
+      <label>
+        <span>Start date</span>
+        <input type="date" id="reportStartDate" />
+      </label>
+      <label>
+        <span>End date</span>
+        <input type="date" id="reportEndDate" />
+      </label>
+      <button type="button" class="reset-filter-btn" id="resetReportDates">
+        <i class="ri-refresh-line"></i> Reset
+      </button>
+    </section>
+
+    <section class="analytics-section" aria-labelledby="analyticsTitle">
+      <div class="analytics-heading">
+        <div><h2 id="analyticsTitle">Data Analytics</h2><p>Live totals for the selected report period</p></div>
+        <button type="button" class="reset-filter-btn" id="refreshAnalytics"><i class="ri-refresh-line"></i> Refresh data</button>
+      </div>
+      <div class="analytics-grid" id="analyticsGrid">
+        <article><i class="ri-user-star-line"></i><strong id="analyticsOperators">—</strong><span>Operators</span></article>
+        <article><i class="ri-steering-2-line"></i><strong id="analyticsDrivers">—</strong><span>Drivers</span></article>
+        <article><i class="ri-refresh-line"></i><strong id="analyticsRenewals">—</strong><span>Renewals</span></article>
+        <article><i class="ri-settings-5-line"></i><strong id="analyticsMotors">—</strong><span>Change Motor</span></article>
+        <article><i class="ri-alert-line"></i><strong id="analyticsViolations">—</strong><span>Violations</span></article>
+      </div>
+      <p class="analytics-warning" id="analyticsWarning" hidden></p>
+    </section>
+
+    <!-- REPORT CARDS -->
+    <div class="reports-grid" id="reportsGrid">
+
+    </div>
+
+    <!-- REPORT PREVIEW MODAL -->
+    <div class="report-modal" id="reportModal" hidden>
+      <div class="report-modal-content">
+        <div class="report-modal-header">
+          <h2 id="modalTitle">Report Preview</h2>
+          <span id="modalCount" class="modal-count"></span>
+          <button class="modal-close-btn" id="closeModalBtn">&times;</button>
+        </div>
+        <div class="report-modal-body" id="modalBody"></div>
+        <div class="report-modal-footer">
+          <button type="button" class="print-btn" id="modalSaveCsvBtn">
+            <i class="ri-file-excel-2-line"></i> Save CSV
+          </button>
+          <button type="button" class="print-btn" id="modalPrintBtn">
+            <i class="ri-printer-line"></i> Print
+          </button>
+          <button type="button" class="download-btn" id="modalSavePdfBtn">
+            <i class="ri-file-pdf-2-line"></i> Save PDF
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+</div>
+
+<script type="module" src="../js/report.js?v=20260819-174500"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
+
+<script>
+
+  const role = localStorage.getItem("role");
+
+  const paymentMenu =
+    document.getElementById("paymentMenu");
+
+  if(role === "admin"){
+    paymentMenu.style.display = "none";
+  }
+
+</script>
+
+</body>
+</html>
+

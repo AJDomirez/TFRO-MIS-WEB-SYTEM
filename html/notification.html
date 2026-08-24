@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TFRO Notifications</title>
+
+<link rel="stylesheet" href="../css/notification.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+</head>
+
+<body class="admin-sidebar">
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+<div class="logo">
+      <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
+
+      <div>
+        <h2>TFRO MIS</h2>
+        <p>Lucena City</p>
+      </div>
+    </div>
+
+    <ul class="menu">
+
+      <li id="dashboardMenu">
+        <a href="dashboard.html">
+          <i class="ri-dashboard-line"></i>
+          Dashboard
+        </a>
+      </li>
+
+      <li id="franchiseMenu">
+        <a href="franchise.html">
+          <i class="ri-file-list-3-line"></i>
+          Franchises
+        </a>
+      </li>
+
+      <li id="violationMenu">
+        <a href="violation.html">
+          <i class="ri-alert-line"></i>
+          Violations
+        </a>
+      </li>
+
+      <li id="paymentMenu">
+        <a href="payment.html">
+          <i class="ri-money-dollar-circle-line"></i>
+          Payments
+        </a>
+      </li>
+
+      <li id="reportMenu">
+        <a href="report.html">
+          <i class="ri-bar-chart-line"></i>
+          Reports
+        </a>
+      </li>
+
+      <li class="active">
+        <a href="notification.html">
+          <i class="ri-notification-3-line"></i>
+          Notifications
+        </a>
+      </li>
+
+      <li id="auditlogMenu"> 
+        <a href="auditlog.html"> 
+        <i class="ri-history-line">
+            </i> Audit Log </a> 
+    </li>
+
+     <li id="profileMenu">
+        <a href="profile.html">
+          <i class="ri-user-settings-line"></i>
+          Profile
+        </a>
+      </li>
+
+    </ul>
+
+    <!-- USER PROFILE -->
+<div class="sidebar-user">
+
+  <div class="user-left">
+
+    <div class="user-avatar" id="userAvatar">
+      MS
+    </div>
+
+    <div class="user-details">
+      <h4 id="userName">User</h4>
+      <p id="userRole">—</p>
+    </div>
+
+  </div>
+
+  <a class="logout-btn" id="logoutBtn" href="logout.html" aria-label="Sign out">
+    <i class="ri-logout-box-r-line"></i>
+  </a>
+
+</div>
+
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+
+      <div>
+        <h1>Notifications</h1>
+        <p>Updates for applications, renewals, inspections, payments, and approvals</p>
+      </div>
+
+      <button class="mark-btn" onclick="markAllRead()">
+        Mark All as Read
+      </button>
+
+    </header>
+
+    <!-- NOTIFICATION STATS -->
+    <div class="notification-stats">
+      <h3>
+        <span id="unreadCount">0</span> unread of
+        <span id="totalCount">0</span> total
+      </h3>
+    </div>
+
+    <!-- NOTIFICATION LIST -->
+    <div class="notification-container" id="notificationContainer">
+
+    </div>
+
+  </main>
+
+</div>
+
+<script type="module" src="../js/notification.js"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
+
+<script>
+
+  const role = localStorage.getItem("role");
+
+  const paymentMenu =
+    document.getElementById("paymentMenu");
+
+  if(role === "admin"){
+    paymentMenu.style.display = "none";
+  }
+
+</script>
+
+</body>
+</html>

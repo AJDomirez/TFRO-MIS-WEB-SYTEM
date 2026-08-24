@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TFRO Traffic Enforcers</title>
+  <link rel="stylesheet" href="../css/dashboard.css?v=20260817-234500" />
+  <link rel="stylesheet" href="../css/enforcer-admin.css?v=20260823-1" />
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260823-2" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+</head>
+<body class="admin-sidebar">
+  <div class="dashboard-container">
+    <aside class="sidebar"><div class="logo"><img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" /><div><h2>TFRO MIS</h2><p>Lucena City</p></div></div><ul class="menu"></ul><div class="sidebar-user"><div class="user-left"><div class="user-avatar" id="userAvatar">A</div><div class="user-details"><h4 id="userName">Administrator</h4><p id="userRole">Administrator</p></div></div><button class="logout-btn" id="logoutBtn" aria-label="Sign out"><i class="ri-logout-box-r-line"></i></button></div></aside>
+    <main class="main-content">
+      <header class="topbar"><div><h1>Traffic Enforcers</h1><p>Register legitimate IDs and manage Traffic Enforcer access</p></div><button class="primary-btn" id="showEnforcerForm"><i class="ri-user-add-line"></i> Register Enforcer ID</button></header>
+      <section class="summary-grid"><article><i class="ri-shield-user-line"></i><div><strong id="totalEnforcers">0</strong><span>Registered</span></div></article><article><i class="ri-checkbox-circle-line"></i><div><strong id="activeEnforcers">0</strong><span>Active</span></div></article><article><i class="ri-link"></i><div><strong id="linkedEnforcers">0</strong><span>Account linked</span></div></article><article><i class="ri-ticket-2-line"></i><div><strong id="submittedTickets">0</strong><span>Tickets submitted</span></div></article></section>
+      <section class="admin-card" id="enforcerFormPanel" hidden><h2>Register Traffic Enforcer ID</h2><p>Create this roster entry before the Enforcer signs up.</p><form id="enforcerForm"><label>Enforcer ID<input name="enforcer_id" placeholder="TE-2026-0001" maxlength="40" required /></label><label>Full name<input name="full_name" required /></label><label>Contact number<input name="contact_number" /></label><label>Unit / assignment<input name="unit_assignment" /></label><div class="form-actions"><button class="primary-btn" type="submit">Save Enforcer</button><button type="button" id="cancelEnforcerForm">Cancel</button></div></form><p class="form-message" id="enforcerFormMessage" hidden></p></section>
+      <section class="admin-card"><div class="card-heading"><div><h2>Enforcer Registry</h2><p>Only active, unclaimed IDs can be used during signup.</p></div><input id="enforcerSearch" type="search" placeholder="Search ID, name, or unit" /></div><div class="table-wrap"><table><thead><tr><th>ID number</th><th>Name</th><th>Contact</th><th>Unit</th><th>Account</th><th>Status</th><th>Tickets</th><th>Action</th></tr></thead><tbody id="enforcerTable"></tbody></table></div></section>
+    </main>
+  </div>
+  <div class="profile-form-modal" id="enforcerProfileModal" hidden><article class="profile-form-sheet"><header><div><small>TFRO ACCOUNT FORM</small><h2>Traffic Enforcer Profile</h2></div><div><button id="printEnforcerProfile" title="Print"><i class="ri-printer-line"></i></button><button id="closeEnforcerProfile" title="Close"><i class="ri-close-line"></i></button></div></header><main><div class="formal-profile-photo"><img id="enforcerFormalPhoto" alt="Traffic Enforcer formal profile" hidden><span id="enforcerPhotoMissing">Photo not yet submitted</span></div><div class="profile-form-details" id="enforcerProfileDetails"></div></main></article></div>
+  <script type="module" src="../js/enforcers.js?v=20260824-034500"></script><script type="module" src="../js/sidebar-user.js?v=20260823-1"></script>
+</body></html>

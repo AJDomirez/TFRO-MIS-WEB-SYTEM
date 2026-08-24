@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Operator Portal</title>
+
+<link rel="stylesheet" href="../css/operatorportal.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-030000">
+  <link rel="stylesheet" href="../css/guided-tour.css?v=20260823-1">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+</head>
+
+<body class="operator-sidebar">
+
+<div class="dashboard-container">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+<div class="logo">
+      <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
+
+      <div>
+        <h2>TFRO MIS</h2>
+        <p>Lucena City</p>
+      </div>
+    </div>
+
+    <ul class="menu">
+
+      <li class="active">
+        <a href="operatorportal.html">
+          <i class="ri-file-list-3-line"></i>
+          My Franchise
+        </a>
+      </li>
+
+      <li>
+        <a href="renewal.html">
+          <i class="ri-refresh-line"></i>
+          Franchise Renewal
+        </a>
+      </li>
+
+      <li>
+        <a href="notification.html">
+          <i class="ri-notification-3-line"></i>
+          Notifications
+        </a>
+      </li>
+
+      <li>
+        <a href="operatorprofile.html">
+          <i class="ri-user-settings-line"></i>
+          My Profile
+        </a>
+      </li>
+
+    </ul>
+
+    <!-- USER PROFILE -->
+    <div class="sidebar-user">
+
+      <div class="user-left">
+
+        <div class="user-avatar" id="userAvatar">
+          AC
+        </div>
+
+        <div class="user-details">
+          <h4 id="userName">Operator</h4>
+          <p>Operator</p>
+        </div>
+
+      </div>
+
+      <a class="logout-btn" id="logoutBtn" href="logout.html" aria-label="Sign out">
+        <i class="ri-logout-box-r-line"></i>
+      </a>
+
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+
+      <div>
+        <h1>My Franchise</h1>
+        <p>View your franchise information and payment status</p>
+      </div>
+
+    </div>
+
+    <!-- WELCOME CARD -->
+    <div class="welcome-card">
+
+      <p>Welcome back,</p>
+
+      <h2 id="welcomeName">Operator</h2>
+
+      <span>
+        Registered Tricycle Operator — Lucena City TFRO
+      </span>
+
+    </div>
+
+    <!-- APPLICATION ACTIONS -->
+    <section class="operator-actions" aria-label="Operator applications">
+      <div class="operator-actions-heading">
+        <div><h3>Applications</h3><p>Start or track your TFRO requests.</p></div>
+        <a href="notification.html" class="notification-link"><i class="ri-notification-3-line"></i> View Notifications</a>
+      </div>
+      <div class="operator-action-grid">
+        <a href="renewal.html" class="operator-action-card">
+          <i class="ri-refresh-line"></i><div><strong>Renew Franchise</strong><span>Three-year franchise and MTOP renewal</span></div><i class="ri-arrow-right-line"></i>
+        </a>
+        <a href="#changeMotorCard" class="operator-action-card">
+          <i class="ri-settings-5-line"></i><div><strong>Change Motor</strong><span>Submit engine, chassis, or plate changes</span></div><i class="ri-arrow-right-line"></i>
+        </a>
+        <a href="#driverApplicationCard" class="operator-action-card">
+          <i class="ri-user-add-line"></i><div><strong>Add Driver</strong><span>Apply and submit Driver credentials</span></div><i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+    </section>
+
+    <!-- FRANCHISE DETAILS -->
+    <div class="info-card">
+
+      <div class="card-header">
+
+        <h3>Franchise Details</h3>
+
+        <span class="badge approved" id="franchiseStatus">
+          Approved
+        </span>
+
+      </div>
+
+      <div class="info-grid">
+
+        <div>
+          <label>Franchise Number</label>
+          <h4 id="franchiseNumber">—</h4>
+        </div>
+
+        <div>
+          <label>Assigned Route</label>
+          <h4 id="assignedRoute">—</h4>
+        </div>
+
+        <div>
+          <label>Date Applied</label>
+          <h4 id="dateApplied">—</h4>
+        </div>
+
+        <div>
+          <label>Expiry Date</label>
+          <h4 id="expiryDate">—</h4>
+        </div>
+
+        <div>
+          <label>Annual Fee</label>
+          <h4 id="annualFee">—</h4>
+        </div>
+
+        <div>
+          <label>Payment Status</label>
+          <h4 id="paymentStatus">—</h4>
+        </div>
+
+      </div>
+
+    </div>
+
+<!-- VIOLATIONS -->
+    <div class="table-card">
+
+      <div class="table-header">
+        <h3>Violation Records</h3>
+      </div>
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Violation</th>
+            <th>Date</th>
+            <th>Penalty</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody id="violationTable">
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <!-- CHANGE MOTOR / MTOP -->
+    <div class="table-card" id="changeMotorCard">
+
+      <div class="card-header">
+        <h3>Change Motor / MTOP</h3>
+        <span class="badge approved" id="changeMotorBadge">Request</span>
+      </div>
+
+      <div class="change-motor-form" id="changeMotorWrap">
+        <p class="change-motor-note">
+          Request to update the engine, chassis, or plate number of your registered tricycle.
+          Please provide the new details and attach a supporting document (PDF).
+        </p>
+
+        <div class="cm-grid">
+          <div class="cm-field"><label>Operator</label><input type="text" id="cmOperatorName" readonly></div>
+          <div class="cm-field"><label>Franchise Number</label><input type="text" id="cmFranchiseNumber" readonly></div>
+          <div class="cm-field"><label>Current Engine No.</label><input type="text" id="cmCurrentEngine" readonly></div>
+          <div class="cm-field"><label>Current Chassis No.</label><input type="text" id="cmCurrentChassis" readonly></div>
+          <div class="cm-field"><label>Current Plate No.</label><input type="text" id="cmCurrentPlate" readonly></div>
+          <div class="cm-field"><label>Assigned Route</label><input type="text" id="cmAssignedRoute" readonly></div>
+          <div class="cm-field">
+            <label>New Engine No.</label>
+            <input type="text" id="cmEngine" placeholder="New engine number">
+          </div>
+          <div class="cm-field">
+            <label>New Chassis No.</label>
+            <input type="text" id="cmChassis" placeholder="New chassis number">
+          </div>
+          <div class="cm-field">
+            <label>New Plate No.</label>
+            <input type="text" id="cmPlate" placeholder="New plate number">
+          </div>
+          <div class="cm-field">
+            <label>Motor Brand</label>
+            <input type="text" id="cmBrand" placeholder="e.g. Yamaha, Honda">
+          </div>
+          <div class="cm-field">
+            <label>Motor Serial</label>
+            <input type="text" id="cmSerial" placeholder="Motor serial number">
+          </div>
+          <div class="cm-field">
+            <label>Supporting Document (PDF)</label>
+            <input type="file" id="cmDoc" accept="application/pdf">
+          </div>
+          <div class="cm-field">
+            <label>Operator 2×2 Picture</label>
+            <input type="file" id="cmPicture" accept="image/jpeg,image/png" required>
+          </div>
+        </div>
+
+        <div class="cm-error" id="cmError" hidden></div>
+
+        <div class="cm-actions">
+          <button class="add-btn" id="cmSubmitBtn" type="button">
+            <i class="ri-send-plane-line"></i>
+            Submit Request
+          </button>
+        </div>
+      </div>
+
+      <!-- Request history -->
+      <div class="cm-history">
+        <h4>Request History</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Request #</th>
+              <th>New Engine</th>
+              <th>New Chassis</th>
+              <th>New Plate</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Form</th>
+            </tr>
+          </thead>
+          <tbody id="cmHistoryTable">
+            <tr>
+              <td colspan="7" style="text-align:center;color:#94a3b8;">No change motor requests.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+</div>
+
+    <!-- DRIVER APPLICATION -->
+    <div class="table-card" id="driverApplicationCard">
+      <div class="card-header">
+        <div>
+          <h3>Apply a Driver</h3>
+          <p class="driver-application-note">
+            Submit the Driver's identity and license credentials for TFRO review.
+            Drivers do not receive an email or password and cannot sign in.
+          </p>
+        </div>
+        <span class="badge pending">Operator submission</span>
+      </div>
+
+      <form id="driverApplicationForm">
+        <div class="driver-form-grid">
+          <div class="driver-field"><label for="driverOperatorName">Operator</label><input id="driverOperatorName" type="text" readonly></div>
+          <div class="driver-field"><label for="driverFranchiseNumber">Franchise Number</label><input id="driverFranchiseNumber" type="text" readonly></div>
+          <div class="driver-field driver-field-wide"><label for="driverAssignedRoute">Assigned Route</label><input id="driverAssignedRoute" type="text" readonly></div>
+          <div class="driver-field">
+            <label for="driverFullName">Full Name</label>
+            <input id="driverFullName" name="full_name" type="text" required>
+          </div>
+          <div class="driver-field">
+            <label for="driverLicenseNumber">Driver's License Number</label>
+            <input id="driverLicenseNumber" name="license_number" type="text" required>
+          </div>
+          <div class="driver-field">
+            <label for="driverLicenseType">License Type</label>
+            <select id="driverLicenseType" name="license_type" required>
+              <option value="">Select license type</option>
+              <option value="Professional">Professional</option>
+              <option value="Non-Professional">Non-Professional</option>
+              <option value="Student Permit">Student Permit</option>
+            </select>
+          </div>
+          <div class="driver-field">
+            <label for="driverLicenseExpiration">License Expiration</label>
+            <input id="driverLicenseExpiration" name="license_expiration" type="date" required>
+          </div>
+          <div class="driver-field">
+            <label for="driverContactNumber">Contact Number</label>
+            <input id="driverContactNumber" name="contact_number" type="tel" pattern="[0-9+\-\s()]{7,15}" required>
+          </div>
+          <div class="driver-field driver-field-wide">
+            <label for="driverAddress">Address</label>
+            <input id="driverAddress" name="address" type="text" required>
+          </div>
+          <div class="driver-field driver-field-wide">
+            <label for="driverPicture">Driver 2×2 Picture</label>
+            <input id="driverPicture" name="picture" type="file" accept="image/jpeg,image/png" required>
+          </div>
+        </div>
+        <div class="driver-form-message" id="driverFormMessage" hidden></div>
+        <div class="driver-form-actions">
+          <button class="page-button page-button-back" id="cancelDriverEditBtn" type="button" hidden>Cancel Edit</button>
+          <button class="add-btn" id="submitDriverBtn" type="submit">
+            <i class="ri-user-add-line"></i>
+            Submit Driver Application
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- OPERATOR-OWNED DRIVERS -->
+    <div class="table-card" id="assignedDriversCard">
+
+      <div class="card-header">
+        <h3>My Driver Applications</h3>
+        <a class="qr-verify-btn" href="driververify.html"><i class="ri-qr-scan-2-line"></i> Scan Driver QR</a>
+        <span class="badge approved">Operator-owned</span>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Driver Name</th>
+            <th>Driver's License #</th>
+            <th>Verification Status</th>
+            <th>Date Applied</th>
+            <th>Form</th>
+          </tr>
+        </thead>
+        <tbody id="assignedDriversTable">
+          <tr>
+            <td colspan="5" style="text-align:center;color:#94a3b8;">No Driver applications yet.</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script type="module" src="../js/operatorportal.js?v=20260817-213000"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
+<script type="module" src="../js/guided-tour.js?v=20260823-1"></script>
+
+</body>
+</html>

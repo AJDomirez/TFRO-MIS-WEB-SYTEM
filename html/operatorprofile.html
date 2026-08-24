@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Operator Profile</title>
+
+<link rel="stylesheet" href="../css/operatorprofile.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-030000">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+</head>
+
+<body class="operator-sidebar">
+
+<div class="dashboard-container">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+<div class="logo">
+      <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
+
+      <div>
+        <h2>TFRO MIS</h2>
+        <p>Lucena City</p>
+      </div>
+    </div>
+
+    <ul class="menu">
+
+      <li>
+        <a href="operatorportal.html">
+          <i class="ri-file-list-3-line"></i>
+          My Franchise
+        </a>
+      </li>
+
+      <li class="active">
+        <a href="operatorprofile.html">
+          <i class="ri-user-settings-line"></i>
+          My Profile
+        </a>
+      </li>
+
+    </ul>
+
+    <!-- USER PROFILE -->
+    <div class="sidebar-user">
+
+      <div class="user-left">
+
+        <div class="user-avatar" id="userAvatar">
+          AC
+        </div>
+
+        <div class="user-details">
+          <h4 id="userName">Operator</h4>
+          <p>Operator</p>
+        </div>
+
+      </div>
+
+      <a class="logout-btn" id="logoutBtn" href="logout.html" aria-label="Sign out">
+        <i class="ri-logout-box-r-line"></i>
+      </a>
+
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+
+      <div>
+        <h1>My Profile</h1>
+        <p>Manage your account information and security settings</p>
+      </div>
+
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+
+      <button class="tab active" data-tab="profile">
+        Profile Info
+      </button>
+
+      <button class="tab" data-tab="password">
+        Change Password
+      </button>
+
+    </div>
+
+    <!-- PROFILE CARD -->
+    <div class="profile-card">
+
+      <div class="profile-header">
+
+        <div class="profile-avatar" id="profileAvatar">
+          AC
+        </div>
+
+        <div>
+          <h2 id="profileName">Operator</h2>
+          <p>Operator</p>
+          <span id="profileEmail">—</span>
+        </div>
+
+      </div>
+
+      <form class="profile-form" id="profileForm">
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" id="firstName">
+          </div>
+
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" id="lastName">
+          </div>
+
+          <div class="form-group full">
+            <label>Email Address</label>
+            <input type="email" id="email" disabled>
+          </div>
+
+          <div class="form-group full">
+            <label>Contact Number</label>
+            <input type="text" id="contactNumber">
+          </div>
+
+          <div class="form-group full">
+            <label>Home Address</label>
+            <input type="text" id="address">
+          </div>
+
+          <div class="form-group full">
+            <label>Franchise Number</label>
+            <input type="text" id="franchiseNumber" disabled>
+          </div>
+
+          <div class="form-group full">
+            <label>Role</label>
+            <input type="text" id="role" disabled>
+          </div>
+
+        </div>
+
+        <div class="inline-profile-message" id="profileMessage" hidden role="alert"></div>
+        <button type="submit" class="save-btn">
+          Save Changes
+        </button>
+
+      </form>
+
+      <!-- CHANGE PASSWORD FORM -->
+      <form class="profile-form hidden" id="passwordForm">
+
+        <h3>Change Password</h3>
+
+        <p class="form-hint">
+          Enter your current password, then choose a new one. You will be
+          signed in again with your new password.
+        </p>
+
+        <div class="form-group full">
+          <label>Current Password</label>
+          <input type="password" id="currentPassword" placeholder="Enter current password" required>
+        </div>
+
+        <div class="form-group full">
+          <label>New Password</label>
+          <input type="password" id="newPassword" placeholder="Enter new password" minlength="6" required>
+        </div>
+
+        <div class="form-group full">
+          <label>Confirm New Password</label>
+          <input type="password" id="confirmPassword" placeholder="Repeat new password" required>
+        </div>
+
+        <div class="inline-profile-message" id="passwordMessage" hidden role="alert"></div>
+        <button type="submit" class="save-btn">
+          Update Password
+        </button>
+
+      </form>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script type="module" src="../js/operatorprofile.js"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
+
+</body>
+</html>

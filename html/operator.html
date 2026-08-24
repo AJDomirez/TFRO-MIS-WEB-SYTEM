@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Operators - TFRO</title>
+
+  <link rel="stylesheet" href="../css/operator.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+</head>
+<body class="admin-sidebar">
+
+<div class="dashboard-container">
+
+  <!-- SIDEBAR -->
+ <aside class="sidebar">
+
+  <div class="logo">
+    <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
+
+<div>
+  <h2>TFRO MIS</h2>
+  <p>Lucena City</p>
+</div>
+
+  </div>
+
+
+<ul class="menu">
+
+  <li id="dashboardMenu">
+    <a href="dashboard.html">
+      <i class="ri-dashboard-line"></i>
+      Dashboard
+    </a>
+  </li>
+
+<li id="franchiseMenu">
+    <a href="franchise.html">
+      <i class="ri-file-list-3-line"></i>
+      Franchises
+    </a>
+  </li>
+
+
+  <li id="motorMenu">
+    <a href="motorequests.html">
+      <i class="ri-settings-5-line"></i>
+      Change Motor Requests
+    </a>
+  </li>
+
+  <li id="violationMenu">
+    <a href="violation.html">
+      <i class="ri-alert-line"></i>
+      Violations
+    </a>
+  </li>
+
+  <li id="paymentMenu">
+    <a href="payment.html">
+      <i class="ri-money-dollar-circle-line"></i>
+      Payments
+    </a>
+  </li>
+
+  <li id="reportMenu">
+    <a href="report.html">
+      <i class="ri-bar-chart-line"></i>
+      Reports
+    </a>
+  </li>
+
+  <li id="notificationMenu">
+        <a href="notification.html">
+          <i class="ri-notification-3-line"></i>
+          Notifications
+        </a>
+      </li>
+
+  <li id="auditlogMenu"> 
+        <a href="auditlog.html"> 
+        <i class="ri-history-line">
+            </i> Audit Log </a> 
+    </li>
+
+   <li id="profileMenu">
+        <a href="profile.html">
+          <i class="ri-user-settings-line"></i>
+          Profile
+        </a>
+      </li>
+
+</ul>
+
+<!-- USER PROFILE -->
+<div class="sidebar-user">
+
+  <div class="user-left">
+
+<div class="user-avatar" id="userAvatar">
+      U
+    </div>
+
+    <div class="user-details">
+      <h4 id="userName">User</h4>
+      <p id="userRole">—</p>
+    </div>
+
+  </div>
+
+  <button class="logout-btn" id="logoutBtn">
+    <i class="ri-logout-box-r-line"></i>
+  </button>
+
+</div>
+
+
+
+</aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div>
+        <h1>Operators</h1>
+        <p>Registered tricycle operators and their franchise details</p>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+
+      <div class="toolbar-left">
+
+        <div class="search-box">
+          <i class="ri-search-line"></i>
+
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search operators..."
+          >
+        </div>
+
+        <select id="statusFilter">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="suspended">Suspended</option>
+        </select>
+
+      </div>
+
+      <div class="date-export-controls">
+        <label>Start Date<input type="date" id="startDate"></label>
+        <label>End Date<input type="date" id="endDate"></label>
+        <button type="button" class="csv-btn" id="exportCsvBtn"><i class="ri-file-excel-2-line"></i> Save CSV</button>
+      </div>
+
+      <button class="add-btn" id="addOperatorBtn">
+        <i class="ri-user-add-line"></i>
+        Add Operator
+      </button>
+
+    </div>
+
+    <section class="operator-form-panel" id="operatorFormPanel" hidden>
+      <h2>Add Operator</h2>
+      <form id="operatorForm">
+        <label>Full name<input name="full_name" required></label>
+        <label>Address<input name="address" required></label>
+        <label>Contact number<input name="contact_number" required></label>
+        <label>Franchise number <small>(optional)</small><input name="franchise_number"></label>
+        <label>Status<select name="status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="suspended">Suspended</option></select></label>
+        <div class="operator-form-actions"><button class="add-btn" type="submit">Save Operator</button><button type="button" id="cancelOperatorBtn">Cancel</button></div>
+      </form>
+    </section>
+
+    <!-- STAT CARDS -->
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <h2 id="totalOperators">0</h2>
+        <p>Total Operators</p>
+      </div>
+
+      <div class="stat-card">
+        <h2 id="activeOperators">0</h2>
+        <p>Active</p>
+      </div>
+
+      <div class="stat-card">
+        <h2 id="inactiveOperators">0</h2>
+        <p>Inactive</p>
+      </div>
+
+      <div class="stat-card">
+        <h2 id="suspendedOperators">0</h2>
+        <p>Suspended</p>
+      </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Operator Name</th>
+            <th>Email</th>
+            <th>Address</th>
+            <th>Contact</th>
+            <th>Franchise</th>
+            <th>Status</th>
+            <th>Account</th>
+            <th>Record</th>
+          </tr>
+        </thead>
+
+        <tbody id="operatorsTable"></tbody>
+
+      </table>
+
+    </div>
+
+  </main>
+
+</div>
+
+<div class="operator-record-modal" id="operatorRecordModal" hidden role="dialog" aria-modal="true" aria-labelledby="operatorRecordTitle">
+  <div class="operator-record-panel">
+    <div class="record-modal-head"><div><span class="record-eyebrow">ADMIN RECORD</span><h2 id="operatorRecordTitle">Operator Profile</h2></div><div class="record-head-actions"><button type="button" id="printOperatorRecord" aria-label="Print operator profile"><i class="ri-printer-line"></i></button><button type="button" id="closeOperatorRecord" aria-label="Close operator record"><i class="ri-close-line"></i></button></div></div>
+    <div class="operator-record-scroll">
+      <section class="record-section"><div class="record-section-title"><div><h3><i class="ri-user-star-line"></i> Operator Profile &amp; Submitted Form</h3><p>Registered account and application information</p></div><span id="operatorAccountBadge"></span></div><div class="account-form-layout"><div class="formal-photo-frame"><img id="operatorFormalPhoto" alt="Operator formal profile" hidden><span id="operatorPhotoMissing">Photo not yet submitted</span></div><div class="record-profile-grid" id="operatorProfileDetails"></div></div></section>
+      <section class="record-section"><div class="record-section-title"><div><h3><i class="ri-steering-2-line"></i> Drivers Under This Operator</h3><p>Driver profiles, submitted forms, and license verification</p></div><span class="driver-count-badge" id="operatorDriverCount">0 Drivers</span></div><div id="operatorDriversList" class="operator-drivers-list"></div></section>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="../js/operator.js?v=20260824-010000"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
+
+<script>
+
+  const role = localStorage.getItem("role");
+
+  const paymentMenu =
+    document.getElementById("paymentMenu");
+
+  if(role === "admin"){
+    paymentMenu.style.display = "none";
+  }
+
+</script>
+
+</body>
+</html>
+

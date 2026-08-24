@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Drivers - TFRO</title>
+
+<link rel="stylesheet" href="../css/driver.css">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+  <script src="../js/vendor/qrcode.min.js?v=1.0.0"></script>
+</head>
+<body class="admin-sidebar">
+
+<div class="dashboard-container">
+
+  <!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+<div class="logo">
+    <img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" />
+
+<div>
+  <h2>TFRO MIS</h2>
+  <p>Lucena City</p>
+</div>
+
+  </div>
+
+ 
+<ul class="menu">
+
+  <li id="dashboardMenu">
+    <a href="dashboard.html">
+      <i class="ri-dashboard-line"></i>
+      Dashboard
+    </a>
+  </li>
+
+  <li id="franchiseMenu">
+    <a href="franchise.html">
+      <i class="ri-file-list-3-line"></i>
+      Franchises
+    </a>
+  </li>
+
+
+  <li id="motorMenu">
+    <a href="motorequests.html">
+      <i class="ri-settings-5-line"></i>
+      Change Motor Requests
+    </a>
+  </li>
+
+  <li id="violationMenu">
+    <a href="violation.html">
+      <i class="ri-alert-line"></i>
+      Violations
+    </a>
+  </li>
+
+  <li id="paymentMenu">
+    <a href="payment.html">
+      <i class="ri-money-dollar-circle-line"></i>
+      Payments
+    </a>
+  </li>
+
+  <li id="reportMenu">
+    <a href="report.html">
+      <i class="ri-bar-chart-line"></i>
+      Reports
+    </a>
+  </li>
+
+  <li id="notificationMenu">
+        <a href="notification.html">
+          <i class="ri-notification-3-line"></i>
+          Notifications
+        </a>
+      </li>
+
+  <li id="auditlogMenu"> 
+        <a href="auditlog.html"> 
+        <i class="ri-history-line">
+            </i> Audit Log </a> 
+    </li>
+
+   <li id="profileMenu">
+        <a href="profile.html">
+          <i class="ri-user-settings-line"></i>
+          Profile
+        </a>
+      </li>
+
+</ul>
+
+<!-- USER PROFILE -->
+<div class="sidebar-user">
+
+  <div class="user-left">
+
+    <div class="user-avatar" id="userAvatar">
+      U
+    </div>
+
+    <div class="user-details">
+      <h4 id="userName">User</h4>
+      <p id="userRole">—</p>
+    </div>
+
+  </div>
+
+  <button class="logout-btn" id="logoutBtn">
+    <i class="ri-logout-box-r-line"></i>
+  </button>
+
+</div>
+
+
+
+</aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div>
+        <h1>Drivers</h1>
+        <p>Review Operator-submitted Driver applications and compliance records</p>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+
+      <div class="toolbar-left">
+
+        <div class="search-box">
+          <i class="ri-search-line"></i>
+
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search drivers..."
+          >
+        </div>
+
+        <select id="complianceFilter">
+          <option value="all">All Compliance</option>
+          <option value="compliant">Compliant</option>
+          <option value="non-compliant">Non-Compliant</option>
+        </select>
+
+      </div>
+
+      <div class="date-export-controls">
+        <label>Start Date<input type="date" id="startDate"></label>
+        <label>End Date<input type="date" id="endDate"></label>
+        <button type="button" class="csv-btn" id="exportCsvBtn"><i class="ri-file-excel-2-line"></i> Save CSV</button>
+      </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Driver Name</th>
+            <th>License #</th>
+            <th>Operator</th>
+            <th>Contact</th>
+            <th>Violations</th>
+            <th>Compliance</th>
+            <th>License Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody id="driversTable"></tbody>
+
+      </table>
+
+    </div>
+
+  </main>
+
+</div>
+
+<!-- ASSIGN DRIVER MODAL -->
+<div class="modal" id="driverFormModal" hidden>
+  <div class="modal-box driver-form-modal-box">
+    <div class="modal-head">
+      <h3>Submitted Driver Application</h3>
+      <button class="modal-close" data-close="driverFormModal"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body driver-form-modal-body"><div class="driver-submission-preview" id="driverSubmissionPreview"><img id="driverFormPicture" class="driver-form-picture" alt="Submitted Driver 2 by 2 picture" hidden><div class="review-info-grid" id="driverFormDetails"></div></div><div class="form-actions driver-form-modal-actions"><button type="button" class="btn-primary" id="printDriverFormBtn"><i class="ri-printer-line"></i> View / Save PDF / Print</button></div></div>
+  </div>
+</div>
+
+<div class="modal" id="driverQrModal" hidden>
+  <div class="modal-box driver-qr-modal-box">
+    <div class="modal-head"><h3>Driver QR Authentication</h3><button class="modal-close" data-close="driverQrModal"><i class="ri-close-line"></i></button></div>
+    <div class="driver-qr-body"><div id="driverQrCode" class="driver-qr-code"></div><h3 id="driverQrName"></h3><p id="driverQrLicense"></p><div class="driver-qr-actions"><button type="button" class="btn-primary" id="printDriverQrBtn"><i class="ri-printer-line"></i> Print QR Card</button><a class="btn-secondary" id="openDriverQrBtn" target="_blank" rel="noopener"><i class="ri-external-link-line"></i> Test Verification</a></div><small>Only authenticated TFRO system users can open this verification record.</small></div>
+  </div>
+</div>
+
+<div class="modal" id="assignModal" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Assign Driver to Operator / Franchise</h3>
+      <button class="modal-close" data-close="assignModal"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom:14px;color:#64748b;">Assign <strong id="assignDriverName">driver</strong> to an approved operator and franchise.</p>
+      <label>Operator <span class="req">*</span></label>
+      <select id="assignOperator" style="width:100%;padding:11px;border:1px solid #d5e2da;border-radius:10px;margin-bottom:14px;"></select>
+      <label>Approved Franchise <span class="req">*</span></label>
+      <select id="assignFranchise" style="width:100%;padding:11px;border:1px solid #d5e2da;border-radius:10px;margin-bottom:14px;"></select>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" data-close="assignModal">Cancel</button>
+        <button type="button" class="btn-primary" id="saveAssignBtn"><i class="ri-user-add-line"></i> Assign Driver</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="../js/driver.js?v=20260823-193000"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
+
+<script>
+
+  const role = localStorage.getItem("role");
+
+  const paymentMenu =
+    document.getElementById("paymentMenu");
+
+  if(role === "admin"){
+    paymentMenu.style.display = "none";
+  }
+
+</script>
+
+</body>
+</html>
+

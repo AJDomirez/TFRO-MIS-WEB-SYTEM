@@ -1,0 +1,41 @@
+.camera-card {
+  width: min(100%, 860px);
+  margin: 0 auto 20px !important;
+  border-top: 4px solid #f4c430 !important;
+}
+
+.camera-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.camera-card-heading h2 { margin: 3px 0 5px; font-size: 24px; }
+.camera-card-heading p { margin: 0; color: #65786f; line-height: 1.45; }
+.camera-card-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 58px;
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: linear-gradient(135deg,#147b55,#1cab75);
+  color: #fff;
+  font-size: 29px;
+  box-shadow: 0 9px 20px rgba(20,123,85,.22);
+}
+
+.camera-card .camera-actions { justify-content: center; }
+.camera-main-btn { min-width: 190px; justify-content: center; padding: 13px 20px !important; font-size: 15px !important; }
+.camera-card .camera-status,
+.camera-card .camera-evidence > small { text-align: center; }
+.camera-card .upload-fallback { justify-content: center; }
+
+@media (max-width: 650px) {
+  .camera-card-heading { align-items: flex-start; }
+  .camera-card-heading h2 { font-size: 21px; }
+  .camera-card-icon { flex-basis: 48px; width: 48px; height: 48px; font-size: 24px; }
+}
