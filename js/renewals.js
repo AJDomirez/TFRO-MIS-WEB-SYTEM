@@ -27,6 +27,10 @@ Object.assign(DOC_LABELS, {
   picture_2x2: "h) 2x2 Picture",
   pmbl_certification: "i) PMBL Membership Certification",
 });
+const DOC_ORDER = [
+  "payment_receipt", "official_receipt", "voters_certificate", "insurance",
+  "cedula", "barangay_clearance", "drivers_license", "picture_2x2", "pmbl_certification",
+];
 const INSPECTION_KEYS = ["functional_horn", "signal_lights", "head_tail_lights", "sidecar_interior_light", "sidecar_light_kept_on", "anti_noise_muffler", "body_number_sticker", "garbage_receptacle", "clean_windshield"];
 const TYPE_LABELS = { regular: "Regular", expired_or: "Expired OR", change_motor: "Change Motor" };
 let renewals = [];
@@ -104,7 +108,8 @@ async function openReview(id) {
   ].join("");
 
   const urls = new Map(await Promise.all(currentDocuments.map(async (doc) => [doc.id, await signedUrl(doc.storage_path)])));
-  byId("renewalDocuments").innerHTML = Object.entries(DOC_LABELS).map(([type, label]) => {
+  byId("renewalDocuments").innerHTML = DOC_ORDER.map((type) => {
+    const label = DOC_LABELS[type];
     const doc = currentDocuments.find((item) => item.doc_type === type);
     if (!doc) return `<div class="renewal-doc-row"><strong>${escapeHtml(label)}</strong><span class="doc-missing">Missing document</span><span></span></div>`;
     return `<div class="renewal-doc-row" data-doc-id="${doc.id}">
