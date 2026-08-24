@@ -7,6 +7,7 @@ let franchises = [];
 let operatorAccounts = [];
 let editingId = null;
 let deleteTargetId = null;
+let preparedCsvImport = [];
 
 /* ---------- Safe element access ---------- */
 function el(id) { return document.getElementById(id); }
@@ -275,10 +276,8 @@ async function loadFranchises() {
 async function loadOperatorAccounts() {
   const { data, error } = await supabase
     .from("operators")
-    .select("user_id, full_name, verified, status")
+    .select("user_id, full_name, email, franchise_number, verified, status")
     .not("user_id", "is", null)
-    .eq("verified", true)
-    .eq("status", "active")
     .order("full_name");
   if (error) throw error;
   const seen = new Set();
@@ -292,6 +291,217 @@ async function loadOperatorAccounts() {
   ).join("");
   if (el("operator_id")) el("operator_id").innerHTML = options;
   if (el("edit_operator_id")) el("edit_operator_id").innerHTML = options;
+}
+
+/* ---------- CSV import ---------- */
+const CSV_FIELDS = Object.freeze({
+  franchise_number: ["franchisenumber", "fn", "fnnumber"],
+  previous_registration: ["previousregistration"],
+  operator_name: ["operatorname", "name", "registeredoperator", "franchiseowner"],
+  operator_email: ["operatoremail", "email"],
+  operator_id: ["operatoraccountid", "operatorid", "userid"],
+  registration_date: ["registrationdate", "dateofregistration"],
+  registration_month: ["registrationmonth", "month"],
+  registration_day: ["registrationday", "day"],
+  registration_year: ["registrationyear", "year"],
+  application_date: ["applicationdate"],
+  previous_mtop_expiration: ["previousmtopexpiry", "previousmtopexpiration"],
+  expiration_date: ["expirationdate", "currentmtopexpiry", "currentmtopexpiration"],
+  address: ["address"], birth_date: ["birthdate"], birth_place: ["birthplace"],
+  civil_status: ["civilstatus"], barangay_clearance_cedula: ["barangayclearancecedula", "cedula"],
+  contact_number: ["contactnumber", "operatorcontact"], motorcycle_brand: ["motorcyclebrandmodel", "motorcyclebrand", "brandmodel"],
+  motorcycle_year_model: ["motorcycleyearmodel", "yearmodel"], engine_number: ["enginenumber", "engineno"],
+  engine_cr_number: ["enginenumbercr", "enginenocr"], chassis_number: ["chassisnumber", "chassisno"],
+  chassis_cr_number: ["chassisnumbercr", "chassisnocr"], plate_number: ["platenumber", "plateno"],
+  toda_name: ["todaname", "toda"], official_receipt_number: ["officialreceiptnumber", "ornumber"],
+  driver_name: ["drivername"], driver_contact_number: ["drivercontact", "drivercontactnumber"],
+  route: ["route"], status: ["status"],
+});
+
+function normalizeCsvHeader(value) { return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [], cell = "", quoted = false;
+  const source = String(text || "").replace(/^\uFEFF/, "");
+  for (let index = 0; index < source.length; index += 1) {
+    const character = source[index];
+    if (quoted) {
+      if (character === '"' && source[index + 1] === '"') { cell += '"'; index += 1; }
+      else if (character === '"') quoted = false;
+      else cell += character;
+    } else if (character === '"') quoted = true;
+    else if (character === ",") { row.push(cell.trim()); cell = ""; }
+    else if (character === "\n") { row.push(cell.trim()); if (row.some(Boolean)) rows.push(row); row = []; cell = ""; }
+    else if (character !== "\r") cell += character;
+  }
+  if (quoted) throw new Error("The CSV has an unclosed quoted value.");
+  row.push(cell.trim());
+  if (row.some(Boolean)) rows.push(row);
+  return rows;
+}
+
+function csvDate(value) {
+  const text = String(value || "").trim();
+  if (!text) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    const date = new Date(`${text}T00:00:00`);
+    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === text ? text : null;
+  }
+  const slash = text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if (slash) {
+    const [, month, day, year] = slash;
+    const result = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    return csvDate(result);
+  }
+  const parsed = new Date(text);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
+}
+
+function csvValue(record, field) {
+  const aliases = CSV_FIELDS[field] || [];
+  const key = Object.keys(record).find((header) => aliases.includes(header));
+  return key === undefined ? undefined : String(record[key] || "").trim();
+}
+
+function findCsvOperator(accountId, email, name) {
+  if (accountId) return operatorAccounts.filter((account) => account.user_id.toLowerCase() === accountId.toLowerCase());
+  if (email) return operatorAccounts.filter((account) => String(account.email || "").toLowerCase() === email.toLowerCase());
+  if (name) return operatorAccounts.filter((account) => String(account.full_name || "").trim().toLowerCase() === name.trim().toLowerCase());
+  return [];
+}
+
+function buildCsvPreview(text) {
+  const rows = parseCsv(text);
+  if (rows.length < 2) throw new Error("The CSV must contain a header row and at least one data row.");
+  const headers = rows[0].map(normalizeCsvHeader);
+  if (new Set(headers).size !== headers.length) throw new Error("The CSV contains duplicate column headings.");
+  const existingByNumber = new Map(franchises.map((item) => [String(item.franchise_number || "").toUpperCase(), item]));
+  const seen = new Set(), errors = [], preview = [];
+
+  rows.slice(1).forEach((cells, rowIndex) => {
+    const csvRowNumber = rowIndex + 2;
+    const raw = Object.fromEntries(headers.map((header, index) => [header, cells[index] ?? ""]));
+    const franchiseNumber = String(csvValue(raw, "franchise_number") || "").trim().toUpperCase();
+    const operatorName = String(csvValue(raw, "operator_name") || "").trim();
+    if (!franchiseNumber) errors.push(`Row ${csvRowNumber}: Franchise Number is required.`);
+    if (!operatorName) errors.push(`Row ${csvRowNumber}: Operator Name is required.`);
+    if (franchiseNumber && seen.has(franchiseNumber)) errors.push(`Row ${csvRowNumber}: duplicate Franchise Number ${franchiseNumber} in this file.`);
+    seen.add(franchiseNumber);
+
+    const existing = existingByNumber.get(franchiseNumber);
+    const registrationDateText = csvValue(raw, "registration_date");
+    const registrationDate = csvDate(registrationDateText);
+    let registrationMonth = Number(csvValue(raw, "registration_month") || registrationDate?.slice(5, 7) || existing?.registration_month || 0);
+    let registrationDay = Number(csvValue(raw, "registration_day") || registrationDate?.slice(8, 10) || existing?.registration_day || 0);
+    let registrationYear = Number(csvValue(raw, "registration_year") || registrationDate?.slice(0, 4) || existing?.registration_year || 0);
+    const maxDay = registrationMonth >= 1 && registrationMonth <= 12 ? new Date(registrationYear, registrationMonth, 0).getDate() : 0;
+    if (registrationDateText && !registrationDate) errors.push(`Row ${csvRowNumber}: Registration Date is invalid.`);
+    if (!registrationMonth || !registrationDay || !registrationYear || registrationYear < 1900 || registrationYear > 2100 || registrationDay > maxDay) {
+      errors.push(`Row ${csvRowNumber}: provide a valid Registration Date (or Month, Day, and Year).`);
+    }
+
+    const operatorEmail = csvValue(raw, "operator_email") || "";
+    const suppliedOperatorId = csvValue(raw, "operator_id") || "";
+    const matches = findCsvOperator(suppliedOperatorId, operatorEmail, operatorName);
+    if ((suppliedOperatorId || operatorEmail) && matches.length !== 1) errors.push(`Row ${csvRowNumber}: the supplied operator account was not found or is not unique.`);
+    if (!suppliedOperatorId && !operatorEmail && matches.length > 1) errors.push(`Row ${csvRowNumber}: Operator Name matches multiple accounts; add Operator Email.`);
+    const linkedOperatorId = matches.length === 1 ? matches[0].user_id : (existing?.operator_id || null);
+
+    const dateField = (field, fallback = null) => {
+      const supplied = csvValue(raw, field);
+      if (supplied === undefined) return fallback;
+      const parsed = csvDate(supplied);
+      if (supplied && !parsed) errors.push(`Row ${csvRowNumber}: ${field.replaceAll("_", " ")} is invalid.`);
+      return parsed;
+    };
+    const textField = (field, fallback = "") => {
+      const supplied = csvValue(raw, field);
+      return supplied === undefined ? (fallback || "") : supplied;
+    };
+    const statusText = textField("status", existing?.status || "pending").toLowerCase();
+    const status = statusText === "approved" ? "active" : statusText;
+    if (!["active", "pending", "suspended", "revoked", "expired"].includes(status)) errors.push(`Row ${csvRowNumber}: Status must be approved, pending, suspended, revoked, or expired.`);
+    const yearModelText = textField("motorcycle_year_model", existing?.motorcycle_year_model || "");
+    const yearModel = yearModelText ? Number(yearModelText) : null;
+    if (yearModel !== null && (!Number.isInteger(yearModel) || yearModel < 1900 || yearModel > 2100)) errors.push(`Row ${csvRowNumber}: Motorcycle Year Model is invalid.`);
+
+    const record = {
+      franchise_number: franchiseNumber, previous_registration: textField("previous_registration", existing?.previous_registration),
+      operator_name: operatorName, operator_id: linkedOperatorId,
+      registration_month: registrationMonth, registration_day: registrationDay, registration_year: registrationYear,
+      application_date: dateField("application_date", existing?.application_date || todayForInput()),
+      previous_mtop_expiration: dateField("previous_mtop_expiration", existing?.previous_mtop_expiration),
+      expiration_date: dateField("expiration_date", existing?.expiration_date), address: textField("address", existing?.address),
+      birth_date: dateField("birth_date", existing?.birth_date), birth_place: textField("birth_place", existing?.birth_place),
+      civil_status: textField("civil_status", existing?.civil_status), barangay_clearance_cedula: textField("barangay_clearance_cedula", existing?.barangay_clearance_cedula),
+      contact_number: textField("contact_number", existing?.contact_number), motorcycle_brand: textField("motorcycle_brand", existing?.motorcycle_brand),
+      motorcycle_year_model: yearModel, engine_number: textField("engine_number", existing?.engine_number).toUpperCase(),
+      engine_cr_number: textField("engine_cr_number", existing?.engine_cr_number).toUpperCase(), chassis_number: textField("chassis_number", existing?.chassis_number).toUpperCase(),
+      chassis_cr_number: textField("chassis_cr_number", existing?.chassis_cr_number).toUpperCase(), plate_number: textField("plate_number", existing?.plate_number).toUpperCase(),
+      toda_name: textField("toda_name", existing?.toda_name), official_receipt_number: textField("official_receipt_number", existing?.official_receipt_number),
+      driver_name: textField("driver_name", existing?.driver_name), driver_contact_number: textField("driver_contact_number", existing?.driver_contact_number),
+      route: textField("route", existing?.route), application_type: existing?.application_type || "renewal", status, is_archived: false,
+    };
+    preview.push({ csvRowNumber, record, action: existing ? "Update" : "Add", linked: Boolean(linkedOperatorId) });
+  });
+  return { preview, errors };
+}
+
+function renderCsvPreview(result) {
+  preparedCsvImport = result.errors.length ? [] : result.preview;
+  el("csvImportStatus").textContent = result.errors.length
+    ? `Found ${result.errors.length} problem(s). Nothing will be saved until they are fixed.`
+    : `${result.preview.length} valid record(s): ${result.preview.filter((row) => row.action === "Add").length} new and ${result.preview.filter((row) => row.action === "Update").length} updates.`;
+  el("csvImportErrors").hidden = !result.errors.length;
+  el("csvImportErrors").innerHTML = result.errors.map((error) => `<p>${escapeHtml(error)}</p>`).join("");
+  el("csvPreviewWrap").hidden = !result.preview.length;
+  el("csvPreviewBody").innerHTML = result.preview.slice(0, 100).map((item) => `<tr><td>${item.csvRowNumber}</td><td>${escapeHtml(item.record.franchise_number)}</td><td>${escapeHtml(item.record.operator_name)}</td><td>${item.linked ? "Linked" : "Awaiting account"}</td><td>${item.action}</td></tr>`).join("");
+  el("confirmCsvImportBtn").disabled = !preparedCsvImport.length;
+}
+
+async function readCsvFile(event) {
+  preparedCsvImport = [];
+  try {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) throw new Error("CSV file is too large. Maximum size is 5 MB.");
+    renderCsvPreview(buildCsvPreview(await file.text()));
+  } catch (error) {
+    renderCsvPreview({ preview: [], errors: [error.message] });
+  }
+}
+
+async function importCsvRecords() {
+  if (!preparedCsvImport.length) return;
+  const button = el("confirmCsvImportBtn");
+  button.disabled = true; button.textContent = "Importing...";
+  try {
+    for (let index = 0; index < preparedCsvImport.length; index += 100) {
+      const batch = preparedCsvImport.slice(index, index + 100).map((item) => item.record);
+      const { error } = await supabase.from("franchises").upsert(batch, { onConflict: "franchise_number" });
+      if (error) throw error;
+    }
+    const count = preparedCsvImport.length;
+    await loadFranchises();
+    closeModal("csvImportModal");
+    showToast(`${count} franchise record(s) imported successfully.`);
+    void logAudit({ action: "Imported Franchise CSV", actionType: "create", record: `${count} records`, description: `Imported or updated ${count} franchise records from CSV.` });
+  } catch (error) {
+    console.error("CSV franchise import failed:", error);
+    el("csvImportStatus").textContent = `Import failed: ${error.message}`;
+  } finally {
+    button.disabled = !preparedCsvImport.length; button.textContent = "Import Records";
+  }
+}
+
+function downloadCsvTemplate() {
+  const headers = ["Franchise Number", "Previous Registration", "Operator Name", "Operator Email", "Registration Date", "Application Date", "Previous MTOP Expiry", "Expiration Date", "Address", "Birthdate", "Birthplace", "Civil Status", "Barangay Clearance / Cedula", "Contact Number", "Motorcycle Brand / Model", "Motorcycle Year Model", "Engine Number", "Engine Number (CR)", "Chassis Number", "Chassis Number (CR)", "Plate Number", "TODA Name", "Official Receipt Number", "Driver Name", "Driver Contact", "Route", "Status"];
+  const example = ["FR-2026-001", "FR-2023-001", "Juan Dela Cruz", "operator@example.com", "2026-08-24", "2026-08-24", "2023-09-30", "2026-09-30", "Lucena City", "1985-01-15", "Lucena City", "Married", "CED-001", "09123456789", "Honda TMX", "2024", "ENG-001", "ENG-CR-001", "CHS-001", "CHS-CR-001", "ABC-123", "Sample TODA", "OR-001", "Pedro Santos", "09987654321", "Lucena Proper", "Approved"];
+  const quote = (value) => `"${String(value).replaceAll('"', '""')}"`;
+  const blob = new Blob(["\uFEFF", headers.map(quote).join(","), "\r\n", example.map(quote).join(",")], { type: "text/csv;charset=utf-8" });
+  const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "tfro_franchise_import_template.csv"; link.click(); URL.revokeObjectURL(link.href);
 }
 
 async function verifyAccess() {
@@ -624,6 +834,18 @@ function onTableClick(event) {
 /* ---------- Event bindings ---------- */
 function bindEvents() {
   el("newApplicationBtn")?.addEventListener("click", openEditChooser);
+  el("openImportBtn")?.addEventListener("click", () => {
+    preparedCsvImport = [];
+    el("csvImportFile").value = "";
+    el("csvImportStatus").textContent = "Select a CSV file to preview it before importing.";
+    el("csvImportErrors").hidden = true;
+    el("csvPreviewWrap").hidden = true;
+    el("confirmCsvImportBtn").disabled = true;
+    openModal("csvImportModal");
+  });
+  el("csvImportFile")?.addEventListener("change", readCsvFile);
+  el("confirmCsvImportBtn")?.addEventListener("click", importCsvRecords);
+  el("downloadCsvTemplateBtn")?.addEventListener("click", downloadCsvTemplate);
   el("edit_record_selector")?.addEventListener("change", (event) => {
     const row = franchises.find((item) => String(item.id) === event.target.value);
     if (row) openEditForm(row);
@@ -701,7 +923,7 @@ function bindEvents() {
   });
 
   // Close on backdrop click
-  ["viewModal", "editModal", "deleteModal"].forEach((id) => {
+  ["viewModal", "editModal", "deleteModal", "csvImportModal"].forEach((id) => {
     el(id)?.addEventListener("click", (e) => {
       if (e.target === el(id)) { el(id).hidden = true; if (id === "editModal") editingId = null; if (id === "deleteModal") deleteTargetId = null; }
     });
