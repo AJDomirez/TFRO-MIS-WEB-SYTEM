@@ -237,7 +237,6 @@ async function handleSaveProgress() {
   try {
     await saveProgress();
     await logAudit({ action: "Reviewed Franchise Renewal", actionType: "update", record: currentRenewal.renewal_code, description: `Saved review progress for ${currentRenewal.renewal_code}.` });
-    alert("Renewal review progress saved. The Operator will see the updated status.");
     byId("reviewModal").hidden = true;
     await loadRenewals();
   } catch (error) { alert(`Could not save review: ${error.message}`); }
