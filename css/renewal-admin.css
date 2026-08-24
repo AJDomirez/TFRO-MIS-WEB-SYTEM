@@ -25,6 +25,8 @@
 .inspection-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;}
 .inspection-grid label,.checkbox-field{display:flex!important;align-items:center;gap:8px;background:#fff;border:1px solid #dfe9e3;border-radius:9px;padding:10px;font-size:.8rem;color:#254a3b;}
 .inspection-grid input,.checkbox-field input{width:auto;margin:0;}
+.tfro004-inspection{grid-template-columns:repeat(2,minmax(0,1fr));}
+.tfro004-inspection label{align-items:flex-start;line-height:1.35;}
 .renewal-doc-row{display:grid;grid-template-columns:minmax(180px,1fr) auto minmax(180px,1fr);align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #e4ece7;}
 .renewal-doc-row:last-child{border-bottom:0;}
 .renewal-doc-row strong{font-size:.82rem;color:#234839;}

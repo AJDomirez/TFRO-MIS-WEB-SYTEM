@@ -8,10 +8,10 @@ async function openSavedSubmissionForm(options) {
 }
 
 const BASE_DOCUMENTS = [
-  "voters_certificate", "cedula", "barangay_clearance", "drivers_license",
+  "payment_receipt", "voters_certificate", "cedula", "barangay_clearance", "drivers_license",
   "picture_2x2", "pmbl_certification",
 ];
-const UPDATED_DOCUMENTS = ["official_receipt", "certificate_registration", "insurance"];
+const UPDATED_DOCUMENTS = ["official_receipt", "insurance"];
 const TYPE_LABELS = { regular: "Regular renewal", expired_or: "Expired OR", change_motor: "Change Motor" };
 let currentUser = null;
 let currentProfile = null;
@@ -168,7 +168,7 @@ async function loadHistory() {
       <td><span class="status-pill ${statusClass(renewal.status)}">${escapeHtml(statusLabel(renewal.status))}</span></td>
       <td>${escapeHtml(renewal.decision_reason || (renewal.status === "approved" ? `MTOP ${renewal.mtop_number || "for issuance"}; expected ${renewal.expected_release_date || "within 1–2 weeks"}` : "Awaiting TFRO processing"))}</td>
       <td>${new Date(renewal.created_at).toLocaleDateString()}</td>
-      <td><button type="button" class="page-button page-button-back" data-renewal-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i> Profile</button> <button type="button" class="page-button page-button-back" data-pmbl-form="${renewal.id}"><i class="ri-file-certificate-line"></i> PMBL</button></td>
+      <td><button type="button" class="page-button page-button-back" data-checklist-form="${renewal.id}"><i class="ri-checkbox-multiple-line"></i> TFRO-004</button> <button type="button" class="page-button page-button-back" data-renewal-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i> Profile</button> <button type="button" class="page-button page-button-back" data-pmbl-form="${renewal.id}"><i class="ri-file-certificate-line"></i> PMBL</button></td>
     </tr>`).join("") : '<tr><td colspan="6">No renewal requests yet.</td></tr>';
 
   if (!currentRenewal) return;
@@ -205,6 +205,12 @@ async function showRenewalSubmission(renewal) {
 async function showPmblCertification(renewal) {
   const { openPmblCertificationForm } = await import("./submission-form.js?v=20260824-231000");
   openPmblCertificationForm({ renewal, franchise: currentFranchise || {} });
+}
+
+async function showRenewalChecklist(renewal) {
+  const { data: documents } = await supabase.from("renewal_documents").select("doc_type,status,verified").eq("renewal_id", renewal.id);
+  const { openRenewalChecklistForm } = await import("./submission-form.js?v=20260824-233000");
+  openRenewalChecklistForm({ renewal, franchise: currentFranchise || {}, documents: documents || [] });
 }
 
 function prefillRenewal(renewal) {
@@ -349,6 +355,12 @@ byId("renewalNextBtn").addEventListener("click", () => {
 });
 byId("renewalForm").addEventListener("submit", submitRenewal);
 byId("renewalHistory").addEventListener("click", (event) => {
+  const checklistButton = event.target.closest("[data-checklist-form]");
+  if (checklistButton) {
+    const renewal = renewalHistoryRows.find((row) => String(row.id) === checklistButton.dataset.checklistForm);
+    if (renewal) showRenewalChecklist(renewal);
+    return;
+  }
   const button = event.target.closest("[data-renewal-form]");
   if (!button) return;
   const renewal = renewalHistoryRows.find((row) => String(row.id) === button.dataset.renewalForm);

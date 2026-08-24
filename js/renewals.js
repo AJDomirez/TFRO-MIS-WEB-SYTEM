@@ -15,7 +15,19 @@ const DOC_LABELS = {
   official_receipt: "Official Receipt — For Hire", certificate_registration: "Certificate of Registration — For Hire",
   insurance: "Insurance — Third-Party & Passenger Liability",
 };
-const INSPECTION_KEYS = ["riding_condition", "brake_system", "lights_signals", "tires_wheels", "general_cleanliness", "safety_compliance"];
+delete DOC_LABELS.certificate_registration;
+Object.assign(DOC_LABELS, {
+  payment_receipt: "a) City Treasurer Payment Receipt",
+  official_receipt: "b) Updated Motorcycle OR - For Hire",
+  voters_certificate: "c) Latest Voter's Certificate",
+  insurance: "d) Third-Party & Passenger Liability Insurance",
+  cedula: "e) Latest Community Tax Certificate / Cedula",
+  barangay_clearance: "f) Barangay Clearance",
+  drivers_license: "g) Driver's License",
+  picture_2x2: "h) 2x2 Picture",
+  pmbl_certification: "i) PMBL Membership Certification",
+});
+const INSPECTION_KEYS = ["functional_horn", "signal_lights", "head_tail_lights", "sidecar_interior_light", "sidecar_light_kept_on", "anti_noise_muffler", "body_number_sticker", "garbage_receptacle", "clean_windshield"];
 const TYPE_LABELS = { regular: "Regular", expired_or: "Expired OR", change_motor: "Change Motor" };
 let renewals = [];
 let currentRenewal = null;
@@ -141,6 +153,12 @@ async function printCurrentPmblCertification() {
   if (!currentRenewal) return;
   const { openPmblCertificationForm } = await import("./submission-form.js?v=20260824-231000");
   openPmblCertificationForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {} });
+}
+
+async function printCurrentChecklist() {
+  if (!currentRenewal) return;
+  const { openRenewalChecklistForm } = await import("./submission-form.js?v=20260824-233000");
+  openRenewalChecklistForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, documents: currentDocuments });
 }
 
 function inspectionResults() {
@@ -310,6 +328,7 @@ byId("saveProgressBtn").addEventListener("click", handleSaveProgress);
 byId("incompleteBtn").addEventListener("click", markIncomplete);
 byId("approveRenewalBtn").addEventListener("click", approveRenewal);
 byId("printRenewalBtn").addEventListener("click", printCurrentRenewal);
+byId("printChecklistBtn").addEventListener("click", printCurrentChecklist);
 byId("printPmblBtn").addEventListener("click", printCurrentPmblCertification);
 byId("temporaryMtop").addEventListener("change", updateTemporaryMtopFields);
 byId("logoutBtn").addEventListener("click", () => signOutAndRedirect("index.html"));
