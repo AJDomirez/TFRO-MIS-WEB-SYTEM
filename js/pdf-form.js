@@ -120,7 +120,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {} }) {
   if (!popup) return;
   try {
     const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
-    const templateUrl = new URL("../forms/TFRO-001 Temporary MTOP.pdf", import.meta.url);
+    const templateUrl = new URL("../forms/TFRO-001 Temporary MTOP.pdf?v=20260826-120000", import.meta.url);
     const templateBytes = await fetch(templateUrl).then((response) => response.arrayBuffer());
     const pdfDoc = await PDFDocument.load(templateBytes);
     const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
@@ -148,13 +148,6 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {} }) {
     };
     const row = (page, y, columns) => columns.forEach(([text, x, width]) => fit(page, text, x, y, width, 9, true));
 
-    if (pages[0]) {
-      fit(pages[0], details.name, 52, 657, 250, 10, true);
-      fit(pages[0], details.franchise, 342, 657, 135, 10, true);
-      fit(pages[0], details.address, 52, 637, 425, 10, true);
-      fit(pages[0], details.orNumber, 490, 657, 75, 10, true);
-      row(pages[0], 520, [[details.make, 7, 64], [details.model, 81, 69], [details.motor, 163, 132], [details.chassis, 307, 122], [details.plate, 443, 78]]);
-    }
     if (pages[1]) {
       fit(pages[1], details.name, 112, 843, 240, 10, true);
       fit(pages[1], details.franchise, 498, 843, 70, 10, true);

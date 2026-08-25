@@ -215,7 +215,7 @@ async function showRenewalChecklist(renewal) {
 
 async function showTemporaryMtop(renewal) {
   if (renewal.status !== "approved") return alert("TFRO-001 is available to operators only after the renewal is approved.");
-  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260826-110000");
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260826-120000");
   openTemporaryMtopPdfForm({ renewal, franchise: currentFranchise || {} });
 }
 
