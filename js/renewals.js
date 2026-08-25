@@ -154,6 +154,12 @@ async function printCurrentRenewal() {
   });
 }
 
+async function printCurrentTemporaryMtop() {
+  if (!currentRenewal) return;
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260826-110000");
+  openTemporaryMtopPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {} });
+}
+
 async function printCurrentPmblCertification() {
   if (!currentRenewal) return;
   const { openPmblPdfForm } = await import("./pdf-form.js?v=20260826-060000");
@@ -331,6 +337,8 @@ document.querySelectorAll("[data-close]").forEach((button) => button.addEventLis
 byId("saveProgressBtn").addEventListener("click", handleSaveProgress);
 byId("incompleteBtn").addEventListener("click", markIncomplete);
 byId("approveRenewalBtn").addEventListener("click", approveRenewal);
+byId("printPmblBtn").insertAdjacentHTML("beforebegin", '<button class="btn-cancel form-action-button" id="printTemporaryMtopBtn"><i class="ri-file-pdf-2-line"></i><span>TFRO-001</span></button>');
+byId("printTemporaryMtopBtn").addEventListener("click", printCurrentTemporaryMtop);
 byId("printRenewalBtn").addEventListener("click", printCurrentRenewal);
 byId("printChecklistBtn").addEventListener("click", printCurrentChecklist);
 byId("printPmblBtn").addEventListener("click", printCurrentPmblCertification);
