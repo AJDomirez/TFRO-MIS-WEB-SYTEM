@@ -1,0 +1,14 @@
+alter table public.profiles add column if not exists profile_picture_path text;
+insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types) values ('account-profile-pictures','account-profile-pictures',false,5242880,array['image/jpeg','image/png','image/webp']) on conflict(id) do update set public=false,file_size_limit=5242880,allowed_mime_types=excluded.allowed_mime_types;
+drop policy if exists "Users upload their formal profile picture" on storage.objects;
+create policy "Users upload their formal profile picture" on storage.objects for insert to authenticated with check(bucket_id='account-profile-pictures' and (storage.foldername(name))[1]=(select auth.uid()::text));
+drop policy if exists "Users read their formal profile picture" on storage.objects;
+create policy "Users read their formal profile picture" on storage.objects for select to authenticated using(bucket_id='account-profile-pictures' and ((storage.foldername(name))[1]=(select auth.uid()::text) or exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.role='admin')));
+drop policy if exists "Users replace their formal profile picture" on storage.objects;
+create policy "Users replace their formal profile picture" on storage.objects for update to authenticated using(bucket_id='account-profile-pictures' and owner_id=(select auth.uid()::text)) with check(bucket_id='account-profile-pictures' and (storage.foldername(name))[1]=(select auth.uid()::text));
+drop policy if exists "Users remove their formal profile picture" on storage.objects;
+create policy "Users remove their formal profile picture" on storage.objects for delete to authenticated using(bucket_id='account-profile-pictures' and owner_id=(select auth.uid()::text));
+grant update(profile_picture_path) on public.profiles to authenticated;
+drop policy if exists "Users save their formal profile picture path" on public.profiles;
+create policy "Users save their formal profile picture path" on public.profiles for update to authenticated using(id=(select auth.uid())) with check(id=(select auth.uid()));
+comment on column public.profiles.profile_picture_path is 'Private formal identification photo for printable Operator and Traffic Enforcer account forms.';

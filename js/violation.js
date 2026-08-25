@@ -58,6 +58,7 @@ function render() {
     return `<tr>
       <td>${escapeHtml(row.subject_name || "—")}</td>
       <td><span class="type ${subjectType}">${escapeHtml(row.classification || row.subject_type || "—")}</span><br><small>${escapeHtml(row.franchise_number || "No franchise")}</small></td>
+      <td>${row.discounted ? "Yes" : "No"}</td>
       <td><strong>${escapeHtml(row.violation_code || "—")}</strong><br>${escapeHtml(row.violation_type)}</td>
       <td><strong>${escapeHtml(row.ticket_number || "—")}</strong><br><small>${escapeHtml(row.apprehending_officers || "—")}</small></td>
       <td>${money.format(Number(row.penalty || 0))}</td>
@@ -71,7 +72,7 @@ function render() {
         <button type="button" data-action="notice" data-id="${row.id}" title="Print violation notice"><i class="ri-printer-line"></i></button>
       </div></td>
     </tr>`;
-  }).join("") : '<tr><td colspan="8">No violations found.</td></tr>';
+  }).join("") : '<tr><td colspan="9">No violations found.</td></tr>';
 }
 
 function printNotice(row) {
@@ -132,6 +133,7 @@ function setFormMode(mode, row = null) {
     form.elements.violation_code.value = row.violation_code || "";
     form.elements.violation_type.value = row.violation_type || "";
     form.elements.classification.value = row.classification || "with_franchise";
+    form.elements.discounted.value = String(Boolean(row.discounted));
     form.elements.franchise_number.value = row.franchise_number || "";
     form.elements.ticket_number.value = row.ticket_number || "";
     form.elements.apprehending_officers.value = row.apprehending_officers || "";
@@ -172,6 +174,7 @@ function readEntry() {
     violation_code: values.violation_code,
     violation_type: values.violation_type.trim(),
     classification: values.classification,
+    discounted: values.discounted === "true",
     franchise_number: values.franchise_number?.trim() || null,
     ticket_number: values.ticket_number?.trim() || null,
     apprehending_officers: values.apprehending_officers?.trim() || null,
@@ -252,6 +255,7 @@ function bindEvents() {
       { header: "Code", value: (row) => row.violation_code },
       { header: "Ticket Number", value: (row) => row.ticket_number },
       { header: "Subject Classification", value: (row) => row.subject_type },
+      { header: "Discounted", value: (row) => row.discounted ? "Yes" : "No" },
       { header: "Name", value: (row) => row.subject_name },
       { header: "Violation", value: (row) => row.violation_type },
       { header: "Description", value: (row) => row.description },
