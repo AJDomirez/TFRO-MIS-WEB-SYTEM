@@ -47,6 +47,24 @@ function splitName(fullName) {
   };
 }
 
+function splitResidentialAddress(fullAddress) {
+  const address = value(fullAddress);
+  const parts = address.split(",").map((part) => part.trim()).filter(Boolean);
+  const barangayIndex = parts.findIndex((part) => /\b(?:brgy\.?|barangay)\b/i.test(part));
+  if (barangayIndex >= 0) {
+    return {
+      street: parts.slice(0, barangayIndex).join(", "),
+      barangay: parts.slice(barangayIndex).join(", "),
+    };
+  }
+  const streetPattern = /\b(?:purok|sitio|street|st\.?|road|rd\.?|avenue|ave\.?|block|blk\.?|lot|phase|subdivision|village)\b/i;
+  const street = parts.filter((part) => streetPattern.test(part));
+  const barangay = parts.filter((part) => !streetPattern.test(part));
+  return street.length
+    ? { street: street.join(", "), barangay: barangay.join(", ") }
+    : { street: address, barangay: "" };
+}
+
 function ageFromBirthDate(input) {
   if (!input) return "";
   const birth = new Date(`${String(input).slice(0, 10)}T00:00:00`);
@@ -111,6 +129,7 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, pictureUrl =
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const names = splitName(renewal.operator_name);
+    const address = splitResidentialAddress(renewal.operator_address);
     const ink = rgb(0, 0, 0);
     const write = (text, x, y, size = 8.5, maxWidth = 500, useBold = true) =>
       drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, color: ink });
@@ -125,7 +144,8 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, pictureUrl =
     write(names.first, 225, 778, 10, 145);
     write(names.middle, 335, 778, 10, 110);
     write(renewal.operator_contact, 458, 778, 10, 105);
-    write(renewal.operator_address, 40, 718, 9.5, 525);
+    write(address.street, 40, 718, 9.5, 275);
+    write(address.barangay, 326, 718, 9.5, 240);
     write(formatDate(franchise.birth_date), 40, 668, 9, 150);
     write(franchise.birth_place, 207, 668, 9, 150);
     write(ageFromBirthDate(franchise.birth_date), 377, 668, 9, 60);
