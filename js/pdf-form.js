@@ -115,6 +115,62 @@ async function embedPicture(pdfDoc, page, pictureUrl) {
   }
 }
 
+export async function openTemporaryMtopPdfForm({ renewal, franchise = {} }) {
+  const popup = openPdfWindow("TFRO-001 Temporary MTOP");
+  if (!popup) return;
+  try {
+    const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
+    const templateUrl = new URL("../forms/TFRO-001 Temporary MTOP.pdf", import.meta.url);
+    const templateBytes = await fetch(templateUrl).then((response) => response.arrayBuffer());
+    const pdfDoc = await PDFDocument.load(templateBytes);
+    const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const bold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+    const ink = rgb(0, 0, 0);
+    const pages = pdfDoc.getPages();
+    const details = {
+      name: value(renewal.operator_name || franchise.operator_name),
+      franchise: value(franchise.franchise_number),
+      address: value(renewal.operator_address || franchise.address),
+      orNumber: value(renewal.current_or_number || renewal.payment_or_number),
+      make: value(franchise.motorcycle_brand),
+      model: value(franchise.motorcycle_year_model),
+      motor: value(renewal.engine_number || franchise.engine_number || franchise.motorcycle_engine_number),
+      chassis: value(renewal.chassis_number || franchise.chassis_number || franchise.motorcycle_chassis_number),
+      plate: value(renewal.plate_number || franchise.plate_number),
+    };
+    const fit = (page, text, x, y, maxWidth, size = 10, useBold = false) => {
+      if (!text) return;
+      const selectedFont = useBold ? bold : font;
+      let fitted = size;
+      while (fitted > 7 && selectedFont.widthOfTextAtSize(text, fitted) > maxWidth) fitted -= 0.5;
+      page.drawText(text, { x, y, maxWidth, size: fitted, font: selectedFont, color: ink });
+    };
+    const row = (page, y, columns) => columns.forEach(([text, x, width]) => fit(page, text, x, y, width, 9, true));
+
+    if (pages[0]) {
+      fit(pages[0], details.name, 52, 657, 250, 10, true);
+      fit(pages[0], details.franchise, 342, 657, 135, 10, true);
+      fit(pages[0], details.address, 52, 637, 425, 10, true);
+      fit(pages[0], details.orNumber, 490, 657, 75, 10, true);
+      row(pages[0], 520, [[details.make, 7, 64], [details.model, 81, 69], [details.motor, 163, 132], [details.chassis, 307, 122], [details.plate, 443, 78]]);
+    }
+    if (pages[1]) {
+      fit(pages[1], details.name, 105, 651, 170, 9.5, true);
+      fit(pages[1], details.franchise, 315, 651, 105, 9.5, true);
+      fit(pages[1], details.orNumber, 470, 651, 66, 9.5, true);
+      fit(pages[1], details.address, 83, 632, 453, 9.5, true);
+      row(pages[1], 507, [[details.make, 42, 46], [details.model, 95, 64], [details.motor, 167, 119], [details.chassis, 294, 109], [details.plate, 411, 74]]);
+    }
+
+    const bytes = await pdfDoc.save();
+    await showPdf(popup, bytes, `TFRO-001-${value(renewal.renewal_code || renewal.id)}.pdf`);
+  } catch (error) {
+    popup.close();
+    console.error(error);
+    alert(`Unable to generate the TFRO-001 PDF: ${error.message}`);
+  }
+}
+
 export async function openRenewalPdfForm({ renewal, franchise = {}, pictureUrl = "" }) {
   const popup = openPdfWindow("TFRO-005 Renewal Application");
   if (!popup) return;
