@@ -4,7 +4,7 @@ import { logAudit } from "./audit-helper.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260826-060000");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260826-160000");
   openRenewalPdfForm(options);
 }
 
@@ -147,8 +147,17 @@ async function openReview(id) {
 async function printCurrentRenewal() {
   if (!currentRenewal) return;
   const picture = currentDocuments.find((doc) => doc.doc_type === "picture_2x2");
+  let changeMotor = {};
+  if (currentRenewal.change_motor_request_id) {
+    const result = await supabase.from("change_motor_requests")
+      .select("new_motor_brand,new_motor_serial,new_engine_number,new_chassis_number,new_plate_number")
+      .eq("id", currentRenewal.change_motor_request_id).maybeSingle();
+    if (result.error) return alert(`Could not load the Change Motor data: ${result.error.message}`);
+    changeMotor = result.data || {};
+  }
   await openSavedSubmissionForm({
     renewal: currentRenewal, franchise: currentRenewal.franchises || {},
+    changeMotor,
     pictureUrl: picture ? await signedUrl(picture.storage_path) : "",
     documentTypes: currentDocuments.map((document) => document.doc_type),
   });

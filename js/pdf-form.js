@@ -155,7 +155,10 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
       fit(pages[1], details.franchise, 498, 845, 70, 10, true);
       fit(pages[1], details.address, 112, 829, 265, 10, true);
       row(pages[1], 699, [[details.make, 51, 68], [details.model, 128, 72], [details.motor, 209, 135], [details.chassis, 353, 127], [details.plate, 489, 81]]);
-      fit(pages[1], details.expiration, 345, 336, 205, 12, true, "center");
+      if (details.expiration) {
+        pages[1].drawRectangle({ x: 180, y: 329, width: 370, height: 24, color: rgb(1, 1, 1) });
+        fit(pages[1], `GOOD UNTIL ${details.expiration}`, 180, 336, 370, 12, true, "center");
+      }
     }
 
     const bytes = await pdfDoc.save();
@@ -167,7 +170,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
   }
 }
 
-export async function openRenewalPdfForm({ renewal, franchise = {}, pictureUrl = "" }) {
+export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor = {}, pictureUrl = "" }) {
   const popup = openPdfWindow("TFRO-005 Renewal Application");
   if (!popup) return;
   try {
@@ -202,13 +205,13 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, pictureUrl =
     write(franchise.birth_place, 207, 668, 9, 150);
     write(ageFromBirthDate(franchise.birth_date), 377, 668, 9, 60);
     write(franchise.civil_status, 457, 668, 9, 110);
-    write(franchise.motorcycle_brand, 90, 627, 9.5, 210);
-    write(renewal.plate_number || franchise.plate_number, 385, 627, 9.5, 180);
-    write(franchise.motorcycle_year_model, 90, 606, 9.5, 210);
+    write(changeMotor.new_motor_brand || franchise.motorcycle_brand, 90, 627, 9.5, 210);
+    write(changeMotor.new_plate_number || renewal.plate_number || franchise.plate_number, 385, 627, 9.5, 180);
+    write(changeMotor.new_motor_serial || franchise.motorcycle_year_model, 90, 606, 9.5, 210);
     write(renewal.current_or_number, 375, 606, 9.5, 190);
-    write(renewal.engine_number || franchise.motorcycle_engine_number, 110, 585, 9.5, 190);
+    write(changeMotor.new_engine_number || renewal.engine_number || franchise.motorcycle_engine_number, 110, 585, 9.5, 190);
     write(formatDate(renewal.current_or_date), 395, 585, 9.5, 170);
-    write(renewal.chassis_number || franchise.motorcycle_chassis_number, 115, 563, 9.5, 185);
+    write(changeMotor.new_chassis_number || renewal.chassis_number || franchise.motorcycle_chassis_number, 115, 563, 9.5, 185);
     write(renewal.current_cr_number || franchise.chassis_cr_number, 370, 563, 9.5, 195);
     const route = value(franchise.route || "LUCENA PROPER");
     page.drawRectangle({ x: 468, y: 517, width: 103, height: 40, color: rgb(1, 1, 1) });
