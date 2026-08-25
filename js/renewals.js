@@ -141,6 +141,13 @@ async function openReview(id) {
   byId("decisionReason").value = currentRenewal.decision_reason || "";
   const final = ["approved", "rejected"].includes(currentRenewal.status);
   ["incompleteBtn", "saveProgressBtn", "approveRenewalBtn"].forEach((id) => { byId(id).disabled = final; });
+  const canSendTemporary = ["expired_or", "change_motor"].includes(currentRenewal.renewal_type);
+  byId("sendTemporaryMtopBtn").disabled = Boolean(currentRenewal.temporary_mtop_issued) || !canSendTemporary;
+  byId("sendTemporaryMtopBtn").innerHTML = currentRenewal.temporary_mtop_issued
+    ? '<i class="ri-check-line"></i> TFRO-001 Sent'
+    : canSendTemporary
+      ? '<i class="ri-send-plane-line"></i> Send TFRO-001'
+      : '<i class="ri-forbid-line"></i> TFRO-001 Not Needed';
   byId("reviewModal").hidden = false;
 }
 
@@ -175,6 +182,40 @@ async function printCurrentTemporaryMtop() {
   }
   const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260826-150000");
   openTemporaryMtopPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, changeMotor });
+}
+
+async function sendCurrentTemporaryMtop() {
+  if (!currentRenewal || currentRenewal.temporary_mtop_issued) return;
+  if (!["expired_or", "change_motor"].includes(currentRenewal.renewal_type)) return alert("TFRO-001 is only issued for Expired OR and Change Motor renewal cases.");
+  let expiration = byId("temporaryMtopExpiration").value;
+  if (!expiration) {
+    const until = new Date();
+    until.setDate(until.getDate() + 15);
+    expiration = `${until.getFullYear()}-${String(until.getMonth() + 1).padStart(2, "0")}-${String(until.getDate()).padStart(2, "0")}`;
+  }
+  const temporaryNumber = byId("temporaryMtopNumber").value.trim() || `TFRO-001-${currentRenewal.renewal_code || currentRenewal.id}`;
+  const sentAt = new Date().toISOString();
+  const { error } = await supabase.from("franchise_renewals").update({
+    temporary_mtop_issued: true,
+    temporary_mtop_issued_at: sentAt,
+    temporary_mtop_number: temporaryNumber,
+    temporary_mtop_expiration_date: expiration,
+  }).eq("id", currentRenewal.id);
+  if (error) return alert(`Could not send TFRO-001: ${error.message}`);
+  Object.assign(currentRenewal, {
+    temporary_mtop_issued: true,
+    temporary_mtop_issued_at: sentAt,
+    temporary_mtop_number: temporaryNumber,
+    temporary_mtop_expiration_date: expiration,
+  });
+  byId("temporaryMtop").checked = true;
+  byId("temporaryMtopNumber").value = temporaryNumber;
+  byId("temporaryMtopExpiration").value = expiration;
+  updateTemporaryMtopFields();
+  byId("sendTemporaryMtopBtn").disabled = true;
+  byId("sendTemporaryMtopBtn").innerHTML = '<i class="ri-check-line"></i> TFRO-001 Sent';
+  await logAudit({ action: "Sent TFRO-001 to Operator", actionType: "update", record: String(currentRenewal.id), description: `TFRO-001 was sent for ${currentRenewal.renewal_code}.` });
+  alert("TFRO-001 has been sent to the operator account.");
 }
 
 async function printCurrentPmblCertification() {
@@ -355,7 +396,9 @@ byId("saveProgressBtn").addEventListener("click", handleSaveProgress);
 byId("incompleteBtn").addEventListener("click", markIncomplete);
 byId("approveRenewalBtn").addEventListener("click", approveRenewal);
 byId("printPmblBtn").insertAdjacentHTML("beforebegin", '<button class="btn-cancel form-action-button" id="printTemporaryMtopBtn"><i class="ri-file-pdf-2-line"></i><span>TFRO-001</span></button>');
+byId("printTemporaryMtopBtn").insertAdjacentHTML("afterend", '<button class="btn-accept" id="sendTemporaryMtopBtn"><i class="ri-send-plane-line"></i> Send TFRO-001</button>');
 byId("printTemporaryMtopBtn").addEventListener("click", printCurrentTemporaryMtop);
+byId("sendTemporaryMtopBtn").addEventListener("click", sendCurrentTemporaryMtop);
 byId("printRenewalBtn").addEventListener("click", printCurrentRenewal);
 byId("printChecklistBtn").addEventListener("click", printCurrentChecklist);
 byId("printPmblBtn").addEventListener("click", printCurrentPmblCertification);
