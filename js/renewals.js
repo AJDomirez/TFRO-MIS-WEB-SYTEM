@@ -143,6 +143,7 @@ async function openReview(id) {
   ["incompleteBtn", "saveProgressBtn", "approveRenewalBtn"].forEach((id) => { byId(id).disabled = final; });
   const canSendTemporary = ["expired_or", "change_motor"].includes(currentRenewal.renewal_type);
   byId("sendTemporaryMtopBtn").hidden = !canSendTemporary && !currentRenewal.temporary_mtop_issued;
+  byId("sendTemporaryMtopBtn").style.setProperty("display", canSendTemporary || currentRenewal.temporary_mtop_issued ? "inline-flex" : "none", "important");
   byId("sendTemporaryMtopBtn").disabled = Boolean(currentRenewal.temporary_mtop_issued) || !canSendTemporary;
   byId("sendTemporaryMtopBtn").innerHTML = currentRenewal.temporary_mtop_issued
     ? '<i class="ri-check-line"></i> TFRO-001 Sent'
@@ -398,6 +399,7 @@ byId("incompleteBtn").addEventListener("click", markIncomplete);
 byId("approveRenewalBtn").addEventListener("click", approveRenewal);
 byId("printPmblBtn").insertAdjacentHTML("beforebegin", '<button class="btn-cancel form-action-button" id="printTemporaryMtopBtn"><i class="ri-file-pdf-2-line"></i><span>TFRO-001</span></button>');
 byId("printTemporaryMtopBtn").insertAdjacentHTML("afterend", '<button class="btn-accept" id="sendTemporaryMtopBtn"><i class="ri-send-plane-line"></i> Send TFRO-001</button>');
+document.querySelector("#reviewModal .renewal-actions").style.setProperty("display", "grid", "important");
 byId("printTemporaryMtopBtn").addEventListener("click", printCurrentTemporaryMtop);
 byId("sendTemporaryMtopBtn").addEventListener("click", sendCurrentTemporaryMtop);
 byId("printRenewalBtn").addEventListener("click", printCurrentRenewal);
