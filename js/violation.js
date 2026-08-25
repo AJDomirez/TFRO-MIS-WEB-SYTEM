@@ -254,7 +254,7 @@ function bindEvents() {
       { header: "Violation Date", value: (row) => row.occurred_at },
       { header: "Code", value: (row) => row.violation_code },
       { header: "Ticket Number", value: (row) => row.ticket_number },
-      { header: "Subject Classification", value: (row) => row.subject_type },
+      { header: "Classification", value: (row) => row.classification || row.subject_type },
       { header: "Discounted", value: (row) => row.discounted ? "Yes" : "No" },
       { header: "Name", value: (row) => row.subject_name },
       { header: "Violation", value: (row) => row.violation_type },
@@ -271,7 +271,14 @@ async function initialize() {
   const { user, profile } = await requireRole(["admin", "staff"]);
   if (user) {
     currentUserId = user.id;
-    canManageViolations = profile?.role === "staff";
+    canManageViolations = ["admin", "staff"].includes(profile?.role);
+    const isAdmin = profile?.role === "admin";
+    document.getElementById("violationPortalTitle").textContent = isAdmin
+      ? "Administrator — Violations"
+      : "TFRO Staff — Violations";
+    document.getElementById("violationPortalDescription").textContent = isAdmin
+      ? "Review, encode, and update TFRO violation records"
+      : "Encode tickets, issue notices, and monitor violation settlement";
     document.getElementById("addViolationBtn").hidden = !canManageViolations;
     if (!canManageViolations) formPanel.hidden = true;
     bindEvents();
