@@ -3,7 +3,7 @@ import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260826-060000");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260826-160000");
   openRenewalPdfForm(options);
 }
 
@@ -70,6 +70,14 @@ function updateCaseRequirements() {
   byId("orClass").value = type === "expired_or" ? "expired" : type === "change_motor" ? "private" : "for_hire";
   byId("crClass").value = type === "change_motor" ? "private" : "for_hire";
   byId("changeMotorRequestField").hidden = type !== "change_motor";
+  byId("temporaryUntilDateField").hidden = type === "regular";
+  byId("temporaryUntilDate").disabled = type === "regular";
+  if (type === "regular") byId("temporaryUntilDate").value = "";
+  if (type !== "regular" && !byId("temporaryUntilDate").value) {
+    const until = new Date();
+    until.setDate(until.getDate() + 15);
+    byId("temporaryUntilDate").value = `${until.getFullYear()}-${String(until.getMonth() + 1).padStart(2, "0")}-${String(until.getDate()).padStart(2, "0")}`;
+  }
   byId("changeMotorRequestId").required = type === "change_motor";
   byId("caseGuidance").textContent = type === "regular"
     ? "All documents, including current OR/CR registered as For Hire and liability insurance, are required before TFRO can approve renewal."
@@ -196,8 +204,17 @@ async function showRenewalSubmission(renewal) {
     const signed = await supabase.storage.from("franchise-documents").createSignedUrl(picture.storage_path, 600);
     pictureUrl = signed.data?.signedUrl || "";
   }
+  let changeMotor = {};
+  if (renewal.change_motor_request_id) {
+    const result = await supabase.from("change_motor_requests")
+      .select("new_motor_brand,new_motor_serial,new_engine_number,new_chassis_number,new_plate_number")
+      .eq("id", renewal.change_motor_request_id).maybeSingle();
+    if (result.error) return alert(`Could not load the Change Motor data: ${result.error.message}`);
+    changeMotor = result.data || {};
+  }
   await openSavedSubmissionForm({
     renewal, franchise: currentFranchise, pictureUrl,
+    changeMotor,
     documentTypes: (documents || []).map((document) => document.doc_type),
   });
 }
@@ -247,6 +264,7 @@ function prefillRenewal(renewal) {
   byId("orClass").value = renewal.or_registration_class;
   byId("crClass").value = renewal.cr_registration_class;
   byId("changeMotorRequestId").value = renewal.change_motor_request_id || "";
+  byId("temporaryUntilDate").value = renewal.temporary_mtop_expiration_date || "";
   updateCaseRequirements();
 }
 
@@ -317,6 +335,7 @@ async function submitRenewal(event) {
         current_cr_number: byId("crNumber").value.trim() || null, or_registration_class: byId("orClass").value,
         cr_registration_class: byId("crClass").value, status: "pending_review",
         change_motor_request_id: byId("renewalType").value === "change_motor" ? Number(byId("changeMotorRequestId").value) : null,
+        temporary_mtop_expiration_date: byId("renewalType").value === "regular" ? null : (byId("temporaryUntilDate").value || null),
       };
       const insert = await supabase.from("franchise_renewals").insert(record).select("id, renewal_code").single();
       if (insert.error) throw insert.error;
@@ -324,7 +343,10 @@ async function submitRenewal(event) {
     }
     uploadedPaths = await uploadDocuments(renewalId, files);
     if (resubmitting) {
-      const update = await supabase.from("franchise_renewals").update({ status: "pending_review" }).eq("id", renewalId);
+      const update = await supabase.from("franchise_renewals").update({
+        status: "pending_review",
+        temporary_mtop_expiration_date: byId("renewalType").value === "regular" ? null : (byId("temporaryUntilDate").value || null),
+      }).eq("id", renewalId);
       if (update.error) throw update.error;
     }
     await logAudit({ action: resubmitting ? "Resubmitted Renewal Requirements" : "Submitted Franchise Renewal", actionType: "create", record: String(renewalId), description: `${resubmitting ? "Resubmitted" : "Submitted"} franchise renewal documents for ${currentFranchise.franchise_number}.` });
