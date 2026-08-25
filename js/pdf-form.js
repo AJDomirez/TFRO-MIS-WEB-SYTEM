@@ -91,7 +91,7 @@ async function embedPicture(pdfDoc, page, pictureUrl) {
       : await pdfDoc.embedJpg(bytes);
     const sx = page.getWidth() / 612;
     const sy = page.getHeight() / 936;
-    page.drawImage(image, { x: 489 * sx, y: 269 * sy, width: 112 * sx, height: 112 * sy });
+    page.drawImage(image, { x: 468 * sx, y: 301 * sy, width: 104 * sx, height: 103 * sy });
   } catch (error) {
     console.warn("The 2x2 picture could not be embedded in the PDF.", error);
   }
@@ -115,28 +115,28 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, pictureUrl =
     const write = (text, x, y, size = 8, maxWidth = 500, useBold = false) =>
       drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, color: ink });
 
-    write(formatDate(renewal.created_at), 442, 838, 7, 145);
-    write(value(renewal.renewal_type).replaceAll("_", " ").toUpperCase() || "RENEWAL", 423, 815, 7, 80);
-    write(franchise.franchise_number, 520, 815, 7, 85);
-    write(names.last, 58, 783, 8, 150);
-    write(names.first, 228, 783, 8, 150);
-    write(names.middle, 391, 783, 8, 100);
-    write(renewal.operator_contact, 498, 783, 8, 105);
-    write(renewal.operator_address, 20, 735, 8, 555);
-    write(formatDate(franchise.birth_date), 20, 687, 8, 150);
-    write(franchise.birth_place, 204, 687, 8, 150);
-    write(ageFromBirthDate(franchise.birth_date), 389, 687, 8, 60);
-    write(franchise.civil_status, 470, 687, 8, 120);
-    write(franchise.motorcycle_brand, 20, 630, 8, 235);
-    write(renewal.plate_number || franchise.plate_number, 338, 630, 8, 250);
-    write(franchise.motorcycle_year_model, 20, 607, 8, 235);
-    write(renewal.current_or_number, 338, 607, 8, 250);
-    write(renewal.engine_number || franchise.motorcycle_engine_number, 20, 584, 8, 235);
-    write(formatDate(renewal.current_or_date), 338, 584, 8, 250);
-    write(renewal.chassis_number || franchise.motorcycle_chassis_number, 20, 561, 8, 235);
-    write(renewal.current_cr_number || franchise.chassis_cr_number, 338, 561, 8, 250);
-    write(franchise.route || "LUCENA PROPER", 510, 513, 8, 90, true);
-    write(renewal.inspection_remarks, 285, 168, 7, 135);
+    write(formatDate(renewal.created_at), 444, 828, 6, 120);
+    write(value(renewal.renewal_type).replaceAll("_", " ").toUpperCase() || "RENEWAL", 410, 808, 6, 62);
+    write(franchise.franchise_number, 472, 808, 6, 95);
+    write(names.last, 48, 778, 7, 165);
+    write(names.first, 225, 778, 7, 145);
+    write(names.middle, 335, 778, 7, 110);
+    write(renewal.operator_contact, 458, 778, 7, 105);
+    write(renewal.operator_address, 40, 723, 7, 525);
+    write(formatDate(franchise.birth_date), 40, 676, 7, 150);
+    write(franchise.birth_place, 207, 676, 7, 150);
+    write(ageFromBirthDate(franchise.birth_date), 377, 676, 7, 60);
+    write(franchise.civil_status, 457, 676, 7, 110);
+    write(franchise.motorcycle_brand, 40, 629, 7, 260);
+    write(renewal.plate_number || franchise.plate_number, 326, 629, 7, 240);
+    write(franchise.motorcycle_year_model, 40, 608, 7, 260);
+    write(renewal.current_or_number, 326, 608, 7, 240);
+    write(renewal.engine_number || franchise.motorcycle_engine_number, 40, 587, 7, 260);
+    write(formatDate(renewal.current_or_date), 326, 587, 7, 240);
+    write(renewal.chassis_number || franchise.motorcycle_chassis_number, 40, 565, 7, 260);
+    write(renewal.current_cr_number || franchise.chassis_cr_number, 326, 565, 7, 240);
+    write(franchise.route || "LUCENA PROPER", 480, 522, 7, 85, true);
+    write(renewal.inspection_remarks, 278, 136, 7, 135);
     await embedPicture(pdfDoc, page, pictureUrl);
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-005-${value(renewal.renewal_code || renewal.id)}.pdf`);
@@ -169,14 +169,14 @@ export async function openPmblPdfForm({ renewal, franchise = {} }) {
     };
     const issued = new Date();
 
-    write(renewal.operator_name, 158, 357, 10, 475, true);
-    write(franchise.franchise_number, 76, 339, 9, 125, true);
-    write(renewal.operator_address, 401, 339, 9, 295);
-    write(franchise.toda_name, 151, 318, 9, 220);
-    write("X", 577, 319, 10, 15, true);
-    write(String(issued.getDate()), 174, 166, 9, 30);
-    write(issued.toLocaleDateString("en-PH", { month: "long" }), 257, 166, 9, 170);
-    write(String(issued.getFullYear()).slice(-2), 456, 166, 9, 30);
+    write(renewal.operator_name, 315, 364, 10, 320, true);
+    write(franchise.franchise_number, 76, 345, 9, 125, true);
+    write(renewal.operator_address, 401, 345, 9, 295);
+    write(franchise.toda_name, 151, 324, 9, 220);
+    write("X", 577, 324, 10, 15, true);
+    write(String(issued.getDate()), 174, 171, 9, 30);
+    write(issued.toLocaleDateString("en-PH", { month: "long" }), 257, 171, 9, 170);
+    write(String(issued.getFullYear()).slice(-2), 456, 171, 9, 30);
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `PMBL-TFRO-003-${value(renewal.renewal_code || renewal.id)}.pdf`);
   } catch (error) {
