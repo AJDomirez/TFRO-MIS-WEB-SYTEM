@@ -151,9 +151,9 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     const row = (page, y, columns) => columns.forEach(([text, x, width]) => fit(page, text, x, y, width, 9, true, "center"));
 
     if (pages[1]) {
-      fit(pages[1], details.name, 112, 843, 240, 10, true);
-      fit(pages[1], details.franchise, 498, 843, 70, 10, true, "center");
-      fit(pages[1], details.address, 112, 827, 265, 10, true);
+      fit(pages[1], details.name, 112, 845, 240, 10, true);
+      fit(pages[1], details.franchise, 498, 845, 70, 10, true);
+      fit(pages[1], details.address, 112, 829, 265, 10, true);
       row(pages[1], 699, [[details.make, 51, 68], [details.model, 128, 72], [details.motor, 209, 135], [details.chassis, 353, 127], [details.plate, 489, 81]]);
       fit(pages[1], details.expiration, 345, 336, 205, 12, true, "center");
     }
