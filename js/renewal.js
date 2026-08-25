@@ -3,7 +3,7 @@ import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260826-220500");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260826-221500");
   openRenewalPdfForm(options);
 }
 
@@ -26,6 +26,16 @@ const RENEWAL_PAGE_TITLES = ["Renewal Details", "Operator Information", "Vehicle
 
 const byId = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" })[char]);
+
+function addressAnswers(address = "") {
+  const parts = String(address).split(",").map((part) => part.trim()).filter(Boolean);
+  if (!parts.length) return { street: "", barangay: "" };
+  const firstIsBarangay = /^(brgy\.?|barangay)\b/i.test(parts[0]);
+  return {
+    street: firstIsBarangay ? "" : parts.shift(),
+    barangay: parts.join(", ") || (firstIsBarangay ? parts[0] || String(address).trim() : ""),
+  };
+}
 
 function setError(message) {
   const element = byId("renewalError");
@@ -124,6 +134,14 @@ async function loadFranchise() {
   byId("operatorName").value = data.operator_name || currentProfile.full_name || "";
   byId("operatorContact").value = data.contact_number || currentProfile.contact_number || "";
   byId("operatorAddress").value = data.address || "";
+  const address = addressAnswers(data.address);
+  byId("residentialStreet").value = address.street;
+  byId("residentialBarangay").value = address.barangay;
+  byId("applicantBirthDate").value = data.birth_date || "";
+  byId("applicantBirthPlace").value = data.birth_place || "";
+  byId("applicantCivilStatus").value = data.civil_status || "";
+  byId("motorcycleMake").value = data.motorcycle_brand || "";
+  byId("motorcycleModel").value = data.motorcycle_year_model || "";
   byId("plateNumber").value = data.plate_number || "";
   byId("engineNumber").value = data.engine_number || "";
   byId("chassisNumber").value = data.chassis_number || "";
@@ -249,17 +267,25 @@ function prefillRenewal(renewal) {
   byId("operatorName").value = renewal.operator_name;
   byId("operatorContact").value = renewal.operator_contact;
   byId("operatorAddress").value = renewal.operator_address;
+  byId("residentialStreet").value = renewal.residential_street || "";
+  byId("residentialBarangay").value = renewal.residential_barangay || "";
+  byId("applicantBirthDate").value = renewal.applicant_birth_date || "";
+  byId("applicantBirthPlace").value = renewal.applicant_birth_place || "";
+  byId("applicantCivilStatus").value = renewal.applicant_civil_status || "";
   byId("votersNumber").value = renewal.voters_certificate_number || "";
   byId("cedulaNumber").value = renewal.cedula_number || "";
   byId("barangayNumber").value = renewal.barangay_clearance_number || "";
   byId("driverId").value = renewal.driver_id || "";
   byId("driverName").value = renewal.driver_name;
   byId("driverLicense").value = renewal.driver_license_number;
+  byId("motorcycleMake").value = renewal.motorcycle_make || "";
+  byId("motorcycleModel").value = renewal.motorcycle_model || "";
   byId("plateNumber").value = renewal.plate_number;
   byId("engineNumber").value = renewal.engine_number;
   byId("chassisNumber").value = renewal.chassis_number;
   byId("pmblNumber").value = renewal.pmbl_certificate_number || "";
   byId("orNumber").value = renewal.current_or_number || "";
+  byId("orDate").value = renewal.current_or_date || "";
   byId("crNumber").value = renewal.current_cr_number || "";
   byId("orClass").value = renewal.or_registration_class;
   byId("crClass").value = renewal.cr_registration_class;
@@ -328,10 +354,15 @@ async function submitRenewal(event) {
         renewal_type: byId("renewalType").value, current_expiration_date: byId("currentExpiration").value,
         operator_name: byId("operatorName").value.trim(), operator_address: byId("operatorAddress").value.trim(),
         operator_contact: byId("operatorContact").value.trim(), voters_certificate_number: byId("votersNumber").value.trim() || null,
+        residential_street: byId("residentialStreet").value.trim(), residential_barangay: byId("residentialBarangay").value.trim(),
+        applicant_birth_date: byId("applicantBirthDate").value, applicant_birth_place: byId("applicantBirthPlace").value.trim(),
+        applicant_civil_status: byId("applicantCivilStatus").value,
         cedula_number: byId("cedulaNumber").value.trim() || null, barangay_clearance_number: byId("barangayNumber").value.trim() || null,
         driver_name: byId("driverName").value, driver_license_number: byId("driverLicense").value,
+        motorcycle_make: byId("motorcycleMake").value.trim(), motorcycle_model: byId("motorcycleModel").value.trim(),
         plate_number: byId("plateNumber").value.trim(), engine_number: byId("engineNumber").value.trim(), chassis_number: byId("chassisNumber").value.trim(),
         pmbl_certificate_number: byId("pmblNumber").value.trim() || null, current_or_number: byId("orNumber").value.trim() || null,
+        current_or_date: byId("orDate").value,
         current_cr_number: byId("crNumber").value.trim() || null, or_registration_class: byId("orClass").value,
         cr_registration_class: byId("crClass").value, status: "pending_review",
         change_motor_request_id: byId("renewalType").value === "change_motor" ? Number(byId("changeMotorRequestId").value) : null,
@@ -345,6 +376,11 @@ async function submitRenewal(event) {
     if (resubmitting) {
       const update = await supabase.from("franchise_renewals").update({
         status: "pending_review",
+        residential_street: byId("residentialStreet").value.trim(), residential_barangay: byId("residentialBarangay").value.trim(),
+        applicant_birth_date: byId("applicantBirthDate").value, applicant_birth_place: byId("applicantBirthPlace").value.trim(),
+        applicant_civil_status: byId("applicantCivilStatus").value,
+        motorcycle_make: byId("motorcycleMake").value.trim(), motorcycle_model: byId("motorcycleModel").value.trim(),
+        current_or_date: byId("orDate").value,
         temporary_mtop_expiration_date: byId("renewalType").value === "regular" ? null : (byId("temporaryUntilDate").value || null),
       }).eq("id", renewalId);
       if (update.error) throw update.error;

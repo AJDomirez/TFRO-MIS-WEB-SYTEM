@@ -4,7 +4,7 @@ import { logAudit } from "./audit-helper.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260826-220500");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260826-221500");
   openRenewalPdfForm(options);
 }
 
@@ -96,11 +96,15 @@ async function openReview(id) {
     detail("Request", currentRenewal.renewal_code), detail("Franchise", currentRenewal.franchises?.franchise_number),
     detail("Operator", currentRenewal.operator_name), detail("Renewal Case", TYPE_LABELS[currentRenewal.renewal_type]),
     detail("Operator Address", currentRenewal.operator_address), detail("Operator Contact", currentRenewal.operator_contact),
+    detail("Home No. / Street / Purok", currentRenewal.residential_street), detail("Barangay", currentRenewal.residential_barangay),
+    detail("Birth Date", currentRenewal.applicant_birth_date), detail("Place of Birth", currentRenewal.applicant_birth_place),
+    detail("Civil Status", currentRenewal.applicant_civil_status),
     detail("Voter's Certificate", currentRenewal.voters_certificate_number), detail("Cedula", currentRenewal.cedula_number),
     detail("Barangay Clearance", currentRenewal.barangay_clearance_number), detail("PMBL Certificate", currentRenewal.pmbl_certificate_number),
     detail("Driver", currentRenewal.driver_name), detail("Driver License", currentRenewal.driver_license_number),
     detail("Plate Number", currentRenewal.plate_number), detail("Engine Number", currentRenewal.engine_number),
-    detail("Chassis Number", currentRenewal.chassis_number), detail("Current OR", currentRenewal.current_or_number),
+    detail("Motorcycle Make", currentRenewal.motorcycle_make), detail("Motorcycle Model", currentRenewal.motorcycle_model),
+    detail("Chassis Number", currentRenewal.chassis_number), detail("Current OR", currentRenewal.current_or_number), detail("Current OR Date", currentRenewal.current_or_date),
     detail("Current CR", currentRenewal.current_cr_number), detail("OR / CR Registration", `${labelStatus(currentRenewal.or_registration_class)} / ${labelStatus(currentRenewal.cr_registration_class)}`),
     detail("Change Motor Request", currentRenewal.change_motor_request_id || "Not applicable"),
     detail("Current Expiration", currentRenewal.current_expiration_date), detail("Submitted", new Date(currentRenewal.created_at).toLocaleString()),
