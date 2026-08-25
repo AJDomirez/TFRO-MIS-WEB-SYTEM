@@ -184,7 +184,11 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const names = splitName(renewal.operator_name);
-    const address = splitResidentialAddress(renewal.operator_address);
+    const fallbackAddress = splitResidentialAddress(renewal.operator_address);
+    const address = {
+      street: value(renewal.residential_street || fallbackAddress.street),
+      barangay: value(renewal.residential_barangay || fallbackAddress.barangay),
+    };
     const ink = rgb(0, 0, 0);
     const write = (text, x, y, size = 8.5, maxWidth = 500, useBold = true) =>
       drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, color: ink });
@@ -201,13 +205,14 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
     write(renewal.operator_contact, 458, 778, 10, 105);
     write(address.street, 40, 718, 9.5, 275);
     write(address.barangay, 326, 718, 9.5, 240);
-    write(formatDate(franchise.birth_date), 40, 668, 9, 150);
-    write(franchise.birth_place, 207, 668, 9, 150);
-    write(ageFromBirthDate(franchise.birth_date), 377, 668, 9, 60);
-    write(franchise.civil_status, 457, 668, 9, 110);
-    write(changeMotor.new_motor_brand || franchise.motorcycle_brand, 90, 627, 9.5, 210);
+    const birthDate = renewal.applicant_birth_date || franchise.birth_date;
+    write(formatDate(birthDate), 40, 668, 9, 150);
+    write(renewal.applicant_birth_place || franchise.birth_place, 207, 668, 9, 150);
+    write(ageFromBirthDate(birthDate), 377, 668, 9, 60);
+    write(renewal.applicant_civil_status || franchise.civil_status, 457, 668, 9, 110);
+    write(changeMotor.new_motor_brand || renewal.motorcycle_make || franchise.motorcycle_brand, 90, 627, 9.5, 210);
     write(changeMotor.new_plate_number || renewal.plate_number || franchise.plate_number, 385, 627, 9.5, 180);
-    write(changeMotor.new_motor_serial || franchise.motorcycle_year_model, 90, 606, 9.5, 210);
+    write(changeMotor.new_motor_serial || renewal.motorcycle_model || franchise.motorcycle_year_model, 90, 606, 9.5, 210);
     write(renewal.current_or_number, 375, 606, 9.5, 190);
     write(changeMotor.new_engine_number || renewal.engine_number || franchise.motorcycle_engine_number, 110, 585, 9.5, 190);
     write(formatDate(renewal.current_or_date), 395, 585, 9.5, 170);

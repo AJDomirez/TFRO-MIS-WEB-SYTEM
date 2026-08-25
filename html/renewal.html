@@ -79,6 +79,11 @@
           <label>Full Name<input id="operatorName" readonly required></label>
           <label>Contact Number<input id="operatorContact" readonly required></label>
           <label class="full">Address<input id="operatorAddress" readonly required></label>
+          <label>Home No., Street / Purok<input id="residentialStreet" required></label>
+          <label>Barangay<input id="residentialBarangay" required></label>
+          <label>Birth Date<input id="applicantBirthDate" type="date" required></label>
+          <label>Place of Birth<input id="applicantBirthPlace" required></label>
+          <label>Civil Status<select id="applicantCivilStatus" required><option value="">Select civil status</option><option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option></select></label>
           <label>Voter's Certificate Number<input id="votersNumber"></label>
           <label>Community Tax Certificate / Cedula<input id="cedulaNumber"></label>
           <label>Barangay Clearance Number<input id="barangayNumber"></label>
@@ -92,11 +97,14 @@
           </label>
           <label>Driver's Name<input id="driverName" readonly required></label>
           <label>Driver's License Number<input id="driverLicense" readonly required></label>
+          <label>Motorcycle Make<input id="motorcycleMake" required></label>
+          <label>Motorcycle Model<input id="motorcycleModel" required></label>
           <label>Plate Number<input id="plateNumber" required></label>
           <label>Engine Number<input id="engineNumber" required></label>
           <label>Chassis Number<input id="chassisNumber" required></label>
           <label>PMBL Certificate Number<input id="pmblNumber"></label>
           <label>Current OR Number<input id="orNumber"></label>
+          <label>Date of Current OR<input id="orDate" type="date" required></label>
           <label>Current CR Number<input id="crNumber"></label>
           <label>OR Registration
             <select id="orClass" required><option value="for_hire">For Hire</option><option value="expired">Expired</option><option value="private">Private</option></select>
@@ -139,7 +147,7 @@
     </section>
   </main>
 </div>
-<script type="module" src="../js/renewal.js?v=20260826-220500"></script>
+<script type="module" src="../js/renewal.js?v=20260826-221500"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 </body>
 </html>
