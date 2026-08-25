@@ -389,9 +389,9 @@ export async function openDroppingPetitionPdfForm({ request, franchise = {}, ope
     write(data.model, 181, 604, 95, 9.5, true, true);
     write(data.motor, 348, 604, 92, 9.5, true, true);
     write(data.chassis, 454, 604, 100, 9.5, true, true);
-    write(data.plate, 276, 587, 86, 9.5, true, true);
-    write(data.route, 181, 568, 210, 9.5, true, true);
-    write(data.franchise, 183, 553, 200, 9.5, true, true);
+    write(data.plate, 276, 601, 86, 9.5, true, true);
+    write(data.route, 181, 572, 210, 9.5, true, true);
+    write(data.franchise, 183, 557, 200, 9.5, true, true);
     write(data.operator, 112, 397, 143, 9.5, true, true);
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-002-${value(request.request_code || request.id)}.pdf`);
