@@ -3,7 +3,7 @@ import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260826-024500");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260826-031500");
   openRenewalPdfForm(options);
 }
 
@@ -203,7 +203,7 @@ async function showRenewalSubmission(renewal) {
 }
 
 async function showPmblCertification(renewal) {
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20260826-024500");
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20260826-031500");
   openPmblPdfForm({ renewal, franchise: currentFranchise || {} });
 }
 

@@ -168,18 +168,24 @@ export async function openPmblPdfForm({ renewal, franchise = {} }) {
     const black = rgb(0, 0, 0);
     const write = (text, x, y, size = 10, maxWidth = 180, useBold = false) => {
       if (!value(text)) return;
-      page.drawText(value(text), { x: x * sx, y: y * sy, size: size * Math.min(sx, sy), maxWidth: maxWidth * sx, font: useBold ? bold : font, color: black });
+      const selectedFont = useBold ? bold : font;
+      const content = value(text);
+      let fittedSize = size;
+      while (fittedSize > 9 && selectedFont.widthOfTextAtSize(content, fittedSize) > maxWidth) fittedSize -= 0.5;
+      page.drawText(content, { x: x * sx, y: y * sy, size: fittedSize * Math.min(sx, sy), maxWidth: maxWidth * sx, font: selectedFont, color: black });
     };
     const issued = new Date();
+    const franchiseNumber = value(franchise.franchise_number);
+    const pmblFranchiseNumber = franchiseNumber.match(/(\d+)$/)?.[1] || franchiseNumber;
 
-    write(renewal.operator_name, 315, 364, 11, 320, true);
-    write(franchise.franchise_number, 76, 345, 10, 125, true);
-    write(renewal.operator_address, 401, 345, 10, 295, true);
-    write(franchise.toda_name, 151, 324, 10, 220, true);
-    write("X", 577, 324, 11, 15, true);
-    write(String(issued.getDate()), 174, 171, 10, 30, true);
-    write(issued.toLocaleDateString("en-PH", { month: "long" }), 257, 171, 10, 170, true);
-    write(String(issued.getFullYear()).slice(-2), 456, 171, 10, 30, true);
+    write(renewal.operator_name, 315, 364, 13, 320, true);
+    write(pmblFranchiseNumber, 76, 345, 13, 125, true);
+    write(renewal.operator_address, 401, 345, 12, 295, true);
+    write(franchise.toda_name, 151, 324, 12, 220, true);
+    write("X", 577, 324, 13, 15, true);
+    write(String(issued.getDate()), 174, 171, 12, 30, true);
+    write(issued.toLocaleDateString("en-PH", { month: "long" }), 257, 171, 12, 170, true);
+    write(String(issued.getFullYear()).slice(-2), 456, 171, 12, 30, true);
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `PMBL-TFRO-003-${value(renewal.renewal_code || renewal.id)}.pdf`);
   } catch (error) {
