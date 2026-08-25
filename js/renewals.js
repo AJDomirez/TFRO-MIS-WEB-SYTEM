@@ -156,8 +156,16 @@ async function printCurrentRenewal() {
 
 async function printCurrentTemporaryMtop() {
   if (!currentRenewal) return;
-  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260826-120000");
-  openTemporaryMtopPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {} });
+  let changeMotor = {};
+  if (currentRenewal.change_motor_request_id) {
+    const { data, error } = await supabase.from("change_motor_requests")
+      .select("new_motor_brand,new_motor_serial,new_engine_number,new_chassis_number,new_plate_number")
+      .eq("id", currentRenewal.change_motor_request_id).maybeSingle();
+    if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
+    changeMotor = data || {};
+  }
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260826-130000");
+  openTemporaryMtopPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, changeMotor });
 }
 
 async function printCurrentPmblCertification() {
