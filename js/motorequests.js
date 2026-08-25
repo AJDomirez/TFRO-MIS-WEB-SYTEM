@@ -240,7 +240,7 @@ alert("Request rejected. The operator has been notified.");
 
 async function openChangeMotorPdf(formCode) {
   if (!currentReq) return;
-  const module = await import("./pdf-form.js?v=20260826-222000");
+  const module = await import("./pdf-form.js?v=20260826-223000");
   const options = { request: currentReq, franchise: currentReq.franchise || {}, operator: currentReq.operator_profile || {} };
   if (formCode === "TFRO-002") module.openDroppingPetitionPdfForm(options);
   else module.openDroppingCertificationPdfForm(options);
