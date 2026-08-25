@@ -468,13 +468,19 @@ async function loadChangeMotorHistory(userId) {
         <td>${escapeHTML(r.new_plate_number)}</td>
         <td><span class="badge ${cls}">${label}</span></td>
         <td>${r.created_at ? new Date(r.created_at).toLocaleDateString() : "—"}</td>
-        <td><button type="button" class="form-action-btn" data-motor-form="${r.id}"><i class="ri-file-pdf-2-line"></i> View / PDF</button></td>
+        <td>${r.status === "approved" && r.forms_sent_to_operator_at ? `<div class="form-buttons"><button type="button" class="form-action-btn" data-motor-form="${r.id}" data-form-code="TFRO-002"><i class="ri-file-pdf-2-line"></i> TFRO-002</button><button type="button" class="form-action-btn" data-motor-form="${r.id}" data-form-code="TFRO-007"><i class="ri-file-pdf-2-line"></i> TFRO-007</button></div>` : '<span class="doc-missing">Available after Admin approval and sending</span>'}</td>
       </tr>
     `;
   }).join("");
 }
 
-async function showMotorSubmission(request) {
+async function showMotorSubmission(request, formCode) {
+  if (request.status !== "approved" || !request.forms_sent_to_operator_at) return alert("These forms have not been sent by TFRO Admin yet.");
+  const module = await import("./pdf-form.js?v=20260826-220000");
+  const options = { request, franchise: window.__currentFranchise || {}, operator: currentOperatorRecord || {} };
+  if (formCode === "TFRO-002") module.openDroppingPetitionPdfForm(options);
+  else module.openDroppingCertificationPdfForm(options);
+  return;
   await openSavedSubmissionForm({
     title: "Change Motor / MTOP Request Form", reference: request.request_code || request.id,
     filename: `TFRO-Change-Motor-${request.request_code || request.id}`,
@@ -495,7 +501,7 @@ document.getElementById("cmHistoryTable")?.addEventListener("click", (event) => 
   const button = event.target.closest("[data-motor-form]");
   if (!button) return;
   const request = window.__changeMotorRequests?.find((row) => String(row.id) === button.dataset.motorForm);
-  if (request) showMotorSubmission(request);
+  if (request) showMotorSubmission(request, button.dataset.formCode);
 });
 
 function escapeHTML(v) {
@@ -593,6 +599,8 @@ async function submitChangeMotor() {
     old_engine_number: franchise.engine_number || null,
     old_chassis_number: franchise.chassis_number || null,
     old_plate_number: franchise.plate_number || null,
+    old_motor_brand: franchise.motorcycle_brand || null,
+    old_motor_model: franchise.motorcycle_year_model ? String(franchise.motorcycle_year_model) : null,
     new_engine_number: engine || null,
     new_chassis_number: chassis || null,
     new_plate_number: plate || null,
