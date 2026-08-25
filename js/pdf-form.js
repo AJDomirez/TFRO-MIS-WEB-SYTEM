@@ -232,8 +232,8 @@ export async function openChecklistPdfForm({ renewal, documents = [] }) {
     const uploaded = new Set(documents.map((item) => item.doc_type));
     const inspection = renewal.inspection_results || {};
     const drawMark = (x, y) => {
-      page.drawLine({ start: { x, y: y + 3 }, end: { x: x + 2.2, y: y + 0.8 }, thickness: 1.25, color: ink });
-      page.drawLine({ start: { x: x + 2.2, y: y + 0.8 }, end: { x: x + 6.8, y: y + 6.8 }, thickness: 1.25, color: ink });
+      page.drawLine({ start: { x: x + 0.8, y: y + 3.1 }, end: { x: x + 2.4, y: y + 1.5 }, thickness: 1, color: ink });
+      page.drawLine({ start: { x: x + 2.4, y: y + 1.5 }, end: { x: x + 5.6, y: y + 5.7 }, thickness: 1, color: ink });
     };
 
     const date = formatDate(renewal.created_at);
@@ -252,7 +252,7 @@ export async function openChecklistPdfForm({ renewal, documents = [] }) {
     ];
     for (const [type, y] of documentRows) {
       if (!uploaded.has(type)) continue;
-      drawMark(120, y);
+      drawMark(121.5, y);
     }
 
     const physicalRows = [
@@ -268,7 +268,7 @@ export async function openChecklistPdfForm({ renewal, documents = [] }) {
     ];
     for (const [key, y] of physicalRows) {
       if (inspection[key] !== true && inspection[key] !== false) continue;
-      const leftX = inspection[key] ? 108 : 127;
+      const leftX = inspection[key] ? 109.5 : 128.5;
       drawMark(leftX, y);
     }
 
