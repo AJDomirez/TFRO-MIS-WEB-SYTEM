@@ -367,6 +367,7 @@ table th{
 .operator-action-card>i:first-child{width:38px;height:38px;min-width:38px;border-radius:10px;background:#e5f5ee;color:#14734d;display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
 .form-action-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #b8d8c8;border-radius:8px;background:#f3faf6;color:#146a4f;font-weight:700;cursor:pointer;white-space:nowrap;}
 .form-buttons{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.receipt-upload{display:grid;gap:6px;min-width:220px}.receipt-upload input{max-width:230px;padding:7px;border:1px solid #c6d9cf;border-radius:7px;background:#fff}.receipt-upload .form-action-btn{justify-content:center}
 .operator-action-card>i:last-child{margin-left:auto;color:#178a5e;}
 .operator-action-card div{display:flex;flex-direction:column;gap:4px;}
 .operator-action-card span{font-size:.76rem;color:#64748b;line-height:1.35;}

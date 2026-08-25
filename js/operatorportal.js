@@ -52,27 +52,74 @@ function dateLabel(value) {
 }
 
 function loadViolations(violations) {
+  window.__operatorViolations = violations;
   const table = document.getElementById("violationTable");
   if (!table) return;
-  table.innerHTML = "";
-
   if (!violations.length) {
-    table.innerHTML =
-      '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">No violations on record.</td></tr>';
+    table.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;">No violations on record.</td></tr>';
     return;
   }
-
-  violations.forEach((v) => {
-    table.innerHTML += `
-      <tr>
-        <td>${escapeHTML(v.violation_type || "—")}</td>
-        <td>${v.occurred_at ? new Date(v.occurred_at).toLocaleDateString() : "—"}</td>
-        <td>${money(v.penalty)}</td>
-        <td><span class="badge">${escapeHTML(v.status || "—")}</span></td>
-      </tr>
-    `;
-  });
+  table.innerHTML = violations.map((violation) => {
+    const payment = Array.isArray(violation.payments) ? violation.payments.find((item) => item.status === "paid") : null;
+    const amount = Math.max(Number(violation.penalty || 0) - Number(violation.discounted || 0), 0);
+    const orderButton = `<button type="button" class="form-action-btn" data-ticket-order="${violation.id}"><i class="ri-file-pdf-2-line"></i> TFRO-009 Order</button>`;
+    const receiptControl = payment
+      ? `<div class="form-buttons"><button type="button" class="form-action-btn" data-payment-form="009" data-payment-id="${payment.id}"><i class="ri-file-pdf-2-line"></i> TFRO-009</button><button type="button" class="form-action-btn" data-payment-form="010" data-payment-id="${payment.id}"><i class="ri-file-pdf-2-line"></i> TFRO-010</button></div>`
+      : violation.treasurer_receipt_path
+        ? `<div class="receipt-upload">${orderButton}<span class="badge pending">Receipt submitted — awaiting TFRO Staff</span></div>`
+        : `<div class="receipt-upload">${orderButton}<input type="text" data-receipt-number="${violation.id}" placeholder="City Treasurer OR #"><input type="file" data-receipt-file="${violation.id}" accept="image/jpeg,image/png,image/webp,application/pdf"><button type="button" class="form-action-btn" data-submit-receipt="${violation.id}"><i class="ri-upload-2-line"></i> Submit Proof</button></div>`;
+    return `<tr><td>${escapeHTML(violation.violation_type || "—")}</td><td>${violation.occurred_at ? new Date(violation.occurred_at).toLocaleDateString() : "—"}</td><td>${money(amount)}${Number(violation.discounted || 0) ? `<br><small>Discount: ${money(violation.discounted)}</small>` : ""}</td><td><span class="badge">${escapeHTML(violation.status || "—")}</span></td><td>${receiptControl}</td></tr>`;
+  }).join("");
 }
+
+async function submitTreasurerReceipt(violationId) {
+  const numberInput = document.querySelector(`[data-receipt-number="${violationId}"]`);
+  const fileInput = document.querySelector(`[data-receipt-file="${violationId}"]`);
+  const file = fileInput?.files?.[0];
+  const receiptNumber = numberInput?.value?.trim();
+  if (!receiptNumber) return alert("Enter the City Treasurer OR number.");
+  if (!file || !["image/jpeg","image/png","image/webp","application/pdf"].includes(file.type) || file.size > 10 * 1024 * 1024) return alert("Choose a JPG, PNG, WebP, or PDF receipt no larger than 10 MB.");
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+  const path = `${currentUser.id}/${violationId}/${Date.now()}-${safeName}`;
+  const upload = await supabase.storage.from("treasurer-receipts").upload(path, file, { contentType:file.type, upsert:false });
+  if (upload.error) return alert(`Could not upload the receipt: ${upload.error.message}`);
+  const saved = await supabase.rpc("submit_city_treasurer_receipt", { p_violation_id:Number(violationId), p_receipt_number:receiptNumber, p_storage_path:path });
+  if (saved.error) { await supabase.storage.from("treasurer-receipts").remove([path]); return alert(`Could not submit the receipt: ${saved.error.message}`); }
+  await logAudit({ action:"Submitted City Treasurer Receipt", actionType:"upload", record:receiptNumber, description:`Submitted City Treasurer proof for violation ${violationId}.` });
+  alert("City Treasurer receipt submitted. TFRO Staff/PAYA can now record payment and prepare the releasing slip.");
+  loadPortal();
+}
+
+function openOperatorPaymentForm(paymentId, code) {
+  const violation = (window.__operatorViolations || []).find((row) => (row.payments || []).some((payment) => String(payment.id) === String(paymentId)));
+  const payment = violation?.payments?.find((row) => String(row.id) === String(paymentId));
+  if (!payment) return;
+  const title = code === "009" ? "ORDER OF PAYMENT" : "VEHICLE/UNIT RELEASING SLIP";
+  const tab = open("", "_blank"); if (!tab) return alert("Please allow pop-ups to view the form.");
+  const fields = code === "009"
+    ? [["Payor", payment.receipt_snapshot?.payer || payment.unit_owner_name],["Ticket No.", violation.ticket_number],["OR No.", payment.receipt],["Amount Paid", money(payment.amount)],["Date Paid", String(payment.paid_at || "").slice(0,10)]]
+    : [["Unit Owner", payment.unit_owner_name],["Owner Address", payment.unit_owner_address],["Owner Contact", payment.unit_owner_contact],["Driver", payment.driver_name],["Driver Address", payment.driver_address],["Driver Contact", payment.driver_contact],["Engine No.", payment.engine_number],["Chassis No.", payment.chassis_number],["OR No.", payment.receipt],["Amount Paid", money(payment.amount)],["Release Date", payment.release_date],["Release Time", payment.release_time],["Released by", payment.released_by],["Witness", payment.release_witness]];
+  tab.document.write(`<!doctype html><html><head><title>TFRO-${code}</title><style>body{font-family:Arial;background:#ddd}.bar{text-align:center;padding:10px;background:#173f32;color:#fff}.sheet{width:850px;min-height:600px;margin:18px auto;padding:35px;background:#fff}.head{border-top:18px solid #06452d;border-bottom:8px solid #f4ef24;padding:16px}.head h2{margin:0;color:#16613f}.title{text-align:center;margin:45px;letter-spacing:5px;text-decoration:underline}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.field{padding:8px;border-bottom:1px solid #111}.field b{display:block;font-size:11px}.sign{margin-top:60px;text-align:right}@media print{.bar{display:none}body{background:#fff}.sheet{margin:0}}</style></head><body><div class="bar"><button onclick="print()">Print / Save PDF</button></div><main class="sheet"><div class="head"><h2>TRICYCLE FRANCHISING AND REGULATORY OFFICE</h2><p>City Government of Lucena | Republic of the Philippines</p><strong>TFRO - ${code}</strong></div><h1 class="title">${title}</h1><div class="grid">${fields.map(([label,value])=>`<div class="field"><b>${escapeHTML(label)}</b>${escapeHTML(value || "—")}</div>`).join("")}</div><div class="sign">CRISELDA C. DAVID, DPA<br>TFRO Head</div></main></body></html>`);
+  tab.document.close();
+}
+
+function openTicketOrder(violationId) {
+  const violation = (window.__operatorViolations || []).find((row) => String(row.id) === String(violationId));
+  if (!violation) return;
+  const amount = Math.max(Number(violation.penalty || 0) - Number(violation.discounted || 0), 0);
+  const tab = open("", "_blank"); if (!tab) return alert("Please allow pop-ups to view TFRO-009.");
+  tab.document.write(`<!doctype html><html><head><title>TFRO-009 ${escapeHTML(violation.ticket_number || "")}</title><style>body{font-family:Arial;background:#ddd}.bar{text-align:center;padding:10px;background:#173f32}.sheet{width:850px;min-height:600px;margin:18px auto;padding:35px;background:#fff}.head{border-top:18px solid #06452d;border-bottom:8px solid #f4ef24;padding:16px}.title{text-align:center;margin:45px;letter-spacing:5px;text-decoration:underline}table{width:100%;border-collapse:collapse}th,td{padding:12px;border:1px solid #111}.right{text-align:right}@media print{.bar{display:none}body{background:#fff}.sheet{margin:0}}</style></head><body><div class="bar"><button onclick="print()">Print / Save PDF</button></div><main class="sheet"><div class="head"><h2>TRICYCLE FRANCHISING AND REGULATORY OFFICE</h2><p>City Government of Lucena | Republic of the Philippines</p><b>TFRO - 009</b></div><h1 class="title">ORDER OF PAYMENT</h1><p>Payor: <b>${escapeHTML(currentOperatorRecord?.full_name || currentProfile?.full_name || "")}</b></p><p>Ticket No.: <b>${escapeHTML(violation.ticket_number || "")}</b></p><table><tr><th>Violation</th><th>Penalty</th></tr><tr><td>${escapeHTML(violation.violation_type || "")}</td><td>${money(violation.penalty)}</td></tr><tr><td>Discounted Amount</td><td>${money(violation.discounted)}</td></tr><tr><th>Total Amount Due</th><th>${money(amount)}</th></tr></table><p class="right">Apprehending Officer: ${escapeHTML(violation.apprehending_officers || "TFRO Traffic Enforcer")}</p></main></body></html>`);
+  tab.document.close();
+}
+
+document.getElementById("violationTable")?.addEventListener("click", (event) => {
+  const receiptButton = event.target.closest("[data-submit-receipt]");
+  if (receiptButton) void submitTreasurerReceipt(receiptButton.dataset.submitReceipt);
+  const formButton = event.target.closest("[data-payment-form]");
+  if (formButton) openOperatorPaymentForm(formButton.dataset.paymentId, formButton.dataset.paymentForm);
+  const orderButton = event.target.closest("[data-ticket-order]");
+  if (orderButton) openTicketOrder(orderButton.dataset.ticketOrder);
+});
 
 /* LOAD DATA */
 async function loadPortal() {
@@ -199,11 +246,11 @@ async function loadPortal() {
   }
 
   /* Violations */
-  const { data: violations } = await supabase
+  const { data: violations, error: violationError } = await supabase
     .from("violations")
-    .select("violation_type, occurred_at, penalty, status")
-    .eq("subject_name", fullName)
-    .eq("subject_type", "operator");
+    .select("id,violation_type,occurred_at,penalty,discounted,status,ticket_number,apprehending_officers,treasurer_receipt_path,treasurer_receipt_number,payments(id,receipt,amount,status,paid_at,receipt_snapshot,unit_owner_name,unit_owner_address,unit_owner_contact,driver_name,driver_address,driver_contact,engine_number,chassis_number,release_date,release_time,released_by,release_witness)")
+    .order("occurred_at", { ascending: false });
+  if (violationError) console.error("Could not load connected violation records:", violationError);
   loadViolations(violations || []);
 
   /* Change motor history */

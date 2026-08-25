@@ -135,7 +135,7 @@ async function searchDriver(event) {
   document.getElementById("ticketSection").hidden = true;
   message(status, "Searching Driver records…");
 
-  const { data: driver, error } = await supabase.from("drivers").select("id,full_name,license_number,license_type,license_expiration,license_status,operator_name,franchise_id,violation_count,compliance").ilike("license_number", license).maybeSingle();
+  const { data: driver, error } = await supabase.from("drivers").select("id,full_name,license_number,license_type,license_expiration,license_status,operator_name,franchise_id,violation_count,compliance,franchises(franchise_number)").ilike("license_number", license).maybeSingle();
   if (error) { void enforcerAudit({ action: "Driver Search Failed", actionType: "verification", record: license, description: `Driver license search failed for ${license}` }); return message(status, `Search failed: ${error.message}`, true); }
   if (!driver) { void enforcerAudit({ action: "Driver Record Not Found", actionType: "verification", record: license, description: `searched for Driver license ${license}; no exact record was found` }); return message(status, "No Driver was found with that exact license number.", true); }
   const { data: history, error: historyError } = await supabase.from("violations").select("id,ticket_number,violation_type,occurred_at,status,penalty").eq("driver_id", driver.id).order("occurred_at", { ascending: false });
@@ -180,6 +180,7 @@ async function submitTicket(event) {
       driver_id: selectedDriver.id, subject_name: selectedDriver.full_name, subject_type: "driver",
       violation_code: item.code, violation_type: item.violation, classification: "with_franchise",
       ticket_number: form.elements.ticket_number.value.trim(), apprehending_officers: enforcer.full_name,
+      franchise_number: selectedDriver.franchises?.franchise_number || null,
       penalty: Number(item.penalty), occurred_at: `${form.elements.occurred_date.value}T00:00:00+08:00`,
       description: form.elements.description.value.trim() || null, status: "pending", recorded_by: currentUser.id,
       ticket_photo_path: path,

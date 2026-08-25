@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Payments</title>
 
-<link rel="stylesheet" href="../css/payment.css?v=20260818-051500">
+<link rel="stylesheet" href="../css/payment.css?v=20260826-230000">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
 
   <!-- Remix Icons -->
@@ -228,6 +228,20 @@
     <label>Date paid<input name="paid_date" type="date" required></label>
     <label>Payment type<select name="type" required><option value="penalty">Violation penalty</option></select></label>
     <label>Amount (automatically computed)<input name="amount" type="number" readonly aria-readonly="true"></label>
+    <fieldset class="release-details"><legend>TFRO-010 Unit Releasing Slip Details</legend>
+      <label>Unit Owner<input name="unit_owner_name" required></label>
+      <label>Owner Address<input name="unit_owner_address"></label>
+      <label>Owner Contact<input name="unit_owner_contact"></label>
+      <label>Driver Name<input name="driver_name" required></label>
+      <label>Driver Address<input name="driver_address"></label>
+      <label>Driver Contact<input name="driver_contact"></label>
+      <label>Engine Number<input name="engine_number"></label>
+      <label>Chassis Number<input name="chassis_number"></label>
+      <label>Release Date<input name="release_date" type="date" required></label>
+      <label>Release Time<input name="release_time" type="time" required></label>
+      <label>Released by / Impounding Enforcer<input name="released_by"></label>
+      <label>Witness<input name="release_witness"></label>
+    </fieldset>
     <p class="payment-confirmation"><i class="ri-shield-check-line"></i> Saving confirms that payment was secured. The official receipt can be printed once only.</p>
     <input name="status" type="hidden" value="paid">
     <div class="payment-modal-actions"><button type="button" id="cancelPaymentBtn">Cancel</button><button type="submit" class="add-btn"><i class="ri-lock-line"></i> Secure Payment</button></div>
@@ -236,7 +250,7 @@
 
 <div class="receipt-ready-modal" id="receiptReadyModal" hidden role="dialog" aria-modal="true" aria-labelledby="receiptReadyTitle"><div class="receipt-ready-card"><div class="receipt-success-icon"><i class="ri-checkbox-circle-fill"></i></div><span class="receipt-eyebrow">PAYMENT COMPLETED</span><h2 id="receiptReadyTitle">Official Receipt Ready</h2><p>The payment was secured and the receipt was created automatically.</p><div class="receipt-ready-summary"><span>Receipt Number</span><strong id="readyReceiptNumber">—</strong><span>Amount Paid</span><strong id="readyReceiptAmount">₱0.00</strong></div><div class="receipt-ready-actions"><button type="button" class="receipt-print-button" id="printReadyReceipt"><i class="ri-printer-line"></i> Print Official Receipt</button><button type="button" class="receipt-view-button" id="viewReadyReceipt"><i class="ri-eye-line"></i> View Receipt</button></div><button type="button" class="receipt-done-button" id="closeReadyReceipt">Done</button></div></div>
 
-<script type="module" src="../js/payment.js?v=20260825-190000"></script>
+<script type="module" src="../js/payment.js?v=20260826-230000"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 
 </body>
