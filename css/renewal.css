@@ -36,6 +36,7 @@
 .page-button-back{justify-self:start;border:1px solid #b9c9c0;background:#fff;color:#176b48;}
 .page-button-next{justify-self:end;border:0;background:#176b48;color:#fff;}
 .page-button:disabled{opacity:.45;cursor:not-allowed;}
+.form-buttons{display:grid;grid-template-columns:repeat(3,minmax(138px,1fr));gap:6px;align-items:stretch;min-width:426px}.form-buttons .page-button{width:100%;height:50px;padding:10px 14px;justify-self:stretch;white-space:nowrap}.form-buttons .page-button i{display:inline-flex;width:18px;justify-content:center;font-size:18px;line-height:1}.form-buttons .page-button span{line-height:1}
 .btn-submit{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(135deg,#178a5e,#1ea86f);color:#fff;border:none;padding:13px 28px;border-radius:11px;font-weight:700;cursor:pointer;border-bottom:3px solid #f4c430;}
 .renewal-pagination .btn-submit{justify-self:end;}
 .renewal-pagination [hidden]{display:none;}
@@ -46,4 +47,4 @@
 .status-pill.rejected{background:#fee2e2;color:#b91c1c;}
 .status-pill.pending{background:#fef3c7;color:#92400e;}
 @media(max-width:900px){.process-summary{grid-template-columns:repeat(2,minmax(0,1fr));}.renewal-grid,.renewal-documents{grid-template-columns:1fr;}.renewal-grid .full{grid-column:auto;}.topbar{align-items:flex-start;}.back-link{display:none;}}
-@media(max-width:600px){.process-summary{grid-template-columns:1fr;}.renewal-card{padding:17px}.card-title{align-items:flex-start}.renewal-documents label{flex-direction:column;align-items:flex-start}.renewal-documents input{max-width:100%}.renewal-pagination{grid-template-columns:1fr 1fr}.renewal-pagination>span{grid-column:1/-1;grid-row:1}.page-button-back{grid-column:1;grid-row:2;width:100%}.page-button-next,.renewal-pagination .btn-submit{grid-column:2;grid-row:2;width:100%}.btn-submit{justify-content:center;}}
+@media(max-width:600px){.process-summary{grid-template-columns:1fr;}.renewal-card{padding:17px}.card-title{align-items:flex-start}.renewal-documents label{flex-direction:column;align-items:flex-start}.renewal-documents input{max-width:100%}.renewal-pagination{grid-template-columns:1fr 1fr}.renewal-pagination>span{grid-column:1/-1;grid-row:1}.page-button-back{grid-column:1;grid-row:2;width:100%}.page-button-next,.renewal-pagination .btn-submit{grid-column:2;grid-row:2;width:100%}.btn-submit{justify-content:center}.form-buttons{grid-template-columns:1fr;min-width:150px}.form-buttons .page-button{grid-column:auto;grid-row:auto}}
