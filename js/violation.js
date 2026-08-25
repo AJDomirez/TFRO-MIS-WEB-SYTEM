@@ -44,6 +44,10 @@ function paidPayment(row) {
   return related.find((payment) => payment.status === "paid") || null;
 }
 
+function netAmount(row) {
+  return Math.max(Number(row.penalty || 0) - Number(row.discounted || 0), 0);
+}
+
 function showToast(message) {
   const toast = document.getElementById("violationToast");
   if (!toast) return;
@@ -67,18 +71,18 @@ function render() {
   document.getElementById("violationTotal").textContent = violations.length;
   document.getElementById("violationPending").textContent = violations.filter((row) => row.status === "pending").length;
   document.getElementById("violationPaid").textContent = violations.filter((row) => row.status === "paid").length;
-  document.getElementById("violationAmount").textContent = money.format(violations.reduce((sum, row) => sum + Number(row.penalty || 0), 0));
+  document.getElementById("violationAmount").textContent = money.format(violations.reduce((sum, row) => sum + netAmount(row), 0));
   table.innerHTML = rows.length ? rows.map((row) => {
     const payment = paidPayment(row);
     return `<tr>
       <td>${formatDate(row.occurred_at)}</td>
       <td>${escapeHtml(classificationLabel(row.classification || row.subject_type))}</td>
-      <td>${row.discounted ? "Yes" : "No"}</td>
+      <td>${money.format(Number(row.discounted || 0))}</td>
       <td>${escapeHtml(row.subject_name || "—")}</td>
       <td><strong>${escapeHtml(row.violation_code || "—")}</strong><br>${escapeHtml(row.violation_type)}</td>
       <td>${formatDate(payment?.paid_at)}</td>
       <td>${escapeHtml(row.ticket_number || "—")}</td>
-      <td>${money.format(Number(payment?.amount ?? row.penalty ?? 0))}</td>
+      <td>${money.format(Number(payment?.amount ?? netAmount(row)))}</td>
       <td>${escapeHtml(payment?.receipt || "—")}</td>
       <td>${escapeHtml(row.apprehending_officers || "—")}</td>
       <td><div class="actions">
@@ -151,7 +155,7 @@ function setFormMode(mode, row = null) {
     form.elements.violation_code.value = row.violation_code || "";
     form.elements.violation_type.value = row.violation_type || "";
     form.elements.classification.value = row.classification || "with_franchise";
-    form.elements.discounted.value = String(Boolean(row.discounted));
+    form.elements.discounted.value = Number(row.discounted || 0).toFixed(2);
     form.elements.franchise_number.value = row.franchise_number || "";
     form.elements.ticket_number.value = row.ticket_number || "";
     form.elements.apprehending_officers.value = row.apprehending_officers || "";
@@ -161,6 +165,7 @@ function setFormMode(mode, row = null) {
     form.elements.description.value = row.description || "";
   } else {
     form.elements.occurred_date.value = dateForInput();
+    form.elements.discounted.value = "0";
     form.elements.penalty.value = "";
     form.elements.status.value = "pending";
   }
@@ -181,18 +186,21 @@ function closeViolationForm() {
 function readEntry() {
   const values = Object.fromEntries(new FormData(form));
   const penalty = Number(values.penalty);
+  const discounted = Number(values.discounted);
   if (!values.subject_name?.trim()) throw new Error("Subject name is required.");
   if (!values.violation_code) throw new Error("Select an official violation code.");
   if (!values.violation_type?.trim()) throw new Error("Violation type is required.");
   if (!values.occurred_date) throw new Error("Violation date is required.");
   if (!Number.isFinite(penalty) || penalty < 0) throw new Error("Penalty must be zero or greater.");
+  if (!Number.isFinite(discounted) || discounted < 0) throw new Error("Discounted amount must be zero or greater.");
+  if (discounted > penalty) throw new Error("Discounted amount cannot be greater than the penalty.");
   return {
     subject_name: values.subject_name.trim(),
     subject_type: values.subject_type,
     violation_code: values.violation_code,
     violation_type: values.violation_type.trim(),
     classification: values.classification,
-    discounted: values.discounted === "true",
+    discounted,
     franchise_number: values.franchise_number?.trim() || null,
     ticket_number: values.ticket_number?.trim() || null,
     apprehending_officers: values.apprehending_officers?.trim() || null,
@@ -271,12 +279,12 @@ function bindEvents() {
     columns: [
       { header: "Violation Date", value: (row) => row.occurred_at },
       { header: "Classification", value: (row) => row.classification || row.subject_type },
-      { header: "Discounted", value: (row) => row.discounted ? "Yes" : "No" },
+      { header: "Discounted", value: (row) => Number(row.discounted || 0) },
       { header: "Name", value: (row) => row.subject_name },
       { header: "Violation", value: (row) => `${row.violation_code || ""} ${row.violation_type || ""}`.trim() },
       { header: "Date Paid", value: (row) => paidPayment(row)?.paid_at || "" },
       { header: "Ticket No.", value: (row) => row.ticket_number },
-      { header: "Total Amount", value: (row) => paidPayment(row)?.amount ?? row.penalty },
+      { header: "Total Amount", value: (row) => paidPayment(row)?.amount ?? netAmount(row) },
       { header: "OR No./Receipt", value: (row) => paidPayment(row)?.receipt || "" },
       { header: "Apprehender", value: (row) => row.apprehending_officers },
     ],
