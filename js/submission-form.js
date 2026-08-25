@@ -153,7 +153,7 @@ export function openPmblCertificationForm({ renewal, franchise = {} }) {
     return;
   }
   popup.opener = null;
-  const tfroLogo = new URL("../Logo/TFRO Logo.jpg", window.location.href)
+  const pmblLogo = new URL("../Logo/PMBL Logo.png", window.location.href)
     .href;
   const cityLogo = new URL("../Logo/Lucena City Logo.png", window.location.href)
     .href;
@@ -174,7 +174,7 @@ export function openPmblCertificationForm({ renewal, franchise = {} }) {
     .brand h2{margin:8px 0 2px!important;font-family:"Arial Narrow",Arial,sans-serif!important;font-size:27px!important;line-height:1!important;letter-spacing:-1px!important;white-space:nowrap!important}
     .brand p{font-size:12px!important;letter-spacing:.1px!important}
     .emblems{height:1.18in!important;gap:12px!important;padding:7px 12px 7px .8in!important;background:linear-gradient(51deg,transparent 0 20%,#ed1738 20%)!important}
-    .seal{width:.88in!important;height:.88in!important;border:4px solid #fff!important;background:#fff url('${escapeHtml(tfroLogo)}') center/contain no-repeat!important;color:transparent!important;font-size:0!important}
+    .seal{width:.88in!important;height:.88in!important;border:4px solid #fff!important;background:#fff url('${escapeHtml(pmblLogo)}') center/118% auto no-repeat!important;color:transparent!important;font-size:0!important}
     .emblems img{width:.88in!important;height:.88in!important;background:#fff!important;border-radius:50%!important}
     .form-code{margin-top:-5px!important;margin-right:.05in!important;padding:2px 17px!important;font:700 17px Georgia,serif!important;letter-spacing:2px!important}
     .title{margin:10px 0 20px!important;font-size:35px!important;letter-spacing:1px!important}
