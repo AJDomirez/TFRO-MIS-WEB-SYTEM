@@ -203,7 +203,7 @@ async function showRenewalSubmission(renewal) {
 }
 
 async function showPmblCertification(renewal) {
-  const { openPmblCertificationForm } = await import("./submission-form.js?v=20260824-231000");
+  const { openPmblCertificationForm } = await import("./submission-form.js?v=20260825-193000");
   openPmblCertificationForm({ renewal, franchise: currentFranchise || {} });
 }
 
