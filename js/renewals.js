@@ -4,7 +4,7 @@ import { logAudit } from "./audit-helper.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260826-053000");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260826-060000");
   openRenewalPdfForm(options);
 }
 
@@ -156,7 +156,7 @@ async function printCurrentRenewal() {
 
 async function printCurrentPmblCertification() {
   if (!currentRenewal) return;
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20260826-053000");
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20260826-060000");
   openPmblPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {} });
 }
 
