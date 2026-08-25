@@ -224,6 +224,7 @@
             <th>Franchise</th>
             <th>Status</th>
             <th>Account</th>
+            <th>Record</th>
           </tr>
         </thead>
 
@@ -237,8 +238,18 @@
 
 </div>
 
-<script type="module" src="../js/operator.js?v=20260817-221500"></script>
-<script type="module" src="../js/sidebar-user.js?v=20260819-170000"></script>
+<div class="operator-record-modal" id="operatorRecordModal" hidden role="dialog" aria-modal="true" aria-labelledby="operatorRecordTitle">
+  <div class="operator-record-panel">
+    <div class="record-modal-head"><div><span class="record-eyebrow">ADMIN RECORD</span><h2 id="operatorRecordTitle">Operator Profile</h2></div><div class="record-head-actions"><button type="button" id="printOperatorRecord" aria-label="Print operator profile"><i class="ri-printer-line"></i></button><button type="button" id="closeOperatorRecord" aria-label="Close operator record"><i class="ri-close-line"></i></button></div></div>
+    <div class="operator-record-scroll">
+      <section class="record-section"><div class="record-section-title"><div><h3><i class="ri-user-star-line"></i> Operator Profile &amp; Submitted Form</h3><p>Registered account and application information</p></div><span id="operatorAccountBadge"></span></div><div class="account-form-layout"><div class="formal-photo-frame"><img id="operatorFormalPhoto" alt="Operator formal profile" hidden><span id="operatorPhotoMissing">Photo not yet submitted</span></div><div class="record-profile-grid" id="operatorProfileDetails"></div></div></section>
+      <section class="record-section"><div class="record-section-title"><div><h3><i class="ri-steering-2-line"></i> Drivers Under This Operator</h3><p>Driver profiles, submitted forms, and license verification</p></div><span class="driver-count-badge" id="operatorDriverCount">0 Drivers</span></div><div id="operatorDriversList" class="operator-drivers-list"></div></section>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="../js/operator.js?v=20260824-010000"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 
 <script>
 

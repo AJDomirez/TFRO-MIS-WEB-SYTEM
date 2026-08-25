@@ -23,10 +23,13 @@ http
     const url = new URL(request.url, `http://${request.headers.host}`);
     const requestedPath = decodeURIComponent(url.pathname);
     const relativePath = requestedPath === "/" ? "/html/index.html" : requestedPath;
-    const filePath = path.resolve(root, `.${relativePath}`);
+    const isQrVendor = relativePath === "/js/vendor/qrcode.min.js";
+    const filePath = isQrVendor
+      ? path.resolve(root, "node_modules", "qrcodejs", "qrcode.min.js")
+      : path.resolve(root, `.${relativePath}`);
     const projectRelativePath = path.relative(root, filePath);
     const [topLevelEntry] = projectRelativePath.split(path.sep);
-    const isPublicPath = publicDirectories.has(topLevelEntry) ||
+    const isPublicPath = isQrVendor || publicDirectories.has(topLevelEntry) ||
       (projectRelativePath === topLevelEntry && publicRootFiles.has(topLevelEntry));
 
     if (

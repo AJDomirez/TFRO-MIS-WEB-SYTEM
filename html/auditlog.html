@@ -131,6 +131,13 @@
           <span class="summary-label">TFRO Staff Actions</span>
         </div>
       </div>
+      <div class="summary-card">
+        <div class="summary-icon"><i class="ri-shield-user-line"></i></div>
+        <div>
+          <span class="summary-value" id="sumEnforcer">0</span>
+          <span class="summary-label">Traffic Enforcer Actions</span>
+        </div>
+      </div>
     </div>
 
     <!-- FILTERS / TOOLBAR -->
@@ -147,6 +154,7 @@
           <option value="admin">Admin</option>
           <option value="operator">Operator</option>
           <option value="staff">Staff</option>
+          <option value="traffic_enforcer">Traffic Enforcer</option>
         </select>
       </div>
 
@@ -293,7 +301,7 @@
 </div>
 
 <script type="module" src="../js/auditlog.js"></script>
-<script type="module" src="../js/sidebar-user.js?v=20260819-170000"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 
 <script>
   const role = localStorage.getItem("role");

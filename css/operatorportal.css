@@ -484,3 +484,4 @@ table th{
     justify-content:center;
   }
 }
+.qr-verify-btn{display:inline-flex;align-items:center;gap:7px;margin-left:auto;padding:9px 13px;border:1px solid #b7d8c8;border-radius:9px;background:#edf8f2;color:#116846;text-decoration:none;font-size:13px;font-weight:800}.qr-verify-btn:hover{background:#dcf2e7}

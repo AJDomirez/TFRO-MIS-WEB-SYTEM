@@ -4,8 +4,8 @@ import { logAudit } from "./audit-helper.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openSubmissionForm } = await import("./submission-form.js");
-  openSubmissionForm(options);
+  const { openRenewalProfileForm } = await import("./submission-form.js?v=20260824-223000");
+  openRenewalProfileForm(options);
 }
 
 const DOC_LABELS = {
@@ -15,7 +15,23 @@ const DOC_LABELS = {
   official_receipt: "Official Receipt — For Hire", certificate_registration: "Certificate of Registration — For Hire",
   insurance: "Insurance — Third-Party & Passenger Liability",
 };
-const INSPECTION_KEYS = ["riding_condition", "brake_system", "lights_signals", "tires_wheels", "general_cleanliness", "safety_compliance"];
+delete DOC_LABELS.certificate_registration;
+Object.assign(DOC_LABELS, {
+  payment_receipt: "a) City Treasurer Payment Receipt",
+  official_receipt: "b) Updated Motorcycle OR - For Hire",
+  voters_certificate: "c) Latest Voter's Certificate",
+  insurance: "d) Third-Party & Passenger Liability Insurance",
+  cedula: "e) Latest Community Tax Certificate / Cedula",
+  barangay_clearance: "f) Barangay Clearance",
+  drivers_license: "g) Driver's License",
+  picture_2x2: "h) 2x2 Picture",
+  pmbl_certification: "i) PMBL Membership Certification",
+});
+const DOC_ORDER = [
+  "payment_receipt", "official_receipt", "voters_certificate", "insurance",
+  "cedula", "barangay_clearance", "drivers_license", "picture_2x2", "pmbl_certification",
+];
+const INSPECTION_KEYS = ["functional_horn", "signal_lights", "head_tail_lights", "sidecar_interior_light", "sidecar_light_kept_on", "anti_noise_muffler", "body_number_sticker", "garbage_receptacle", "clean_windshield"];
 const TYPE_LABELS = { regular: "Regular", expired_or: "Expired OR", change_motor: "Change Motor" };
 let renewals = [];
 let currentRenewal = null;
@@ -37,7 +53,7 @@ function detail(label, value, html = false) {
 }
 
 async function loadRenewals() {
-  const { data, error } = await supabase.from("franchise_renewals").select("*, franchises(franchise_number, status)").order("created_at", { ascending: false });
+  const { data, error } = await supabase.from("franchise_renewals").select("*, franchises(franchise_number, status, birth_date, birth_place, civil_status, motorcycle_brand, motorcycle_year_model, chassis_cr_number, route)").order("created_at", { ascending: false });
   if (error) return alert(`Could not load renewals: ${error.message}`);
   renewals = data || [];
   renderTable();
@@ -86,12 +102,14 @@ async function openReview(id) {
     detail("Plate Number", currentRenewal.plate_number), detail("Engine Number", currentRenewal.engine_number),
     detail("Chassis Number", currentRenewal.chassis_number), detail("Current OR", currentRenewal.current_or_number),
     detail("Current CR", currentRenewal.current_cr_number), detail("OR / CR Registration", `${labelStatus(currentRenewal.or_registration_class)} / ${labelStatus(currentRenewal.cr_registration_class)}`),
+    detail("Change Motor Request", currentRenewal.change_motor_request_id || "Not applicable"),
     detail("Current Expiration", currentRenewal.current_expiration_date), detail("Submitted", new Date(currentRenewal.created_at).toLocaleString()),
     detail("Status", badge(currentRenewal.status), true),
   ].join("");
 
   const urls = new Map(await Promise.all(currentDocuments.map(async (doc) => [doc.id, await signedUrl(doc.storage_path)])));
-  byId("renewalDocuments").innerHTML = Object.entries(DOC_LABELS).map(([type, label]) => {
+  byId("renewalDocuments").innerHTML = DOC_ORDER.map((type) => {
+    const label = DOC_LABELS[type];
     const doc = currentDocuments.find((item) => item.doc_type === type);
     if (!doc) return `<div class="renewal-doc-row"><strong>${escapeHtml(label)}</strong><span class="doc-missing">Missing document</span><span></span></div>`;
     return `<div class="renewal-doc-row" data-doc-id="${doc.id}">
@@ -103,6 +121,9 @@ async function openReview(id) {
   }).join("");
 
   byId("franchiseCheck").value = currentRenewal.franchise_check_status;
+  byId("verifiedOrClass").value = currentRenewal.or_registration_class;
+  byId("verifiedCrClass").value = currentRenewal.cr_registration_class;
+  byId("ltoForHireVerified").checked = currentRenewal.lto_lucena_for_hire_verified;
   const results = currentRenewal.inspection_results || {};
   document.querySelectorAll("[data-inspection]").forEach((input) => { input.checked = Boolean(results[input.dataset.inspection]); });
   byId("inspectionRemarks").value = currentRenewal.inspection_remarks || "";
@@ -112,6 +133,9 @@ async function openReview(id) {
   byId("paymentStatus").value = currentRenewal.payment_status;
   byId("paymentOrNumber").value = currentRenewal.payment_or_number || "";
   byId("temporaryMtop").checked = currentRenewal.temporary_mtop_issued;
+  byId("temporaryMtopNumber").value = currentRenewal.temporary_mtop_number || "";
+  byId("temporaryMtopExpiration").value = currentRenewal.temporary_mtop_expiration_date || "";
+  updateTemporaryMtopFields();
   byId("mtopNumber").value = currentRenewal.mtop_number || "";
   byId("expectedRelease").value = currentRenewal.expected_release_date || new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
   byId("decisionReason").value = currentRenewal.decision_reason || "";
@@ -124,26 +148,38 @@ async function printCurrentRenewal() {
   if (!currentRenewal) return;
   const picture = currentDocuments.find((doc) => doc.doc_type === "picture_2x2");
   await openSavedSubmissionForm({
-    title: "Franchise Renewal Application", reference: currentRenewal.renewal_code,
-    filename: `TFRO-Renewal-${currentRenewal.renewal_code}`,
+    renewal: currentRenewal, franchise: currentRenewal.franchises || {},
     pictureUrl: picture ? await signedUrl(picture.storage_path) : "",
-    fields: [
-      { label: "Operator", value: currentRenewal.operator_name }, { label: "Contact", value: currentRenewal.operator_contact },
-      { label: "Address", value: currentRenewal.operator_address }, { label: "Renewal Type", value: TYPE_LABELS[currentRenewal.renewal_type] || currentRenewal.renewal_type },
-      { label: "Current Expiration", value: currentRenewal.current_expiration_date }, { label: "Driver", value: currentRenewal.driver_name },
-      { label: "Driver License", value: currentRenewal.driver_license_number }, { label: "Plate", value: currentRenewal.plate_number },
-      { label: "Engine", value: currentRenewal.engine_number }, { label: "Chassis", value: currentRenewal.chassis_number },
-      { label: "Voter's Certificate", value: currentRenewal.voters_certificate_number }, { label: "Cedula", value: currentRenewal.cedula_number },
-      { label: "Barangay Clearance", value: currentRenewal.barangay_clearance_number }, { label: "PMBL Certificate", value: currentRenewal.pmbl_certificate_number },
-      { label: "Current OR", value: currentRenewal.current_or_number }, { label: "Current CR", value: currentRenewal.current_cr_number },
-      { label: "OR Registration", value: currentRenewal.or_registration_class }, { label: "CR Registration", value: currentRenewal.cr_registration_class },
-      { label: "Status", value: labelStatus(currentRenewal.status) }, { label: "Submitted", value: new Date(currentRenewal.created_at).toLocaleString() },
-    ],
+    documentTypes: currentDocuments.map((document) => document.doc_type),
   });
+}
+
+async function printCurrentPmblCertification() {
+  if (!currentRenewal) return;
+  const { openPmblCertificationForm } = await import("./submission-form.js?v=20260824-231000");
+  openPmblCertificationForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {} });
+}
+
+async function printCurrentChecklist() {
+  if (!currentRenewal) return;
+  const { openRenewalChecklistForm } = await import("./submission-form.js?v=20260824-233000");
+  openRenewalChecklistForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, documents: currentDocuments });
 }
 
 function inspectionResults() {
   return Object.fromEntries(INSPECTION_KEYS.map((key) => [key, document.querySelector(`[data-inspection="${key}"]`).checked]));
+}
+
+function updateTemporaryMtopFields() {
+  const allowed = currentRenewal && ["expired_or", "change_motor"].includes(currentRenewal.renewal_type);
+  const issued = allowed && byId("temporaryMtop").checked;
+  byId("temporaryMtop").disabled = !allowed;
+  byId("temporaryMtopNumber").disabled = !issued;
+  byId("temporaryMtopExpiration").disabled = !issued;
+  if (!issued) {
+    byId("temporaryMtopNumber").value = "";
+    byId("temporaryMtopExpiration").value = "";
+  }
 }
 
 async function saveDocumentReviews() {
@@ -162,9 +198,16 @@ async function saveProgress(forcedStatus = null) {
   const documentsComplete = await saveDocumentReviews();
   const inspections = inspectionResults();
   const inspectionPassed = INSPECTION_KEYS.every((key) => inspections[key]);
+  const temporaryMtopIssued = !byId("temporaryMtop").disabled && byId("temporaryMtop").checked;
+  if (temporaryMtopIssued && (!byId("temporaryMtopNumber").value.trim() || !byId("temporaryMtopExpiration").value)) {
+    throw new Error("Enter the Temporary MTOP number and expiration date.");
+  }
   let status = forcedStatus || (documentsComplete ? (inspectionPassed ? "awaiting_payment" : "inspection_pending") : "pending_review");
   const payload = {
     franchise_check_status: byId("franchiseCheck").value,
+    or_registration_class: byId("verifiedOrClass").value,
+    cr_registration_class: byId("verifiedCrClass").value,
+    lto_lucena_for_hire_verified: byId("ltoForHireVerified").checked,
     documents_complete: documentsComplete,
     inspection_results: inspections,
     inspection_passed: inspectionPassed,
@@ -174,8 +217,10 @@ async function saveProgress(forcedStatus = null) {
     assessed_amount: byId("assessedAmount").value === "" ? null : Number(byId("assessedAmount").value),
     payment_status: byId("paymentStatus").value,
     payment_or_number: byId("paymentOrNumber").value.trim() || null,
-    temporary_mtop_issued: byId("temporaryMtop").checked,
-    temporary_mtop_issued_at: byId("temporaryMtop").checked ? (currentRenewal.temporary_mtop_issued_at || new Date().toISOString()) : null,
+    temporary_mtop_issued: temporaryMtopIssued,
+    temporary_mtop_issued_at: temporaryMtopIssued ? (currentRenewal.temporary_mtop_issued_at || new Date().toISOString()) : null,
+    temporary_mtop_number: temporaryMtopIssued ? byId("temporaryMtopNumber").value.trim() : null,
+    temporary_mtop_expiration_date: temporaryMtopIssued ? byId("temporaryMtopExpiration").value : null,
     decision_reason: byId("decisionReason").value.trim() || null,
     status,
     reviewed_at: new Date().toISOString(),
@@ -192,7 +237,6 @@ async function handleSaveProgress() {
   try {
     await saveProgress();
     await logAudit({ action: "Reviewed Franchise Renewal", actionType: "update", record: currentRenewal.renewal_code, description: `Saved review progress for ${currentRenewal.renewal_code}.` });
-    alert("Renewal review progress saved. The Operator will see the updated status.");
     byId("reviewModal").hidden = true;
     await loadRenewals();
   } catch (error) { alert(`Could not save review: ${error.message}`); }
@@ -223,6 +267,11 @@ async function approveRenewal() {
     if (byId("paymentStatus").value !== "paid") return alert("Confirm Treasurer payment before approval.");
     if (!byId("paymentOrNumber").value.trim()) return alert("Enter the Treasurer's Office payment OR number.");
     if (byId("franchiseCheck").value === "revoked") return alert("A revoked franchise cannot be renewed.");
+    if (!["up_to_date", "expired"].includes(byId("franchiseCheck").value)) return alert("Complete the franchise status check before approval.");
+    if (!byId("ltoForHireVerified").checked || byId("verifiedOrClass").value !== "for_hire" || byId("verifiedCrClass").value !== "for_hire") return alert("Verify the LTO Lucena City For Hire OR and CR before approval.");
+    if (currentRenewal.renewal_type === "change_motor" && !currentRenewal.change_motor_request_id) return alert("Case 3 requires a linked Change Motor request.");
+    const releaseDays = Math.round((new Date(`${byId("expectedRelease").value}T00:00:00`) - new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00`)) / 86400000);
+    if (releaseDays < 7 || releaseDays > 14) return alert("Expected MTOP release must be 7 to 14 days from today.");
     await saveProgress("awaiting_payment");
     const { data, error } = await supabase.rpc("approve_franchise_renewal", {
       p_renewal_id: currentRenewal.id,
@@ -283,5 +332,8 @@ byId("saveProgressBtn").addEventListener("click", handleSaveProgress);
 byId("incompleteBtn").addEventListener("click", markIncomplete);
 byId("approveRenewalBtn").addEventListener("click", approveRenewal);
 byId("printRenewalBtn").addEventListener("click", printCurrentRenewal);
+byId("printChecklistBtn").addEventListener("click", printCurrentChecklist);
+byId("printPmblBtn").addEventListener("click", printCurrentPmblCertification);
+byId("temporaryMtop").addEventListener("change", updateTemporaryMtopFields);
 byId("logoutBtn").addEventListener("click", () => signOutAndRedirect("index.html"));
 init();

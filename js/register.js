@@ -18,6 +18,57 @@ const passwordInput = document.getElementById("password");
 const confirmPasswordInput = document.getElementById("confirmPassword");
 const passwordMatchStatus = document.getElementById("passwordMatchStatus");
 const registerMessage = document.getElementById("registerMessage");
+const roleInputs = [...document.querySelectorAll('input[name="role"]')];
+const operatorFields = [...document.querySelectorAll("[data-operator-field]")];
+const enforcerFields = [...document.querySelectorAll("[data-enforcer-field]")];
+const franchiseNumberInput = document.getElementById("franchiseNumber");
+const enforcerIdInput = document.getElementById("enforcerId");
+const profilePictureInput = document.getElementById("profilePicture");
+let profilePreviewUrl = "";
+
+profilePictureInput.addEventListener("change", () => {
+  const file = profilePictureInput.files[0];
+  const preview = document.getElementById("signupProfilePreview");
+  const placeholder = document.getElementById("profilePhotoPlaceholder");
+  const filename = document.getElementById("profilePhotoFileName");
+  if (profilePreviewUrl) URL.revokeObjectURL(profilePreviewUrl);
+  profilePreviewUrl = "";
+  if (!file) {
+    preview.hidden = true;
+    preview.removeAttribute("src");
+    placeholder.hidden = false;
+    filename.textContent = "No photo selected";
+    document.getElementById("profilePhotoButtonText").textContent = "Choose Photo";
+    return;
+  }
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    profilePictureInput.value = "";
+    showRegisterWarning("Choose a JPG, PNG, or WebP formal photo no larger than 5 MB.");
+    filename.textContent = "Invalid photo";
+    return;
+  }
+  profilePreviewUrl = URL.createObjectURL(file);
+  preview.src = profilePreviewUrl;
+  preview.hidden = false;
+  placeholder.hidden = true;
+  filename.textContent = file.name;
+  document.getElementById("profilePhotoButtonText").textContent = "Change Photo";
+});
+
+function selectedRole() {
+  return roleInputs.find((input) => input.checked)?.value || "operator";
+}
+
+function updateRoleFields() {
+  const isEnforcer = selectedRole() === "traffic_enforcer";
+  operatorFields.forEach((field) => { field.hidden = isEnforcer; });
+  enforcerFields.forEach((field) => { field.hidden = !isEnforcer; });
+  franchiseNumberInput.required = !isEnforcer;
+  enforcerIdInput.required = isEnforcer;
+}
+
+roleInputs.forEach((input) => input.addEventListener("change", updateRoleFields));
+updateRoleFields();
 
 function showRegisterWarning(message) {
   registerMessage.textContent = message;
@@ -169,19 +220,23 @@ registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   registerMessage.hidden = true;
 
-  // Public registration is deliberately Operator-only. Staff and Administrator
-  // accounts are provisioned centrally; Drivers do not receive login accounts.
-  const role = "operator";
+  // Enforcer authority is assigned only after the database trigger matches the
+  // submitted ID to the Administrator-managed roster.
+  const role = selectedRole();
   const fullName = document.getElementById("fullName").value.trim();
   const email = document.getElementById("email").value.trim();
   const contactNumber = document.getElementById("contactNumber").value.trim();
   const address = document.getElementById("address").value.trim();
   const franchiseNumber = document.getElementById("franchiseNumber").value.trim().toUpperCase();
+  const enforcerId = enforcerIdInput.value.trim().toUpperCase();
   const password = passwordInput.value;
   const confirmPassword = confirmPasswordInput.value;
+  const profilePicture = document.getElementById("profilePicture").files[0];
 
   /* VALIDATION */
-  if (!fullName || !email || !contactNumber || !address || !franchiseNumber) {
+  if (!fullName || !email || !contactNumber || !address
+      || (role === "operator" && !franchiseNumber)
+      || (role === "traffic_enforcer" && !enforcerId) || !profilePicture) {
     showRegisterWarning("Please fill in all the required fields.");
     return;
   }
@@ -192,6 +247,11 @@ registerForm.addEventListener("submit", async (event) => {
       "a lowercase letter, a number, and a symbol."
     );
     passwordInput.focus();
+    return;
+  }
+
+  if (!["image/jpeg", "image/png", "image/webp"].includes(profilePicture.type) || profilePicture.size > 5 * 1024 * 1024) {
+    showRegisterWarning("Upload a formal JPG, PNG, or WebP profile picture no larger than 5 MB.");
     return;
   }
 
@@ -219,7 +279,8 @@ registerForm.addEventListener("submit", async (event) => {
           full_name: fullName,
           contact_number: contactNumber,
           address,
-          franchise_number: franchiseNumber,
+          franchise_number: role === "operator" ? franchiseNumber : null,
+          enforcer_id: role === "traffic_enforcer" ? enforcerId : null,
         },
       },
     }));
@@ -261,6 +322,22 @@ registerForm.addEventListener("submit", async (event) => {
     await supabase.auth.signOut({ scope: "local" });
     showRegisterWarning("Account created, but its TFRO profile could not be loaded. Please sign in again.");
     window.location.replace("login.html");
+    return;
+  }
+
+  const extension = profilePicture.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+  const picturePath = `${data.user.id}/formal-profile-${Date.now()}.${extension}`;
+  const uploadResult = await supabase.storage.from("account-profile-pictures").upload(picturePath, profilePicture, { contentType: profilePicture.type, upsert: false });
+  if (uploadResult.error) {
+    await supabase.auth.signOut({ scope: "local" });
+    showRegisterWarning("Account created, but the required formal profile picture could not be saved. Please sign in and contact the Administrator.");
+    return;
+  }
+  const pictureUpdate = await supabase.from("profiles").update({ profile_picture_path: picturePath }).eq("id", data.user.id);
+  if (pictureUpdate.error) {
+    await supabase.storage.from("account-profile-pictures").remove([picturePath]);
+    await supabase.auth.signOut({ scope: "local" });
+    showRegisterWarning("Account created, but its formal profile picture could not be linked. Please contact the Administrator.");
     return;
   }
 

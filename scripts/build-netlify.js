@@ -4,7 +4,7 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const output = path.join(root, "dist");
 const publicDirectories = ["css", "html", "js", "Logo"];
-const publicRootFiles = ["Tricycle Image.png"];
+const publicRootFiles = ["Tricycle Image.png", "index.html", ".nojekyll"];
 
 if (path.dirname(output) !== root || path.basename(output) !== "dist") {
   throw new Error(`Refusing to clean unexpected output path: ${output}`);
@@ -27,6 +27,14 @@ for (const file of publicRootFiles) {
 fs.copyFileSync(
   path.join(root, "Logo", "TFRO Logo.jpg"),
   path.join(output, "Logo", "tfro-logo.jpg"),
+);
+
+// Bundle the pinned QR generator locally so Driver QR cards do not depend on a CDN.
+const qrVendorDirectory = path.join(output, "js", "vendor");
+fs.mkdirSync(qrVendorDirectory, { recursive: true });
+fs.copyFileSync(
+  path.join(root, "node_modules", "qrcodejs", "qrcode.min.js"),
+  path.join(qrVendorDirectory, "qrcode.min.js"),
 );
 
 const forbiddenExtensions = new Set([".md", ".sql", ".toml"]);

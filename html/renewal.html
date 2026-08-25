@@ -66,6 +66,10 @@
               <option value="change_motor">Case 3 — Change Motor / Private OR and CR</option>
             </select>
           </label>
+          <label class="full" id="changeMotorRequestField" hidden>Related Change Motor Request
+            <select id="changeMotorRequestId"><option value="">Select a submitted Change Motor request</option></select>
+            <small>Case 3 can be submitted while the motor request is under review, but renewal approval waits for TFRO approval of that request.</small>
+          </label>
         </div>
         </div>
 
@@ -105,15 +109,15 @@
         <div class="renewal-page" data-renewal-page="4" hidden>
         <p class="document-note" id="documentNote">Upload clear PDF or image photocopies. Regular renewal requires all nine documents.</p>
         <div class="renewal-documents" id="documentList">
-          <label data-doc="voters_certificate"><span><i class="ri-file-text-line"></i> Latest Voter's Certificate *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
-          <label data-doc="cedula"><span><i class="ri-file-text-line"></i> Latest Cedula *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
-          <label data-doc="barangay_clearance"><span><i class="ri-file-text-line"></i> Barangay Clearance *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
-          <label data-doc="drivers_license"><span><i class="ri-id-card-line"></i> Driver's License *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
-          <label data-doc="picture_2x2"><span><i class="ri-image-line"></i> 2×2 Picture *</span><input type="file" accept="image/jpeg,image/png" required></label>
-          <label data-doc="pmbl_certification"><span><i class="ri-file-shield-2-line"></i> PMBL Certification *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
-          <label class="updated-document" data-doc="official_receipt"><span><i class="ri-receipt-line"></i> Official Receipt — For Hire</span><input type="file" accept="application/pdf,image/jpeg,image/png"></label>
-          <label class="updated-document" data-doc="certificate_registration"><span><i class="ri-file-list-3-line"></i> Certificate of Registration — For Hire</span><input type="file" accept="application/pdf,image/jpeg,image/png"></label>
-          <label class="updated-document" data-doc="insurance"><span><i class="ri-shield-check-line"></i> Insurance with Third-Party &amp; Passenger Liability</span><input type="file" accept="application/pdf,image/jpeg,image/png"></label>
+          <label data-doc="payment_receipt"><span><b>a)</b><i class="ri-receipt-line"></i> City Treasurer Payment Receipt *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
+          <label class="updated-document" data-doc="official_receipt"><span><b>b)</b><i class="ri-receipt-line"></i> Updated Motorcycle OR — For Hire</span><input type="file" accept="application/pdf,image/jpeg,image/png"></label>
+          <label data-doc="voters_certificate"><span><b>c)</b><i class="ri-file-list-3-line"></i> Latest Voter's Certificate *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
+          <label class="updated-document" data-doc="insurance"><span><b>d)</b><i class="ri-shield-check-line"></i> Third-Party &amp; Passenger Liability Insurance</span><input type="file" accept="application/pdf,image/jpeg,image/png"></label>
+          <label data-doc="cedula"><span><b>e)</b><i class="ri-file-text-line"></i> Latest Community Tax Certificate / Cedula *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
+          <label data-doc="barangay_clearance"><span><b>f)</b><i class="ri-file-text-line"></i> Barangay Clearance *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
+          <label data-doc="drivers_license"><span><b>g)</b><i class="ri-id-card-line"></i> Driver's License *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
+          <label data-doc="picture_2x2"><span><b>h)</b><i class="ri-image-line"></i> 2×2 Picture *</span><input type="file" accept="image/jpeg,image/png" required></label>
+          <label data-doc="pmbl_certification"><span><b>i)</b><i class="ri-file-shield-2-line"></i> PMBL Membership Certification *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
         </div>
 
         <div class="case-guidance" id="caseGuidance"></div>
@@ -134,7 +138,7 @@
     </section>
   </main>
 </div>
-<script type="module" src="../js/renewal.js?v=20260817-211000"></script>
+<script type="module" src="../js/renewal.js?v=20260824-233000"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 </body>
 </html>

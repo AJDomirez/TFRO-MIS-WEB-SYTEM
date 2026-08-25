@@ -225,14 +225,17 @@
     <label>Official receipt number<input name="receipt" required maxlength="50" placeholder="City Treasurer OR number"></label>
     <label>Date paid<input name="paid_date" type="date" required></label>
     <label>Payment type<select name="type" required><option value="penalty">Violation penalty</option></select></label>
-    <label>Amount<input name="amount" type="number" min="0.01" step="0.01" required></label>
-    <label>Status<select name="status" required><option value="paid">Paid</option><option value="pending">Pending</option><option value="overdue">Overdue</option></select></label>
-    <div class="payment-modal-actions"><button type="button" id="cancelPaymentBtn">Cancel</button><button type="submit" class="add-btn">Save Payment</button></div>
+    <label>Amount (automatically computed)<input name="amount" type="number" readonly aria-readonly="true"></label>
+    <p class="payment-confirmation"><i class="ri-shield-check-line"></i> Saving confirms that payment was secured. The official receipt can be printed once only.</p>
+    <input name="status" type="hidden" value="paid">
+    <div class="payment-modal-actions"><button type="button" id="cancelPaymentBtn">Cancel</button><button type="submit" class="add-btn"><i class="ri-lock-line"></i> Secure Payment</button></div>
   </form>
 </div>
 
-<script type="module" src="../js/payment.js?v=20260818-051500"></script>
-<script type="module" src="../js/sidebar-user.js?v=20260819-170000"></script>
+<div class="receipt-ready-modal" id="receiptReadyModal" hidden role="dialog" aria-modal="true" aria-labelledby="receiptReadyTitle"><div class="receipt-ready-card"><div class="receipt-success-icon"><i class="ri-checkbox-circle-fill"></i></div><span class="receipt-eyebrow">PAYMENT COMPLETED</span><h2 id="receiptReadyTitle">Official Receipt Ready</h2><p>The payment was secured and the receipt was created automatically.</p><div class="receipt-ready-summary"><span>Receipt Number</span><strong id="readyReceiptNumber">—</strong><span>Amount Paid</span><strong id="readyReceiptAmount">₱0.00</strong></div><div class="receipt-ready-actions"><button type="button" class="receipt-print-button" id="printReadyReceipt"><i class="ri-printer-line"></i> Print Official Receipt</button><button type="button" class="receipt-view-button" id="viewReadyReceipt"><i class="ri-eye-line"></i> View Receipt</button></div><button type="button" class="receipt-done-button" id="closeReadyReceipt">Done</button></div></div>
+
+<script type="module" src="../js/payment.js?v=20260824-011500"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 
 </body>
 </html>

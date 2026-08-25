@@ -3,21 +3,22 @@ import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openSubmissionForm } = await import("./submission-form.js");
-  openSubmissionForm(options);
+  const { openRenewalProfileForm } = await import("./submission-form.js?v=20260824-223000");
+  openRenewalProfileForm(options);
 }
 
 const BASE_DOCUMENTS = [
-  "voters_certificate", "cedula", "barangay_clearance", "drivers_license",
+  "payment_receipt", "voters_certificate", "cedula", "barangay_clearance", "drivers_license",
   "picture_2x2", "pmbl_certification",
 ];
-const UPDATED_DOCUMENTS = ["official_receipt", "certificate_registration", "insurance"];
+const UPDATED_DOCUMENTS = ["official_receipt", "insurance"];
 const TYPE_LABELS = { regular: "Regular renewal", expired_or: "Expired OR", change_motor: "Change Motor" };
 let currentUser = null;
 let currentProfile = null;
 let currentFranchise = null;
 let currentRenewal = null;
 let operatorDrivers = [];
+let changeMotorRequests = [];
 let renewalHistoryRows = [];
 let renewalPage = 1;
 const RENEWAL_PAGE_COUNT = 4;
@@ -68,6 +69,8 @@ function updateCaseRequirements() {
   document.querySelectorAll(".updated-document input").forEach((input) => { input.required = needsAllNow && !currentRenewal; });
   byId("orClass").value = type === "expired_or" ? "expired" : type === "change_motor" ? "private" : "for_hire";
   byId("crClass").value = type === "change_motor" ? "private" : "for_hire";
+  byId("changeMotorRequestField").hidden = type !== "change_motor";
+  byId("changeMotorRequestId").required = type === "change_motor";
   byId("caseGuidance").textContent = type === "regular"
     ? "All documents, including current OR/CR registered as For Hire and liability insurance, are required before TFRO can approve renewal."
     : type === "expired_or"
@@ -76,6 +79,26 @@ function updateCaseRequirements() {
   byId("documentNote").textContent = needsAllNow
     ? "Upload all nine clear PDF or image photocopies."
     : "Upload the six basic requirements now. Updated For Hire OR, CR, and insurance may follow, but approval remains pending until all are verified.";
+}
+
+async function loadChangeMotorRequests() {
+  const { data, error } = await supabase.from("change_motor_requests")
+    .select("id, request_code, status, franchise_id, new_engine_number, new_chassis_number, new_plate_number")
+    .eq("operator_id", currentUser.id)
+    .in("status", ["pending_review", "reviewing", "approved"])
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  changeMotorRequests = data || [];
+  byId("changeMotorRequestId").innerHTML = '<option value="">Select a submitted Change Motor request</option>' +
+    changeMotorRequests.map((request) => `<option value="${request.id}">${escapeHtml(request.request_code || `Request ${request.id}`)} — ${escapeHtml(statusLabel(request.status))}</option>`).join("");
+}
+
+function selectChangeMotorRequest() {
+  const request = changeMotorRequests.find((item) => String(item.id) === byId("changeMotorRequestId").value);
+  if (!request) return;
+  byId("engineNumber").value = request.new_engine_number || currentFranchise?.engine_number || "";
+  byId("chassisNumber").value = request.new_chassis_number || currentFranchise?.chassis_number || "";
+  byId("plateNumber").value = request.new_plate_number || currentFranchise?.plate_number || "";
 }
 
 async function loadFranchise() {
@@ -98,6 +121,12 @@ async function loadFranchise() {
   byId("chassisNumber").value = data.chassis_number || "";
   if (!data.expiration_date) {
     setError("The franchise has no expiration date. TFRO Staff must correct the franchise record before renewal.");
+    byId("submitRenewalBtn").disabled = true;
+  }
+  const today = new Date();
+  const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  if (data.expiration_date && data.expiration_date > localToday) {
+    setError(`This franchise is not yet due for renewal. It becomes eligible on ${data.expiration_date}.`);
     byId("submitRenewalBtn").disabled = true;
   }
   if (data.status === "revoked") {
@@ -139,7 +168,7 @@ async function loadHistory() {
       <td><span class="status-pill ${statusClass(renewal.status)}">${escapeHtml(statusLabel(renewal.status))}</span></td>
       <td>${escapeHtml(renewal.decision_reason || (renewal.status === "approved" ? `MTOP ${renewal.mtop_number || "for issuance"}; expected ${renewal.expected_release_date || "within 1–2 weeks"}` : "Awaiting TFRO processing"))}</td>
       <td>${new Date(renewal.created_at).toLocaleDateString()}</td>
-      <td><button type="button" class="page-button page-button-back" data-renewal-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i> View / PDF</button></td>
+      <td><button type="button" class="page-button page-button-back" data-checklist-form="${renewal.id}"><i class="ri-checkbox-multiple-line"></i> TFRO-004</button> <button type="button" class="page-button page-button-back" data-renewal-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i> Profile</button> <button type="button" class="page-button page-button-back" data-pmbl-form="${renewal.id}"><i class="ri-file-certificate-line"></i> PMBL</button></td>
     </tr>`).join("") : '<tr><td colspan="6">No renewal requests yet.</td></tr>';
 
   if (!currentRenewal) return;
@@ -159,29 +188,29 @@ async function loadHistory() {
 }
 
 async function showRenewalSubmission(renewal) {
-  const { data: picture } = await supabase.from("renewal_documents")
-    .select("storage_path").eq("renewal_id", renewal.id).eq("doc_type", "picture_2x2").maybeSingle();
+  const { data: documents } = await supabase.from("renewal_documents")
+    .select("doc_type, storage_path").eq("renewal_id", renewal.id);
+  const picture = (documents || []).find((document) => document.doc_type === "picture_2x2");
   let pictureUrl = "";
   if (picture?.storage_path) {
     const signed = await supabase.storage.from("franchise-documents").createSignedUrl(picture.storage_path, 600);
     pictureUrl = signed.data?.signedUrl || "";
   }
   await openSavedSubmissionForm({
-    title: "Franchise Renewal Application", reference: renewal.renewal_code,
-    filename: `TFRO-Renewal-${renewal.renewal_code}`, pictureUrl,
-    fields: [
-      { label: "Operator", value: renewal.operator_name }, { label: "Contact", value: renewal.operator_contact },
-      { label: "Address", value: renewal.operator_address }, { label: "Renewal Type", value: TYPE_LABELS[renewal.renewal_type] || renewal.renewal_type },
-      { label: "Current Expiration", value: renewal.current_expiration_date }, { label: "Driver", value: renewal.driver_name },
-      { label: "Driver License", value: renewal.driver_license_number }, { label: "Plate Number", value: renewal.plate_number },
-      { label: "Engine Number", value: renewal.engine_number }, { label: "Chassis Number", value: renewal.chassis_number },
-      { label: "Voter's Certificate", value: renewal.voters_certificate_number }, { label: "Cedula", value: renewal.cedula_number },
-      { label: "Barangay Clearance", value: renewal.barangay_clearance_number }, { label: "PMBL Certificate", value: renewal.pmbl_certificate_number },
-      { label: "Current OR", value: renewal.current_or_number }, { label: "Current CR", value: renewal.current_cr_number },
-      { label: "OR Registration", value: renewal.or_registration_class }, { label: "CR Registration", value: renewal.cr_registration_class },
-      { label: "Status", value: statusLabel(renewal.status) }, { label: "Submitted", value: new Date(renewal.created_at).toLocaleString() },
-    ],
+    renewal, franchise: currentFranchise, pictureUrl,
+    documentTypes: (documents || []).map((document) => document.doc_type),
   });
+}
+
+async function showPmblCertification(renewal) {
+  const { openPmblCertificationForm } = await import("./submission-form.js?v=20260824-231000");
+  openPmblCertificationForm({ renewal, franchise: currentFranchise || {} });
+}
+
+async function showRenewalChecklist(renewal) {
+  const { data: documents } = await supabase.from("renewal_documents").select("doc_type,status,verified").eq("renewal_id", renewal.id);
+  const { openRenewalChecklistForm } = await import("./submission-form.js?v=20260824-233000");
+  openRenewalChecklistForm({ renewal, franchise: currentFranchise || {}, documents: documents || [] });
 }
 
 function prefillRenewal(renewal) {
@@ -203,6 +232,7 @@ function prefillRenewal(renewal) {
   byId("crNumber").value = renewal.current_cr_number || "";
   byId("orClass").value = renewal.or_registration_class;
   byId("crClass").value = renewal.cr_registration_class;
+  byId("changeMotorRequestId").value = renewal.change_motor_request_id || "";
   updateCaseRequirements();
 }
 
@@ -272,6 +302,7 @@ async function submitRenewal(event) {
         pmbl_certificate_number: byId("pmblNumber").value.trim() || null, current_or_number: byId("orNumber").value.trim() || null,
         current_cr_number: byId("crNumber").value.trim() || null, or_registration_class: byId("orClass").value,
         cr_registration_class: byId("crClass").value, status: "pending_review",
+        change_motor_request_id: byId("renewalType").value === "change_motor" ? Number(byId("changeMotorRequestId").value) : null,
       };
       const insert = await supabase.from("franchise_renewals").insert(record).select("id, renewal_code").single();
       if (insert.error) throw insert.error;
@@ -305,7 +336,7 @@ async function init() {
   byId("userName").textContent = currentProfile.full_name || "Operator";
   byId("userAvatar").textContent = (currentProfile.full_name || "OP").split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
   try {
-    await Promise.all([loadFranchise(), loadDrivers()]);
+    await Promise.all([loadFranchise(), loadDrivers(), loadChangeMotorRequests()]);
     await loadHistory();
     selectDriver();
     updateCaseRequirements();
@@ -316,6 +347,7 @@ async function init() {
 }
 
 byId("renewalType").addEventListener("change", updateCaseRequirements);
+byId("changeMotorRequestId").addEventListener("change", selectChangeMotorRequest);
 byId("driverId").addEventListener("change", selectDriver);
 byId("renewalBackBtn").addEventListener("click", () => showRenewalPage(renewalPage - 1));
 byId("renewalNextBtn").addEventListener("click", () => {
@@ -323,10 +355,22 @@ byId("renewalNextBtn").addEventListener("click", () => {
 });
 byId("renewalForm").addEventListener("submit", submitRenewal);
 byId("renewalHistory").addEventListener("click", (event) => {
+  const checklistButton = event.target.closest("[data-checklist-form]");
+  if (checklistButton) {
+    const renewal = renewalHistoryRows.find((row) => String(row.id) === checklistButton.dataset.checklistForm);
+    if (renewal) showRenewalChecklist(renewal);
+    return;
+  }
   const button = event.target.closest("[data-renewal-form]");
   if (!button) return;
   const renewal = renewalHistoryRows.find((row) => String(row.id) === button.dataset.renewalForm);
   if (renewal) showRenewalSubmission(renewal);
+});
+byId("renewalHistory").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-pmbl-form]");
+  if (!button) return;
+  const renewal = renewalHistoryRows.find((row) => String(row.id) === button.dataset.pmblForm);
+  if (renewal) showPmblCertification(renewal);
 });
 byId("logoutBtn").addEventListener("click", () => signOutAndRedirect("index.html"));
 showRenewalPage(1);

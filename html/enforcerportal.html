@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TFRO Traffic Enforcer Portal</title>
+  <link rel="stylesheet" href="../css/operatorportal.css?v=20260823-1" />
+  <link rel="stylesheet" href="../css/enforcer.css?v=20260823-1" />
+  <link rel="stylesheet" href="../css/ticket-camera.css?v=20260823-1" />
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260823-2" />
+  <link rel="stylesheet" href="../css/guided-tour.css?v=20260823-1" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+</head>
+<body class="enforcer-sidebar">
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="logo"><img class="sidebar-logo" src="../Logo/TFRO Logo.jpg" alt="TFRO Logo" /><div><h2>TFRO MIS</h2><p>Lucena City</p></div></div>
+      <ul class="menu"></ul>
+      <div class="sidebar-user"><div class="user-left"><div class="user-avatar" id="userAvatar">TE</div><div class="user-details"><h4 id="userName">Traffic Enforcer</h4><p id="userRole">Traffic Enforcer</p></div></div><button class="logout-btn" id="logoutBtn" aria-label="Sign out"><i class="ri-logout-box-r-line"></i></button></div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar"><div><h1>Traffic Enforcer Portal</h1><p>Verify Drivers and submit photo-backed violation tickets to TFRO</p></div><span class="enforcer-badge" id="enforcerBadge">ID loading…</span></header>
+
+      <section class="portal-card driver-search-card">
+        <div class="section-heading"><div><span class="eyebrow">Driver verification</span><h2>Search by Driver's License Number</h2></div><div class="verification-tools"><a class="qr-verify-btn" href="driververify.html"><i class="ri-qr-scan-2-line"></i> Scan Driver QR</a><i class="ri-id-card-line"></i></div></div>
+        <form id="driverSearchForm" class="driver-search-form">
+          <label for="licenseSearch">License number</label>
+          <div><input id="licenseSearch" placeholder="Enter complete license number" autocomplete="off" required /><button type="submit"><i class="ri-search-line"></i> Verify Driver</button></div>
+        </form>
+        <p class="form-message" id="searchMessage" hidden role="status"></p>
+        <div class="driver-result" id="driverResult" hidden></div>
+      </section>
+
+      <section class="portal-card camera-card" id="ticketCameraCard">
+        <div class="camera-card-heading">
+          <span class="camera-card-icon"><i class="ri-camera-3-line"></i></span>
+          <div><span class="eyebrow">Photo evidence</span><h2>Ticket Violation Camera</h2><p>Take a clear picture of the issued ticket before submitting the violation to TFRO Staff.</p></div>
+        </div>
+        <fieldset class="camera-evidence">
+          <legend>Camera and ticket picture</legend>
+          <p class="camera-consent"><i class="ri-shield-check-line"></i> Your camera remains off until you select <strong>Allow Camera</strong>. The browser will ask your permission before showing a live preview.</p>
+          <div class="camera-actions">
+            <button type="button" class="camera-btn camera-main-btn" id="requestCameraBtn"><i class="ri-camera-line"></i> Allow Camera</button>
+            <button type="button" class="camera-btn capture" id="captureTicketBtn" hidden><i class="ri-camera-lens-line"></i> Take Picture</button>
+            <button type="button" class="camera-btn secondary" id="retakeTicketBtn" hidden><i class="ri-restart-line"></i> Retake</button>
+            <button type="button" class="camera-btn secondary" id="stopCameraBtn" hidden><i class="ri-camera-off-line"></i> Turn Camera Off</button>
+          </div>
+          <div class="camera-stage" id="cameraStage" hidden>
+            <video id="ticketCamera" playsinline muted aria-label="Live camera preview"></video>
+            <canvas id="ticketCanvas" hidden></canvas>
+            <img id="ticketPhotoPreview" alt="Captured violation ticket preview" hidden />
+          </div>
+          <p class="camera-status" id="cameraStatus" role="status">No photo selected yet.</p>
+          <div class="upload-fallback"><span>Or upload an existing picture:</span><input id="ticketPhotoFile" type="file" accept="image/jpeg,image/png,image/webp" /></div>
+          <small>One clear JPG, PNG, or WebP image is required. Maximum 10 MB. It will be stored privately for TFRO review and violation payment records.</small>
+        </fieldset>
+      </section>
+
+      <section class="portal-card ticket-card" id="ticketSection" hidden>
+        <div class="section-heading"><div><span class="eyebrow">New ticket</span><h2>Record Violation</h2></div><i class="ri-file-warning-line"></i></div>
+        <form id="ticketForm" class="ticket-form">
+          <label>Driver<input id="ticketDriver" readonly /></label>
+          <label>License number<input id="ticketLicense" readonly /></label>
+          <label>Ticket number<input name="ticket_number" required placeholder="Official ticket number" /></label>
+          <label>Violation code<select name="violation_code" id="violationCode" required><option value="">Select official violation</option></select></label>
+          <label>Violation<input name="violation_type" readonly required /></label>
+          <label>Penalty (PHP)<input name="penalty" type="number" readonly required /></label>
+          <label>Date of violation<input name="occurred_date" type="date" required /></label>
+          <label class="ticket-wide">Details<textarea name="description" rows="3" placeholder="Location and circumstances of the violation"></textarea></label>
+          <p class="form-message ticket-wide" id="ticketMessage" hidden role="alert"></p>
+          <div class="ticket-actions ticket-wide"><button type="submit" id="submitTicketBtn"><i class="ri-camera-line"></i> Submit Ticket to TFRO</button></div>
+        </form>
+      </section>
+
+      <section class="portal-card" id="ticketHistoryCard">
+        <div class="section-heading"><div><span class="eyebrow">Activity</span><h2>My Submitted Tickets</h2></div><i class="ri-history-line"></i></div>
+        <div class="table-wrap"><table><thead><tr><th>Date</th><th>Ticket</th><th>Driver</th><th>Violation</th><th>Penalty</th><th>Status</th><th>Photo</th></tr></thead><tbody id="ticketHistory"><tr><td colspan="7">Loading tickets…</td></tr></tbody></table></div>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="../js/enforcerportal.js?v=20260823-1"></script>
+  <script type="module" src="../js/sidebar-user.js?v=20260823-1"></script>
+  <script type="module" src="../js/guided-tour.js?v=20260823-1"></script>
+</body>
+</html>

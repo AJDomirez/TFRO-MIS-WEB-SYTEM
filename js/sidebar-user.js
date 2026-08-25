@@ -16,7 +16,8 @@ function getSupabaseClient() {
 const savedRole = localStorage.getItem("role") || "";
 if (savedRole) {
   document.body.classList.toggle("admin-sidebar", ["admin", "staff"].includes(savedRole));
-  document.body.classList.toggle("operator-sidebar", savedRole === "operator");
+  document.body.classList.toggle("operator-sidebar", ["operator", "traffic_enforcer"].includes(savedRole));
+  document.body.classList.toggle("enforcer-sidebar", savedRole === "traffic_enforcer");
 }
 
 function initials(name = "") {
@@ -35,6 +36,7 @@ function roleLabel(role) {
     admin: "Administrator",
     staff: "TFRO Staff",
     operator: "Operator",
+    traffic_enforcer: "Traffic Enforcer",
   };
   return map[role] || role || "User";
 }
@@ -50,6 +52,9 @@ function setupAdminNavigation() {
   ];
   const pages = [
     { href: "dashboard.html", icon: "ri-dashboard-line", label: "Dashboard" },
+    { href: "operator.html", icon: "ri-user-star-line", label: "Operators" },
+    { href: "driver.html", icon: "ri-steering-2-line", label: "Drivers" },
+    { href: "enforcers.html", icon: "ri-shield-user-line", label: "Traffic Enforcers" },
     { href: "violation.html", icon: "ri-alert-line", label: "Violations" },
     { href: "report.html", icon: "ri-bar-chart-line", label: "Reports" },
     { href: "notification.html", icon: "ri-notification-3-line", label: "Notifications" },
@@ -121,6 +126,18 @@ function setupStaffNavigation() {
   menu.dataset.navigationReady = "true";
 }
 
+function setupEnforcerNavigation() {
+  const menu = document.querySelector(".sidebar .menu");
+  if (!menu || menu.dataset.enforcerMenuReady) return;
+  const currentPage = window.location.pathname.split("/").pop() || "enforcerportal.html";
+  const pages = [
+    { href: "enforcerportal.html", icon: "ri-shield-user-line", label: "Ticketing & Driver Search" },
+  ];
+  menu.dataset.enforcerMenuReady = "true";
+  menu.innerHTML = pages.map((page) => `<li class="${page.href === currentPage ? "active" : ""}"><a href="${page.href}"><i class="${page.icon}"></i><span>${page.label}</span></a></li>`).join("");
+  menu.dataset.navigationReady = "true";
+}
+
 async function loadSidebarUser() {
   const supabase = await getSupabaseClient();
   const { data: { user }, error } = await supabase.auth.getUser();
@@ -136,11 +153,13 @@ async function loadSidebarUser() {
   const role = profile?.role || localStorage.getItem("role") || "";
   if (role) {
     document.body.classList.toggle("admin-sidebar", ["admin", "staff"].includes(role));
-    document.body.classList.toggle("operator-sidebar", role === "operator");
+    document.body.classList.toggle("operator-sidebar", ["operator", "traffic_enforcer"].includes(role));
+    document.body.classList.toggle("enforcer-sidebar", role === "traffic_enforcer");
   }
   if (role === "operator") setupOperatorNavigation();
   if (role === "staff") setupStaffNavigation();
   if (role === "admin") setupAdminNavigation();
+  if (role === "traffic_enforcer") setupEnforcerNavigation();
 
   const nameEl = document.getElementById("userName");
   const roleEl = document.getElementById("userRole");
@@ -185,6 +204,7 @@ function setupSharedTableSearch() {
 
 function initializeSidebar() {
   if (savedRole === "operator") setupOperatorNavigation();
+  else if (savedRole === "traffic_enforcer") setupEnforcerNavigation();
   else if (savedRole === "staff") setupStaffNavigation();
   else if (savedRole === "admin") setupAdminNavigation();
   loadSidebarUser();

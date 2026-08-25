@@ -12,6 +12,7 @@
     href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
     rel="stylesheet"
   />
+  <script src="../js/vendor/qrcode.min.js?v=1.0.0"></script>
 </head>
 <body class="admin-sidebar">
 
@@ -206,6 +207,13 @@
   </div>
 </div>
 
+<div class="modal" id="driverQrModal" hidden>
+  <div class="modal-box driver-qr-modal-box">
+    <div class="modal-head"><h3>Driver QR Authentication</h3><button class="modal-close" data-close="driverQrModal"><i class="ri-close-line"></i></button></div>
+    <div class="driver-qr-body"><div id="driverQrCode" class="driver-qr-code"></div><h3 id="driverQrName"></h3><p id="driverQrLicense"></p><div class="driver-qr-actions"><button type="button" class="btn-primary" id="printDriverQrBtn"><i class="ri-printer-line"></i> Print QR Card</button><a class="btn-secondary" id="openDriverQrBtn" target="_blank" rel="noopener"><i class="ri-external-link-line"></i> Test Verification</a></div><small>Only authenticated TFRO system users can open this verification record.</small></div>
+  </div>
+</div>
+
 <div class="modal" id="assignModal" hidden>
   <div class="modal-box">
     <div class="modal-head">
@@ -226,8 +234,8 @@
   </div>
 </div>
 
-<script type="module" src="../js/driver.js?v=20260817-233000"></script>
-<script type="module" src="../js/sidebar-user.js?v=20260819-170000"></script>
+<script type="module" src="../js/driver.js?v=20260823-193000"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 
 <script>
 

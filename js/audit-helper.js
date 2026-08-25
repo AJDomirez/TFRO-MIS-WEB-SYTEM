@@ -31,7 +31,7 @@ export async function logAudit({ action, actionType, record = null, description 
     }
     if (!role) role = localStorage.getItem("role") || null;
 
-    await supabase.from("audit_logs").insert({
+    const { error } = await supabase.from("audit_logs").insert({
       user_id: user.id,
       user_name: fullName,
       role,
@@ -43,6 +43,7 @@ export async function logAudit({ action, actionType, record = null, description 
       new_value: newValue,
       ip_address: null,
     });
+    if (error) throw error;
   } catch (err) {
     console.error("Audit log insert failed:", err);
   }

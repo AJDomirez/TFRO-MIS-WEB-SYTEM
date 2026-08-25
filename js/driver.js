@@ -39,7 +39,7 @@ function render() {
   const rows = filteredDrivers();
   table.innerHTML = rows.length ? rows.map((row) => {
     const violationClass = row.violation_count >= 3 ? "high" : row.violation_count > 0 ? "low" : "none";
-    return `<tr><td><div class="driver-info"><div class="avatar">${initials(row.full_name)}</div><span>${escapeHtml(row.full_name)}</span></div></td><td class="license">${escapeHtml(row.license_number)}</td><td>${escapeHtml(row.operator_name)}</td><td>${escapeHtml(row.contact_number)}</td><td><div class="violation-badge ${violationClass}">${row.violation_count}</div></td><td><span class="status ${row.compliance}">${row.compliance}</span></td><td>${licenseStatusLabel(row)}</td><td><div class="actions"><button class="view-form-btn" data-action="view" data-id="${row.id}" title="View submitted form"><i class="ri-file-text-line"></i> View Form</button><button data-action="assign" data-id="${row.id}" title="Assign to Operator/Franchise"><i class="ri-user-add-line"></i></button><button data-action="verify" data-id="${row.id}" title="Verify License"><i class="ri-verified-badge-line"></i></button></div></td></tr>`;
+    return `<tr><td><div class="driver-info"><div class="avatar">${initials(row.full_name)}</div><span>${escapeHtml(row.full_name)}</span></div></td><td class="license">${escapeHtml(row.license_number)}</td><td>${escapeHtml(row.operator_name)}</td><td>${escapeHtml(row.contact_number)}</td><td><div class="violation-badge ${violationClass}">${row.violation_count}</div></td><td><span class="status ${row.compliance}">${row.compliance}</span></td><td>${licenseStatusLabel(row)}</td><td><div class="actions"><button class="view-form-btn" data-action="view" data-id="${row.id}" title="View submitted form"><i class="ri-file-text-line"></i> View Form</button><button data-action="qr" data-id="${row.id}" title="Driver QR authentication"><i class="ri-qr-code-line"></i></button><button data-action="assign" data-id="${row.id}" title="Assign to Operator/Franchise"><i class="ri-user-add-line"></i></button><button data-action="verify" data-id="${row.id}" title="Verify License"><i class="ri-verified-badge-line"></i></button></div></td></tr>`;
   }).join("") : '<tr><td colspan="8">No drivers found.</td></tr>';
 }
 async function loadDrivers() {
@@ -81,6 +81,7 @@ document.getElementById("logoutBtn")?.addEventListener("click", async () => { aw
 
 /* ============ ASSIGN DRIVER TO OPERATOR / FRANCHISE ============ */
 let currentDriver = null;
+let currentQrUrl = "";
 let operatorsList = [];
 let franchisesList = [];
 
@@ -249,15 +250,45 @@ alert("License verified. Driver is now compliant.");
   });
 }
 
+async function openDriverQr(id) {
+  const driver = drivers.find((row) => String(row.id) === String(id));
+  if (!driver) return;
+  const { data, error } = await supabase.from("driver_qr_verifications").select("qr_token").eq("driver_id", driver.id).single();
+  if (error) return alert("Could not create Driver QR: " + error.message);
+  currentDriver = driver;
+  currentQrUrl = new URL(`driververify.html?t=${encodeURIComponent(data.qr_token)}`, window.location.href).href;
+  const qrBox = document.getElementById("driverQrCode");
+  qrBox.innerHTML = "";
+  if (!window.QRCode) return alert("The QR generator could not load. Check your internet connection and try again.");
+  new window.QRCode(qrBox, { text: currentQrUrl, width: 220, height: 220, colorDark: "#0b5138", colorLight: "#ffffff", correctLevel: window.QRCode.CorrectLevel.H });
+  document.getElementById("driverQrName").textContent = driver.full_name;
+  document.getElementById("driverQrLicense").textContent = `License: ${driver.license_number}`;
+  document.getElementById("openDriverQrBtn").href = currentQrUrl;
+  document.getElementById("driverQrModal").hidden = false;
+}
+
+function printDriverQr() {
+  if (!currentDriver || !currentQrUrl) return;
+  const qr = document.querySelector("#driverQrCode canvas, #driverQrCode img");
+  const source = qr?.tagName === "CANVAS" ? qr.toDataURL("image/png") : qr?.src;
+  if (!source) return;
+  const tab = window.open("", "_blank");
+  if (!tab) return alert("Please allow pop-ups to print the QR card.");
+  tab.document.write(`<!doctype html><html><head><title>Driver QR</title><style>body{font-family:Arial;text-align:center;padding:30px}.card{display:inline-block;padding:24px;border:3px solid #0b5138;border-radius:16px}.card img{width:260px}.brand{color:#0b5138;font-weight:800}.license{font-weight:700}@media print{button{display:none}}</style></head><body><div class="card"><div class="brand">TFRO MIS · VERIFIED DRIVER RECORD</div><h2>${escapeHtml(currentDriver.full_name)}</h2><img src="${source}"><p class="license">License: ${escapeHtml(currentDriver.license_number)}</p><small>Scan and sign in to authenticate this Driver record.</small></div><p><button onclick="print()">Print QR Card</button></p></body></html>`);
+  tab.document.close();
+}
+
 table.addEventListener("click", async (e) => {
   const btn = e.target.closest("button[data-action]");
   if (!btn) return;
   if (btn.dataset.action === "view") await openDriverForm(btn.dataset.id);
+  if (btn.dataset.action === "qr") await openDriverQr(btn.dataset.id);
   if (btn.dataset.action === "assign") openAssignModal(btn.dataset.id);
   if (btn.dataset.action === "verify") verifyLicense(btn.dataset.id);
 });
 document.getElementById("saveAssignBtn")?.addEventListener("click", saveAssignment);
 document.getElementById("printDriverFormBtn")?.addEventListener("click", printDriverForm);
+document.getElementById("printDriverQrBtn")?.addEventListener("click", printDriverQr);
 document.querySelectorAll("[data-close]").forEach((el) =>
   el.addEventListener("click", () => { document.getElementById(el.dataset.close).hidden = true; })
 );

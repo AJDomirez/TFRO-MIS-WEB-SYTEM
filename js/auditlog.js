@@ -296,12 +296,14 @@ function updateSummary() {
   const admin = active.filter((l) => (l.role || "").toLowerCase() === "admin");
   const operator = active.filter((l) => (l.role || "").toLowerCase() === "operator");
   const staff = active.filter((l) => (l.role || "").toLowerCase() === "staff");
+  const enforcer = active.filter((l) => (l.role || "").toLowerCase() === "traffic_enforcer");
 
   setText("sumTotal", active.length);
   setText("sumToday", today.length);
   setText("sumAdmin", admin.length);
   setText("sumOperator", operator.length);
   setText("sumStaff", staff.length);
+  setText("sumEnforcer", enforcer.length);
 }
 
 /* ---------- DETAIL MODAL ---------- */

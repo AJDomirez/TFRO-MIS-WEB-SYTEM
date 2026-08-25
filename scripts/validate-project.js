@@ -37,7 +37,9 @@ for (const file of javascriptFiles) {
   const source = fs.readFileSync(file, "utf8");
   for (const match of source.matchAll(/(?:from\s+|import\s+)["'](\.[^"']+)["']/g)) {
     const target = localTarget(file, match[1]);
-    if (target && !fs.existsSync(target)) {
+    const isBundledQrVendor = match[1].split("?")[0].endsWith("/js/vendor/qrcode.min.js")
+      && fs.existsSync(path.join(root, "node_modules", "qrcodejs", "qrcode.min.js"));
+    if (target && !fs.existsSync(target) && !isBundledQrVendor) {
       errors.push(`${relative(file)} imports missing file ${match[1]}`);
     }
   }
@@ -53,7 +55,9 @@ for (const file of filesIn("html", ".html")) {
 
   for (const match of source.matchAll(/\b(?:src|href)=["']([^"']+)["']/g)) {
     const target = localTarget(file, match[1]);
-    if (target && !fs.existsSync(target)) {
+    const isBundledQrVendor = match[1].split("?")[0].endsWith("/js/vendor/qrcode.min.js")
+      && fs.existsSync(path.join(root, "node_modules", "qrcodejs", "qrcode.min.js"));
+    if (target && !fs.existsSync(target) && !isBundledQrVendor) {
       errors.push(`${relative(file)} references missing file ${match[1]}`);
     }
   }

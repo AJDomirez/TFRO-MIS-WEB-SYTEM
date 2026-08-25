@@ -1,87 +1,55 @@
 import { supabase } from "./supabase.js";
 import { requireRole } from "./auth-guard.js";
 
-function isWithinDateRange(value) {
-  const rowDate = String(value || "").slice(0, 10);
-  const start = document.getElementById("startDate")?.value || "";
-  const end = document.getElementById("endDate")?.value || "";
-  return (!start || rowDate >= start) && (!end || rowDate <= end);
-}
-
-let operators = [];
-const table = document.getElementById("operatorsTable");
-const formPanel = document.getElementById("operatorFormPanel");
-const form = document.getElementById("operatorForm");
-
-function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" })[c]); }
-function setCount(id, value) { document.getElementById(id).textContent = value; }
-
-function filteredOperators() {
-  const term = document.getElementById("searchInput").value.trim().toLowerCase();
-  const status = document.getElementById("statusFilter").value;
-  return operators.filter((row) => isWithinDateRange(row.created_at) &&
-    (status === "all" || row.status === status) &&
-    [row.full_name, row.email || "", row.address, row.contact_number, row.franchise_number || ""]
-      .some((value) => value.toLowerCase().includes(term)));
-}
+let operators = [], operatorDrivers = [];
+const table = document.getElementById("operatorsTable"), formPanel = document.getElementById("operatorFormPanel"), form = document.getElementById("operatorForm");
+const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" })[c]);
+const setCount = (id, value) => { document.getElementById(id).textContent = value; };
+function isWithinDateRange(value) { const date = String(value || "").slice(0,10), start = document.getElementById("startDate")?.value || "", end = document.getElementById("endDate")?.value || ""; return (!start || date >= start) && (!end || date <= end); }
+function filteredOperators() { const term = document.getElementById("searchInput").value.trim().toLowerCase(), status = document.getElementById("statusFilter").value; return operators.filter((row) => isWithinDateRange(row.created_at) && (status === "all" || row.status === status) && [row.full_name,row.email,row.address,row.contact_number,row.franchise_number].some((v) => String(v || "").toLowerCase().includes(term))); }
 
 function render() {
   const rows = filteredOperators();
-  table.innerHTML = rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row.full_name)}</td><td>${escapeHtml(row.email || "—")}</td><td>${escapeHtml(row.address)}</td><td>${escapeHtml(row.contact_number)}</td><td>${escapeHtml(row.franchise_number || "—")}</td><td><span class="status ${row.status}">${escapeHtml(row.status)}</span></td><td><span class="status ${row.verified ? "active" : "inactive"}">${row.user_id ? (row.verified ? "Verified" : "Pending verification") : "Not linked"}</span></td></tr>`).join("") : '<tr><td colspan="7">No operators found.</td></tr>';
-  setCount("totalOperators", operators.length);
-  setCount("activeOperators", operators.filter((row) => row.status === "active").length);
-  setCount("inactiveOperators", operators.filter((row) => row.status === "inactive").length);
-  setCount("suspendedOperators", operators.filter((row) => row.status === "suspended").length);
+  table.innerHTML = rows.length ? rows.map((row) => `<tr><td><button type="button" class="operator-name-button" data-view-operator="${row.id}">${escapeHtml(row.full_name)}</button></td><td>${escapeHtml(row.email || "—")}</td><td>${escapeHtml(row.address)}</td><td>${escapeHtml(row.contact_number)}</td><td>${escapeHtml(row.franchise_number || "—")}</td><td><span class="status ${row.status}">${escapeHtml(row.status)}</span></td><td><span class="status ${row.verified ? "active" : "inactive"}">${row.user_id ? (row.verified ? "Verified" : "Pending verification") : "Not linked"}</span></td><td><button type="button" class="view-record-btn" data-view-operator="${row.id}"><i class="ri-folder-user-line"></i> View Profile & Drivers</button></td></tr>`).join("") : '<tr><td colspan="8">No operators found.</td></tr>';
+  setCount("totalOperators", operators.length); setCount("activeOperators", operators.filter((r) => r.status === "active").length); setCount("inactiveOperators", operators.filter((r) => r.status === "inactive").length); setCount("suspendedOperators", operators.filter((r) => r.status === "suspended").length);
 }
 
 async function loadOperators() {
-  const { data, error } = await supabase
-    .from("operators")
-    .select("id,user_id,full_name,email,address,contact_number,franchise_number,status,verified,created_at")
-    .order("full_name");
-  if (error) {
-    console.error(error);
-    table.innerHTML = `<tr><td colspan="7" class="table-error">Could not load Operator accounts: ${escapeHtml(error.message)}</td></tr>`;
-    return;
-  }
-  operators = data || []; render();
+  const [operatorResult, driverResult, profileResult] = await Promise.all([
+    supabase.from("operators").select("id,user_id,full_name,email,address,contact_number,franchise_number,status,verified,created_at").order("full_name"),
+    supabase.from("drivers").select("id,full_name,license_number,operator_name,contact_number,violation_count,compliance,created_at,franchise_id,operator_id,address,license_type,license_expiration,license_status,license_verified_at,picture_storage_path").order("full_name"),
+    supabase.from("profiles").select("id,profile_picture_path"),
+  ]);
+  if (operatorResult.error) { table.innerHTML = `<tr><td colspan="8" class="table-error">Could not load Operator accounts: ${escapeHtml(operatorResult.error.message)}</td></tr>`; return; }
+  if (driverResult.error) console.error("Could not preload Operator Drivers:", driverResult.error);
+  const pictures = new Map((profileResult.data || []).map((profile) => [profile.id, profile.profile_picture_path]));
+  operators = (operatorResult.data || []).map((operator) => ({ ...operator, profile_picture_path:pictures.get(operator.user_id) || null })); operatorDrivers = driverResult.data || []; render();
 }
 
-async function verifyAccess() {
-  const { user } = await requireRole(["admin"]);
-  if (!user) return;
-  loadOperators();
+function profileField(label, value) { const shown = value === null || value === undefined || value === "" ? "—" : value; return `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(shown)}</strong></div>`; }
+async function openOperatorRecord(operatorId) {
+  const operator = operators.find((row) => String(row.id) === String(operatorId)); if (!operator) return;
+  const drivers = operatorDrivers.filter((driver) => String(driver.operator_id) === String(operator.id) || (!driver.operator_id && String(driver.operator_name || "").trim().toLowerCase() === String(operator.full_name || "").trim().toLowerCase()));
+  document.getElementById("operatorRecordTitle").textContent = operator.full_name;
+  document.getElementById("operatorAccountBadge").innerHTML = `<span class="status ${operator.verified ? "active" : "inactive"}">${operator.verified ? "Verified Account" : "Pending Verification"}</span>`;
+  document.getElementById("operatorProfileDetails").innerHTML = [profileField("Full Name",operator.full_name),profileField("Email Address",operator.email),profileField("Home Address",operator.address),profileField("Contact Number",operator.contact_number),profileField("Franchise Number",operator.franchise_number),profileField("Account Status",operator.status),profileField("Account Link",operator.user_id ? "Linked to login account" : "No login linked"),profileField("Submitted / Registered",operator.created_at ? new Date(operator.created_at).toLocaleString("en-PH") : "—")].join("");
+  document.getElementById("operatorDriverCount").textContent = `${drivers.length} Driver${drivers.length === 1 ? "" : "s"}`;
+  document.getElementById("operatorDriversList").innerHTML = drivers.length ? drivers.map((driver) => {
+    const expired = driver.license_expiration && new Date(`${driver.license_expiration}T23:59:59`) < new Date(), verified = driver.license_status === "verified" && !expired;
+    const fields = [profileField("Driver Name",driver.full_name),profileField("Address",driver.address),profileField("Contact Number",driver.contact_number),profileField("License Number",driver.license_number),profileField("License Type",driver.license_type),profileField("License Expiration",driver.license_expiration),profileField("License Status",expired ? "Expired" : driver.license_status),profileField("Verified At",driver.license_verified_at ? new Date(driver.license_verified_at).toLocaleString("en-PH") : "Not yet verified"),profileField("Franchise ID",driver.franchise_id),profileField("Compliance",driver.compliance),profileField("Recorded Violations",driver.violation_count),profileField("Form Submitted",driver.created_at ? new Date(driver.created_at).toLocaleString("en-PH") : "—")].join("");
+    return `<article class="operator-driver-card"><div class="driver-card-summary"><div class="driver-card-avatar"><i class="ri-steering-2-line"></i></div><div><h4>${escapeHtml(driver.full_name)}</h4><p>${escapeHtml(driver.license_number)} · ${escapeHtml(driver.license_type || "License type not entered")}</p></div><span class="license-verification ${verified ? "verified" : "unverified"}"><i class="${verified ? "ri-checkbox-circle-fill" : "ri-error-warning-fill"}"></i>${verified ? "Verified License" : expired ? "Expired License" : "Not Verified"}</span></div><details><summary><i class="ri-file-text-line"></i> View Driver Profile & Submitted Form <i class="ri-arrow-down-s-line"></i></summary><div class="driver-form-record"><img data-driver-picture="${driver.id}" alt="Submitted Driver picture" hidden><div class="record-profile-grid">${fields}</div></div></details></article>`;
+  }).join("") : '<div class="empty-driver-record"><i class="ri-user-unfollow-line"></i><h4>No Drivers assigned</h4><p>No submitted Driver profiles are currently linked to this Operator.</p></div>';
+  document.getElementById("operatorRecordModal").hidden = false;
+  const formalPhoto = document.getElementById("operatorFormalPhoto"), missingPhoto = document.getElementById("operatorPhotoMissing"); formalPhoto.hidden = true; formalPhoto.removeAttribute("src"); missingPhoto.hidden = false;
+  if (operator.profile_picture_path) { const { data } = await supabase.storage.from("account-profile-pictures").createSignedUrl(operator.profile_picture_path,600); if (data?.signedUrl) { formalPhoto.src=data.signedUrl; formalPhoto.hidden=false; missingPhoto.hidden=true; } }
+  await Promise.all(drivers.filter((d) => d.picture_storage_path).map(async (driver) => { const { data } = await supabase.storage.from("franchise-documents").createSignedUrl(driver.picture_storage_path,600); const image = document.querySelector(`[data-driver-picture="${driver.id}"]`); if (data?.signedUrl && image) { image.src = data.signedUrl; image.hidden = false; } }));
 }
+const closeOperatorRecord = () => { document.getElementById("operatorRecordModal").hidden = true; };
 
-document.getElementById("addOperatorBtn").addEventListener("click", () => { formPanel.hidden = false; });
-document.getElementById("cancelOperatorBtn").addEventListener("click", () => { form.reset(); formPanel.hidden = true; });
-document.getElementById("searchInput").addEventListener("input", render);
-document.getElementById("statusFilter").addEventListener("change", render);
-import("./csv-export.js").then(({ bindDateCsvExport }) => bindDateCsvExport({
-  getRows: filteredOperators, render, filename: "tfro_operators",
-  columns: [
-    { header: "Operator Name", value: (row) => row.full_name }, { header: "Email", value: (row) => row.email },
-    { header: "Address", value: (row) => row.address }, { header: "Contact Number", value: (row) => row.contact_number },
-    { header: "Franchise Number", value: (row) => row.franchise_number }, { header: "Status", value: (row) => row.status },
-    { header: "Verified", value: (row) => row.verified ? "Yes" : "No" }, { header: "Created At", value: (row) => row.created_at },
-  ],
-})).catch((error) => console.error("CSV controls unavailable:", error));
-form.addEventListener("submit", async (event) => {
-  event.preventDefault(); const entry = Object.fromEntries(new FormData(form));
-  const { error } = await supabase.from("operators").insert({ full_name: entry.full_name.trim(), address: entry.address.trim(), contact_number: entry.contact_number.trim(), franchise_number: entry.franchise_number.trim() || null, status: entry.status });
-  if (error) return alert(`Could not save operator: ${error.message}`);
-  form.reset(); formPanel.hidden = true; loadOperators();
-  import("./audit-helper.js").then(({ logAudit }) => logAudit({
-    action: "Added Operator",
-    actionType: "create",
-    record: entry.full_name.trim(),
-    description: `Added new operator record for ${entry.full_name.trim()} (${entry.franchise_number.trim() || "no franchise"}).`,
-  })).catch((error) => console.error("Audit log unavailable:", error));
-});
-document.getElementById("logoutBtn")?.addEventListener("click", async () => { await supabase.auth.signOut(); localStorage.clear(); window.location.href = "index.html"; });
-verifyAccess();
-
-supabase
-  .channel("admin-operators-live")
-  .on("postgres_changes", { event: "*", schema: "public", table: "operators" }, () => loadOperators())
-  .subscribe();
+document.getElementById("addOperatorBtn").addEventListener("click", () => { formPanel.hidden = false; }); document.getElementById("cancelOperatorBtn").addEventListener("click", () => { form.reset(); formPanel.hidden = true; }); document.getElementById("searchInput").addEventListener("input",render); document.getElementById("statusFilter").addEventListener("change",render);
+table.addEventListener("click", (event) => { const button = event.target.closest("[data-view-operator]"); if (button) openOperatorRecord(button.dataset.viewOperator); }); document.getElementById("closeOperatorRecord").addEventListener("click",closeOperatorRecord); document.getElementById("printOperatorRecord").addEventListener("click",()=>window.print()); document.getElementById("operatorRecordModal").addEventListener("click",(event) => { if (event.target.id === "operatorRecordModal") closeOperatorRecord(); });
+import("./csv-export.js").then(({ bindDateCsvExport }) => bindDateCsvExport({ getRows:filteredOperators,render,filename:"tfro_operators",columns:[{header:"Operator Name",value:(r)=>r.full_name},{header:"Email",value:(r)=>r.email},{header:"Address",value:(r)=>r.address},{header:"Contact Number",value:(r)=>r.contact_number},{header:"Franchise Number",value:(r)=>r.franchise_number},{header:"Status",value:(r)=>r.status},{header:"Verified",value:(r)=>r.verified?"Yes":"No"},{header:"Created At",value:(r)=>r.created_at}] })).catch(console.error);
+form.addEventListener("submit",async(event)=>{ event.preventDefault(); const entry=Object.fromEntries(new FormData(form)); const {error}=await supabase.from("operators").insert({full_name:entry.full_name.trim(),address:entry.address.trim(),contact_number:entry.contact_number.trim(),franchise_number:entry.franchise_number.trim()||null,status:entry.status}); if(error)return alert(`Could not save operator: ${error.message}`); form.reset(); formPanel.hidden=true; loadOperators(); import("./audit-helper.js").then(({logAudit})=>logAudit({action:"Added Operator",actionType:"create",record:entry.full_name.trim(),description:`Added new operator record for ${entry.full_name.trim()}.`})).catch(console.error); });
+document.getElementById("logoutBtn")?.addEventListener("click",async()=>{await supabase.auth.signOut();localStorage.clear();location.href="index.html";});
+(async()=>{const {user}=await requireRole(["admin"]);if(user)loadOperators();})();
+supabase.channel("admin-operators-live").on("postgres_changes",{event:"*",schema:"public",table:"operators"},loadOperators).on("postgres_changes",{event:"*",schema:"public",table:"drivers"},loadOperators).subscribe();

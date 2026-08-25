@@ -67,6 +67,7 @@ function render() {
         ${canManageViolations ? `<button type="button" data-action="edit" data-id="${row.id}" title="Edit violation" aria-label="Edit violation for ${escapeHtml(row.subject_name || "record")}">
           <i class="ri-pencil-line"></i>
         </button>` : ""}
+        ${row.ticket_photo_path ? `<button type="button" data-action="photo" data-id="${row.id}" title="View submitted ticket photo" aria-label="View ticket photo for ${escapeHtml(row.subject_name || "record")}"><i class="ri-image-line"></i></button>` : ""}
         <button type="button" data-action="notice" data-id="${row.id}" title="Print violation notice"><i class="ri-printer-line"></i></button>
       </div></td>
     </tr>`;
@@ -78,6 +79,16 @@ function printNotice(row) {
   if (!tab) return window.alert("Please allow pop-ups to print the violation notice.");
   tab.document.write(`<!doctype html><html><head><title>Violation Notice ${escapeHtml(row.ticket_number || "")}</title><style>body{font-family:Arial,sans-serif;color:#172033}.page{max-width:760px;margin:25px auto;border:1px solid #aebbb5;padding:28px}.head{border-top:12px solid #0b5c41;border-bottom:5px solid #f4c430;padding:16px 0}.head h1{font-size:20px;margin:0}.title{text-align:center;letter-spacing:4px;text-decoration:underline;margin:30px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{border-bottom:1px solid #555;padding:8px 0}.field b{display:block;font-size:11px;color:#5b6870;text-transform:uppercase}table{width:100%;border-collapse:collapse;margin:24px 0}th,td{border:1px solid #555;padding:10px;text-align:left}.sign{display:flex;justify-content:space-between;margin-top:55px;text-align:center}@media print{.page{border:0;margin:0}}</style></head><body><main class="page"><header class="head"><h1>TRICYCLE FRANCHISING AND REGULATORY OFFICE</h1><p>City Government of Lucena</p></header><h2 class="title">NOTICE OF VIOLATION</h2><section class="grid"><div class="field"><b>Ticket number</b>${escapeHtml(row.ticket_number || "—")}</div><div class="field"><b>Violation date</b>${new Date(row.occurred_at).toLocaleDateString("en-PH")}</div><div class="field"><b>Name</b>${escapeHtml(row.subject_name)}</div><div class="field"><b>Classification</b>${escapeHtml(row.classification || row.subject_type)}</div><div class="field"><b>Franchise number</b>${escapeHtml(row.franchise_number || "—")}</div><div class="field"><b>Apprehending officer/s</b>${escapeHtml(row.apprehending_officers || "—")}</div></section><table><tr><th>Code</th><th>Violation</th><th>Penalty</th></tr><tr><td>${escapeHtml(row.violation_code || "—")}</td><td>${escapeHtml(row.violation_type)}</td><td>${money.format(Number(row.penalty || 0))}</td></tr></table><p><strong>Status:</strong> ${escapeHtml(row.status)}</p><div class="sign"><p>_________________________<br>Operator / Driver</p><p>_________________________<br>TFRO Personnel</p></div></main><script>window.onload=()=>window.print()<\/script></body></html>`);
   tab.document.close();
+}
+
+async function openTicketPhoto(row) {
+  if (!row.ticket_photo_path) return;
+  const { data, error } = await supabase.storage.from("violation-tickets").createSignedUrl(row.ticket_photo_path, 300);
+  if (error) {
+    window.alert(`Could not open ticket photo: ${error.message}`);
+    return;
+  }
+  window.open(data.signedUrl, "_blank", "noopener");
 }
 
 async function loadViolations() {
@@ -229,6 +240,7 @@ function bindEvents() {
     const row = violations.find((item) => String(item.id) === String(button.dataset.id));
     if (!row) return;
     if (button.dataset.action === "edit") setFormMode("edit", row);
+    if (button.dataset.action === "photo") void openTicketPhoto(row);
     if (button.dataset.action === "notice") printNotice(row);
   });
   bindDateCsvExport({

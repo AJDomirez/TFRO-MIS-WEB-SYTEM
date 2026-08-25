@@ -5,6 +5,7 @@ export const ROLE_DESTINATIONS = Object.freeze({
   admin: "dashboard.html",
   staff: "violation.html",
   operator: "operatorportal.html",
+  traffic_enforcer: "enforcerportal.html",
 });
 
 function clearCachedIdentity() {
@@ -43,7 +44,7 @@ export function destinationForRole(role) {
 export async function loadUserProfile(userId) {
   return supabase
     .from("profiles")
-    .select("id, role, full_name, contact_number")
+    .select("id, role, full_name, contact_number, profile_picture_path")
     .eq("id", userId)
     .maybeSingle();
 }
@@ -93,6 +94,21 @@ let signOutInProgress = false;
 export async function signOutAndRedirect(destination = "index.html") {
   if (signOutInProgress) return;
   signOutInProgress = true;
+
+  if (localStorage.getItem("role") === "traffic_enforcer") {
+    try {
+      await Promise.race([
+        import("./audit-helper.js").then(({ logAudit }) => logAudit({
+          action: "Logged out of system",
+          actionType: "logout",
+          description: "Traffic Enforcer ended the authenticated system session.",
+        })),
+        new Promise((resolve) => window.setTimeout(resolve, 800)),
+      ]);
+    } catch (error) {
+      console.error("Traffic Enforcer logout audit failed:", error);
+    }
+  }
 
   // Clear the visible identity immediately so logout remains responsive even
   // if Supabase or the user's connection is temporarily unavailable.
