@@ -139,21 +139,23 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
       plate: value(changeMotor.new_plate_number || renewal.plate_number || franchise.plate_number),
       expiration: formatDate(renewal.temporary_mtop_expiration_date),
     };
-    const fit = (page, text, x, y, maxWidth, size = 10, useBold = false) => {
+    const fit = (page, text, x, y, maxWidth, size = 10, useBold = false, align = "left") => {
       if (!text) return;
       const selectedFont = useBold ? bold : font;
       let fitted = size;
       while (fitted > 7 && selectedFont.widthOfTextAtSize(text, fitted) > maxWidth) fitted -= 0.5;
-      page.drawText(text, { x, y, maxWidth, size: fitted, font: selectedFont, color: ink });
+      const textWidth = selectedFont.widthOfTextAtSize(text, fitted);
+      const drawX = align === "center" ? x + Math.max(0, (maxWidth - textWidth) / 2) : x;
+      page.drawText(text, { x: drawX, y, maxWidth, size: fitted, font: selectedFont, color: ink });
     };
-    const row = (page, y, columns) => columns.forEach(([text, x, width]) => fit(page, text, x, y, width, 9, true));
+    const row = (page, y, columns) => columns.forEach(([text, x, width]) => fit(page, text, x, y, width, 9, true, "center"));
 
     if (pages[1]) {
       fit(pages[1], details.name, 112, 843, 240, 10, true);
-      fit(pages[1], details.franchise, 498, 843, 70, 10, true);
+      fit(pages[1], details.franchise, 498, 843, 70, 10, true, "center");
       fit(pages[1], details.address, 112, 827, 265, 10, true);
-      row(pages[1], 699, [[details.make, 58, 61], [details.model, 129, 68], [details.motor, 208, 134], [details.chassis, 354, 124], [details.plate, 491, 76]]);
-      fit(pages[1], details.expiration, 365, 336, 185, 12, true);
+      row(pages[1], 699, [[details.make, 51, 68], [details.model, 128, 72], [details.motor, 209, 135], [details.chassis, 353, 127], [details.plate, 489, 81]]);
+      fit(pages[1], details.expiration, 345, 336, 205, 12, true, "center");
     }
 
     const bytes = await pdfDoc.save();
