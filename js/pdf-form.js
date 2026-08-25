@@ -217,3 +217,67 @@ export async function openPmblPdfForm({ renewal, franchise = {} }) {
     alert(`Unable to generate the PMBL PDF: ${error.message}`);
   }
 }
+
+export async function openChecklistPdfForm({ renewal, documents = [] }) {
+  const popup = openPdfWindow("TFRO-004 Checklist for Renewal");
+  if (!popup) return;
+  try {
+    const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
+    const templateUrl = new URL("../forms/TFRO-004 Checklist for Renewal.pdf", import.meta.url);
+    const templateBytes = await fetch(templateUrl).then((response) => response.arrayBuffer());
+    const pdfDoc = await PDFDocument.load(templateBytes);
+    const page = pdfDoc.getPages()[0];
+    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const ink = rgb(0, 0, 0);
+    const uploaded = new Set(documents.map((item) => item.doc_type));
+    const inspection = renewal.inspection_results || {};
+    const drawMark = (x, y) => page.drawText("X", { x, y, size: 7.5, font, color: ink });
+
+    const date = formatDate(renewal.created_at);
+    page.drawText(date, { x: 278, y: 521, size: 8, font, color: ink });
+    page.drawText(date, { x: 699, y: 521, size: 8, font, color: ink });
+
+    const documentRows = [
+      ["payment_receipt", 456],
+      ["official_receipt", 447],
+      ["voters_certificate", 421],
+      ["insurance", 405],
+      ["cedula", 370],
+      ["barangay_clearance", 361],
+      ["drivers_license", 352],
+      ["picture_2x2", 343],
+      ["pmbl_certification", 334],
+    ];
+    for (const [type, y] of documentRows) {
+      if (!uploaded.has(type)) continue;
+      drawMark(120, y);
+      drawMark(542, y);
+    }
+
+    const physicalRows = [
+      ["functional_horn", 226],
+      ["signal_lights", 213],
+      ["head_tail_lights", 199],
+      ["sidecar_interior_light", 180],
+      ["sidecar_light_kept_on", 160],
+      ["anti_noise_muffler", 147],
+      ["body_number_sticker", 134],
+      ["garbage_receptacle", 119],
+      ["clean_windshield", 109],
+    ];
+    for (const [key, y] of physicalRows) {
+      if (inspection[key] !== true && inspection[key] !== false) continue;
+      const leftX = inspection[key] ? 108 : 127;
+      const rightX = inspection[key] ? 529 : 550;
+      drawMark(leftX, y);
+      drawMark(rightX, y);
+    }
+
+    const bytes = await pdfDoc.save();
+    await showPdf(popup, bytes, `TFRO-004-${value(renewal.renewal_code || renewal.id)}.pdf`);
+  } catch (error) {
+    popup.close();
+    console.error(error);
+    alert(`Unable to generate the TFRO-004 PDF: ${error.message}`);
+  }
+}

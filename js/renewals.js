@@ -162,8 +162,8 @@ async function printCurrentPmblCertification() {
 
 async function printCurrentChecklist() {
   if (!currentRenewal) return;
-  const { openRenewalChecklistForm } = await import("./submission-form.js?v=20260824-233000");
-  openRenewalChecklistForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, documents: currentDocuments });
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260826-073000");
+  openChecklistPdfForm({ renewal: currentRenewal, documents: currentDocuments });
 }
 
 function inspectionResults() {

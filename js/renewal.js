@@ -168,7 +168,7 @@ async function loadHistory() {
       <td><span class="status-pill ${statusClass(renewal.status)}">${escapeHtml(statusLabel(renewal.status))}</span></td>
       <td>${escapeHtml(renewal.decision_reason || (renewal.status === "approved" ? `MTOP ${renewal.mtop_number || "for issuance"}; expected ${renewal.expected_release_date || "within 1–2 weeks"}` : "Awaiting TFRO processing"))}</td>
       <td>${new Date(renewal.created_at).toLocaleDateString()}</td>
-      <td><button type="button" class="page-button page-button-back" data-checklist-form="${renewal.id}"><i class="ri-checkbox-multiple-line"></i> TFRO-004</button> <button type="button" class="page-button page-button-back" data-renewal-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i> Profile</button> <button type="button" class="page-button page-button-back" data-pmbl-form="${renewal.id}"><i class="ri-file-certificate-line"></i> PMBL</button></td>
+      <td><button type="button" class="page-button page-button-back" data-pmbl-form="${renewal.id}"><i class="ri-file-certificate-line"></i> TFRO-003</button> <button type="button" class="page-button page-button-back" data-checklist-form="${renewal.id}"><i class="ri-checkbox-multiple-line"></i> TFRO-004</button> <button type="button" class="page-button page-button-back" data-renewal-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i> TFRO-005</button></td>
     </tr>`).join("") : '<tr><td colspan="6">No renewal requests yet.</td></tr>';
 
   if (!currentRenewal) return;
@@ -209,8 +209,8 @@ async function showPmblCertification(renewal) {
 
 async function showRenewalChecklist(renewal) {
   const { data: documents } = await supabase.from("renewal_documents").select("doc_type,status,verified").eq("renewal_id", renewal.id);
-  const { openRenewalChecklistForm } = await import("./submission-form.js?v=20260824-233000");
-  openRenewalChecklistForm({ renewal, franchise: currentFranchise || {}, documents: documents || [] });
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260826-073000");
+  openChecklistPdfForm({ renewal, documents: documents || [] });
 }
 
 function prefillRenewal(renewal) {
