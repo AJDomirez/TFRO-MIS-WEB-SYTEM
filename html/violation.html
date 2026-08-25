@@ -179,7 +179,7 @@
         <label>Violation code<select name="violation_code" id="violationCode" required><option value="">Select official violation</option></select></label>
         <label>Violation<input name="violation_type" required readonly></label>
         <label>Classification<select name="classification"><option value="with_franchise">With Franchise</option><option value="colorum">Colorum</option><option value="temporary">Temporary</option></select></label>
-        <label>Discounted<select name="discounted"><option value="false">No</option><option value="true">Yes</option></select></label>
+        <label>Discounted Amount (PHP)<input name="discounted" type="number" min="0" step="0.01" value="0" required></label>
         <label>Franchise number<input name="franchise_number" placeholder="Required when applicable"></label>
         <label>Ticket number<input name="ticket_number" required></label>
         <label>Apprehending officer/s<input name="apprehending_officers" required></label>
@@ -224,7 +224,7 @@
 
 <div class="violation-toast" id="violationToast" hidden role="status" aria-live="polite"></div>
 
-<script type="module" src="../js/violation.js?v=20260825-170000"></script>
+<script type="module" src="../js/violation.js?v=20260825-190000"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 </body>
 </html>
