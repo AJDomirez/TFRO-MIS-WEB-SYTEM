@@ -191,7 +191,7 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
 
     write(formatDate(renewal.created_at), 515, 827, 8.5, 55);
     const fullRenewalFranchiseNumber = value(franchise.franchise_number);
-    const renewalFranchiseNumber = fullRenewalFranchiseNumber.match(/(\d+)$/)?.[1] || fullRenewalFranchiseNumber;
+    const renewalFranchiseNumber = fullRenewalFranchiseNumber.replace(/^FR-/i, "");
     const renewalFranchiseSize = 10;
     const renewalFranchiseWidth = bold.widthOfTextAtSize(renewalFranchiseNumber, renewalFranchiseSize);
     page.drawText(renewalFranchiseNumber, { x: 568 - renewalFranchiseWidth, y: 806.5, size: renewalFranchiseSize, font: bold, color: ink });
