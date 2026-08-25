@@ -116,12 +116,11 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, pictureUrl =
       drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, color: ink });
 
     write(formatDate(renewal.created_at), 515, 827, 8.5, 55);
-    page.drawRectangle({ x: 454, y: 802, width: 117, height: 18, color: rgb(1, 1, 1) });
     const fullRenewalFranchiseNumber = value(franchise.franchise_number);
     const renewalFranchiseNumber = fullRenewalFranchiseNumber.match(/(\d+)$/)?.[1] || fullRenewalFranchiseNumber;
     const renewalFranchiseSize = 10;
     const renewalFranchiseWidth = bold.widthOfTextAtSize(renewalFranchiseNumber, renewalFranchiseSize);
-    page.drawText(renewalFranchiseNumber, { x: 454 + (117 - renewalFranchiseWidth) / 2, y: 806.5, size: renewalFranchiseSize, font: bold, color: ink });
+    page.drawText(renewalFranchiseNumber, { x: 568 - renewalFranchiseWidth, y: 806.5, size: renewalFranchiseSize, font: bold, color: ink });
     write(names.last, 48, 778, 10, 165);
     write(names.first, 225, 778, 10, 145);
     write(names.middle, 335, 778, 10, 110);
