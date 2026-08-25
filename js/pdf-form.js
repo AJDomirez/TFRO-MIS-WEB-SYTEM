@@ -155,11 +155,11 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {} }) {
       row(pages[0], 520, [[details.make, 7, 64], [details.model, 81, 69], [details.motor, 163, 132], [details.chassis, 307, 122], [details.plate, 443, 78]]);
     }
     if (pages[1]) {
-      fit(pages[1], details.name, 105, 651, 170, 9.5, true);
-      fit(pages[1], details.franchise, 315, 651, 105, 9.5, true);
-      fit(pages[1], details.orNumber, 470, 651, 66, 9.5, true);
-      fit(pages[1], details.address, 83, 632, 453, 9.5, true);
-      row(pages[1], 507, [[details.make, 42, 46], [details.model, 95, 64], [details.motor, 167, 119], [details.chassis, 294, 109], [details.plate, 411, 74]]);
+      fit(pages[1], details.name, 82, 657, 220, 9.5, true);
+      fit(pages[1], details.franchise, 339, 657, 120, 9.5, true);
+      fit(pages[1], details.orNumber, 470, 657, 66, 9.5, true);
+      fit(pages[1], details.address, 82, 639, 410, 9.5, true);
+      row(pages[1], 535, [[details.make, 42, 57], [details.model, 109, 58], [details.motor, 179, 111], [details.chassis, 306, 106], [details.plate, 425, 65]]);
     }
 
     const bytes = await pdfDoc.save();
