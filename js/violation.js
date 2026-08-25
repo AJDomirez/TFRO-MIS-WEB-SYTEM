@@ -90,6 +90,7 @@ function render() {
           <i class="ri-pencil-line"></i>
         </button>` : ""}
         ${row.ticket_photo_path ? `<button type="button" data-action="photo" data-id="${row.id}" title="View submitted ticket photo" aria-label="View ticket photo for ${escapeHtml(row.subject_name || "record")}"><i class="ri-image-line"></i></button>` : ""}
+        <button type="button" data-action="order" data-id="${row.id}" title="View TFRO-009 Order of Payment"><i class="ri-file-pdf-2-line"></i></button>
         <button type="button" data-action="notice" data-id="${row.id}" title="Print violation notice"><i class="ri-printer-line"></i></button>
       </div></td>
     </tr>`;
@@ -100,6 +101,14 @@ function printNotice(row) {
   const tab = window.open("", "_blank");
   if (!tab) return window.alert("Please allow pop-ups to print the violation notice.");
   tab.document.write(`<!doctype html><html><head><title>Violation Notice ${escapeHtml(row.ticket_number || "")}</title><style>body{font-family:Arial,sans-serif;color:#172033}.page{max-width:760px;margin:25px auto;border:1px solid #aebbb5;padding:28px}.head{border-top:12px solid #0b5c41;border-bottom:5px solid #f4c430;padding:16px 0}.head h1{font-size:20px;margin:0}.title{text-align:center;letter-spacing:4px;text-decoration:underline;margin:30px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{border-bottom:1px solid #555;padding:8px 0}.field b{display:block;font-size:11px;color:#5b6870;text-transform:uppercase}table{width:100%;border-collapse:collapse;margin:24px 0}th,td{border:1px solid #555;padding:10px;text-align:left}.sign{display:flex;justify-content:space-between;margin-top:55px;text-align:center}@media print{.page{border:0;margin:0}}</style></head><body><main class="page"><header class="head"><h1>TRICYCLE FRANCHISING AND REGULATORY OFFICE</h1><p>City Government of Lucena</p></header><h2 class="title">NOTICE OF VIOLATION</h2><section class="grid"><div class="field"><b>Ticket number</b>${escapeHtml(row.ticket_number || "—")}</div><div class="field"><b>Violation date</b>${new Date(row.occurred_at).toLocaleDateString("en-PH")}</div><div class="field"><b>Name</b>${escapeHtml(row.subject_name)}</div><div class="field"><b>Classification</b>${escapeHtml(row.classification || row.subject_type)}</div><div class="field"><b>Franchise number</b>${escapeHtml(row.franchise_number || "—")}</div><div class="field"><b>Apprehending officer/s</b>${escapeHtml(row.apprehending_officers || "—")}</div></section><table><tr><th>Code</th><th>Violation</th><th>Penalty</th></tr><tr><td>${escapeHtml(row.violation_code || "—")}</td><td>${escapeHtml(row.violation_type)}</td><td>${money.format(Number(row.penalty || 0))}</td></tr></table><p><strong>Status:</strong> ${escapeHtml(row.status)}</p><div class="sign"><p>_________________________<br>Operator / Driver</p><p>_________________________<br>TFRO Personnel</p></div></main><script>window.onload=()=>window.print()<\/script></body></html>`);
+  tab.document.close();
+}
+
+function printOrderPayment(row) {
+  const tab = window.open("", "_blank");
+  if (!tab) return window.alert("Please allow pop-ups to view TFRO-009.");
+  const total = netAmount(row);
+  tab.document.write(`<!doctype html><html><head><title>TFRO-009 ${escapeHtml(row.ticket_number || "")}</title><style>body{font-family:Arial;background:#ddd}.toolbar{text-align:center;padding:10px;background:#173f32}.sheet{width:900px;min-height:610px;margin:18px auto;padding:35px;background:#fff}.head{border-top:18px solid #06452d;border-bottom:8px solid #f4ef24;padding:16px}.title{text-align:center;margin:45px;letter-spacing:5px;text-decoration:underline}.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}table{width:100%;margin:25px 0;border-collapse:collapse}th,td{padding:12px;border:1px solid #111}.sign{text-align:right;margin-top:45px}@media print{.toolbar{display:none}body{background:#fff}.sheet{margin:0}}</style></head><body><div class="toolbar"><button onclick="print()">Print / Save PDF</button></div><main class="sheet"><div class="head"><h2>TRICYCLE FRANCHISING AND REGULATORY OFFICE</h2><p>City Government of Lucena | Republic of the Philippines</p><b>TFRO - 009</b></div><h1 class="title">ORDER OF PAYMENT</h1><div class="grid"><p>Payor: <b>${escapeHtml(row.subject_name || "")}</b></p><p>Apprehending Officer/s: <b>${escapeHtml(row.apprehending_officers || "")}</b></p><p>Ticket No.: <b>${escapeHtml(row.ticket_number || "")}</b></p><p>Franchise No.: <b>${escapeHtml(row.franchise_number || "")}</b></p></div><table><tr><th>Code</th><th>Violation</th><th>Penalty</th></tr><tr><td>${escapeHtml(row.violation_code || "")}</td><td>${escapeHtml(row.violation_type || "")}</td><td>${money.format(Number(row.penalty || 0))}</td></tr><tr><td colspan="2">Discounted Amount</td><td>${money.format(Number(row.discounted || 0))}</td></tr><tr><th colspan="2">Total Amount Due</th><th>${money.format(total)}</th></tr></table><p class="sign">Assessed by: ____________________<br>TFRO Staff / PAYA</p></main></body></html>`);
   tab.document.close();
 }
 
@@ -270,6 +279,7 @@ function bindEvents() {
     if (!row) return;
     if (button.dataset.action === "edit") setFormMode("edit", row);
     if (button.dataset.action === "photo") void openTicketPhoto(row);
+    if (button.dataset.action === "order") printOrderPayment(row);
     if (button.dataset.action === "notice") printNotice(row);
   });
   bindDateCsvExport({
