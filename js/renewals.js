@@ -162,7 +162,7 @@ async function printCurrentPmblCertification() {
 
 async function printCurrentChecklist() {
   if (!currentRenewal) return;
-  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260826-073000");
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260826-083000");
   openChecklistPdfForm({ renewal: currentRenewal, documents: currentDocuments });
 }
 

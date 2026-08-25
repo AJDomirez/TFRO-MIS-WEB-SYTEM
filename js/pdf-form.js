@@ -231,11 +231,13 @@ export async function openChecklistPdfForm({ renewal, documents = [] }) {
     const ink = rgb(0, 0, 0);
     const uploaded = new Set(documents.map((item) => item.doc_type));
     const inspection = renewal.inspection_results || {};
-    const drawMark = (x, y) => page.drawText("X", { x, y, size: 7.5, font, color: ink });
+    const drawMark = (x, y) => {
+      page.drawLine({ start: { x, y: y + 3 }, end: { x: x + 2.2, y: y + 0.8 }, thickness: 1.25, color: ink });
+      page.drawLine({ start: { x: x + 2.2, y: y + 0.8 }, end: { x: x + 6.8, y: y + 6.8 }, thickness: 1.25, color: ink });
+    };
 
     const date = formatDate(renewal.created_at);
-    page.drawText(date, { x: 278, y: 521, size: 8, font, color: ink });
-    page.drawText(date, { x: 699, y: 521, size: 8, font, color: ink });
+    page.drawText(date, { x: 315, y: 521, size: 8, font, color: ink });
 
     const documentRows = [
       ["payment_receipt", 456],
@@ -251,7 +253,6 @@ export async function openChecklistPdfForm({ renewal, documents = [] }) {
     for (const [type, y] of documentRows) {
       if (!uploaded.has(type)) continue;
       drawMark(120, y);
-      drawMark(542, y);
     }
 
     const physicalRows = [
@@ -268,10 +269,11 @@ export async function openChecklistPdfForm({ renewal, documents = [] }) {
     for (const [key, y] of physicalRows) {
       if (inspection[key] !== true && inspection[key] !== false) continue;
       const leftX = inspection[key] ? 108 : 127;
-      const rightX = inspection[key] ? 529 : 550;
       drawMark(leftX, y);
-      drawMark(rightX, y);
     }
+
+    page.setMediaBox(0, 0, page.getWidth() / 2, page.getHeight());
+    page.setCropBox(0, 0, page.getWidth(), page.getHeight());
 
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-004-${value(renewal.renewal_code || renewal.id)}.pdf`);
