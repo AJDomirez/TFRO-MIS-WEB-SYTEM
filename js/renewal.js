@@ -3,7 +3,7 @@ import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalProfileForm } = await import("./submission-form.js?v=20260824-223000");
+  const { openRenewalProfileForm } = await import("./submission-form.js?v=20260825-213000");
   openRenewalProfileForm(options);
 }
 
