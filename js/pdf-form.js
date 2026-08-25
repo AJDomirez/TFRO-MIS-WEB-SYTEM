@@ -232,27 +232,27 @@ export async function openChecklistPdfForm({ renewal, documents = [] }) {
     const uploaded = new Set(documents.map((item) => item.doc_type));
     const inspection = renewal.inspection_results || {};
     const drawMark = (x, y) => {
-      page.drawLine({ start: { x: x + 0.8, y: y + 3.1 }, end: { x: x + 2.4, y: y + 1.5 }, thickness: 1, color: ink });
-      page.drawLine({ start: { x: x + 2.4, y: y + 1.5 }, end: { x: x + 5.6, y: y + 5.7 }, thickness: 1, color: ink });
+      page.drawLine({ start: { x: x + 0.8, y: y + 2.8 }, end: { x: x + 2.3, y: y + 1.3 }, thickness: 1, color: ink });
+      page.drawLine({ start: { x: x + 2.3, y: y + 1.3 }, end: { x: x + 5.3, y: y + 5 }, thickness: 1, color: ink });
     };
 
     const date = formatDate(renewal.created_at);
     page.drawText(date, { x: 315, y: 521, size: 8, font, color: ink });
 
     const documentRows = [
-      ["payment_receipt", 456],
-      ["official_receipt", 447],
-      ["voters_certificate", 421],
-      ["insurance", 405],
-      ["cedula", 370],
-      ["barangay_clearance", 361],
-      ["drivers_license", 352],
-      ["picture_2x2", 343],
-      ["pmbl_certification", 334],
+      ["payment_receipt", 456, 121.5],
+      ["official_receipt", 447, 121.5],
+      ["voters_certificate", 421, 121.5],
+      ["insurance", 405, 121.5],
+      ["cedula", 370, 124.5],
+      ["barangay_clearance", 361, 124.5],
+      ["drivers_license", 352, 124.5],
+      ["picture_2x2", 343, 124.5],
+      ["pmbl_certification", 334, 124.5],
     ];
-    for (const [type, y] of documentRows) {
+    for (const [type, y, x] of documentRows) {
       if (!uploaded.has(type)) continue;
-      drawMark(121.5, y);
+      drawMark(x, y);
     }
 
     const physicalRows = [

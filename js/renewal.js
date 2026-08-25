@@ -209,7 +209,7 @@ async function showPmblCertification(renewal) {
 
 async function showRenewalChecklist(renewal) {
   const { data: documents } = await supabase.from("renewal_documents").select("doc_type,status,verified").eq("renewal_id", renewal.id);
-  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260826-090000");
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260826-093000");
   openChecklistPdfForm({ renewal, documents: documents || [] });
 }
 
