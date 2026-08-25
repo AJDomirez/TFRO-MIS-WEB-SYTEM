@@ -137,6 +137,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {} }) {
       motor: value(renewal.engine_number || franchise.engine_number || franchise.motorcycle_engine_number),
       chassis: value(renewal.chassis_number || franchise.chassis_number || franchise.motorcycle_chassis_number),
       plate: value(renewal.plate_number || franchise.plate_number),
+      expiration: formatDate(renewal.temporary_mtop_expiration_date),
     };
     const fit = (page, text, x, y, maxWidth, size = 10, useBold = false) => {
       if (!text) return;
@@ -155,11 +156,11 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {} }) {
       row(pages[0], 520, [[details.make, 7, 64], [details.model, 81, 69], [details.motor, 163, 132], [details.chassis, 307, 122], [details.plate, 443, 78]]);
     }
     if (pages[1]) {
-      fit(pages[1], details.name, 92, 711, 145, 9, true);
-      fit(pages[1], details.franchise, 240, 711, 90, 9, true);
-      fit(pages[1], details.orNumber, 372, 692, 70, 9, true);
-      fit(pages[1], details.address, 93, 691, 225, 9, true);
-      row(pages[1], 568, [[details.make, 59, 43], [details.model, 109, 52], [details.motor, 169, 118], [details.chassis, 296, 101], [details.plate, 406, 67]]);
+      fit(pages[1], details.name, 112, 843, 240, 10, true);
+      fit(pages[1], details.franchise, 498, 843, 70, 10, true);
+      fit(pages[1], details.address, 112, 827, 265, 10, true);
+      row(pages[1], 699, [[details.make, 58, 61], [details.model, 129, 68], [details.motor, 208, 134], [details.chassis, 354, 124], [details.plate, 491, 76]]);
+      fit(pages[1], details.expiration, 365, 336, 185, 12, true);
     }
 
     const bytes = await pdfDoc.save();
