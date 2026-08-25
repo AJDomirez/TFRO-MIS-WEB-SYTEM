@@ -28,6 +28,22 @@ function dateForInput(value = new Date()) {
   return local.toISOString().slice(0, 10);
 }
 
+function formatDate(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-PH");
+}
+
+function classificationLabel(value) {
+  const labels = { with_franchise: "C", colorum: "Colorum", temporary: "Temporary" };
+  return labels[value] || value || "—";
+}
+
+function paidPayment(row) {
+  const related = Array.isArray(row.payments) ? row.payments : [];
+  return related.find((payment) => payment.status === "paid") || null;
+}
+
 function showToast(message) {
   const toast = document.getElementById("violationToast");
   if (!toast) return;
@@ -42,7 +58,7 @@ function filteredViolations() {
   const status = document.getElementById("statusFilter").value;
   return violations.filter((row) => isWithinDateRange(row.occurred_at)
     && (status === "all" || row.status === status)
-    && [row.subject_name || "", row.violation_code || "", row.ticket_number || "", row.violation_type || "", row.description || ""]
+    && [row.subject_name || "", row.violation_code || "", row.ticket_number || "", row.violation_type || "", row.description || "", row.apprehending_officers || "", ...(row.payments || []).map((payment) => payment.receipt || "")]
       .some((value) => value.toLowerCase().includes(term)));
 }
 
@@ -53,17 +69,18 @@ function render() {
   document.getElementById("violationPaid").textContent = violations.filter((row) => row.status === "paid").length;
   document.getElementById("violationAmount").textContent = money.format(violations.reduce((sum, row) => sum + Number(row.penalty || 0), 0));
   table.innerHTML = rows.length ? rows.map((row) => {
-    const subjectType = ["driver", "operator"].includes(row.subject_type) ? row.subject_type : "";
-    const status = ["pending", "paid", "dismissed"].includes(row.status) ? row.status : "";
+    const payment = paidPayment(row);
     return `<tr>
-      <td>${escapeHtml(row.subject_name || "—")}</td>
-      <td><span class="type ${subjectType}">${escapeHtml(row.classification || row.subject_type || "—")}</span><br><small>${escapeHtml(row.franchise_number || "No franchise")}</small></td>
+      <td>${formatDate(row.occurred_at)}</td>
+      <td>${escapeHtml(classificationLabel(row.classification || row.subject_type))}</td>
       <td>${row.discounted ? "Yes" : "No"}</td>
+      <td>${escapeHtml(row.subject_name || "—")}</td>
       <td><strong>${escapeHtml(row.violation_code || "—")}</strong><br>${escapeHtml(row.violation_type)}</td>
-      <td><strong>${escapeHtml(row.ticket_number || "—")}</strong><br><small>${escapeHtml(row.apprehending_officers || "—")}</small></td>
-      <td>${money.format(Number(row.penalty || 0))}</td>
-      <td>${new Date(row.occurred_at).toLocaleDateString("en-PH")}</td>
-      <td><span class="status ${status}">${escapeHtml(row.status)}</span></td>
+      <td>${formatDate(payment?.paid_at)}</td>
+      <td>${escapeHtml(row.ticket_number || "—")}</td>
+      <td>${money.format(Number(payment?.amount ?? row.penalty ?? 0))}</td>
+      <td>${escapeHtml(payment?.receipt || "—")}</td>
+      <td>${escapeHtml(row.apprehending_officers || "—")}</td>
       <td><div class="actions">
         ${canManageViolations ? `<button type="button" data-action="edit" data-id="${row.id}" title="Edit violation" aria-label="Edit violation for ${escapeHtml(row.subject_name || "record")}">
           <i class="ri-pencil-line"></i>
@@ -72,7 +89,7 @@ function render() {
         <button type="button" data-action="notice" data-id="${row.id}" title="Print violation notice"><i class="ri-printer-line"></i></button>
       </div></td>
     </tr>`;
-  }).join("") : '<tr><td colspan="9">No violations found.</td></tr>';
+  }).join("") : '<tr><td colspan="11">No violations found.</td></tr>';
 }
 
 function printNotice(row) {
@@ -95,8 +112,9 @@ async function openTicketPhoto(row) {
 async function loadViolations() {
   const { data, error } = await supabase
     .from("violations")
-    .select("*")
-    .order("occurred_at", { ascending: false });
+    .select("*, payments!payments_violation_id_fkey(receipt, amount, paid_at, status)")
+    .order("occurred_at", { ascending: false })
+    .order("paid_at", { referencedTable: "payments", ascending: false });
   if (error) {
     console.error("Could not load violations:", error);
     window.alert(`Could not load violations: ${error.message}`);
@@ -252,17 +270,15 @@ function bindEvents() {
     filename: "tfro_violations",
     columns: [
       { header: "Violation Date", value: (row) => row.occurred_at },
-      { header: "Code", value: (row) => row.violation_code },
-      { header: "Ticket Number", value: (row) => row.ticket_number },
       { header: "Classification", value: (row) => row.classification || row.subject_type },
       { header: "Discounted", value: (row) => row.discounted ? "Yes" : "No" },
       { header: "Name", value: (row) => row.subject_name },
-      { header: "Violation", value: (row) => row.violation_type },
-      { header: "Description", value: (row) => row.description },
-      { header: "Penalty", value: (row) => row.penalty },
-      { header: "Status", value: (row) => row.status },
-      { header: "Apprehending Officers", value: (row) => row.apprehending_officers },
-      { header: "Created At", value: (row) => row.created_at },
+      { header: "Violation", value: (row) => `${row.violation_code || ""} ${row.violation_type || ""}`.trim() },
+      { header: "Date Paid", value: (row) => paidPayment(row)?.paid_at || "" },
+      { header: "Ticket No.", value: (row) => row.ticket_number },
+      { header: "Total Amount", value: (row) => paidPayment(row)?.amount ?? row.penalty },
+      { header: "OR No./Receipt", value: (row) => paidPayment(row)?.receipt || "" },
+      { header: "Apprehender", value: (row) => row.apprehending_officers },
     ],
   });
 }
