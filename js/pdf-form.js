@@ -407,7 +407,7 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
   if (!popup) return;
   try {
     const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
-    const templateUrl = new URL("../forms/TFRO-007 Certification of Dropping.pdf?v=20260826-222000", import.meta.url);
+    const templateUrl = new URL("../forms/TFRO-007 Certification of Dropping.pdf?v=20260826-224000", import.meta.url);
     const pdfDoc = await PDFDocument.load(await fetch(templateUrl).then((response) => response.arrayBuffer()));
     const page = pdfDoc.getPage(0);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
