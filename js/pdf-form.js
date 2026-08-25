@@ -118,7 +118,8 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, pictureUrl =
     write(formatDate(renewal.created_at), 515, 827, 8.5, 55);
     page.drawRectangle({ x: 454, y: 802, width: 117, height: 18, color: rgb(1, 1, 1) });
     page.drawText("FRANCHISE NO.", { x: 456, y: 808, size: 6.5, font: bold, color: ink });
-    const renewalFranchiseNumber = value(franchise.franchise_number);
+    const fullRenewalFranchiseNumber = value(franchise.franchise_number);
+    const renewalFranchiseNumber = fullRenewalFranchiseNumber.match(/(\d+)$/)?.[1] || fullRenewalFranchiseNumber;
     const renewalFranchiseSize = 7.5;
     const renewalFranchiseWidth = bold.widthOfTextAtSize(renewalFranchiseNumber, renewalFranchiseSize);
     page.drawText(renewalFranchiseNumber, { x: 568 - renewalFranchiseWidth, y: 808, size: renewalFranchiseSize, font: bold, color: ink });
@@ -180,8 +181,7 @@ export async function openPmblPdfForm({ renewal, franchise = {} }) {
       page.drawText(content, { x: x * sx, y: y * sy, size: fittedSize * Math.min(sx, sy), maxWidth: maxWidth * sx, font: selectedFont, color: black });
     };
     const issued = new Date();
-    const franchiseNumber = value(franchise.franchise_number);
-    const pmblFranchiseNumber = franchiseNumber.match(/(\d+)$/)?.[1] || franchiseNumber;
+    const pmblFranchiseNumber = value(franchise.franchise_number);
 
     write(renewal.operator_name, 315, 364, 13, 320, true);
     write(pmblFranchiseNumber, 76, 345, 13, 125, true);
