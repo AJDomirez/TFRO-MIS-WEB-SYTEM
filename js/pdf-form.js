@@ -338,3 +338,101 @@ export async function openChecklistPdfForm({ renewal, documents = [] }) {
     alert(`Unable to generate the TFRO-004 PDF: ${error.message}`);
   }
 }
+
+function droppingDetails(request = {}, franchise = {}, operator = {}) {
+  return {
+    operator: value(operator.full_name || franchise.operator_name),
+    address: value(operator.address || franchise.address),
+    contact: value(operator.contact_number || franchise.contact_number),
+    franchise: value(franchise.franchise_number),
+    toda: value(franchise.toda_name),
+    route: value(franchise.route || "LUCENA CITY PROPER"),
+    make: value(request.old_motor_brand || franchise.motorcycle_brand),
+    model: value(request.old_motor_model || franchise.motorcycle_year_model),
+    motor: value(request.old_engine_number),
+    chassis: value(request.old_chassis_number),
+    plate: value(request.old_plate_number),
+  };
+}
+
+export async function openDroppingPetitionPdfForm({ request, franchise = {}, operator = {} }) {
+  const popup = openPdfWindow("TFRO-002 Petition for Dropping");
+  if (!popup) return;
+  try {
+    const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
+    const templateUrl = new URL("../forms/TFRO-002 Petition for Dropping.pdf?v=20260826-220000", import.meta.url);
+    const pdfDoc = await PDFDocument.load(await fetch(templateUrl).then((response) => response.arrayBuffer()));
+    const page = pdfDoc.getPage(0);
+    const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const bold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+    const ink = rgb(0, 0, 0);
+    const data = droppingDetails(request, franchise, operator);
+    const write = (text, x, y, maxWidth, size = 9, centered = false, useBold = false) => {
+      if (!text) return;
+      const selected = useBold ? bold : font;
+      let fitted = size;
+      while (fitted > 6.5 && selected.widthOfTextAtSize(text, fitted) > maxWidth) fitted -= 0.5;
+      const width = selected.widthOfTextAtSize(text, fitted);
+      page.drawText(text, { x: centered ? x + Math.max(0, (maxWidth - width) / 2) : x, y, maxWidth, size: fitted, font: selected, color: ink });
+    };
+    write(data.operator, 72, 785, 180, 9, false, true);
+    write(value(request.request_code || request.id), 486, 797, 72, 8.5, true, true);
+    write(data.toda, 486, 770, 70, 8.5, true, true);
+    write(data.contact, 474, 744, 88, 8.5, true, true);
+    write(data.operator, 184, 660, 200, 8.5, false, true);
+    write(data.address, 124, 644, 360, 8, false, true);
+    write(data.make, 83, 612, 92, 8.5, true, true);
+    write(data.model, 181, 612, 95, 8.5, true, true);
+    write(data.motor, 348, 612, 92, 8.5, true, true);
+    write(data.chassis, 454, 612, 100, 8.5, true, true);
+    write(data.plate, 276, 595, 86, 8.5, true, true);
+    write(data.route, 181, 568, 210, 8.5, true, true);
+    write(data.franchise, 183, 548, 200, 8.5, true, true);
+    write(data.operator, 112, 388, 145, 8.5, false, true);
+    const bytes = await pdfDoc.save();
+    await showPdf(popup, bytes, `TFRO-002-${value(request.request_code || request.id)}.pdf`);
+  } catch (error) {
+    popup.close();
+    console.error(error);
+    alert(`Unable to generate TFRO-002: ${error.message}`);
+  }
+}
+
+export async function openDroppingCertificationPdfForm({ request, franchise = {}, operator = {} }) {
+  const popup = openPdfWindow("TFRO-007 Certification of Dropping");
+  if (!popup) return;
+  try {
+    const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
+    const templateUrl = new URL("../forms/TFRO-007 Certification of Dropping.pdf?v=20260826-220000", import.meta.url);
+    const pdfDoc = await PDFDocument.load(await fetch(templateUrl).then((response) => response.arrayBuffer()));
+    const page = pdfDoc.getPage(0);
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const ink = rgb(0, 0, 0);
+    const data = droppingDetails(request, franchise, operator);
+    const write = (text, x, y, maxWidth, size = 9, useBold = false) => {
+      if (!text) return;
+      const selected = useBold ? bold : font;
+      let fitted = size;
+      while (fitted > 6.5 && selected.widthOfTextAtSize(text, fitted) > maxWidth) fitted -= 0.5;
+      page.drawText(text, { x, y, maxWidth, size: fitted, font: selected, color: ink });
+    };
+    const certificationLine = `This is to certify that the tricycle franchise Number. ${data.franchise} has been cancelled/dropped due to`;
+    write(certificationLine, 80, 592, 445, 9);
+    write("privatization of tricycle described hereunder;", 80, 576, 445, 9);
+    write(data.operator, 272, 492, 215, 9, true);
+    write([data.make, data.model].filter(Boolean).join(" "), 272, 475, 215, 9);
+    write(data.motor, 272, 458, 215, 9);
+    write(data.chassis, 272, 441, 215, 9);
+    write(data.plate, 272, 424, 215, 9);
+    const issued = request.admin_reviewed_at ? new Date(request.admin_reviewed_at) : new Date();
+    const issuedText = `Issued this ${issued.toLocaleDateString("en-PH", { month: "long", day: "2-digit", year: "numeric" }).toUpperCase()}.`;
+    write(issuedText, 70, 289, 250, 9, true);
+    const bytes = await pdfDoc.save();
+    await showPdf(popup, bytes, `TFRO-007-${value(request.request_code || request.id)}.pdf`);
+  } catch (error) {
+    popup.close();
+    console.error(error);
+    alert(`Unable to generate TFRO-007: ${error.message}`);
+  }
+}

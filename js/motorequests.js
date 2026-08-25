@@ -41,7 +41,7 @@ async function verifyAccess() {
 async function loadRequests() {
   var res = await supabase
     .from("change_motor_requests")
-    .select("*, operator_profile:profiles!change_motor_requests_operator_id_fkey(full_name)")
+    .select("*, operator_profile:profiles!change_motor_requests_operator_id_fkey(full_name,contact_number), franchise:franchises!change_motor_requests_franchise_id_fkey(franchise_number,operator_name,address,contact_number,toda_name,route,motorcycle_brand,motorcycle_year_model)")
     .order("created_at", { ascending: false });
   if (res.error) { console.error(res.error); return alert("Could not load requests: " + res.error.message); }
   requests = res.data || [];
@@ -109,6 +109,8 @@ async function openReview(id) {
       safeDetail("Current Engine", currentReq.old_engine_number) +
       safeDetail("Current Chassis", currentReq.old_chassis_number) +
       safeDetail("Current Plate", currentReq.old_plate_number) +
+      safeDetail("Current Make", currentReq.old_motor_brand || currentReq.franchise?.motorcycle_brand) +
+      safeDetail("Current Model", currentReq.old_motor_model || currentReq.franchise?.motorcycle_year_model) +
       safeDetail("New Engine", currentReq.new_engine_number) +
       safeDetail("New Chassis", currentReq.new_chassis_number) +
       safeDetail("New Plate", currentReq.new_plate_number) +
@@ -116,8 +118,14 @@ async function openReview(id) {
       safeDetail("Motor Serial", currentReq.new_motor_serial) +
       safeDetail("Supporting Doc", docHtml, true) +
     "</div>" +
-    '<div class="review-actions"><button type="button" class="btn-cancel" id="printMotorFormBtn"><i class="ri-printer-line"></i> View / Save PDF</button></div>' +
+    '<div class="review-actions motor-form-actions"><button type="button" class="btn-cancel" id="printTfro002Btn"><i class="ri-file-pdf-2-line"></i> TFRO-002</button><button type="button" class="btn-cancel" id="printTfro007Btn"><i class="ri-file-pdf-2-line"></i> TFRO-007</button>' +
+      (currentReq.status === "approved" ? '<button type="button" class="btn-accept" id="sendMotorFormsBtn"' + (currentReq.forms_sent_to_operator_at ? " disabled" : "") + '><i class="ri-' + (currentReq.forms_sent_to_operator_at ? "check" : "send-plane") + '-line"></i> ' + (currentReq.forms_sent_to_operator_at ? "Forms Sent" : "Send Forms to Operator") + '</button>' : "") +
+    '</div>' +
     renderMotorActions(currentReq);
+
+  el("printTfro002Btn").addEventListener("click", function () { openChangeMotorPdf("TFRO-002"); });
+  el("printTfro007Btn").addEventListener("click", function () { openChangeMotorPdf("TFRO-007"); });
+  el("sendMotorFormsBtn")?.addEventListener("click", sendChangeMotorForms);
 
   var acceptBtn = el("reviewBody").querySelector("#acceptBtn");
   var rejectBtn = el("reviewBody").querySelector("#rejectBtn");
@@ -230,6 +238,32 @@ alert("Request rejected. The operator has been notified.");
   }
 }
 
+async function openChangeMotorPdf(formCode) {
+  if (!currentReq) return;
+  const module = await import("./pdf-form.js?v=20260826-220000");
+  const options = { request: currentReq, franchise: currentReq.franchise || {}, operator: currentReq.operator_profile || {} };
+  if (formCode === "TFRO-002") module.openDroppingPetitionPdfForm(options);
+  else module.openDroppingCertificationPdfForm(options);
+}
+
+async function sendChangeMotorForms() {
+  if (!currentReq || currentReq.status !== "approved" || currentReq.forms_sent_to_operator_at) return;
+  const auth = await supabase.auth.getUser();
+  const sentAt = new Date().toISOString();
+  const update = await supabase.from("change_motor_requests").update({
+    forms_sent_to_operator_at: sentAt,
+    forms_sent_by: auth.data.user?.id || null,
+  }).eq("id", currentReq.id);
+  if (update.error) return alert("Could not send the forms: " + update.error.message);
+  currentReq.forms_sent_to_operator_at = sentAt;
+  currentReq.forms_sent_by = auth.data.user?.id || null;
+  const button = el("sendMotorFormsBtn");
+  button.disabled = true;
+  button.innerHTML = '<i class="ri-check-line"></i> Forms Sent';
+  await logAudit({ action: "Sent Change Motor Forms", actionType: "update", record: currentReq.request_code || currentReq.id, description: `Sent TFRO-002 and TFRO-007 to the operator for ${currentReq.request_code || currentReq.id}.` });
+  alert("TFRO-002 and TFRO-007 have been sent to the operator account.");
+}
+
 function bindEvents() {
   el("searchInput").addEventListener("input", renderTable);
   el("statusFilter").addEventListener("change", renderTable);
@@ -243,17 +277,19 @@ function bindEvents() {
       { header: "Old Engine Number", value: (row) => row.old_engine_number },
       { header: "Old Chassis Number", value: (row) => row.old_chassis_number },
       { header: "Old Plate Number", value: (row) => row.old_plate_number },
+      { header: "Old Motor Make", value: (row) => row.old_motor_brand },
+      { header: "Old Motor Model", value: (row) => row.old_motor_model },
       { header: "New Engine Number", value: (row) => row.new_engine_number },
       { header: "New Chassis Number", value: (row) => row.new_chassis_number },
       { header: "New Plate Number", value: (row) => row.new_plate_number },
       { header: "Motor Brand", value: (row) => row.new_motor_brand },
       { header: "Motor Serial", value: (row) => row.new_motor_serial },
       { header: "Status", value: (row) => row.status },
+      { header: "Forms Sent At", value: (row) => row.forms_sent_to_operator_at },
       { header: "Rejection Reason", value: (row) => row.rejection_reason },
       { header: "Submitted At", value: (row) => row.created_at },
     ],
   });
-  el("reviewBody").querySelector("#printMotorFormBtn")?.addEventListener("click", () => printMotorForm(resolvedOperatorName));
   el("motorTable").addEventListener("click", function (e) {
     var btn = e.target.closest("button[data-action]");
     if (!btn) return;

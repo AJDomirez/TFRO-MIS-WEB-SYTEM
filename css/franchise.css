@@ -555,3 +555,5 @@ table td{
 @media (max-width:900px){.date-export-controls{flex-wrap:wrap;}.csv-import-modal{max-width:96vw;}}
 
 
+.motor-form-actions{flex-wrap:wrap;justify-content:flex-start}
+.motor-form-actions button{min-width:140px;justify-content:center}
