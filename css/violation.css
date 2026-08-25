@@ -238,11 +238,12 @@ select{
 .table-card{
   background:white;
   border-radius:15px;
-  overflow:hidden;
+  overflow-x:auto;
 }
 
 table{
   width:100%;
+  min-width:1350px;
   border-collapse:collapse;
 }
 
