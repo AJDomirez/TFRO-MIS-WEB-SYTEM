@@ -142,6 +142,7 @@ async function openReview(id) {
   const final = ["approved", "rejected"].includes(currentRenewal.status);
   ["incompleteBtn", "saveProgressBtn", "approveRenewalBtn"].forEach((id) => { byId(id).disabled = final; });
   const canSendTemporary = ["expired_or", "change_motor"].includes(currentRenewal.renewal_type);
+  byId("sendTemporaryMtopBtn").hidden = !canSendTemporary && !currentRenewal.temporary_mtop_issued;
   byId("sendTemporaryMtopBtn").disabled = Boolean(currentRenewal.temporary_mtop_issued) || !canSendTemporary;
   byId("sendTemporaryMtopBtn").innerHTML = currentRenewal.temporary_mtop_issued
     ? '<i class="ri-check-line"></i> TFRO-001 Sent'
