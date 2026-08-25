@@ -121,7 +121,7 @@ export function openRenewalProfileForm({
     .hotline{border:0!important;border-bottom:0!important;background:linear-gradient(118deg,#fff719 0 57%,transparent 57%)!important}
     .form-code{position:absolute!important;top:25.5mm!important;right:1mm!important;width:48mm!important;margin:0!important;background:#5486be!important;color:#050505!important;font:700 13px Georgia,serif!important;letter-spacing:1px!important}
     .title-grid{margin-top:9mm!important;border-top:1.5px solid #111!important;grid-template-columns:1fr 76mm!important}
-    .title{font-size:13px!important;padding:6px!important}.meta{grid-template-columns:18mm 1fr!important}
+    .title{font-size:13px!important;padding:6px!important}.meta{grid-template-columns:18mm minmax(0,1fr)!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;min-width:0!important;overflow:hidden!important}.meta b,.meta span{display:flex!important;align-items:center!important;min-width:0!important;min-height:0!important;overflow:hidden!important;padding:1px 2px!important;line-height:1.05!important}.meta span{white-space:nowrap!important;font-size:6.5px!important}
     .app-grid{grid-template-columns:1fr 46mm!important;grid-template-rows:18mm 18mm!important}
     .app-grid .contact{grid-column:2!important;grid-row:1/3!important}.app-grid .address{grid-column:1!important;grid-row:2!important}
     .line-field{padding:2px!important}.line-field b{font-size:7px!important}.line-field span{font-size:8px!important}
@@ -132,7 +132,7 @@ export function openRenewalProfileForm({
     .inspection{border:0!important;grid-template-columns:1fr 1fr 1.15fr!important}.inspect-column{border:0!important;padding:0 2mm!important}.inspect-item{border:0!important;min-height:5mm!important;padding:1px!important}.inspect-item span{display:inline-block!important;min-width:17mm!important;border-bottom:1px solid #111!important;text-align:center!important}.sidecar{border:0!important;padding:1mm 2mm!important}.inspector{padding:1mm 4mm!important}.inspector-line{margin-top:8mm!important}
     .approvals{border:0!important;gap:18mm!important;padding:7mm 44mm 1mm!important}.approval-line{border:0!important}.approval-label{display:block;margin-bottom:7mm;font-weight:400!important}
     .footer{border:0!important;border-bottom:3px solid #2353b7!important;color:#2353b7!important;font-size:5.5px!important;font-weight:700!important;text-align:left!important;margin:0 4mm!important;padding:1mm!important}
-    @media print{.sheet{border:1.5px solid #111!important}.title-grid{margin-top:9mm!important}.app-grid{grid-template-rows:1fr 1fr!important}.photo{margin:3mm 0 10mm!important}.inspection{grid-template-rows:2fr 1fr!important}.approvals{padding:0 44mm 1mm!important}}
+    @media print{.sheet{border:1.5px solid #111!important}.title-grid{margin-top:9mm!important;overflow:hidden!important}.app-grid{grid-template-rows:1fr 1fr!important}.photo{margin:3mm 0 10mm!important}.inspection{grid-template-rows:2fr 1fr!important}.approvals{padding:0 44mm 1mm!important}}
   `;
 
   popup.document
@@ -146,7 +146,7 @@ export function openRenewalProfileForm({
     @page{size:8.5in 13in;margin:0}
     @media print{
       html,body{width:8.5in;height:13in;margin:0!important;padding:0!important;background:#fff!important}
-      .sheet{display:grid!important;grid-template-rows:21mm 6mm 18mm 28mm 11mm 5mm 44mm 10mm 65mm 5mm 55mm 1fr 3mm;width:8.5in!important;height:13in!important;min-height:13in!important;margin:0!important;padding:0.2in!important;overflow:hidden!important}
+      .sheet{display:grid!important;grid-template-rows:21mm 6mm 21mm 25mm 11mm 5mm 44mm 10mm 65mm 5mm 55mm 1fr 3mm;width:8.5in!important;height:13in!important;min-height:13in!important;margin:0!important;padding:0.2in!important;overflow:hidden!important}
       .masthead,.hotline,.title-grid,.app-grid,.four,.vehicle-head,.vehicle,.route,.profile-body,.office-head,.inspection,.approvals,.footer{min-height:0!important;height:auto!important;margin:0!important}
       .app-grid{grid-template-rows:1fr 1fr}.app-grid .line-field,.four .line-field,.vehicle .line-field{min-height:0!important;height:auto!important}
       .vehicle{grid-template-rows:repeat(4,1fr)}.profile-body{grid-template-rows:2fr 3fr}.photo{min-height:0!important;height:auto!important}
