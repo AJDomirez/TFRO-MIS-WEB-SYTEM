@@ -115,7 +115,7 @@ async function embedPicture(pdfDoc, page, pictureUrl) {
   }
 }
 
-export async function openTemporaryMtopPdfForm({ renewal, franchise = {} }) {
+export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, changeMotor = {} }) {
   const popup = openPdfWindow("TFRO-001 Temporary MTOP");
   if (!popup) return;
   try {
@@ -132,11 +132,11 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {} }) {
       franchise: value(franchise.franchise_number),
       address: value(renewal.operator_address || franchise.address),
       orNumber: value(renewal.current_or_number || renewal.payment_or_number),
-      make: value(franchise.motorcycle_brand),
-      model: value(franchise.motorcycle_year_model),
-      motor: value(renewal.engine_number || franchise.engine_number || franchise.motorcycle_engine_number),
-      chassis: value(renewal.chassis_number || franchise.chassis_number || franchise.motorcycle_chassis_number),
-      plate: value(renewal.plate_number || franchise.plate_number),
+      make: value(changeMotor.new_motor_brand || franchise.motorcycle_brand),
+      model: value(changeMotor.new_motor_serial || franchise.motorcycle_year_model),
+      motor: value(changeMotor.new_engine_number || renewal.engine_number || franchise.engine_number || franchise.motorcycle_engine_number),
+      chassis: value(changeMotor.new_chassis_number || renewal.chassis_number || franchise.chassis_number || franchise.motorcycle_chassis_number),
+      plate: value(changeMotor.new_plate_number || renewal.plate_number || franchise.plate_number),
       expiration: formatDate(renewal.temporary_mtop_expiration_date),
     };
     const fit = (page, text, x, y, maxWidth, size = 10, useBold = false) => {
