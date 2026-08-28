@@ -306,7 +306,7 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
     };
     const ink = rgb(0, 0, 0);
     const write = (text, x, y, size = 12, maxWidth = 500, useBold = true) =>
-      drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 12), { maxWidth, minSize: 12, color: ink });
+      drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 11), { maxWidth, minSize: 11, color: ink });
 
     const fullRenewalFranchiseNumber = value(franchise.franchise_number);
     const birthDate = renewal.applicant_birth_date || franchise.birth_date;
@@ -337,9 +337,9 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
     if (!manual) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-005 Renewal Application");
     if (!popup) return;
-    write(manual.date, 515, 827, 8.5, 55);
+    write(manual.date, 508, 827, 11, 60, false);
     const renewalFranchiseNumber = manual.franchise;
-    const renewalFranchiseSize = 12;
+    const renewalFranchiseSize = 11;
     const renewalFranchiseWidth = bold.widthOfTextAtSize(renewalFranchiseNumber, renewalFranchiseSize);
     page.drawText(renewalFranchiseNumber, { x: 568 - renewalFranchiseWidth, y: 806.5, size: renewalFranchiseSize, font: bold, color: ink });
     write(manual.last, 48, 778, 10, 165); write(manual.first, 225, 778, 10, 145); write(manual.middle, 335, 778, 10, 110);
@@ -534,26 +534,31 @@ export async function openDroppingPetitionPdfForm({ request, franchise = {}, ope
     if (!data) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-002 Petition for Dropping");
     if (!popup) return;
-    const write = (text, x, y, maxWidth, size = 12, centered = false, useBold = false) => {
+    const write = (text, x, y, maxWidth, size = 11, centered = false, useBold = false, wrapAtHyphens = false) => {
       if (!text) return;
       const selected = useBold ? bold : font;
-      const fitted = Math.max(size, 12);
+      const fitted = Math.max(size, 11);
       const width = selected.widthOfTextAtSize(text, fitted);
-      page.drawText(text, { x: centered ? x + Math.max(0, (maxWidth - width) / 2) : x, y, maxWidth, size: fitted, font: selected, color: ink });
+      const textOptions = {
+        x: centered ? x + Math.max(0, (maxWidth - width) / 2) : x,
+        y, maxWidth, size: fitted, lineHeight: 11, font: selected, color: ink,
+      };
+      if (wrapAtHyphens) textOptions.wordBreaks = ["-", " "];
+      page.drawText(text, textOptions);
     };
-    write(data.operator, 72, 801, 180, 10, true, true);
-    write(data.requestCode, 478, 801, 88, 8, true, true);
-    write(data.toda, 486, 774, 70, 9.5, true, true);
-    write(data.contact, 474, 748, 88, 9.5, true, true);
-    write(data.address, 72, 647, 467, 9.5, true, true);
-    write(data.make, 83, 604, 92, 9.5, true, true);
-    write(data.model, 181, 604, 95, 9.5, true, true);
-    write(data.motor, 348, 604, 92, 9.5, true, true);
-    write(data.chassis, 454, 604, 100, 9.5, true, true);
-    write(data.plate, 276, 601, 86, 9.5, true, true);
-    write(data.route, 181, 572, 210, 9.5, true, true);
-    write(data.franchise, 183, 557, 200, 9.5, true, true);
-    write(data.operator, 112, 397, 143, 9.5, true, true);
+    write(data.operator, 72, 801, 180, 11, true, true);
+    write(data.requestCode, 487, 801, 80, 11, true, false);
+    write(data.toda, 493, 774, 66, 11, true, true);
+    write(data.contact, 487, 748, 75, 11, true, true);
+    write(data.address, 72, 647, 467, 11, true, true);
+    write(data.make, 83, 604, 92, 11, true, true);
+    write(data.model, 181, 604, 95, 11, true, true);
+    write(data.motor, 348, 604, 92, 11, true, true, true);
+    write(data.chassis, 454, 604, 100, 11, true, true, true);
+    write(data.plate, 276, 601, 86, 11, true, true);
+    write(data.route, 181, 572, 210, 11, true, true);
+    write(data.franchise, 183, 557, 200, 11, true, true);
+    write(data.operator, 112, 397, 143, 11, true, true);
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-002-${value(request.request_code || request.id)}.pdf`);
   } catch (error) {
@@ -583,15 +588,14 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
     if (!data) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-007 Certification of Dropping");
     if (!popup) return;
-    const write = (text, x, y, maxWidth, size = 12, useBold = false) => {
+    const write = (text, x, y, maxWidth, size = 11, useBold = false) => {
       if (!text) return;
       const selected = useBold ? bold : font;
-      const fitted = Math.max(size, 12);
-      page.drawText(text, { x, y, maxWidth, size: fitted, font: selected, color: ink });
+      const fitted = Math.max(size, 11);
+      page.drawText(text, { x, y, maxWidth, size: fitted, lineHeight: 13, font: selected, color: ink });
     };
-    const certificationLine = `This is to certify that the tricycle franchise Number. ${data.franchise} has been cancelled/dropped due to`;
-    write(certificationLine, 80, 592, 445, 9);
-    write("privatization of tricycle described hereunder;", 80, 576, 445, 9);
+    write(`This is to certify that the tricycle franchise Number. ${data.franchise}`, 80, 592, 445, 11);
+    write("has been cancelled/dropped due to privatization of tricycle described hereunder;", 80, 576, 445, 11);
     write(data.operator, 241, 497, 246, 9, true);
     write([data.make, data.model].filter(Boolean).join(" "), 241, 481, 246, 9);
     write(data.motor, 241, 465, 246, 9);
