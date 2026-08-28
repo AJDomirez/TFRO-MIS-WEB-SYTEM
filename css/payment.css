@@ -288,14 +288,23 @@ td{
 
 .actions{
   display:flex;
+  flex-wrap:wrap;
   gap:8px;
 }
 
 .actions button{
-  border:none;
-  background:none;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:7px 9px;
+  border:1px solid #d7e3dd;
+  border-radius:7px;
+  background:#f7faf8;
+  color:#176348;
   cursor:pointer;
-  font-size:18px;
+  font-size:12px;
+  font-weight:700;
+  white-space:nowrap;
 }
 
 .payment-modal[hidden] { display: none; }
