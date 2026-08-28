@@ -4,7 +4,7 @@ const path = require("node:path");
 
 const root = __dirname;
 const port = Number(process.env.PORT) || 5500;
-const publicDirectories = new Set(["css", "html", "js", "Logo"]);
+const publicDirectories = new Set(["css", "forms", "html", "js", "Logo"]);
 const publicRootFiles = new Set(["Tricycle Image.png"]);
 
 const mimeTypes = {
@@ -14,6 +14,7 @@ const mimeTypes = {
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".png": "image/png",
+  ".pdf": "application/pdf",
   ".svg": "image/svg+xml",
   ".webp": "image/webp",
 };

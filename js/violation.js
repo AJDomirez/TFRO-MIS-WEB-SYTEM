@@ -2,6 +2,7 @@ import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
+import { openPaymentOrderPdfForm } from "./pdf-form.js";
 
 let violations = [];
 let catalog = [];
@@ -105,11 +106,15 @@ function printNotice(row) {
 }
 
 function printOrderPayment(row) {
-  const tab = window.open("", "_blank");
-  if (!tab) return window.alert("Please allow pop-ups to view TFRO-009.");
-  const total = netAmount(row);
-  tab.document.write(`<!doctype html><html><head><title>TFRO-009 ${escapeHtml(row.ticket_number || "")}</title><style>body{font-family:Arial;background:#ddd}.toolbar{text-align:center;padding:10px;background:#173f32}.sheet{width:900px;min-height:610px;margin:18px auto;padding:35px;background:#fff}.head{border-top:18px solid #06452d;border-bottom:8px solid #f4ef24;padding:16px}.title{text-align:center;margin:45px;letter-spacing:5px;text-decoration:underline}.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}table{width:100%;margin:25px 0;border-collapse:collapse}th,td{padding:12px;border:1px solid #111}.sign{text-align:right;margin-top:45px}@media print{.toolbar{display:none}body{background:#fff}.sheet{margin:0}}</style></head><body><div class="toolbar"><button onclick="print()">Print / Save PDF</button></div><main class="sheet"><div class="head"><h2>TRICYCLE FRANCHISING AND REGULATORY OFFICE</h2><p>City Government of Lucena | Republic of the Philippines</p><b>TFRO - 009</b></div><h1 class="title">ORDER OF PAYMENT</h1><div class="grid"><p>Payor: <b>${escapeHtml(row.subject_name || "")}</b></p><p>Apprehending Officer/s: <b>${escapeHtml(row.apprehending_officers || "")}</b></p><p>Ticket No.: <b>${escapeHtml(row.ticket_number || "")}</b></p><p>Franchise No.: <b>${escapeHtml(row.franchise_number || "")}</b></p></div><table><tr><th>Code</th><th>Violation</th><th>Amount Due</th></tr><tr><td>${escapeHtml(row.violation_code || "")}</td><td>${escapeHtml(row.violation_type || "")}</td><td>${money.format(total)}</td></tr><tr><th colspan="2">Total Amount Due (automatic net amount)</th><th>${money.format(total)}</th></tr></table><p class="sign">Assessed by: ____________________<br>TFRO Staff / PAYA</p></main></body></html>`);
-  tab.document.close();
+  const payment = paidPayment(row) || {};
+  void openPaymentOrderPdfForm({
+    payment: {
+      ...payment,
+      payer: row.subject_name,
+      amount: payment.amount ?? netAmount(row),
+    },
+    violation: row,
+  });
 }
 
 async function openTicketPhoto(row) {
