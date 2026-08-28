@@ -2,7 +2,7 @@ import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
-import { openPaymentOrderPdfForm } from "./pdf-form.js";
+import { openPaymentOrderPdfForm } from "./pdf-form.js?v=20260828-2";
 
 let violations = [];
 let catalog = [];
@@ -10,6 +10,7 @@ let currentUserId = null;
 let editingViolationId = null;
 let toastTimer = null;
 let canManageViolations = false;
+let canEditPdfFields = false;
 
 const table = document.getElementById("violationsTable");
 const formPanel = document.getElementById("violationFormPanel");
@@ -114,6 +115,7 @@ function printOrderPayment(row) {
       amount: payment.amount ?? netAmount(row),
     },
     violation: row,
+    editable: canEditPdfFields,
   });
 }
 
@@ -312,6 +314,7 @@ async function initialize() {
     currentUserId = user.id;
     canManageViolations = ["admin", "staff"].includes(profile?.role);
     const isAdmin = profile?.role === "admin";
+    canEditPdfFields = isAdmin;
     document.getElementById("violationPortalTitle").textContent = isAdmin
       ? "Administrator — Violations"
       : "TFRO Staff — Violations";
