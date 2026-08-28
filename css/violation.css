@@ -326,6 +326,10 @@ th{
   background:#effaf5;
 }
 
+.photo-link{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:0;border-radius:7px;background:#e9f6f0;color:#117552;font-weight:700;white-space:nowrap;cursor:pointer}
+.photo-link:hover{background:#d8eee4}
+.ticket-image-missing{color:#7b8a84;font-size:12px;white-space:nowrap}
+
 .violation-toast{
   position:fixed;
   right:24px;

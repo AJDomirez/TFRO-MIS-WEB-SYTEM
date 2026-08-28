@@ -87,16 +87,18 @@ function render() {
       <td>${money.format(Number(payment?.amount ?? netAmount(row)))}</td>
       <td>${escapeHtml(payment?.receipt || "—")}</td>
       <td>${escapeHtml(row.apprehending_officers || "—")}</td>
+      <td>${row.ticket_photo_path
+        ? `<button type="button" class="photo-link" data-action="photo" data-id="${row.id}" title="View ticket image submitted by the Traffic Enforcer"><i class="ri-image-line"></i> View Ticket Image</button>`
+        : '<span class="ticket-image-missing">No image submitted</span>'}</td>
       <td><div class="actions">
         ${canManageViolations ? `<button type="button" data-action="edit" data-id="${row.id}" title="Edit violation" aria-label="Edit violation for ${escapeHtml(row.subject_name || "record")}">
           <i class="ri-pencil-line"></i>
         </button>` : ""}
-        ${row.ticket_photo_path ? `<button type="button" data-action="photo" data-id="${row.id}" title="View submitted ticket photo" aria-label="View ticket photo for ${escapeHtml(row.subject_name || "record")}"><i class="ri-image-line"></i></button>` : ""}
         <button type="button" data-action="order" data-id="${row.id}" title="View TFRO-009 Order of Payment"><i class="ri-file-pdf-2-line"></i></button>
         <button type="button" data-action="notice" data-id="${row.id}" title="Print violation notice"><i class="ri-printer-line"></i></button>
       </div></td>
     </tr>`;
-  }).join("") : '<tr><td colspan="11">No violations found.</td></tr>';
+  }).join("") : '<tr><td colspan="12">No violations found.</td></tr>';
 }
 
 function printNotice(row) {
