@@ -234,6 +234,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
       motor: value(changeMotor.new_engine_number || renewal.engine_number || franchise.engine_number || franchise.motorcycle_engine_number),
       chassis: value(changeMotor.new_chassis_number || renewal.chassis_number || franchise.chassis_number || franchise.motorcycle_chassis_number),
       plate: value(changeMotor.new_plate_number || renewal.plate_number || franchise.plate_number),
+      route: value(franchise.route || "LUCENA CITY PROPER"),
       expiration: formatDate(renewal.temporary_mtop_expiration_date),
     };
     details = await editFields("TFRO-001 Temporary MTOP", [
@@ -246,6 +247,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
       { key: "motor", label: "Motor / engine number", value: details.motor },
       { key: "chassis", label: "Chassis number", value: details.chassis },
       { key: "plate", label: "Plate number", value: details.plate },
+      { key: "route", label: "Authorized route", value: details.route },
       { key: "expiration", label: "Expiration date", value: details.expiration },
     ], editable);
     if (!details) { popup?.close(); return; }
@@ -265,10 +267,12 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
       fit(pages[1], details.name, 112, 845, 240, 12, true);
       fit(pages[1], details.franchise, 498, 845, 70, 12, true);
       fit(pages[1], details.address, 112, 829, 265, 12, true);
+      pages[1].drawRectangle({ x: 150, y: 760, width: 315, height: 18, color: rgb(1, 1, 1) });
+      fit(pages[1], details.route, 18, 763, 576, 12, true, "center");
       row(pages[1], 699, [[details.make, 51, 68], [details.model, 128, 72], [details.motor, 209, 135], [details.chassis, 353, 127], [details.plate, 489, 81]]);
       if (details.expiration) {
-        pages[1].drawRectangle({ x: 180, y: 329, width: 370, height: 24, color: rgb(1, 1, 1) });
-        fit(pages[1], `GOOD UNTIL ${details.expiration}`, 180, 336, 370, 12, true, "center");
+        pages[1].drawRectangle({ x: 145, y: 329, width: 260, height: 27, color: rgb(1, 1, 1) });
+        fit(pages[1], `GOOD UNTIL ${details.expiration}`, 145, 336, 260, 18, true, "center");
       }
     }
 
