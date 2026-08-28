@@ -1,7 +1,7 @@
 import { supabase } from "./supabase.js";
 import { requireRole } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
-import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20260828-3";
+import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20260828-5";
 
 let payments = [], pendingViolations = [], currentUserId = null, currentRole = null, editingPaymentId = null;
 const table = document.getElementById("paymentsTable"), modal = document.getElementById("paymentModal"), form = document.getElementById("paymentForm");

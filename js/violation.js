@@ -2,7 +2,7 @@ import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
-import { openPaymentOrderPdfForm } from "./pdf-form.js?v=20260828-3";
+import { openPaymentOrderPdfForm } from "./pdf-form.js?v=20260828-5";
 
 let violations = [];
 let catalog = [];

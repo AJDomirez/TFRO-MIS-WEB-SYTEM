@@ -579,6 +579,12 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const ink = rgb(0, 0, 0);
+    page.drawRectangle({ x: 465, y: 735, width: 115, height: 48, color: rgb(1, 1, 1) });
+    page.drawRectangle({ x: 475, y: 754, width: 96, height: 22, color: rgb(0.34, 0.56, 0.78) });
+    const formCode = "TFRO - 007";
+    const formCodeSize = 10;
+    const formCodeWidth = bold.widthOfTextAtSize(formCode, formCodeSize);
+    page.drawText(formCode, { x: 475 + (96 - formCodeWidth) / 2, y: 761, size: formCodeSize, font: bold, color: ink });
     const issued = request.admin_reviewed_at ? new Date(request.admin_reviewed_at) : new Date();
     const issuedDefault = issued.toLocaleDateString("en-PH", { month: "long", day: "2-digit", year: "numeric" }).toUpperCase();
     const data = await editFields("TFRO-007 Certification of Dropping", [
@@ -622,10 +628,11 @@ export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, ed
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const ink = rgb(0, 0, 0);
+    page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: 92, color: rgb(1, 1, 1) });
     const snapshot = payment.receipt_snapshot || {};
     const amount = snapshot.amount_paid ?? payment.amount ?? violation.penalty ?? 0;
-    const write = (text, x, y, maxWidth, size = 9, align = "left", useBold = true) =>
-      drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 12), { maxWidth, minSize: 12, align, color: ink, baseHeight: 468 });
+    const write = (text, x, y, maxWidth, size = 11, align = "left", useBold = true) =>
+      drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 11), { maxWidth, minSize: 11, align, color: ink, baseHeight: 468 });
 
     const manual = await editFields("TFRO-009 Order of Payment", [
       { key: "payer", label: "Payor", value: snapshot.payer || payment.payer || payment.unit_owner_name },
@@ -636,7 +643,7 @@ export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, ed
       { key: "violation", label: "Violation", value: snapshot.violation || violation.violation_type },
       { key: "amount", label: "Amount due / paid", value: money(amount) },
       { key: "receipt", label: "Official receipt number", value: payment.receipt },
-      { key: "assessedBy", label: "Assessed by", value: snapshot.assessed_by || payment.recorded_by_name || "TFRO Personnel" },
+      { key: "assessedBy", label: "Assessed by", value: snapshot.assessed_by || payment.recorded_by_name || "" },
       { key: "datePaid", label: "Date paid", value: formatDate(payment.date || payment.paid_at) },
     ], editable);
     if (!manual) { popup?.close(); return; }
@@ -668,6 +675,7 @@ export async function openUnitReleasePdfForm({ payment = {}, violation = {}, edi
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const ink = rgb(0, 0, 0);
+    page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: 92, color: rgb(1, 1, 1) });
     const write = (text, x, y, maxWidth, size = 8.5, align = "left", useBold = true) =>
       drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 12), { maxWidth, minSize: 12, align, color: ink, baseHeight: 468 });
 
