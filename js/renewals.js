@@ -5,7 +5,7 @@ import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
 
 async function openSavedSubmissionForm(options) {
   const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260826-221500");
-  openRenewalPdfForm(options);
+  openRenewalPdfForm({ ...options, editable: true });
 }
 
 const DOC_LABELS = {
@@ -187,7 +187,7 @@ async function printCurrentTemporaryMtop() {
     changeMotor = data || {};
   }
   const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260826-200000");
-  openTemporaryMtopPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, changeMotor });
+  openTemporaryMtopPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, changeMotor, editable: true });
 }
 
 async function sendCurrentTemporaryMtop() {
@@ -226,14 +226,14 @@ async function sendCurrentTemporaryMtop() {
 
 async function printCurrentPmblCertification() {
   if (!currentRenewal) return;
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20260826-060000");
-  openPmblPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {} });
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20260826-203500");
+  openPmblPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, editable: true });
 }
 
 async function printCurrentChecklist() {
   if (!currentRenewal) return;
   const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260826-093000");
-  openChecklistPdfForm({ renewal: currentRenewal, documents: currentDocuments });
+  openChecklistPdfForm({ renewal: currentRenewal, documents: currentDocuments, editable: true });
 }
 
 function inspectionResults() {

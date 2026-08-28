@@ -1,6 +1,7 @@
 import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
+import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js";
 
 async function openSavedSubmissionForm(options) {
   const { openSubmissionForm } = await import("./submission-form.js");
@@ -94,22 +95,24 @@ function openOperatorPaymentForm(paymentId, code) {
   const violation = (window.__operatorViolations || []).find((row) => (row.payments || []).some((payment) => String(payment.id) === String(paymentId)));
   const payment = violation?.payments?.find((row) => String(row.id) === String(paymentId));
   if (!payment) return;
-  const title = code === "009" ? "ORDER OF PAYMENT" : "VEHICLE/UNIT RELEASING SLIP";
-  const tab = open("", "_blank"); if (!tab) return alert("Please allow pop-ups to view the form.");
-  const fields = code === "009"
-    ? [["Payor", payment.receipt_snapshot?.payer || payment.unit_owner_name],["Ticket No.", violation.ticket_number],["OR No.", payment.receipt],["Amount Paid", money(payment.amount)],["Date Paid", String(payment.paid_at || "").slice(0,10)]]
-    : [["Unit Owner", payment.unit_owner_name],["Owner Address", payment.unit_owner_address],["Owner Contact", payment.unit_owner_contact],["Driver", payment.driver_name],["Driver Address", payment.driver_address],["Driver Contact", payment.driver_contact],["Engine No.", payment.engine_number],["Chassis No.", payment.chassis_number],["OR No.", payment.receipt],["Amount Paid", money(payment.amount)],["Release Date", payment.release_date],["Release Time", payment.release_time],["Released by", payment.released_by],["Witness", payment.release_witness]];
-  tab.document.write(`<!doctype html><html><head><title>TFRO-${code}</title><style>body{font-family:Arial;background:#ddd}.bar{text-align:center;padding:10px;background:#173f32;color:#fff}.sheet{width:850px;min-height:600px;margin:18px auto;padding:35px;background:#fff}.head{border-top:18px solid #06452d;border-bottom:8px solid #f4ef24;padding:16px}.head h2{margin:0;color:#16613f}.title{text-align:center;margin:45px;letter-spacing:5px;text-decoration:underline}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.field{padding:8px;border-bottom:1px solid #111}.field b{display:block;font-size:11px}.sign{margin-top:60px;text-align:right}@media print{.bar{display:none}body{background:#fff}.sheet{margin:0}}</style></head><body><div class="bar"><button onclick="print()">Print / Save PDF</button></div><main class="sheet"><div class="head"><h2>TRICYCLE FRANCHISING AND REGULATORY OFFICE</h2><p>City Government of Lucena | Republic of the Philippines</p><strong>TFRO - ${code}</strong></div><h1 class="title">${title}</h1><div class="grid">${fields.map(([label,value])=>`<div class="field"><b>${escapeHTML(label)}</b>${escapeHTML(value || "—")}</div>`).join("")}</div><div class="sign">CRISELDA C. DAVID, DPA<br>TFRO Head</div></main></body></html>`);
-  tab.document.close();
+  const options = { payment, violation };
+  if (code === "009") void openPaymentOrderPdfForm(options);
+  else void openUnitReleasePdfForm(options);
 }
 
 function openTicketOrder(violationId) {
   const violation = (window.__operatorViolations || []).find((row) => String(row.id) === String(violationId));
   if (!violation) return;
   const amount = Math.max(Number(violation.penalty || 0) - Number(violation.discounted || 0), 0);
-  const tab = open("", "_blank"); if (!tab) return alert("Please allow pop-ups to view TFRO-009.");
-  tab.document.write(`<!doctype html><html><head><title>TFRO-009 ${escapeHTML(violation.ticket_number || "")}</title><style>body{font-family:Arial;background:#ddd}.bar{text-align:center;padding:10px;background:#173f32}.sheet{width:850px;min-height:600px;margin:18px auto;padding:35px;background:#fff}.head{border-top:18px solid #06452d;border-bottom:8px solid #f4ef24;padding:16px}.title{text-align:center;margin:45px;letter-spacing:5px;text-decoration:underline}table{width:100%;border-collapse:collapse}th,td{padding:12px;border:1px solid #111}.right{text-align:right}@media print{.bar{display:none}body{background:#fff}.sheet{margin:0}}</style></head><body><div class="bar"><button onclick="print()">Print / Save PDF</button></div><main class="sheet"><div class="head"><h2>TRICYCLE FRANCHISING AND REGULATORY OFFICE</h2><p>City Government of Lucena | Republic of the Philippines</p><b>TFRO - 009</b></div><h1 class="title">ORDER OF PAYMENT</h1><p>Payor: <b>${escapeHTML(currentOperatorRecord?.full_name || currentProfile?.full_name || "")}</b></p><p>Ticket No.: <b>${escapeHTML(violation.ticket_number || "")}</b></p><table><tr><th>Violation</th><th>Amount Due</th></tr><tr><td>${escapeHTML(violation.violation_type || "")}</td><td>${money(amount)}</td></tr><tr><th>Total Amount Due (automatic net amount)</th><th>${money(amount)}</th></tr></table><p class="right">Apprehending Officer: ${escapeHTML(violation.apprehending_officers || "TFRO Traffic Enforcer")}</p></main></body></html>`);
-  tab.document.close();
+  void openPaymentOrderPdfForm({
+    payment: {
+      payer: currentOperatorRecord?.full_name || currentProfile?.full_name || "",
+      unit_owner_name: currentOperatorRecord?.full_name || currentProfile?.full_name || "",
+      unit_owner_address: currentOperatorRecord?.address || "",
+      amount,
+    },
+    violation,
+  });
 }
 
 document.getElementById("violationTable")?.addEventListener("click", (event) => {

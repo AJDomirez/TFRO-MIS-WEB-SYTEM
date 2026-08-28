@@ -22,7 +22,7 @@ function openPdfWindow(title) {
     return null;
   }
   popup.opener = null;
-  popup.document.write(`<!doctype html><title>${title}</title><style>body{margin:0;display:grid;place-items:center;min-height:100vh;background:#eef2ef;font:16px Arial;color:#173f32}</style><p>Generating auto-filled PDF…</p>`);
+  popup.document.write(`<!doctype html><meta charset="utf-8"><title>${title}</title><style>body{margin:0;display:grid;place-items:center;min-height:100vh;background:#eef2ef;font:16px Arial;color:#173f32}</style><p>Generating auto-filled PDF&hellip;</p>`);
   return popup;
 }
 
@@ -75,19 +75,116 @@ function ageFromBirthDate(input) {
   return age >= 0 ? String(age) : "";
 }
 
-function drawScaled(page, font, text, x, y, size = 8, options = {}) {
+function drawScaled(page, font, text, x, y, size = 12, options = {}) {
   if (!value(text)) return;
-  const sx = page.getWidth() / 612;
-  const sy = page.getHeight() / 936;
-  page.drawText(value(text), {
-    x: x * sx,
+  const sx = page.getWidth() / (options.baseWidth || 612);
+  const sy = page.getHeight() / (options.baseHeight || 936);
+  const content = value(text);
+  const maxWidth = options.maxWidth || 500;
+  const minimumSize = options.minSize || 12;
+  let fittedSize = Math.max(size, minimumSize);
+  while (fittedSize > minimumSize && font.widthOfTextAtSize(content, fittedSize) > maxWidth) {
+    fittedSize = Math.max(minimumSize, fittedSize - 0.25);
+  }
+  const textWidth = font.widthOfTextAtSize(content, fittedSize);
+  const alignedX = options.align === "center"
+    ? x + Math.max(0, (maxWidth - textWidth) / 2)
+    : options.align === "right"
+      ? x + Math.max(0, maxWidth - textWidth)
+      : x;
+  page.drawText(content, {
+    x: alignedX * sx,
     y: y * sy,
-    size: size * Math.min(sx, sy),
+    size: fittedSize * Math.min(sx, sy),
     font,
-    maxWidth: (options.maxWidth || 500) * sx,
-    lineHeight: (options.lineHeight || size * 1.15) * sy,
+    maxWidth: maxWidth * sx,
+    lineHeight: (options.lineHeight || fittedSize * 1.15) * sy,
     color: options.color,
   });
+}
+
+function money(amount) {
+  return `PHP ${Number(amount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function editFields(title, fields, editable) {
+  if (!editable) return Promise.resolve(Object.fromEntries(fields.map((field) => [field.key, field.value])));
+  return new Promise((resolve) => {
+    const dialog = document.createElement("dialog");
+    dialog.setAttribute("aria-label", `${title} manual field editor`);
+    dialog.style.cssText = "width:min(760px,calc(100vw - 32px));max-height:88vh;padding:0;border:0;border-radius:14px;box-shadow:0 24px 70px #0005;color:#17231e;font-family:Arial,sans-serif";
+    const header = document.createElement("header");
+    header.style.cssText = "padding:18px 22px;background:#153e31;color:#fff";
+    const heading = document.createElement("h2");
+    heading.textContent = `Review ${title}`;
+    heading.style.cssText = "margin:0 0 5px;font-size:20px";
+    const note = document.createElement("p");
+    note.textContent = "Administrator only: values are auto-filled. Edit only what must change for this generated copy.";
+    note.style.cssText = "margin:0;font-size:12px;opacity:.9";
+    header.append(heading, note);
+    const form = document.createElement("form");
+    form.method = "dialog";
+    form.style.cssText = "padding:20px 22px";
+    const grid = document.createElement("div");
+    grid.style.cssText = "display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px";
+    for (const field of fields) {
+      const label = document.createElement("label");
+      label.style.cssText = "display:grid;gap:6px;font-size:12px;font-weight:700";
+      label.append(document.createTextNode(field.label));
+      const input = document.createElement("input");
+      input.name = field.key;
+      input.type = field.type || "text";
+      if (input.type === "checkbox") input.checked = Boolean(field.value);
+      else input.value = value(field.value);
+      input.style.cssText = input.type === "checkbox"
+        ? "width:20px;height:20px;accent-color:#17603f"
+        : "width:100%;min-height:40px;padding:8px 10px;border:1px solid #aebbb5;border-radius:7px;font:14px Arial";
+      label.append(input);
+      grid.append(label);
+    }
+    const actions = document.createElement("div");
+    actions.style.cssText = "display:flex;justify-content:flex-end;gap:10px;margin-top:20px";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.textContent = "Cancel";
+    cancel.style.cssText = "padding:10px 16px;border:1px solid #aebbb5;border-radius:7px;background:#fff;font-weight:700";
+    const generate = document.createElement("button");
+    generate.type = "submit";
+    generate.textContent = "Generate PDF";
+    generate.style.cssText = "padding:10px 16px;border:0;border-radius:7px;background:#153e31;color:#fff;font-weight:700";
+    actions.append(cancel, generate);
+    form.append(grid, actions);
+    dialog.append(header, form);
+    document.body.append(dialog);
+    const finish = (result) => { dialog.close(); dialog.remove(); resolve(result); };
+    cancel.addEventListener("click", () => finish(null));
+    dialog.addEventListener("cancel", (event) => { event.preventDefault(); finish(null); });
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const result = {};
+      for (const field of fields) {
+        const input = form.elements[field.key];
+        result[field.key] = input.type === "checkbox" ? input.checked : input.value.trim();
+      }
+      finish(result);
+    });
+    dialog.showModal();
+  });
+}
+
+async function createCroppedOfficialForm(PDFDocument, templateUrl, sourcePageIndex, bottom, height) {
+  const templateBytes = await fetch(templateUrl).then((response) => {
+    if (!response.ok) throw new Error(`Official form template could not be loaded (${response.status}).`);
+    return response.arrayBuffer();
+  });
+  const source = await PDFDocument.load(templateBytes);
+  const sourcePage = source.getPage(sourcePageIndex);
+  const width = sourcePage.getWidth();
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([width, height]);
+  const embedded = await pdfDoc.embedPage(sourcePage, { left: 0, bottom, right: width, top: bottom + height });
+  page.drawPage(embedded, { x: 0, y: 0, width, height });
+  return { pdfDoc, page };
 }
 
 async function showPdf(popup, bytes, filename) {
@@ -115,9 +212,9 @@ async function embedPicture(pdfDoc, page, pictureUrl) {
   }
 }
 
-export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, changeMotor = {} }) {
-  const popup = openPdfWindow("TFRO-001 Temporary MTOP");
-  if (!popup) return;
+export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, changeMotor = {}, editable = false }) {
+  let popup = editable ? null : openPdfWindow("TFRO-001 Temporary MTOP");
+  if (!editable && !popup) return;
   try {
     const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
     const templateUrl = new URL("../forms/TFRO-001 Temporary MTOP.pdf?v=20260826-200000", import.meta.url);
@@ -127,7 +224,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     const bold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const ink = rgb(0, 0, 0);
     const pages = pdfDoc.getPages();
-    const details = {
+    let details = {
       name: value(renewal.operator_name || franchise.operator_name),
       franchise: value(franchise.franchise_number),
       address: value(renewal.operator_address || franchise.address),
@@ -139,21 +236,35 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
       plate: value(changeMotor.new_plate_number || renewal.plate_number || franchise.plate_number),
       expiration: formatDate(renewal.temporary_mtop_expiration_date),
     };
-    const fit = (page, text, x, y, maxWidth, size = 10, useBold = false, align = "left") => {
+    details = await editFields("TFRO-001 Temporary MTOP", [
+      { key: "name", label: "Applicant / Operator", value: details.name },
+      { key: "franchise", label: "Franchise number", value: details.franchise },
+      { key: "address", label: "Address", value: details.address },
+      { key: "orNumber", label: "Official receipt number", value: details.orNumber },
+      { key: "make", label: "Vehicle make", value: details.make },
+      { key: "model", label: "Vehicle model", value: details.model },
+      { key: "motor", label: "Motor / engine number", value: details.motor },
+      { key: "chassis", label: "Chassis number", value: details.chassis },
+      { key: "plate", label: "Plate number", value: details.plate },
+      { key: "expiration", label: "Expiration date", value: details.expiration },
+    ], editable);
+    if (!details) { popup?.close(); return; }
+    popup ||= openPdfWindow("TFRO-001 Temporary MTOP");
+    if (!popup) return;
+    const fit = (page, text, x, y, maxWidth, size = 12, useBold = false, align = "left") => {
       if (!text) return;
       const selectedFont = useBold ? bold : font;
-      let fitted = size;
-      while (fitted > 7 && selectedFont.widthOfTextAtSize(text, fitted) > maxWidth) fitted -= 0.5;
+      let fitted = Math.max(size, 12);
       const textWidth = selectedFont.widthOfTextAtSize(text, fitted);
       const drawX = align === "center" ? x + Math.max(0, (maxWidth - textWidth) / 2) : x;
       page.drawText(text, { x: drawX, y, maxWidth, size: fitted, font: selectedFont, color: ink });
     };
-    const row = (page, y, columns) => columns.forEach(([text, x, width]) => fit(page, text, x, y, width, 9, true, "center"));
+    const row = (page, y, columns) => columns.forEach(([text, x, width]) => fit(page, text, x, y, width, 12, true, "center"));
 
     if (pages[1]) {
-      fit(pages[1], details.name, 112, 845, 240, 10, true);
-      fit(pages[1], details.franchise, 498, 845, 70, 10, true);
-      fit(pages[1], details.address, 112, 829, 265, 10, true);
+      fit(pages[1], details.name, 112, 845, 240, 12, true);
+      fit(pages[1], details.franchise, 498, 845, 70, 12, true);
+      fit(pages[1], details.address, 112, 829, 265, 12, true);
       row(pages[1], 699, [[details.make, 51, 68], [details.model, 128, 72], [details.motor, 209, 135], [details.chassis, 353, 127], [details.plate, 489, 81]]);
       if (details.expiration) {
         pages[1].drawRectangle({ x: 180, y: 329, width: 370, height: 24, color: rgb(1, 1, 1) });
@@ -164,15 +275,15 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-001-${value(renewal.renewal_code || renewal.id)}.pdf`);
   } catch (error) {
-    popup.close();
+    popup?.close();
     console.error(error);
     alert(`Unable to generate the TFRO-001 PDF: ${error.message}`);
   }
 }
 
-export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor = {}, pictureUrl = "" }) {
-  const popup = openPdfWindow("TFRO-005 Renewal Application");
-  if (!popup) return;
+export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor = {}, pictureUrl = "", editable = false }) {
+  let popup = editable ? null : openPdfWindow("TFRO-005 Renewal Application");
+  if (!editable && !popup) return;
   try {
     const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
     const templateUrl = new URL("../forms/TFRO-005 Application Form.pdf", import.meta.url);
@@ -190,53 +301,67 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
       barangay: value(renewal.residential_barangay || fallbackAddress.barangay),
     };
     const ink = rgb(0, 0, 0);
-    const write = (text, x, y, size = 8.5, maxWidth = 500, useBold = true) =>
-      drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, color: ink });
+    const write = (text, x, y, size = 12, maxWidth = 500, useBold = true) =>
+      drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 12), { maxWidth, minSize: 12, color: ink });
 
-    write(formatDate(renewal.created_at), 515, 827, 8.5, 55);
     const fullRenewalFranchiseNumber = value(franchise.franchise_number);
-    const renewalFranchiseNumber = fullRenewalFranchiseNumber.replace(/^FR-/i, "");
-    const renewalFranchiseSize = 10;
+    const birthDate = renewal.applicant_birth_date || franchise.birth_date;
+    let manual = await editFields("TFRO-005 Application", [
+      { key: "date", label: "Application date", value: formatDate(renewal.created_at) },
+      { key: "franchise", label: "Franchise number", value: fullRenewalFranchiseNumber.replace(/^FR-/i, "") },
+      { key: "last", label: "Last name", value: names.last },
+      { key: "first", label: "First name", value: names.first },
+      { key: "middle", label: "Middle name", value: names.middle },
+      { key: "contact", label: "Contact number", value: renewal.operator_contact },
+      { key: "street", label: "Home number and street", value: address.street },
+      { key: "barangay", label: "Barangay", value: address.barangay },
+      { key: "birthDate", label: "Birthdate", value: formatDate(birthDate) },
+      { key: "birthPlace", label: "Place of birth", value: renewal.applicant_birth_place || franchise.birth_place },
+      { key: "age", label: "Age", value: ageFromBirthDate(birthDate) },
+      { key: "civilStatus", label: "Civil status", value: renewal.applicant_civil_status || franchise.civil_status },
+      { key: "make", label: "Vehicle make", value: changeMotor.new_motor_brand || renewal.motorcycle_make || franchise.motorcycle_brand },
+      { key: "plate", label: "Plate number", value: changeMotor.new_plate_number || renewal.plate_number || franchise.plate_number },
+      { key: "model", label: "Vehicle model", value: changeMotor.new_motor_serial || renewal.motorcycle_model || franchise.motorcycle_year_model },
+      { key: "orNumber", label: "O.R. number", value: renewal.current_or_number },
+      { key: "engine", label: "Motor / engine number", value: changeMotor.new_engine_number || renewal.engine_number || franchise.motorcycle_engine_number },
+      { key: "orDate", label: "O.R. date", value: formatDate(renewal.current_or_date) },
+      { key: "chassis", label: "Chassis number", value: changeMotor.new_chassis_number || renewal.chassis_number || franchise.motorcycle_chassis_number },
+      { key: "crNumber", label: "C.R. number", value: renewal.current_cr_number || franchise.chassis_cr_number },
+      { key: "route", label: "Authorized route", value: franchise.route || "LUCENA PROPER" },
+      { key: "remarks", label: "Inspection remarks", value: renewal.inspection_remarks },
+    ], editable);
+    if (!manual) { popup?.close(); return; }
+    popup ||= openPdfWindow("TFRO-005 Renewal Application");
+    if (!popup) return;
+    write(manual.date, 515, 827, 8.5, 55);
+    const renewalFranchiseNumber = manual.franchise;
+    const renewalFranchiseSize = 12;
     const renewalFranchiseWidth = bold.widthOfTextAtSize(renewalFranchiseNumber, renewalFranchiseSize);
     page.drawText(renewalFranchiseNumber, { x: 568 - renewalFranchiseWidth, y: 806.5, size: renewalFranchiseSize, font: bold, color: ink });
-    write(names.last, 48, 778, 10, 165);
-    write(names.first, 225, 778, 10, 145);
-    write(names.middle, 335, 778, 10, 110);
-    write(renewal.operator_contact, 458, 778, 10, 105);
-    write(address.street, 40, 718, 9.5, 275);
-    write(address.barangay, 326, 718, 9.5, 240);
-    const birthDate = renewal.applicant_birth_date || franchise.birth_date;
-    write(formatDate(birthDate), 40, 668, 9, 150);
-    write(renewal.applicant_birth_place || franchise.birth_place, 207, 668, 9, 150);
-    write(ageFromBirthDate(birthDate), 377, 668, 9, 60);
-    write(renewal.applicant_civil_status || franchise.civil_status, 457, 668, 9, 110);
-    write(changeMotor.new_motor_brand || renewal.motorcycle_make || franchise.motorcycle_brand, 90, 627, 9.5, 210);
-    write(changeMotor.new_plate_number || renewal.plate_number || franchise.plate_number, 385, 627, 9.5, 180);
-    write(changeMotor.new_motor_serial || renewal.motorcycle_model || franchise.motorcycle_year_model, 90, 606, 9.5, 210);
-    write(renewal.current_or_number, 375, 606, 9.5, 190);
-    write(changeMotor.new_engine_number || renewal.engine_number || franchise.motorcycle_engine_number, 110, 585, 9.5, 190);
-    write(formatDate(renewal.current_or_date), 395, 585, 9.5, 170);
-    write(changeMotor.new_chassis_number || renewal.chassis_number || franchise.motorcycle_chassis_number, 115, 563, 9.5, 185);
-    write(renewal.current_cr_number || franchise.chassis_cr_number, 370, 563, 9.5, 195);
-    const route = value(franchise.route || "LUCENA PROPER");
+    write(manual.last, 48, 778, 10, 165); write(manual.first, 225, 778, 10, 145); write(manual.middle, 335, 778, 10, 110);
+    write(manual.contact, 458, 778, 10, 105); write(manual.street, 40, 718, 9.5, 275); write(manual.barangay, 326, 718, 9.5, 240);
+    write(manual.birthDate, 40, 668, 9, 150); write(manual.birthPlace, 207, 668, 9, 150); write(manual.age, 377, 668, 9, 60); write(manual.civilStatus, 457, 668, 9, 110);
+    write(manual.make, 90, 627, 9.5, 210); write(manual.plate, 385, 627, 9.5, 180); write(manual.model, 90, 606, 9.5, 210); write(manual.orNumber, 375, 606, 9.5, 190);
+    write(manual.engine, 110, 585, 9.5, 190); write(manual.orDate, 395, 585, 9.5, 170); write(manual.chassis, 115, 563, 9.5, 185); write(manual.crNumber, 370, 563, 9.5, 195);
+    const route = value(manual.route);
     page.drawRectangle({ x: 468, y: 517, width: 103, height: 40, color: rgb(1, 1, 1) });
-    const routeSize = route.length > 20 ? 7.5 : 9;
+    const routeSize = 12;
     const routeWidth = bold.widthOfTextAtSize(route, routeSize);
     page.drawText(route, { x: 468 + Math.max(2, (103 - routeWidth) / 2), y: 534, size: routeSize, font: bold, color: ink, maxWidth: 99 });
-    write(renewal.inspection_remarks, 278, 136, 8, 135);
+    write(manual.remarks, 278, 136, 8, 135);
     await embedPicture(pdfDoc, page, pictureUrl);
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-005-${value(renewal.renewal_code || renewal.id)}.pdf`);
   } catch (error) {
-    popup.close();
+    popup?.close();
     console.error(error);
     alert(`Unable to generate the TFRO-005 PDF: ${error.message}`);
   }
 }
 
-export async function openPmblPdfForm({ renewal, franchise = {} }) {
-  const popup = openPdfWindow("PMBL TFRO-003 Certification");
-  if (!popup) return;
+export async function openPmblPdfForm({ renewal, franchise = {}, editable = false }) {
+  let popup = editable ? null : openPdfWindow("PMBL TFRO-003 Certification");
+  if (!editable && !popup) return;
   try {
     const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
     const templateUrl = new URL("../forms/PMBL TFRO-003 Certification.pdf", import.meta.url);
@@ -254,33 +379,48 @@ export async function openPmblPdfForm({ renewal, franchise = {} }) {
       if (!value(text)) return;
       const selectedFont = useBold ? bold : font;
       const content = value(text);
-      let fittedSize = size;
-      while (fittedSize > 9 && selectedFont.widthOfTextAtSize(content, fittedSize) > maxWidth) fittedSize -= 0.5;
+      const fittedSize = Math.max(size, 13);
       page.drawText(content, { x: x * sx, y: y * sy, size: fittedSize * Math.min(sx, sy), maxWidth: maxWidth * sx, font: selectedFont, color: black });
     };
     const issued = new Date();
     const pmblFranchiseNumber = value(franchise.franchise_number);
-
-    write(renewal.operator_name, 315, 364, 13, 320, true);
-    write(pmblFranchiseNumber, 76, 345, 13, 125, true);
-    write(renewal.operator_address, 401, 345, 12, 295, true);
-    write(franchise.toda_name, 151, 324, 12, 220, true);
-    write("X", 577, 324, 13, 15, true);
-    write(String(issued.getDate()), 174, 171, 12, 30, true);
-    write(issued.toLocaleDateString("en-PH", { month: "long" }), 257, 171, 12, 170, true);
-    write(String(issued.getFullYear()).slice(-2), 456, 171, 12, 30, true);
+    const manual = await editFields("PMBL TFRO-003 Certification", [
+      { key: "name", label: "Member name", value: renewal.operator_name },
+      { key: "franchise", label: "Franchise number", value: pmblFranchiseNumber },
+      { key: "address", label: "Residential address", value: renewal.operator_address },
+      { key: "toda", label: "TODA", value: franchise.toda_name },
+      { key: "driver", label: "Driver", value: false, type: "checkbox" },
+      { key: "operator", label: "Operator", value: true, type: "checkbox" },
+      { key: "both", label: "Both", value: false, type: "checkbox" },
+      { key: "day", label: "Issued day", value: String(issued.getDate()) },
+      { key: "month", label: "Issued month", value: issued.toLocaleDateString("en-PH", { month: "long" }) },
+      { key: "year", label: "Issued year (last two digits)", value: String(issued.getFullYear()).slice(-2) },
+    ], editable);
+    if (!manual) { popup?.close(); return; }
+    popup ||= openPdfWindow("PMBL TFRO-003 Certification");
+    if (!popup) return;
+    write(manual.name, 315, 364, 13, 320, true); write(manual.franchise, 76, 345, 13, 125, true);
+    write(manual.address, 401, 345, 13, 295, true); write(manual.toda, 151, 324, 13, 220, true);
+    const drawTick = (x) => {
+      page.drawLine({ start: { x: x * sx, y: 328.2 * sy }, end: { x: (x + 2.9) * sx, y: 325.0 * sy }, thickness: 1.45 * Math.min(sx, sy), color: black });
+      page.drawLine({ start: { x: (x + 2.9) * sx, y: 325.0 * sy }, end: { x: (x + 8.6) * sx, y: 332.0 * sy }, thickness: 1.45 * Math.min(sx, sy), color: black });
+    };
+    if (manual.driver) drawTick(508.5);
+    if (manual.operator) drawTick(577.4);
+    if (manual.both) drawTick(666.0);
+    write(manual.day, 174, 171, 13, 30, true); write(manual.month, 257, 171, 13, 170, true); write(manual.year, 456, 171, 13, 30, true);
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `PMBL-TFRO-003-${value(renewal.renewal_code || renewal.id)}.pdf`);
   } catch (error) {
-    popup.close();
+    popup?.close();
     console.error(error);
     alert(`Unable to generate the PMBL PDF: ${error.message}`);
   }
 }
 
-export async function openChecklistPdfForm({ renewal, documents = [] }) {
-  const popup = openPdfWindow("TFRO-004 Checklist for Renewal");
-  if (!popup) return;
+export async function openChecklistPdfForm({ renewal, documents = [], editable = false }) {
+  let popup = editable ? null : openPdfWindow("TFRO-004 Checklist for Renewal");
+  if (!editable && !popup) return;
   try {
     const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
     const templateUrl = new URL("../forms/TFRO-004 Checklist for Renewal.pdf", import.meta.url);
@@ -296,9 +436,6 @@ export async function openChecklistPdfForm({ renewal, documents = [] }) {
       page.drawLine({ start: { x: x + 2.3, y: y + 1.3 }, end: { x: x + 5.3, y: y + 5 }, thickness: 1, color: ink });
     };
 
-    const date = formatDate(renewal.created_at);
-    page.drawText(date, { x: 315, y: 521, size: 8, font, color: ink });
-
     const documentRows = [
       ["payment_receipt", 456, 121.5],
       ["official_receipt", 447, 121.5],
@@ -310,11 +447,6 @@ export async function openChecklistPdfForm({ renewal, documents = [] }) {
       ["picture_2x2", 343, 124.5],
       ["pmbl_certification", 334, 124.5],
     ];
-    for (const [type, y, x] of documentRows) {
-      if (!uploaded.has(type)) continue;
-      drawMark(x, y);
-    }
-
     const physicalRows = [
       ["functional_horn", 226],
       ["signal_lights", 213],
@@ -326,10 +458,24 @@ export async function openChecklistPdfForm({ renewal, documents = [] }) {
       ["garbage_receptacle", 119],
       ["clean_windshield", 109],
     ];
+    const manual = await editFields("TFRO-004 Renewal Checklist", [
+      { key: "date", label: "Checklist date", value: formatDate(renewal.created_at) },
+      ...documentRows.map(([type]) => ({ key: type, label: type.replaceAll("_", " "), value: uploaded.has(type), type: "checkbox" })),
+      ...physicalRows.flatMap(([key]) => [
+        { key: `${key}_pass`, label: `${key.replaceAll("_", " ")} — PASS`, value: inspection[key] === true, type: "checkbox" },
+        { key: `${key}_fail`, label: `${key.replaceAll("_", " ")} — FAIL`, value: inspection[key] === false, type: "checkbox" },
+      ]),
+    ], editable);
+    if (!manual) { popup?.close(); return; }
+    popup ||= openPdfWindow("TFRO-004 Checklist for Renewal");
+    if (!popup) return;
+    page.drawText(manual.date, { x: 315, y: 521, size: 12, font, color: ink });
+    for (const [type, y, x] of documentRows) {
+      if (manual[type]) drawMark(x, y);
+    }
     for (const [key, y] of physicalRows) {
-      if (inspection[key] !== true && inspection[key] !== false) continue;
-      const leftX = inspection[key] ? 109.5 : 128.5;
-      drawMark(leftX, y);
+      if (manual[`${key}_pass`]) drawMark(109.5, y);
+      if (manual[`${key}_fail`]) drawMark(128.5, y);
     }
 
     page.setMediaBox(0, 0, page.getWidth() / 2, page.getHeight());
@@ -338,7 +484,7 @@ export async function openChecklistPdfForm({ renewal, documents = [] }) {
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-004-${value(renewal.renewal_code || renewal.id)}.pdf`);
   } catch (error) {
-    popup.close();
+    popup?.close();
     console.error(error);
     alert(`Unable to generate the TFRO-004 PDF: ${error.message}`);
   }
@@ -360,9 +506,9 @@ function droppingDetails(request = {}, franchise = {}, operator = {}) {
   };
 }
 
-export async function openDroppingPetitionPdfForm({ request, franchise = {}, operator = {} }) {
-  const popup = openPdfWindow("TFRO-002 Petition for Dropping");
-  if (!popup) return;
+export async function openDroppingPetitionPdfForm({ request, franchise = {}, operator = {}, editable = false }) {
+  let popup = editable ? null : openPdfWindow("TFRO-002 Petition for Dropping");
+  if (!editable && !popup) return;
   try {
     const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
     const templateUrl = new URL("../forms/TFRO-002 Petition for Dropping.pdf?v=20260826-222000", import.meta.url);
@@ -371,17 +517,28 @@ export async function openDroppingPetitionPdfForm({ request, franchise = {}, ope
     const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const bold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const ink = rgb(0, 0, 0);
-    const data = droppingDetails(request, franchise, operator);
-    const write = (text, x, y, maxWidth, size = 9, centered = false, useBold = false) => {
+    let data = droppingDetails(request, franchise, operator);
+    data.requestCode = value(request.request_code || request.id);
+    data = await editFields("TFRO-002 Petition for Dropping", [
+      { key: "operator", label: "Operator name", value: data.operator }, { key: "requestCode", label: "Request code", value: data.requestCode },
+      { key: "address", label: "Address", value: data.address }, { key: "contact", label: "Contact number", value: data.contact },
+      { key: "franchise", label: "Franchise number", value: data.franchise }, { key: "toda", label: "TODA", value: data.toda },
+      { key: "route", label: "Route", value: data.route }, { key: "make", label: "Vehicle make", value: data.make },
+      { key: "model", label: "Vehicle model", value: data.model }, { key: "motor", label: "Motor / engine number", value: data.motor },
+      { key: "chassis", label: "Chassis number", value: data.chassis }, { key: "plate", label: "Plate number", value: data.plate },
+    ], editable);
+    if (!data) { popup?.close(); return; }
+    popup ||= openPdfWindow("TFRO-002 Petition for Dropping");
+    if (!popup) return;
+    const write = (text, x, y, maxWidth, size = 12, centered = false, useBold = false) => {
       if (!text) return;
       const selected = useBold ? bold : font;
-      let fitted = size;
-      while (fitted > 6.5 && selected.widthOfTextAtSize(text, fitted) > maxWidth) fitted -= 0.5;
+      const fitted = Math.max(size, 12);
       const width = selected.widthOfTextAtSize(text, fitted);
       page.drawText(text, { x: centered ? x + Math.max(0, (maxWidth - width) / 2) : x, y, maxWidth, size: fitted, font: selected, color: ink });
     };
     write(data.operator, 72, 801, 180, 10, true, true);
-    write(value(request.request_code || request.id), 478, 801, 88, 8, true, true);
+    write(data.requestCode, 478, 801, 88, 8, true, true);
     write(data.toda, 486, 774, 70, 9.5, true, true);
     write(data.contact, 474, 748, 88, 9.5, true, true);
     write(data.address, 72, 647, 467, 9.5, true, true);
@@ -396,15 +553,15 @@ export async function openDroppingPetitionPdfForm({ request, franchise = {}, ope
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-002-${value(request.request_code || request.id)}.pdf`);
   } catch (error) {
-    popup.close();
+    popup?.close();
     console.error(error);
     alert(`Unable to generate TFRO-002: ${error.message}`);
   }
 }
 
-export async function openDroppingCertificationPdfForm({ request, franchise = {}, operator = {} }) {
-  const popup = openPdfWindow("TFRO-007 Certification of Dropping");
-  if (!popup) return;
+export async function openDroppingCertificationPdfForm({ request, franchise = {}, operator = {}, editable = false }) {
+  let popup = editable ? null : openPdfWindow("TFRO-007 Certification of Dropping");
+  if (!editable && !popup) return;
   try {
     const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
     const templateUrl = new URL("../forms/TFRO-007 Certification of Dropping.pdf?v=20260826-224000", import.meta.url);
@@ -413,12 +570,19 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const ink = rgb(0, 0, 0);
-    const data = droppingDetails(request, franchise, operator);
-    const write = (text, x, y, maxWidth, size = 9, useBold = false) => {
+    const issued = request.admin_reviewed_at ? new Date(request.admin_reviewed_at) : new Date();
+    const issuedDefault = issued.toLocaleDateString("en-PH", { month: "long", day: "2-digit", year: "numeric" }).toUpperCase();
+    const data = await editFields("TFRO-007 Certification of Dropping", [
+      ...Object.entries(droppingDetails(request, franchise, operator)).map(([key, fieldValue]) => ({ key, label: key.replaceAll("_", " "), value: fieldValue })),
+      { key: "issued", label: "Issued date", value: issuedDefault },
+    ], editable);
+    if (!data) { popup?.close(); return; }
+    popup ||= openPdfWindow("TFRO-007 Certification of Dropping");
+    if (!popup) return;
+    const write = (text, x, y, maxWidth, size = 12, useBold = false) => {
       if (!text) return;
       const selected = useBold ? bold : font;
-      let fitted = size;
-      while (fitted > 6.5 && selected.widthOfTextAtSize(text, fitted) > maxWidth) fitted -= 0.5;
+      const fitted = Math.max(size, 12);
       page.drawText(text, { x, y, maxWidth, size: fitted, font: selected, color: ink });
     };
     const certificationLine = `This is to certify that the tricycle franchise Number. ${data.franchise} has been cancelled/dropped due to`;
@@ -429,14 +593,104 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
     write(data.motor, 241, 465, 246, 9);
     write(data.chassis, 241, 449, 246, 9);
     write(data.plate, 241, 433, 246, 9);
-    const issued = request.admin_reviewed_at ? new Date(request.admin_reviewed_at) : new Date();
-    const issuedText = `Issued this ${issued.toLocaleDateString("en-PH", { month: "long", day: "2-digit", year: "numeric" }).toUpperCase()}.`;
+    const issuedText = `Issued this ${data.issued}.`;
     write(issuedText, 70, 320, 250, 9, true);
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-007-${value(request.request_code || request.id)}.pdf`);
   } catch (error) {
-    popup.close();
+    popup?.close();
     console.error(error);
     alert(`Unable to generate TFRO-007: ${error.message}`);
+  }
+}
+
+export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, editable = false }) {
+  let popup = editable ? null : openPdfWindow("TFRO-009 Order of Payment");
+  if (!editable && !popup) return;
+  try {
+    const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
+    const templateUrl = new URL("../forms/TFRO-009 Order of Payment.pdf", import.meta.url);
+    const { pdfDoc, page } = await createCroppedOfficialForm(PDFDocument, templateUrl, 1, 468, 468);
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const ink = rgb(0, 0, 0);
+    const snapshot = payment.receipt_snapshot || {};
+    const amount = snapshot.amount_paid ?? payment.amount ?? violation.penalty ?? 0;
+    const write = (text, x, y, maxWidth, size = 9, align = "left", useBold = true) =>
+      drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 12), { maxWidth, minSize: 12, align, color: ink, baseHeight: 468 });
+
+    const manual = await editFields("TFRO-009 Order of Payment", [
+      { key: "payer", label: "Payor", value: snapshot.payer || payment.payer || payment.unit_owner_name },
+      { key: "officers", label: "Apprehending officer/s", value: snapshot.apprehending_officers || violation.apprehending_officers },
+      { key: "address", label: "Address", value: snapshot.address || payment.unit_owner_address },
+      { key: "ticket", label: "Ticket number", value: snapshot.ticket_number || violation.ticket_number },
+      { key: "code", label: "Violation code", value: snapshot.code || violation.violation_code },
+      { key: "violation", label: "Violation", value: snapshot.violation || violation.violation_type },
+      { key: "amount", label: "Amount due / paid", value: money(amount) },
+      { key: "receipt", label: "Official receipt number", value: payment.receipt },
+      { key: "assessedBy", label: "Assessed by", value: snapshot.assessed_by || payment.recorded_by_name || "TFRO Personnel" },
+      { key: "datePaid", label: "Date paid", value: formatDate(payment.date || payment.paid_at) },
+    ], editable);
+    if (!manual) { popup?.close(); return; }
+    popup ||= openPdfWindow("TFRO-009 Order of Payment");
+    if (!popup) return;
+    write(manual.payer, 108, 346, 190, 9.5); write(manual.officers, 420, 346, 112, 8.5, "center");
+    write(manual.address, 116, 334, 184, 8.5); write(manual.ticket, 420, 334, 112, 8.5, "center");
+    write(manual.code, 75, 286, 112, 9, "center"); write(manual.violation, 193, 286, 205, 9, "center");
+    write(manual.amount, 405, 286, 126, 9, "center"); write(manual.amount, 405, 193, 126, 9.5, "center");
+    write(manual.receipt, 74, 130, 92, 8.5); write(manual.amount, 74, 116, 92, 8.5);
+    write(manual.assessedBy, 235, 109, 112, 8, "center"); write(manual.datePaid, 74, 102, 92, 8.5);
+
+    const bytes = await pdfDoc.save();
+    await showPdf(popup, bytes, `TFRO-009-${value(payment.receipt || violation.ticket_number || payment.id)}.pdf`);
+  } catch (error) {
+    popup?.close();
+    console.error(error);
+    alert(`Unable to generate TFRO-009: ${error.message}`);
+  }
+}
+
+export async function openUnitReleasePdfForm({ payment = {}, violation = {}, editable = false }) {
+  let popup = editable ? null : openPdfWindow("TFRO-010 Vehicle/Unit Releasing Slip");
+  if (!editable && !popup) return;
+  try {
+    const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
+    const templateUrl = new URL("../forms/TFRO-010 Unit Releasing Slip.pdf", import.meta.url);
+    const { pdfDoc, page } = await createCroppedOfficialForm(PDFDocument, templateUrl, 0, 468, 468);
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const ink = rgb(0, 0, 0);
+    const write = (text, x, y, maxWidth, size = 8.5, align = "left", useBold = true) =>
+      drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 12), { maxWidth, minSize: 12, align, color: ink, baseHeight: 468 });
+
+    const manual = await editFields("TFRO-010 Vehicle/Unit Releasing Slip", [
+      { key: "owner", label: "Unit owner", value: payment.unit_owner_name || payment.payer },
+      { key: "releaseDate", label: "Release date", value: formatDate(payment.release_date || payment.date || payment.paid_at) },
+      { key: "ownerAddress", label: "Owner address", value: payment.unit_owner_address }, { key: "ownerContact", label: "Owner contact", value: payment.unit_owner_contact },
+      { key: "driver", label: "Driver name", value: payment.driver_name || payment.payer }, { key: "driverAddress", label: "Driver address", value: payment.driver_address },
+      { key: "driverContact", label: "Driver contact", value: payment.driver_contact }, { key: "engine", label: "Engine number", value: payment.engine_number },
+      { key: "chassis", label: "Chassis number", value: payment.chassis_number }, { key: "receipt", label: "Official receipt number", value: payment.receipt },
+      { key: "amount", label: "Amount paid", value: money(payment.amount) }, { key: "datePaid", label: "Date paid", value: formatDate(payment.date || payment.paid_at) },
+      { key: "recordedBy", label: "Recorded by", value: payment.receipt_snapshot?.assessed_by || payment.recorded_by_name || "TFRO Staff" },
+      { key: "releasedBy", label: "Released by", value: payment.released_by || violation.apprehending_officers }, { key: "witness", label: "Witness", value: payment.release_witness },
+      { key: "releaseTime", label: "Release time", value: payment.release_time },
+    ], editable);
+    if (!manual) { popup?.close(); return; }
+    popup ||= openPdfWindow("TFRO-010 Vehicle/Unit Releasing Slip");
+    if (!popup) return;
+    write(manual.owner, 187, 342, 215, 9); write(manual.releaseDate, 444, 342, 88, 8.5, "center");
+    write(manual.ownerAddress, 116, 328, 214, 8.25); write(manual.ownerContact, 427, 328, 105, 8.25, "center");
+    write(manual.driver, 166, 314, 225, 8.75); write(manual.driverAddress, 159, 300, 210, 8.25); write(manual.driverContact, 438, 286, 94, 8.25, "center");
+    write(manual.engine, 139, 245, 150, 8.75); write(manual.chassis, 139, 231, 150, 8.75); write(manual.receipt, 116, 204, 175, 8.75);
+    write(manual.amount, 136, 190, 155, 8.75); write(manual.datePaid, 127, 176, 164, 8.75); write(manual.recordedBy, 72, 121, 140, 8.25, "center");
+    write(manual.releasedBy, 344, 178, 138, 8.25, "center"); write(manual.witness, 389, 156, 93, 8.25, "center");
+    write(manual.releaseTime, 379, 134, 52, 8.25, "center"); write(manual.releaseDate, 450, 134, 72, 8.25, "center");
+
+    const bytes = await pdfDoc.save();
+    await showPdf(popup, bytes, `TFRO-010-${value(payment.receipt || payment.id)}.pdf`);
+  } catch (error) {
+    popup?.close();
+    console.error(error);
+    alert(`Unable to generate TFRO-010: ${error.message}`);
   }
 }
