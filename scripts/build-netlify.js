@@ -3,8 +3,9 @@ const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
 const output = path.join(root, "dist");
-const publicDirectories = ["css", "html", "js", "Logo", "forms"];
+const publicDirectories = ["css", "html", "js", "Logo"];
 const publicRootFiles = ["Tricycle Image.png", "index.html", ".nojekyll"];
+const formTemplateDirectory = path.join(root, "forms");
 
 if (path.dirname(output) !== root || path.basename(output) !== "dist") {
   throw new Error(`Refusing to clean unexpected output path: ${output}`);
@@ -21,6 +22,19 @@ for (const directory of publicDirectories) {
 
 for (const file of publicRootFiles) {
   fs.copyFileSync(path.join(root, file), path.join(output, file));
+}
+
+// The forms directory also contains a local React development workspace. Only
+// publish the official PDF templates consumed by js/pdf-form.js.
+const outputFormsDirectory = path.join(output, "forms");
+fs.mkdirSync(outputFormsDirectory, { recursive: true });
+for (const entry of fs.readdirSync(formTemplateDirectory, { withFileTypes: true })) {
+  if (entry.isFile() && path.extname(entry.name).toLowerCase() === ".pdf") {
+    fs.copyFileSync(
+      path.join(formTemplateDirectory, entry.name),
+      path.join(outputFormsDirectory, entry.name),
+    );
+  }
 }
 
 // Provide an email-client-safe logo URL without spaces in the filename.
@@ -55,4 +69,11 @@ function verify(directory) {
 }
 
 verify(output);
+
+const deployedForms = fs.readdirSync(outputFormsDirectory, { withFileTypes: true });
+if (!deployedForms.length || deployedForms.some((entry) =>
+  !entry.isFile() || path.extname(entry.name).toLowerCase() !== ".pdf"
+)) {
+  throw new Error("The deployed forms directory must contain PDF templates only");
+}
 console.log(`Netlify frontend built at ${output}`);

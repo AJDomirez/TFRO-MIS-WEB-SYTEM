@@ -143,6 +143,10 @@
           Change Password
         </button>
 
+        <button class="tab-btn" id="settingsTabButton" onclick="showTab('settings')" hidden>
+          System Settings
+        </button>
+
       </div>
 
       <!-- PROFILE TAB -->
@@ -183,7 +187,7 @@
             <input type="email" id="email" disabled>
           </div>
 
-          <div class="input-group">
+          <div class="input-group" id="contactNumberGroup">
             <label>Contact Number</label>
             <input type="text" id="contactNumber">
           </div>
@@ -227,6 +231,30 @@
 
         </form>
 
+      </div>
+
+      <!-- ADMIN SYSTEM SETTINGS TAB -->
+      <div class="card tab-content" id="settingsTab">
+        <div class="settings-heading">
+          <div class="settings-icon"><i class="ri-settings-3-line"></i></div>
+          <div><h2>System Settings</h2><p>Control access to TFRO MIS services.</p></div>
+        </div>
+        <form id="settingsForm">
+          <label class="setting-row">
+            <span><strong>Operator Registration</strong><small>Allow operators and registered Traffic Enforcers to create accounts.</small></span>
+            <input type="checkbox" id="registrationEnabled">
+          </label>
+          <label class="setting-row warning-setting">
+            <span><strong>Maintenance Mode</strong><small>Temporarily block staff, operators, and Traffic Enforcers. Administrators retain access.</small></span>
+            <input type="checkbox" id="maintenanceMode">
+          </label>
+          <div class="settings-number-grid">
+            <label class="input-group"><span>Maximum Wrong Password Attempts</span><input type="number" id="maxLoginAttempts" min="1" max="10" step="1" required><small>Allowed range: 1–10 attempts.</small></label>
+            <label class="input-group"><span>Login Lockout Duration (seconds)</span><input type="number" id="loginLockoutSeconds" min="10" max="3600" step="1" required><small>Allowed range: 10–3600 seconds.</small></label>
+          </div>
+          <p class="settings-status" id="settingsStatus" aria-live="polite"></p>
+          <button type="submit" class="save-btn">Save System Settings</button>
+        </form>
       </div>
 
     </div>

@@ -25,6 +25,20 @@ const franchiseNumberInput = document.getElementById("franchiseNumber");
 const enforcerIdInput = document.getElementById("enforcerId");
 const profilePictureInput = document.getElementById("profilePicture");
 let profilePreviewUrl = "";
+let registrationEnabled = true;
+
+async function loadRegistrationSetting() {
+  const { data } = await supabase.from("system_settings")
+    .select("operator_registration_enabled, maintenance_mode").eq("id", true).maybeSingle();
+  registrationEnabled = data?.operator_registration_enabled !== false && !data?.maintenance_mode;
+  if (!registrationEnabled) {
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="ri-lock-line"></i> Registration Temporarily Closed';
+    showRegisterWarning(data?.maintenance_mode
+      ? "TFRO MIS is temporarily under maintenance. Registration is unavailable."
+      : "New account registration is currently disabled by the Administrator.");
+  }
+}
 
 profilePictureInput.addEventListener("change", () => {
   const file = profilePictureInput.files[0];
@@ -219,6 +233,10 @@ function showRegistrationError(error) {
 registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   registerMessage.hidden = true;
+  if (!registrationEnabled) {
+    showRegisterWarning("New account registration is currently unavailable.");
+    return;
+  }
 
   // Enforcer authority is assigned only after the database trigger matches the
   // submitted ID to the Administrator-managed roster.
@@ -344,3 +362,5 @@ registerForm.addEventListener("submit", async (event) => {
   alert("Account created successfully!");
   window.location.replace(destinationForRole(profile.role));
 });
+
+void loadRegistrationSetting();

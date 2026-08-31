@@ -80,6 +80,18 @@ export async function requireRole(allowedRoles) {
 
   cacheIdentity(user, profile);
 
+  if (profile.role !== "admin") {
+    const { data: settings } = await supabase.from("system_settings")
+      .select("maintenance_mode").eq("id", true).maybeSingle();
+    if (settings?.maintenance_mode) {
+      await supabase.auth.signOut({ scope: "local" });
+      clearCachedIdentity();
+      window.alert("TFRO MIS is temporarily under maintenance. Please try again later.");
+      window.location.replace("login.html");
+      return { user: null, profile: null };
+    }
+  }
+
   if (!roles.includes(profile.role)) {
     window.location.replace(destinationForRole(profile.role));
     return { user: null, profile: null };

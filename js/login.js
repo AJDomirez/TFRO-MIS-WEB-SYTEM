@@ -26,6 +26,78 @@ const sendRecoveryCodeButton = document.getElementById("sendRecoveryCodeBtn");
 const verifyRecoveryCodeButton = document.getElementById("verifyRecoveryCodeBtn");
 const resendRecoveryCodeButton = document.getElementById("resendRecoveryCodeBtn");
 let recoveryEmail = "";
+const LOGIN_ATTEMPT_KEY = "tfro-login-attempt-security";
+let maxLoginAttempts = 5;
+let lockoutSeconds = 60;
+let lockoutTimer = null;
+
+function readAttemptState() {
+  try {
+    const state = JSON.parse(localStorage.getItem(LOGIN_ATTEMPT_KEY) || "{}");
+    return {
+      failures: Math.max(0, Number(state.failures) || 0),
+      lockedUntil: Math.max(0, Number(state.lockedUntil) || 0),
+    };
+  } catch {
+    return { failures: 0, lockedUntil: 0 };
+  }
+}
+
+function saveAttemptState(state) {
+  localStorage.setItem(LOGIN_ATTEMPT_KEY, JSON.stringify(state));
+}
+
+function clearAttemptState() {
+  localStorage.removeItem(LOGIN_ATTEMPT_KEY);
+  if (lockoutTimer) window.clearInterval(lockoutTimer);
+  lockoutTimer = null;
+}
+
+function refreshLockout() {
+  const state = readAttemptState();
+  if (!state.lockedUntil) return false;
+  const remainingSeconds = Math.ceil((state.lockedUntil - Date.now()) / 1000);
+  if (remainingSeconds <= 0) {
+    clearAttemptState();
+    submitButton.disabled = false;
+    submitButton.innerHTML = '<i class="ri-login-box-line"></i> Sign In';
+    if (loginMessage.textContent.includes("Too many incorrect")) loginMessage.hidden = true;
+    return false;
+  }
+  submitButton.disabled = true;
+  submitButton.innerHTML = `<i class="ri-time-line"></i> Try again in ${remainingSeconds}s`;
+  showLoginWarning(`Too many incorrect password attempts. Please wait ${remainingSeconds} second${remainingSeconds === 1 ? "" : "s"} for another 5 attempts.`);
+  if (!lockoutTimer) lockoutTimer = window.setInterval(refreshLockout, 250);
+  return true;
+}
+
+function recordInvalidPassword() {
+  const state = readAttemptState();
+  state.failures += 1;
+  if (state.failures >= maxLoginAttempts) {
+    state.lockedUntil = Date.now() + lockoutSeconds * 1000;
+    saveAttemptState(state);
+    refreshLockout();
+    return 0;
+  }
+  saveAttemptState(state);
+  return maxLoginAttempts - state.failures;
+}
+
+async function loadPasswordSecuritySettings() {
+  const { data } = await supabase.from("system_settings")
+    .select("max_login_attempts, login_lockout_seconds").eq("id", true).maybeSingle();
+  const configuredAttempts = Number(data?.max_login_attempts);
+  const configuredSeconds = Number(data?.login_lockout_seconds);
+  if (Number.isInteger(configuredAttempts) && configuredAttempts >= 1 && configuredAttempts <= 10) maxLoginAttempts = configuredAttempts;
+  if (Number.isInteger(configuredSeconds) && configuredSeconds >= 10 && configuredSeconds <= 3600) lockoutSeconds = configuredSeconds;
+  refreshLockout();
+}
+
+function isInvalidCredentialError(error) {
+  return String(error?.message || error?.error_description || "").toLowerCase()
+    .includes("invalid login credentials");
+}
 
 function showLoginWarning(message) {
   loginMessage.textContent = message;
@@ -263,6 +335,7 @@ function friendlyLoginError(error) {
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (refreshLockout()) return;
   loginMessage.hidden = true;
 
   const email = document.getElementById("email").value.trim();
@@ -281,20 +354,35 @@ loginForm.addEventListener("submit", async (event) => {
     }));
   } catch (requestError) {
     console.error("Supabase sign-in request failed:", requestError);
-    showLoginWarning(friendlyLoginError(requestError));
+    if (isInvalidCredentialError(requestError)) {
+      const remaining = recordInvalidPassword();
+      if (remaining > 0) showLoginWarning(`Login failed: Incorrect email or password. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`);
+    } else {
+      showLoginWarning(friendlyLoginError(requestError));
+    }
+    if (refreshLockout()) return;
     submitButton.disabled = false;
-    submitButton.textContent = "Sign In";
+    submitButton.innerHTML = '<i class="ri-login-box-line"></i> Sign In';
     return;
   }
 
   if (authError || !authData.user) {
     console.error("Supabase sign-in error:", authError);
-    showLoginWarning(friendlyLoginError(authError));
+    if (isInvalidCredentialError(authError)) {
+      const remaining = recordInvalidPassword();
+      if (remaining > 0) {
+        showLoginWarning(`Login failed: Incorrect email or password. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`);
+      }
+    } else {
+      showLoginWarning(friendlyLoginError(authError));
+    }
+    if (refreshLockout()) return;
     submitButton.disabled = false;
-    submitButton.textContent = "Sign In";
+    submitButton.innerHTML = '<i class="ri-login-box-line"></i> Sign In';
     return;
   }
 
+  clearAttemptState();
   const success = await routeUser(authData.user, franchiseNumber);
   if (!success) {
     submitButton.disabled = false;
@@ -315,3 +403,5 @@ loginForm.addEventListener("submit", async (event) => {
     console.error("Could not restore the existing session:", error);
   }
 })();
+
+void loadPasswordSecuritySettings();

@@ -4,7 +4,7 @@ const path = require("node:path");
 
 const root = __dirname;
 const port = Number(process.env.PORT) || 5500;
-const publicDirectories = new Set(["css", "forms", "html", "js", "Logo"]);
+const publicDirectories = new Set(["css", "html", "js", "Logo"]);
 const publicRootFiles = new Set(["Tricycle Image.png"]);
 
 const mimeTypes = {
@@ -22,7 +22,14 @@ const mimeTypes = {
 http
   .createServer((request, response) => {
     const url = new URL(request.url, `http://${request.headers.host}`);
-    const requestedPath = decodeURIComponent(url.pathname);
+    let requestedPath;
+    try {
+      requestedPath = decodeURIComponent(url.pathname);
+    } catch {
+      response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
+      response.end("Bad request");
+      return;
+    }
     const relativePath = requestedPath === "/" ? "/html/index.html" : requestedPath;
     const isQrVendor = relativePath === "/js/vendor/qrcode.min.js";
     const filePath = isQrVendor
@@ -30,7 +37,10 @@ http
       : path.resolve(root, `.${relativePath}`);
     const projectRelativePath = path.relative(root, filePath);
     const [topLevelEntry] = projectRelativePath.split(path.sep);
-    const isPublicPath = isQrVendor || publicDirectories.has(topLevelEntry) ||
+    const isFormTemplate = topLevelEntry === "forms" &&
+      path.dirname(projectRelativePath) === "forms" &&
+      path.extname(projectRelativePath).toLowerCase() === ".pdf";
+    const isPublicPath = isQrVendor || isFormTemplate || publicDirectories.has(topLevelEntry) ||
       (projectRelativePath === topLevelEntry && publicRootFiles.has(topLevelEntry));
 
     if (
