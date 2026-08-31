@@ -2,7 +2,8 @@ import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
-import { openPaymentOrderPdfForm } from "./pdf-form.js?v=20260828-5";
+import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20260831-3";
+import { sendOperatorForm } from "./form-delivery.js";
 
 let violations = [];
 let catalog = [];
@@ -95,7 +96,7 @@ function render() {
           <i class="ri-pencil-line"></i>
         </button>` : ""}
         <button type="button" data-action="order" data-id="${row.id}" title="View TFRO-009 Order of Payment"><i class="ri-file-pdf-2-line"></i></button>
-        <button type="button" data-action="notice" data-id="${row.id}" title="Print violation notice"><i class="ri-printer-line"></i></button>
+        ${payment ? `<button type="button" data-action="release" data-id="${row.id}" title="View${canEditPdfFields ? " / Edit" : ""} TFRO-010 Vehicle/Unit Releasing Slip"><i class="ri-file-check-line"></i></button>` : ""}
       </div></td>
     </tr>`;
   }).join("") : '<tr><td colspan="12">No violations found.</td></tr>';
@@ -118,6 +119,28 @@ function printOrderPayment(row) {
     },
     violation: row,
     editable: canEditPdfFields,
+    onSend: canEditPdfFields && payment.id ? () => sendOperatorForm({
+      formCode: "TFRO-009",
+      recordType: "payment",
+      recordId: payment.id,
+      recordLabel: payment.receipt || payment.id,
+    }) : null,
+  });
+}
+
+function openVehicleReleaseSlip(row) {
+  const payment = paidPayment(row);
+  if (!payment) return window.alert("TFRO-010 is available after TFRO Staff records the payment and releasing details.");
+  void openUnitReleasePdfForm({
+    payment,
+    violation: row,
+    editable: canEditPdfFields,
+    onSend: canEditPdfFields ? () => sendOperatorForm({
+      formCode: "TFRO-010",
+      recordType: "payment",
+      recordId: payment.id,
+      recordLabel: payment.receipt || payment.id,
+    }) : null,
   });
 }
 
@@ -134,7 +157,7 @@ async function openTicketPhoto(row) {
 async function loadViolations() {
   const { data, error } = await supabase
     .from("violations")
-    .select("*, payments!payments_violation_id_fkey(receipt, amount, paid_at, status)")
+    .select("*, payments!payments_violation_id_fkey(*)")
     .order("occurred_at", { ascending: false })
     .order("paid_at", { referencedTable: "payments", ascending: false });
   if (error) {
@@ -289,7 +312,7 @@ function bindEvents() {
     if (button.dataset.action === "edit") setFormMode("edit", row);
     if (button.dataset.action === "photo") void openTicketPhoto(row);
     if (button.dataset.action === "order") printOrderPayment(row);
-    if (button.dataset.action === "notice") printNotice(row);
+    if (button.dataset.action === "release") openVehicleReleaseSlip(row);
   });
   bindDateCsvExport({
     getRows: filteredViolations,

@@ -88,12 +88,16 @@ async function loadProfile() {
   const email = user.email || "";
   const role = profile?.role || currentUserRole || "";
   currentUserRole = role;
+  const isAdmin = role === "admin";
+  document.getElementById("contactNumberGroup").hidden = isAdmin;
+  document.getElementById("settingsTabButton").hidden = !isAdmin;
+  if (isAdmin) void loadSystemSettings();
 
   const names = fullName.split(" ").filter(Boolean);
   setValue("firstName", names[0] || "");
   setValue("lastName", names.slice(1).join(" ") || "");
   setValue("email", email);
-  setValue("contactNumber", contact);
+  if (!isAdmin) setValue("contactNumber", contact);
   setValue("role", roleLabel(role));
 
   const label = roleLabel(role);
@@ -117,19 +121,14 @@ async function loadProfile() {
 function showTab(tab) {
   const profileTab = document.getElementById("profileTab");
   const passwordTab = document.getElementById("passwordTab");
+  const settingsTab = document.getElementById("settingsTab");
   const buttons = document.querySelectorAll(".tab-btn");
 
   buttons.forEach((btn) => btn.classList.remove("active"));
-
-  if (tab === "profile") {
-    profileTab.classList.add("active");
-    passwordTab.classList.remove("active");
-    buttons[0].classList.add("active");
-  } else {
-    passwordTab.classList.add("active");
-    profileTab.classList.remove("active");
-    buttons[1].classList.add("active");
-  }
+  [profileTab, passwordTab, settingsTab].forEach((panel) => panel.classList.remove("active"));
+  const panels = { profile: profileTab, password: passwordTab, settings: settingsTab };
+  panels[tab]?.classList.add("active");
+  document.querySelector(`.tab-btn[onclick="showTab('${tab}')"]`)?.classList.add("active");
 }
 window.showTab = showTab;
 
@@ -172,7 +171,7 @@ let contactWarned = false;
   // 2) Update the contact number if one was provided. If the column is still
   //    missing from the database (schema not fixed yet), warn once but do NOT
   //    block the name update / UI refresh.
-  if (contactNumber) {
+  if (currentUserRole !== "admin" && contactNumber) {
     const { error: contactError } = await supabase
       .from("profiles")
       .update({ contact_number: contactNumber })
@@ -194,6 +193,55 @@ let contactWarned = false;
   await logAudit("Updated profile", fullName);
   alert("Profile updated successfully!");
   loadProfile(); // refreshes sidebar name + role (e.g. Administrator) below it
+});
+
+async function loadSystemSettings() {
+  const { data, error } = await supabase.from("system_settings")
+    .select("operator_registration_enabled, maintenance_mode, max_login_attempts, login_lockout_seconds")
+    .eq("id", true).maybeSingle();
+  const status = document.getElementById("settingsStatus");
+  if (error) {
+    status.textContent = `Could not load settings: ${error.message}`;
+    return;
+  }
+  document.getElementById("registrationEnabled").checked = data?.operator_registration_enabled !== false;
+  document.getElementById("maintenanceMode").checked = Boolean(data?.maintenance_mode);
+  document.getElementById("maxLoginAttempts").value = data?.max_login_attempts || 5;
+  document.getElementById("loginLockoutSeconds").value = data?.login_lockout_seconds || 60;
+  status.textContent = "";
+}
+
+document.getElementById("settingsForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (currentUserRole !== "admin") return;
+  const button = event.currentTarget.querySelector('[type="submit"]');
+  const status = document.getElementById("settingsStatus");
+  button.disabled = true;
+  button.textContent = "Saving...";
+  const settings = {
+    operator_registration_enabled: document.getElementById("registrationEnabled").checked,
+    maintenance_mode: document.getElementById("maintenanceMode").checked,
+    max_login_attempts: Number(document.getElementById("maxLoginAttempts").value),
+    login_lockout_seconds: Number(document.getElementById("loginLockoutSeconds").value),
+    updated_at: new Date().toISOString(),
+    updated_by: currentUserId,
+  };
+  if (!Number.isInteger(settings.max_login_attempts) || settings.max_login_attempts < 1 || settings.max_login_attempts > 10
+      || !Number.isInteger(settings.login_lockout_seconds) || settings.login_lockout_seconds < 10 || settings.login_lockout_seconds > 3600) {
+    button.disabled = false;
+    button.textContent = "Save System Settings";
+    status.textContent = "Enter 1–10 attempts and a lockout duration from 10–3600 seconds.";
+    return;
+  }
+  const { error } = await supabase.from("system_settings").update(settings).eq("id", true);
+  button.disabled = false;
+  button.textContent = "Save System Settings";
+  if (error) {
+    status.textContent = `Could not save settings: ${error.message}`;
+    return;
+  }
+  status.textContent = "System settings saved successfully.";
+  await logAudit("Updated system settings", document.getElementById("profileName").textContent);
 });
 
 /* CHANGE PASSWORD */

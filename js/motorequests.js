@@ -240,21 +240,32 @@ alert("Request rejected. The operator has been notified.");
 
 async function openChangeMotorPdf(formCode) {
   if (!currentReq) return;
-  const module = await import("./pdf-form.js?v=20260828-5");
-  const options = { request: currentReq, franchise: currentReq.franchise || {}, operator: currentReq.operator_profile || {}, editable: true };
+  const module = await import("./pdf-form.js?v=20260831-1");
+  const options = {
+    request: currentReq,
+    franchise: currentReq.franchise || {},
+    operator: currentReq.operator_profile || {},
+    editable: true,
+    onSend: currentReq.status === "approved" && !currentReq.forms_sent_to_operator_at
+      ? sendChangeMotorForms
+      : null,
+  };
   if (formCode === "TFRO-002") module.openDroppingPetitionPdfForm(options);
   else module.openDroppingCertificationPdfForm(options);
 }
 
 async function sendChangeMotorForms() {
-  if (!currentReq || currentReq.status !== "approved" || currentReq.forms_sent_to_operator_at) return;
+  if (!currentReq || currentReq.status !== "approved" || currentReq.forms_sent_to_operator_at) return false;
   const auth = await supabase.auth.getUser();
   const sentAt = new Date().toISOString();
   const update = await supabase.from("change_motor_requests").update({
     forms_sent_to_operator_at: sentAt,
     forms_sent_by: auth.data.user?.id || null,
   }).eq("id", currentReq.id);
-  if (update.error) return alert("Could not send the forms: " + update.error.message);
+  if (update.error) {
+    alert("Could not send the forms: " + update.error.message);
+    return false;
+  }
   currentReq.forms_sent_to_operator_at = sentAt;
   currentReq.forms_sent_by = auth.data.user?.id || null;
   const button = el("sendMotorFormsBtn");
@@ -262,6 +273,7 @@ async function sendChangeMotorForms() {
   button.innerHTML = '<i class="ri-check-line"></i> Forms Sent';
   await logAudit({ action: "Sent Change Motor Forms", actionType: "update", record: currentReq.request_code || currentReq.id, description: `Sent TFRO-002 and TFRO-007 to the operator for ${currentReq.request_code || currentReq.id}.` });
   alert("TFRO-002 and TFRO-007 have been sent to the operator account.");
+  return true;
 }
 
 function bindEvents() {

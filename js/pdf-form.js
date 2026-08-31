@@ -107,7 +107,7 @@ function money(amount) {
   return `PHP ${Number(amount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function editFields(title, fields, editable) {
+function editFields(title, fields, editable, onSend = null) {
   if (!editable) return Promise.resolve(Object.fromEntries(fields.map((field) => [field.key, field.value])));
   return new Promise((resolve) => {
     const dialog = document.createElement("dialog");
@@ -143,7 +143,7 @@ function editFields(title, fields, editable) {
       grid.append(label);
     }
     const actions = document.createElement("div");
-    actions.style.cssText = "display:flex;justify-content:flex-end;gap:10px;margin-top:20px";
+    actions.style.cssText = "display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:20px";
     const cancel = document.createElement("button");
     cancel.type = "button";
     cancel.textContent = "Cancel";
@@ -152,21 +152,53 @@ function editFields(title, fields, editable) {
     generate.type = "submit";
     generate.textContent = "Generate PDF";
     generate.style.cssText = "padding:10px 16px;border:0;border-radius:7px;background:#153e31;color:#fff;font-weight:700";
-    actions.append(cancel, generate);
+    const send = document.createElement("button");
+    if (onSend) {
+      send.type = "button";
+      send.textContent = "Send to Operator";
+      send.style.cssText = "padding:10px 16px;border:0;border-radius:7px;background:#d8a900;color:#17231e;font-weight:700";
+    }
+    actions.append(cancel);
+    if (onSend) actions.append(send);
+    actions.append(generate);
     form.append(grid, actions);
     dialog.append(header, form);
     document.body.append(dialog);
     const finish = (result) => { dialog.close(); dialog.remove(); resolve(result); };
     cancel.addEventListener("click", () => finish(null));
     dialog.addEventListener("cancel", (event) => { event.preventDefault(); finish(null); });
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
+    const fieldValues = () => {
       const result = {};
       for (const field of fields) {
         const input = form.elements[field.key];
         result[field.key] = input.type === "checkbox" ? input.checked : input.value.trim();
       }
-      finish(result);
+      return result;
+    };
+    if (onSend) send.addEventListener("click", async () => {
+      send.disabled = true;
+      generate.disabled = true;
+      const originalText = send.textContent;
+      send.textContent = "Sending...";
+      try {
+        const sent = await onSend(fieldValues());
+        if (sent === false) {
+          send.disabled = false;
+          generate.disabled = false;
+          send.textContent = originalText;
+          return;
+        }
+        finish(fieldValues());
+      } catch (error) {
+        alert(`Could not send the form: ${error.message}`);
+        send.disabled = false;
+        generate.disabled = false;
+        send.textContent = originalText;
+      }
+    });
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      finish(fieldValues());
     });
     dialog.showModal();
   });
@@ -212,7 +244,7 @@ async function embedPicture(pdfDoc, page, pictureUrl) {
   }
 }
 
-export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, changeMotor = {}, editable = false }) {
+export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, changeMotor = {}, editable = false, onSend = null }) {
   let popup = editable ? null : openPdfWindow("TFRO-001 Temporary MTOP");
   if (!editable && !popup) return;
   try {
@@ -249,7 +281,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
       { key: "plate", label: "Plate number", value: details.plate },
       { key: "route", label: "Authorized route", value: details.route },
       { key: "expiration", label: "Expiration date", value: details.expiration },
-    ], editable);
+    ], editable, onSend);
     if (!details) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-001 Temporary MTOP");
     if (!popup) return;
@@ -285,7 +317,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
   }
 }
 
-export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor = {}, pictureUrl = "", editable = false }) {
+export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor = {}, pictureUrl = "", editable = false, onSend = null }) {
   let popup = editable ? null : openPdfWindow("TFRO-005 Renewal Application");
   if (!editable && !popup) return;
   try {
@@ -333,7 +365,7 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
       { key: "crNumber", label: "C.R. number", value: renewal.current_cr_number || franchise.chassis_cr_number },
       { key: "route", label: "Authorized route", value: franchise.route || "LUCENA PROPER" },
       { key: "remarks", label: "Inspection remarks", value: renewal.inspection_remarks },
-    ], editable);
+    ], editable, onSend);
     if (!manual) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-005 Renewal Application");
     if (!popup) return;
@@ -363,7 +395,7 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
   }
 }
 
-export async function openPmblPdfForm({ renewal, franchise = {}, editable = false }) {
+export async function openPmblPdfForm({ renewal, franchise = {}, editable = false, onSend = null }) {
   let popup = editable ? null : openPdfWindow("PMBL TFRO-003 Certification");
   if (!editable && !popup) return;
   try {
@@ -399,7 +431,7 @@ export async function openPmblPdfForm({ renewal, franchise = {}, editable = fals
       { key: "day", label: "Issued day", value: String(issued.getDate()) },
       { key: "month", label: "Issued month", value: issued.toLocaleDateString("en-PH", { month: "long" }) },
       { key: "year", label: "Issued year (last two digits)", value: String(issued.getFullYear()).slice(-2) },
-    ], editable);
+    ], editable, onSend);
     if (!manual) { popup?.close(); return; }
     popup ||= openPdfWindow("PMBL TFRO-003 Certification");
     if (!popup) return;
@@ -422,7 +454,7 @@ export async function openPmblPdfForm({ renewal, franchise = {}, editable = fals
   }
 }
 
-export async function openChecklistPdfForm({ renewal, documents = [], editable = false }) {
+export async function openChecklistPdfForm({ renewal, documents = [], editable = false, onSend = null }) {
   let popup = editable ? null : openPdfWindow("TFRO-004 Checklist for Renewal");
   if (!editable && !popup) return;
   try {
@@ -469,7 +501,7 @@ export async function openChecklistPdfForm({ renewal, documents = [], editable =
         { key: `${key}_pass`, label: `${key.replaceAll("_", " ")} — PASS`, value: inspection[key] === true, type: "checkbox" },
         { key: `${key}_fail`, label: `${key.replaceAll("_", " ")} — FAIL`, value: inspection[key] === false, type: "checkbox" },
       ]),
-    ], editable);
+    ], editable, onSend);
     if (!manual) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-004 Checklist for Renewal");
     if (!popup) return;
@@ -510,7 +542,7 @@ function droppingDetails(request = {}, franchise = {}, operator = {}) {
   };
 }
 
-export async function openDroppingPetitionPdfForm({ request, franchise = {}, operator = {}, editable = false }) {
+export async function openDroppingPetitionPdfForm({ request, franchise = {}, operator = {}, editable = false, onSend = null }) {
   let popup = editable ? null : openPdfWindow("TFRO-002 Petition for Dropping");
   if (!editable && !popup) return;
   try {
@@ -530,7 +562,7 @@ export async function openDroppingPetitionPdfForm({ request, franchise = {}, ope
       { key: "route", label: "Route", value: data.route }, { key: "make", label: "Vehicle make", value: data.make },
       { key: "model", label: "Vehicle model", value: data.model }, { key: "motor", label: "Motor / engine number", value: data.motor },
       { key: "chassis", label: "Chassis number", value: data.chassis }, { key: "plate", label: "Plate number", value: data.plate },
-    ], editable);
+    ], editable, onSend);
     if (!data) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-002 Petition for Dropping");
     if (!popup) return;
@@ -568,7 +600,7 @@ export async function openDroppingPetitionPdfForm({ request, franchise = {}, ope
   }
 }
 
-export async function openDroppingCertificationPdfForm({ request, franchise = {}, operator = {}, editable = false }) {
+export async function openDroppingCertificationPdfForm({ request, franchise = {}, operator = {}, editable = false, onSend = null }) {
   let popup = editable ? null : openPdfWindow("TFRO-007 Certification of Dropping");
   if (!editable && !popup) return;
   try {
@@ -590,7 +622,7 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
     const data = await editFields("TFRO-007 Certification of Dropping", [
       ...Object.entries(droppingDetails(request, franchise, operator)).map(([key, fieldValue]) => ({ key, label: key.replaceAll("_", " "), value: fieldValue })),
       { key: "issued", label: "Issued date", value: issuedDefault },
-    ], editable);
+    ], editable, onSend);
     if (!data) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-007 Certification of Dropping");
     if (!popup) return;
@@ -618,7 +650,7 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
   }
 }
 
-export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, editable = false }) {
+export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, editable = false, onSend = null }) {
   let popup = editable ? null : openPdfWindow("TFRO-009 Order of Payment");
   if (!editable && !popup) return;
   try {
@@ -645,7 +677,7 @@ export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, ed
       { key: "receipt", label: "Official receipt number", value: payment.receipt },
       { key: "assessedBy", label: "Assessed by", value: snapshot.assessed_by || payment.recorded_by_name || "" },
       { key: "datePaid", label: "Date paid", value: formatDate(payment.date || payment.paid_at) },
-    ], editable);
+    ], editable, onSend);
     if (!manual) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-009 Order of Payment");
     if (!popup) return;
@@ -665,7 +697,7 @@ export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, ed
   }
 }
 
-export async function openUnitReleasePdfForm({ payment = {}, violation = {}, editable = false }) {
+export async function openUnitReleasePdfForm({ payment = {}, violation = {}, editable = false, onSend = null }) {
   let popup = editable ? null : openPdfWindow("TFRO-010 Vehicle/Unit Releasing Slip");
   if (!editable && !popup) return;
   try {
@@ -690,7 +722,7 @@ export async function openUnitReleasePdfForm({ payment = {}, violation = {}, edi
       { key: "recordedBy", label: "Recorded by", value: payment.receipt_snapshot?.assessed_by || payment.recorded_by_name || "TFRO Staff" },
       { key: "releasedBy", label: "Released by", value: payment.released_by || violation.apprehending_officers }, { key: "witness", label: "Witness", value: payment.release_witness },
       { key: "releaseTime", label: "Release time", value: payment.release_time },
-    ], editable);
+    ], editable, onSend);
     if (!manual) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-010 Vehicle/Unit Releasing Slip");
     if (!popup) return;
