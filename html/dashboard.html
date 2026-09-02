@@ -1,4 +1,4 @@
-m<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -93,15 +93,15 @@ m<!DOCTYPE html>
 </ul>
 
 <!-- USER PROFILE -->
-<div class="user-section">
+<div class="user-section sidebar-user">
 
-      <div class="user-info">
+      <div class="user-info user-left">
 
         <div class="avatar" id="userAvatar">
           U
         </div>
 
-        <div>
+        <div class="user-details">
           <h4 id="userName">User</h4>
           <p id="userRole">Administrator</p>
         </div>
@@ -124,9 +124,11 @@ m<!DOCTYPE html>
     <!-- TOPBAR -->
     <div class="topbar">
       <div>
+        <span class="dashboard-eyebrow">OPERATIONS OVERVIEW</span>
         <h1>Dashboard</h1>
-        <p>Welcome back Administrator</p>
+        <p>Monitor franchises, submissions, violations, and collections.</p>
       </div>
+      <div class="dashboard-period"><i class="ri-calendar-2-line"></i><span id="dashboardPeriod">Last 6 months</span><button type="button" id="refreshDashboard" title="Refresh dashboard" aria-label="Refresh dashboard"><i class="ri-refresh-line"></i></button></div>
     </div>
 
     <!-- NOTICE -->
@@ -138,55 +140,70 @@ m<!DOCTYPE html>
     <!-- STAT CARDS -->
     <div class="stats-grid">
 
-      <div class="card">
+      <div class="card" data-tone="forest">
         <i class="ri-file-list-3-line blue"></i>
-        <h2 id="totalFranchises">—</h2>
-        <p>Total Franchises</p>
+        <div class="card-copy"><span>Total Franchises</span><h2 id="totalFranchises">—</h2><small>All registered records</small></div>
+        <span class="metric-badge neutral">Registry</span>
       </div>
 
-      <div class="card">
+      <div class="card" data-tone="green">
         <i class="ri-checkbox-circle-line green"></i>
-        <h2 id="activeFranchises">—</h2>
-        <p>Active Franchises</p>
+        <div class="card-copy"><span>Active Franchises</span><h2 id="activeFranchises">—</h2><small id="activeRate">Calculating active rate</small></div>
+        <span class="metric-badge positive" id="activeBadge">Live</span>
       </div>
 
-      <div class="card">
+      <div class="card" data-tone="gold">
         <i class="ri-time-line orange"></i>
-        <h2 id="pendingRenewals">—</h2>
-        <p>Pending Renewals</p>
+        <div class="card-copy"><span>Pending Renewals</span><h2 id="pendingRenewals">—</h2><small>Awaiting administrator review</small></div>
+        <span class="metric-badge warning">Action</span>
       </div>
 
-      <div class="card">
+      <div class="card" data-tone="red">
         <i class="ri-error-warning-line teal"></i>
-        <h2 id="totalViolations">—</h2>
-        <p>Total Violations</p>
+        <div class="card-copy"><span>Total Violations</span><h2 id="totalViolations">—</h2><small>Recorded enforcement cases</small></div>
+        <span class="metric-badge neutral">Cases</span>
       </div>
 
-      <div class="card">
+      <div class="card" data-tone="orange">
         <i class="ri-notification-3-line orange"></i>
-        <h2 id="pendingViolations">—</h2>
-        <p>Pending Violations</p>
+        <div class="card-copy"><span>Pending Violations</span><h2 id="pendingViolations">—</h2><small id="violationContext">Requires follow-up</small></div>
+        <span class="metric-badge warning">Review</span>
       </div>
 
-      <div class="card">
+      <div class="card" data-tone="teal">
         <i class="ri-wallet-3-line green"></i>
-        <h2 id="violationCollections">—</h2>
-        <p>Violation Payments</p>
+        <div class="card-copy"><span>Violation Collections</span><h2 id="violationCollections">—</h2><small>Confirmed penalty payments</small></div>
+        <span class="metric-badge positive">Paid</span>
       </div>
 
     </div>
 
     <!-- CHARTS -->
-    <div class="charts-grid">
+    <div class="analytics-grid-dashboard">
 
-      <div class="chart-card">
-        <h3>Monthly Submissions</h3>
-        <canvas id="applicationsChart"></canvas>
+      <div class="chart-card activity-card">
+        <div class="analytics-heading"><div><span>ACTIVITY</span><h3>Monthly Submissions</h3><p>New records received across core workflows</p></div><i class="ri-line-chart-line"></i></div>
+        <div class="chart-frame"><canvas id="applicationsChart"></canvas></div>
       </div>
 
-      <div class="chart-card">
-        <h3>Violation Types</h3>
-        <canvas id="violationsChart"></canvas>
+      <div class="chart-card violation-card">
+        <div class="analytics-heading"><div><span>ENFORCEMENT</span><h3>Violation Types</h3><p>Distribution of recorded cases</p></div><i class="ri-pie-chart-2-line"></i></div>
+        <div class="doughnut-frame"><canvas id="violationsChart"></canvas><div class="doughnut-total"><strong id="violationChartTotal">0</strong><span>Total cases</span></div></div>
+      </div>
+
+      <div class="chart-card status-card">
+        <div class="analytics-heading"><div><span>REGISTRY HEALTH</span><h3>Franchise Status</h3><p>Current permit distribution</p></div><i class="ri-pulse-line"></i></div>
+        <div class="status-breakdown" id="franchiseStatusBreakdown"></div>
+      </div>
+
+      <div class="chart-card snapshot-card">
+        <div class="analytics-heading"><div><span>AT A GLANCE</span><h3>Operational Snapshot</h3><p>Priority indicators for today</p></div><i class="ri-radar-line"></i></div>
+        <div class="snapshot-list">
+          <div><i class="ri-shield-check-line"></i><span><small>Active registry rate</small><strong id="snapshotActiveRate">0%</strong></span></div>
+          <div><i class="ri-timer-flash-line"></i><span><small>Expiring within 14 days</small><strong id="snapshotExpiring">0</strong></span></div>
+          <div><i class="ri-checkbox-multiple-line"></i><span><small>Items awaiting action</small><strong id="snapshotPending">0</strong></span></div>
+          <div><i class="ri-bank-card-line"></i><span><small>Confirmed collections</small><strong id="snapshotCollections">₱0.00</strong></span></div>
+        </div>
       </div>
 
     </div>
@@ -195,7 +212,8 @@ m<!DOCTYPE html>
     <div class="table-card">
 
       <div class="table-header">
-        <h3>Expiring Franchises</h3>
+        <div><span class="dashboard-eyebrow">UPCOMING DEADLINES</span><h3>Expiring Franchises</h3></div>
+        <a href="franchise.html">View all <i class="ri-arrow-right-line"></i></a>
       </div>
 
       <table>

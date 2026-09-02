@@ -26,6 +26,26 @@ function escapeHtml(str) {
 
 function el(id) { return document.getElementById(id); }
 
+function showSystemNotice(message, type = "info", title = "System Notification") {
+  const modal = el("systemNoticeModal");
+  const icon = el("systemNoticeIcon");
+  if (!modal || !icon) return;
+  const configuration = {
+    info: { title, icon: "ri-information-line" },
+    success: { title: title || "Action Completed", icon: "ri-checkbox-circle-line" },
+    warning: { title: title || "Action Needed", icon: "ri-alert-line" },
+    error: { title: title || "Action Failed", icon: "ri-error-warning-line" },
+  }[type] || { title, icon: "ri-information-line" };
+  modal.dataset.type = type;
+  icon.className = configuration.icon;
+  setText("systemNoticeTitle", configuration.title);
+  setText("systemNoticeMessage", message);
+  modal.hidden = false;
+  el("dismissSystemNotice")?.focus();
+}
+
+function closeSystemNotice() { el("systemNoticeModal").hidden = true; }
+
 let logs = [];
 let currentRole = null;
 let selectedIds = new Set();
@@ -381,7 +401,7 @@ async function loadLogs() {
 function exportLogs() {
   const filtered = getFilteredLogs();
   if (!filtered.length) {
-    alert("No logs to export for the current filter.");
+    showSystemNotice("No logs match the current filter, so there is nothing to export.", "info", "Nothing to Export");
     return;
   }
 
@@ -426,7 +446,7 @@ function isProtected(log) {
 /* ---------- MANAGE LOGS (Admin only) ---------- */
 function openManage() {
   if (currentRole !== "admin") {
-    alert("Only Administrators can manage audit logs.");
+    showSystemNotice("Only Administrators can manage audit logs.", "warning", "Access Restricted");
     return;
   }
   el("manageModal").hidden = false;
@@ -442,7 +462,7 @@ async function archiveOldLogs() {
   );
 
   if (!oldLogs.length) {
-    alert("No logs older than 90 days to archive.");
+    showSystemNotice("No logs older than 90 days were found. Your audit archive is already up to date.", "info", "No Logs to Archive");
     return;
   }
 
@@ -451,7 +471,7 @@ async function archiveOldLogs() {
   const protectedCount = oldLogs.length - nonProtected.length;
 
   if (nonProtected.length === 0) {
-    alert(`All ${protectedCount} old records are protected security events and have been retained for compliance.`);
+    showSystemNotice(`All ${protectedCount} old records are protected security events and were retained for compliance.`, "warning", "Protected Records Retained");
     return;
   }
 
@@ -462,10 +482,10 @@ async function archiveOldLogs() {
     .in("id", ids);
 
   if (error) {
-    alert("Failed to archive logs: " + error.message);
+    showSystemNotice(`The logs could not be archived. ${error.message}`, "error", "Archive Failed");
     return;
   }
-  alert(`Archived ${nonProtected.length} old log(s). ${protectedCount} protected record(s) retained.`);
+  showSystemNotice(`Archived ${nonProtected.length} old log(s). ${protectedCount} protected record(s) were retained.`, "success", "Archive Completed");
   selectedIds.clear();
   loadLogs();
 }
@@ -478,7 +498,7 @@ function openClearModal() {
 function clearOlderThan() {
   const dateVal = el("clearDate").value;
   if (!dateVal) {
-    alert("Please select a date.");
+    showSystemNotice("Select a cutoff date before clearing old logs.", "warning", "Date Required");
     return;
   }
   const cutoff = new Date(dateVal + "T00:00:00");
@@ -488,7 +508,7 @@ function clearOlderThan() {
   );
 
   if (!toRemove.length) {
-    alert("No logs found before that date.");
+    showSystemNotice("No audit logs were found before the selected date.", "info", "No Matching Logs");
     el("clearModal").hidden = false;
     return;
   }
@@ -506,7 +526,7 @@ function clearOlderThan() {
 function deleteSelected() {
   const ids = Array.from(selectedIds);
   if (!ids.length) {
-    alert("No rows selected.");
+    showSystemNotice("Select one or more audit-log rows before choosing Delete Selected Logs.", "warning", "No Logs Selected");
     return;
   }
 
@@ -533,13 +553,13 @@ async function confirmDelete() {
     .in("id", ids)
     .select("id");
   if (error) {
-    alert("Failed to delete logs: " + error.message);
+    showSystemNotice(`The selected logs could not be deleted. ${error.message}`, "error", "Deletion Failed");
     return;
   }
 
   const deletedIds = new Set((deletedRows || []).map((row) => String(row.id)));
   if (deletedIds.size !== ids.length) {
-    alert("The selected logs could not all be deleted. Please sign in as an Administrator and run supabase/setup-audit-logs.sql if the issue continues.");
+    showSystemNotice("Some selected logs could not be deleted. Confirm that you are signed in as an Administrator. If the issue continues, verify the audit-log database setup.", "error", "Deletion Incomplete");
     await loadLogs();
     return;
   }
@@ -590,6 +610,8 @@ function bindEvents() {
   el("clearAllBtn")?.addEventListener("click", deleteSelected);
   el("confirmClearBtn")?.addEventListener("click", clearOlderThan);
   el("confirmDeleteBtn")?.addEventListener("click", confirmDelete);
+  el("dismissSystemNotice")?.addEventListener("click", closeSystemNotice);
+  el("closeSystemNotice")?.addEventListener("click", closeSystemNotice);
 
   // Close modals
   document.querySelectorAll("[data-close]").forEach((btn) => {
@@ -600,10 +622,13 @@ function bindEvents() {
   });
 
   // Close on backdrop click
-  ["detailModal", "manageModal", "confirmModal", "clearModal"].forEach((id) => {
+  ["detailModal", "manageModal", "confirmModal", "clearModal", "systemNoticeModal"].forEach((id) => {
     el(id)?.addEventListener("click", (e) => {
       if (e.target === el(id)) el(id).hidden = true;
     });
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !el("systemNoticeModal")?.hidden) closeSystemNotice();
   });
 
   // Logout

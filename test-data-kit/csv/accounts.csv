@@ -1,0 +1,5 @@
+role,email,password,full_name,contact_number,franchise_number,enforcer_id,notes
+admin,admin.test@tfro.example,TFRO-Test!2026,Alex Test Administrator,,, ,Create internally and set profiles.role=admin
+staff,staff.test@tfro.example,TFRO-Test!2026,Sam Test Staff,,, ,Create internally and set profiles.role=staff
+operator,operator.test@example.com,TFRO-Test!2026,Juan Test Operator,09170000001,TEST-FR-2026-001,,Register through the public signup page
+traffic_enforcer,enforcer.test@example.com,TFRO-Test!2026,Ernesto Test Enforcer,09170000003,,TEST-ENF-001,Create roster entry first then register

@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.codex-preview/
 .env
 .env.*
 !.env.example

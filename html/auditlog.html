@@ -300,6 +300,18 @@
   </div>
 </div>
 
+<!-- SYSTEM NOTIFICATION -->
+<div class="system-notice-overlay" id="systemNoticeModal" hidden>
+  <section class="system-notice-card" role="alertdialog" aria-modal="true" aria-labelledby="systemNoticeTitle" aria-describedby="systemNoticeMessage">
+    <button type="button" class="system-notice-close" id="closeSystemNotice" aria-label="Close notification"><i class="ri-close-line"></i></button>
+    <div class="system-notice-icon"><i id="systemNoticeIcon" class="ri-information-line"></i></div>
+    <span class="system-notice-kicker">TFRO MIS</span>
+    <h2 id="systemNoticeTitle">System Notification</h2>
+    <p id="systemNoticeMessage">The requested action has been checked.</p>
+    <button type="button" class="system-notice-dismiss" id="dismissSystemNotice">Okay, Got It</button>
+  </section>
+</div>
+
 <script type="module" src="../js/auditlog.js"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 

@@ -255,12 +255,51 @@
           <p class="settings-status" id="settingsStatus" aria-live="polite"></p>
           <button type="submit" class="save-btn">Save System Settings</button>
         </form>
+
+        <section class="account-management" aria-labelledby="accountManagementTitle">
+          <div class="account-management-heading">
+            <div><span class="settings-kicker">ADMINISTRATOR ONLY</span><h3 id="accountManagementTitle">Account Management</h3><p>Remove portal access for Operator and Traffic Enforcer accounts while retaining their official records.</p></div>
+            <button type="button" class="account-refresh-btn" id="refreshAccountsBtn"><i class="ri-refresh-line"></i> Refresh</button>
+          </div>
+          <div class="account-management-tools">
+            <div class="account-search"><i class="ri-search-line"></i><input type="search" id="accountSearch" placeholder="Search name, email, role, or ID"></div>
+            <select id="accountRoleFilter" aria-label="Filter accounts by role"><option value="all">All account types</option><option value="operator">Operators</option><option value="traffic_enforcer">Traffic Enforcers</option></select>
+          </div>
+          <p class="settings-status" id="accountManagementStatus" aria-live="polite">Loading accounts…</p>
+          <div class="account-table-wrap">
+            <table class="account-management-table">
+              <thead><tr><th>Account</th><th>Role</th><th>Reference</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="accountManagementRows"></tbody>
+            </table>
+          </div>
+        </section>
       </div>
 
     </div>
 
   </main>
 
+</div>
+
+<div class="system-confirm-modal" id="deleteAccountModal" hidden>
+  <section class="system-confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="deleteAccountTitle" aria-describedby="deleteAccountDescription">
+    <button type="button" class="system-confirm-close" id="closeDeleteAccountModal" aria-label="Close confirmation"><i class="ri-close-line"></i></button>
+    <div class="system-confirm-icon"><i class="ri-user-unfollow-line"></i></div>
+    <span class="system-confirm-kicker">ACCOUNT MANAGEMENT</span>
+    <h2 id="deleteAccountTitle">Delete portal account?</h2>
+    <p id="deleteAccountDescription">This account will no longer be able to sign in to TFRO MIS.</p>
+    <div class="system-confirm-account">
+      <span id="deleteAccountInitials">U</span>
+      <div><strong id="deleteAccountName">Selected account</strong><small id="deleteAccountRole">Portal user</small></div>
+    </div>
+    <div class="system-confirm-retained"><i class="ri-shield-check-line"></i><p><strong>Official records will be retained.</strong><span>Franchise, renewal, violation, ticket, and audit history will not be erased.</span></p></div>
+    <p class="system-confirm-warning"><i class="ri-error-warning-line"></i> Account deletion cannot be undone.</p>
+    <p class="system-confirm-error" id="deleteAccountError" role="alert" hidden></p>
+    <div class="system-confirm-actions">
+      <button type="button" class="system-confirm-cancel" id="cancelDeleteAccount">Cancel</button>
+      <button type="button" class="system-confirm-delete" id="confirmDeleteAccount"><i class="ri-delete-bin-6-line"></i> Delete Account</button>
+    </div>
+  </section>
 </div>
 
 <script type="module" src="../js/profile.js"></script>

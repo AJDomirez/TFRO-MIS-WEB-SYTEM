@@ -1,0 +1,2 @@
+request_code,operator_email,franchise_number,old_engine_number,old_chassis_number,old_plate_number,old_motor_brand,old_motor_model,new_engine_number,new_chassis_number,new_plate_number,new_motor_brand,new_motor_serial,status,supporting_file
+TEST-CM-2026-001,operator.test@example.com,TEST-FR-2026-001,TEST-ENG-001,TEST-CHS-001,TEST-PLATE-001,Honda,2024,TEST-ENG-NEW-001,TEST-CHS-NEW-001,TEST-PLATE-NEW-001,Yamaha,TEST-SERIAL-NEW-001,pending_review,sample-change-motor-support.pdf
