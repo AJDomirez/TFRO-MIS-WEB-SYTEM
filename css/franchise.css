@@ -337,6 +337,10 @@ table td{
 .actions button[data-action="view"]{
   color:#178a5e;
 }
+.actions button[data-action="forms"]{
+  color:#0f766e;
+  background:#ecfdf5;
+}
 .actions button[data-action="edit"]{
   color:#b7791f;
 }
@@ -535,6 +539,17 @@ table td{
   from{opacity:0;transform:translate(-50%,14px);}
   to{opacity:1;transform:translate(-50%,0);}
 }
+
+.forms-modal-box{max-width:780px}
+.modal-subtitle{margin-top:4px;color:#718078;font-size:12px}
+.forms-loading,.forms-empty{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;min-height:220px;color:#718078;text-align:center}
+.forms-loading i{font-size:25px;animation:forms-spin .8s linear infinite}
+.forms-empty i{font-size:38px;color:#9eb4aa}.forms-empty strong{color:#27483b}.forms-empty span{font-size:12px}.forms-empty.error i,.forms-empty.error strong{color:#b91c1c}
+@keyframes forms-spin{to{transform:rotate(360deg)}}
+.saved-forms-section+.saved-forms-section{margin-top:24px}
+.saved-forms-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}.saved-forms-heading h4{margin:0;color:#123e2f;font-size:15px}.saved-forms-heading p{margin:3px 0 0;color:#778981;font-size:11px}.saved-forms-heading>span{display:grid;place-items:center;min-width:27px;height:27px;padding:0 8px;border-radius:20px;background:#e5f4ed;color:#11734f;font-size:11px;font-weight:800}
+.saved-forms-list{display:grid;gap:8px}.saved-form-card{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:11px;padding:11px;border:1px solid #e2ebe6;border-radius:10px;background:#fbfdfc}.saved-form-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:9px;background:#e8f5ef;color:#147b56;font-size:19px}.saved-form-copy{min-width:0}.saved-form-copy strong,.saved-form-copy span,.saved-form-copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.saved-form-copy strong{color:#1e4435;font-size:12px}.saved-form-copy span{margin-top:2px;color:#60756c;font-size:11px}.saved-form-copy small{margin-top:3px;color:#899890;font-size:9px;text-transform:capitalize}.saved-form-open{display:inline-flex;align-items:center;gap:5px;padding:8px 10px;border-radius:8px;background:#147b56;color:white;font-size:10px;font-weight:800;text-decoration:none}.saved-form-open:hover{background:#0b5c41}.saved-form-unavailable{color:#9a6a14;font-size:10px;font-weight:700}
+@media(max-width:560px){.saved-form-card{grid-template-columns:34px minmax(0,1fr)}.saved-form-open,.saved-form-unavailable{grid-column:2;justify-self:start}}
 
 /* ============ CSV BULK IMPORT ============ */
 .csv-import-btn{background:#0b6b4f !important;}
