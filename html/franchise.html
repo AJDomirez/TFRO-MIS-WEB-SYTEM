@@ -355,6 +355,20 @@
   </div>
 </div>
 
+<!-- SAVED FORMS MODAL -->
+<div class="modal" id="formsModal" hidden>
+  <div class="modal-box forms-modal-box">
+    <div class="modal-head">
+      <div>
+        <h3>Saved Franchise Forms</h3>
+        <p class="modal-subtitle" id="formsModalSubtitle"></p>
+      </div>
+      <button class="modal-close" data-close="formsModal" aria-label="Close saved forms"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body" id="formsBody"></div>
+  </div>
+</div>
+
 <!-- EDIT MODAL -->
 <div class="modal" id="editModal" hidden>
   <div class="modal-box">
@@ -528,7 +542,7 @@
 <!-- SUCCESS TOAST -->
 <div class="toast" id="toast" hidden></div>
 
-<script type="module" src="../js/franchise.js?v=20260819-174500"></script>
+<script type="module" src="../js/franchise.js?v=20260906-113000"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 <script>
   const role = localStorage.getItem("role");

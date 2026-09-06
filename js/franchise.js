@@ -248,6 +248,7 @@ function renderTable() {
       <td>
         <div class="actions">
           <button data-action="view" data-id="${row.id}" title="View"><i class="ri-eye-line"></i></button>
+          <button data-action="forms" data-id="${row.id}" title="View all saved forms"><i class="ri-file-list-3-line"></i></button>
           <button data-action="edit" data-id="${row.id}" title="Edit"><i class="ri-pencil-line"></i></button>
           <button data-action="delete" data-id="${row.id}" title="Delete"><i class="ri-delete-bin-line"></i></button>
         </div>
@@ -667,6 +668,145 @@ function showView(row) {
   openModal("viewModal");
 }
 
+const APPLICATION_DOC_LABELS = {
+  voters: "Voter's Certificate",
+  barangay: "Barangay Clearance",
+  cedula: "Cedula",
+  ohcr: "Official Receipt / Certificate of Registration",
+  insurance: "Insurance",
+  pmbl: "PMBL Certification",
+};
+
+const RENEWAL_DOC_LABELS = {
+  voters_certificate: "Voter's Certificate",
+  cedula: "Cedula",
+  barangay_clearance: "Barangay Clearance",
+  drivers_license: "Driver's License",
+  picture_2x2: "2x2 Picture",
+  pmbl_certification: "PMBL Certification",
+  official_receipt: "Official Receipt",
+  certificate_registration: "Certificate of Registration",
+  insurance: "Insurance",
+};
+
+async function signedDocumentUrl(path) {
+  if (!path) return "";
+  const { data, error } = await supabase.storage.from("franchise-documents").createSignedUrl(path, 600);
+  if (error) {
+    console.error("Could not create a saved-form URL:", error);
+    return "";
+  }
+  return data?.signedUrl || "";
+}
+
+function formFileCard({ label, fileName, status, url, date }) {
+  const action = url
+    ? `<a class="saved-form-open" href="${escapeHtml(url)}" target="_blank" rel="noopener"><i class="ri-eye-line"></i> View file</a>`
+    : '<span class="saved-form-unavailable"><i class="ri-error-warning-line"></i> File unavailable</span>';
+  return `<article class="saved-form-card">
+    <div class="saved-form-icon"><i class="ri-file-pdf-2-line"></i></div>
+    <div class="saved-form-copy"><strong>${escapeHtml(label)}</strong><span>${escapeHtml(fileName || "Saved document")}</span><small>${escapeHtml(status || "saved")}${date ? ` · ${escapeHtml(new Date(date).toLocaleDateString("en-PH"))}` : ""}</small></div>
+    ${action}
+  </article>`;
+}
+
+function formsSection(title, subtitle, cards) {
+  if (!cards.length) return "";
+  return `<section class="saved-forms-section"><div class="saved-forms-heading"><div><h4>${escapeHtml(title)}</h4><p>${escapeHtml(subtitle)}</p></div><span>${cards.length}</span></div><div class="saved-forms-list">${cards.join("")}</div></section>`;
+}
+
+async function showForms(row) {
+  el("formsModalSubtitle").textContent = `${row.franchise_number} · ${row.operator_name}`;
+  el("formsBody").innerHTML = '<div class="forms-loading"><i class="ri-loader-4-line"></i> Loading saved forms...</div>';
+  openModal("formsModal");
+
+  const [applicationResult, renewalsResult, driversResult, motorResult] = await Promise.all([
+    row.application_id
+      ? supabase.from("franchise_documents").select("id, doc_type, file_name, storage_path, status, verified, uploaded_at").eq("application_id", row.application_id).order("uploaded_at")
+      : Promise.resolve({ data: [], error: null }),
+    supabase.from("franchise_renewals").select("id, renewal_code, status, created_at").eq("franchise_id", row.id).order("created_at", { ascending: false }),
+    supabase.from("drivers").select("id, full_name, picture_storage_path, license_status, created_at").eq("franchise_id", row.id).order("created_at", { ascending: false }),
+    supabase.from("change_motor_requests").select("id, request_code, supporting_file_name, supporting_storage_path, picture_storage_path, status, created_at").eq("franchise_id", row.id).order("created_at", { ascending: false }),
+  ]);
+
+  const initialError = [applicationResult, renewalsResult, driversResult, motorResult].find((result) => result.error)?.error;
+  if (initialError) {
+    console.error("Could not load franchise forms:", initialError);
+    el("formsBody").innerHTML = `<div class="forms-empty error"><i class="ri-error-warning-line"></i><strong>Forms could not be loaded</strong><span>${escapeHtml(initialError.message)}</span></div>`;
+    return;
+  }
+
+  const renewals = renewalsResult.data || [];
+  const renewalDocsResult = renewals.length
+    ? await supabase.from("renewal_documents").select("id, renewal_id, doc_type, file_name, storage_path, status, verified, uploaded_at").in("renewal_id", renewals.map((renewal) => renewal.id)).order("uploaded_at")
+    : { data: [], error: null };
+  if (renewalDocsResult.error) {
+    console.error("Could not load renewal documents:", renewalDocsResult.error);
+    el("formsBody").innerHTML = `<div class="forms-empty error"><i class="ri-error-warning-line"></i><strong>Renewal forms could not be loaded</strong><span>${escapeHtml(renewalDocsResult.error.message)}</span></div>`;
+    return;
+  }
+
+  const applicationDocs = await Promise.all((applicationResult.data || []).map(async (doc) => formFileCard({
+    label: APPLICATION_DOC_LABELS[doc.doc_type] || doc.doc_type,
+    fileName: doc.file_name,
+    status: doc.verified ? "verified" : doc.status,
+    url: await signedDocumentUrl(doc.storage_path),
+    date: doc.uploaded_at,
+  })));
+
+  const renewalDocs = await Promise.all((renewalDocsResult.data || []).map(async (doc) => {
+    const renewal = renewals.find((item) => String(item.id) === String(doc.renewal_id));
+    return formFileCard({
+      label: `${RENEWAL_DOC_LABELS[doc.doc_type] || doc.doc_type} · ${renewal?.renewal_code || `Renewal ${doc.renewal_id}`}`,
+      fileName: doc.file_name,
+      status: doc.verified ? "verified" : doc.status,
+      url: await signedDocumentUrl(doc.storage_path),
+      date: doc.uploaded_at,
+    });
+  }));
+
+  const driverForms = await Promise.all((driversResult.data || []).filter((driver) => driver.picture_storage_path).map(async (driver) => formFileCard({
+    label: `Driver Submission · ${driver.full_name}`,
+    fileName: "Submitted 2x2 picture",
+    status: driver.license_status,
+    url: await signedDocumentUrl(driver.picture_storage_path),
+    date: driver.created_at,
+  })));
+
+  const motorForms = [];
+  for (const request of motorResult.data || []) {
+    if (request.supporting_storage_path) motorForms.push(formFileCard({
+      label: `Change Motor Support · ${request.request_code || request.id}`,
+      fileName: request.supporting_file_name,
+      status: request.status,
+      url: await signedDocumentUrl(request.supporting_storage_path),
+      date: request.created_at,
+    }));
+    if (request.picture_storage_path) motorForms.push(formFileCard({
+      label: `Change Motor Picture · ${request.request_code || request.id}`,
+      fileName: "Submitted motorcycle picture",
+      status: request.status,
+      url: await signedDocumentUrl(request.picture_storage_path),
+      date: request.created_at,
+    }));
+  }
+
+  const content = [
+    formsSection("Initial Application", "Documents submitted with the franchise application", applicationDocs),
+    formsSection("Renewal Requirements", "Documents saved across all renewal submissions", renewalDocs),
+    formsSection("Driver Forms", "Saved files from assigned driver submissions", driverForms),
+    formsSection("Change Motor Forms", "Supporting documents and motorcycle pictures", motorForms),
+  ].join("");
+  el("formsBody").innerHTML = content || '<div class="forms-empty"><i class="ri-folder-open-line"></i><strong>No saved forms yet</strong><span>Uploaded forms connected to this franchise will appear here.</span></div>';
+
+  void logAudit({
+    action: "Viewed Franchise Forms",
+    actionType: "view",
+    record: row.franchise_number,
+    description: `Viewed saved forms and documents for franchise ${row.franchise_number}.`,
+  });
+}
+
 /* ---------- Edit modal ---------- */
 function openEditForm(row) {
   editingId = row.id;
@@ -833,6 +973,7 @@ function onTableClick(event) {
   if (!row) return;
   const action = button.dataset.action;
   if (action === "view") showView(row);
+  else if (action === "forms") void showForms(row);
   else if (action === "edit") openEditForm(row);
   else if (action === "delete") openDeleteModal(row);
 }
@@ -929,7 +1070,7 @@ function bindEvents() {
   });
 
   // Close on backdrop click
-  ["viewModal", "editModal", "deleteModal", "csvImportModal"].forEach((id) => {
+  ["viewModal", "formsModal", "editModal", "deleteModal", "csvImportModal"].forEach((id) => {
     el(id)?.addEventListener("click", (e) => {
       if (e.target === el(id)) { el(id).hidden = true; if (id === "editModal") editingId = null; if (id === "deleteModal") deleteTargetId = null; }
     });
