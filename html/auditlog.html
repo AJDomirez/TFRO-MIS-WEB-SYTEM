@@ -195,17 +195,9 @@
 
     <!-- TABLE -->
     <div class="table-card">
-      <div class="table-toolbar" id="bulkBar" style="display:none;">
-        <span id="selectedCount">0 selected</span>
-        <button class="delete-btn" id="deleteSelectedBtn">
-          <i class="ri-delete-bin-line"></i> Delete Selected
-        </button>
-      </div>
-
       <table>
         <thead>
           <tr>
-            <th class="col-check"><input type="checkbox" id="selectAll"></th>
             <th>User</th>
             <th>Role</th>
             <th>Action</th>
@@ -247,55 +239,11 @@
           <i class="ri-archive-line"></i>
           <span>Archive Old Logs<br><small>Move logs older than 90 days to archive</small></span>
         </button>
-        <button class="manage-option" id="clearOlderBtn">
-          <i class="ri-time-line"></i>
-          <span>Clear Logs Older Than...<br><small>Permanently remove logs older than a chosen date</small></span>
-        </button>
-        <button class="manage-option danger" id="clearAllBtn">
-          <i class="ri-delete-bin-line"></i>
-          <span>Delete Selected Logs<br><small>Remove the currently selected records</small></span>
-        </button>
       </div>
       <p class="manage-note">
         <i class="ri-shield-check-line"></i>
-        Deleting selected logs or clearing logs by date permanently removes them and cannot be undone.
+        Audit evidence is append-only. Records can be archived for retention management but cannot be edited or permanently deleted through the system.
       </p>
-    </div>
-  </div>
-</div>
-
-<!-- CONFIRMATION MODAL -->
-<div class="modal-overlay" id="confirmModal" hidden>
-  <div class="modal modal-sm">
-    <div class="modal-head">
-      <h3><i class="ri-alert-line"></i> Delete Audit Logs?</h3>
-      <button class="modal-close" data-close="confirmModal"><i class="ri-close-line"></i></button>
-    </div>
-    <div class="modal-body">
-      <p id="confirmMessage">This will permanently remove the selected audit records. This action cannot be undone.</p>
-      <div class="modal-actions">
-        <button class="btn-cancel" data-close="confirmModal">Cancel</button>
-        <button class="btn-danger" id="confirmDeleteBtn"><i class="ri-delete-bin-line"></i> Delete Logs</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- CLEAR OLDER THAN MODAL -->
-<div class="modal-overlay" id="clearModal" hidden>
-  <div class="modal modal-sm">
-    <div class="modal-head">
-      <h3><i class="ri-time-line"></i> Clear Logs Older Than</h3>
-      <button class="modal-close" data-close="clearModal"><i class="ri-close-line"></i></button>
-    </div>
-    <div class="modal-body">
-      <label for="clearDate">Delete all logs before:</label>
-      <input type="date" id="clearDate" class="date-input">
-      <p class="manage-note">All matching logs will be permanently deleted and cannot be recovered.</p>
-      <div class="modal-actions">
-        <button class="btn-cancel" data-close="clearModal">Cancel</button>
-        <button class="btn-danger" id="confirmClearBtn"><i class="ri-delete-bin-line"></i> Clear Logs</button>
-      </div>
     </div>
   </div>
 </div>

@@ -48,7 +48,6 @@ function closeSystemNotice() { el("systemNoticeModal").hidden = true; }
 
 let logs = [];
 let currentRole = null;
-let selectedIds = new Set();
 
 const logTable = document.getElementById("logTable");
 const searchInput = document.getElementById("searchInput");
@@ -243,7 +242,7 @@ function renderLogs() {
   if (!filtered.length) {
     logTable.innerHTML = `
       <tr class="empty-row">
-        <td colspan="8"><i class="ri-file-search-line"></i> No log entries found.</td>
+        <td colspan="7"><i class="ri-file-search-line"></i> No log entries found.</td>
       </tr>
     `;
     return;
@@ -253,10 +252,8 @@ function renderLogs() {
     const type = normalizeType(log.action_type);
     const actionName = cleanActionName(log);
     const record = log.record || "—";
-    const checked = selectedIds.has(String(log.id)) ? "checked" : "";
     logTable.innerHTML += `
       <tr>
-        <td class="col-check"><input type="checkbox" class="row-check" data-id="${escapeHtml(log.id)}" ${checked}></td>
         <td>${escapeHtml(log.user_name || "—")}</td>
         <td><span class="role-badge">${escapeHtml(log.role || "—")}</span></td>
         <td>
@@ -277,16 +274,6 @@ function renderLogs() {
     `;
   });
 
-  // Bind checkbox events
-  logTable.querySelectorAll(".row-check").forEach((cb) => {
-    cb.addEventListener("change", () => {
-      const id = cb.dataset.id;
-      if (cb.checked) selectedIds.add(id);
-      else selectedIds.delete(id);
-      updateSelectionUI();
-    });
-  });
-
   // Bind view buttons
   logTable.querySelectorAll("[data-view]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -294,17 +281,6 @@ function renderLogs() {
       if (log) openDetail(log);
     });
   });
-}
-
-function updateSelectionUI() {
-  const bulkBar = el("bulkBar");
-  const count = selectedIds.size;
-  if (bulkBar) {
-    bulkBar.style.display = count > 0 ? "" : "none";
-    el("selectedCount").textContent = count + " selected";
-  }
-  const selectAll = el("selectAll");
-  if (selectAll) selectAll.checked = count > 0 && count === logs.filter((l) => !l.is_archived).length;
 }
 
 /* ---------- SUMMARY CARDS ---------- */
@@ -486,91 +462,7 @@ async function archiveOldLogs() {
     return;
   }
   showSystemNotice(`Archived ${nonProtected.length} old log(s). ${protectedCount} protected record(s) were retained.`, "success", "Archive Completed");
-  selectedIds.clear();
   loadLogs();
-}
-
-// Clear logs older than a chosen date
-function openClearModal() {
-  el("clearModal").hidden = false;
-}
-
-function clearOlderThan() {
-  const dateVal = el("clearDate").value;
-  if (!dateVal) {
-    showSystemNotice("Select a cutoff date before clearing old logs.", "warning", "Date Required");
-    return;
-  }
-  const cutoff = new Date(dateVal + "T00:00:00");
-
-  const toRemove = logs.filter(
-    (l) => !l.is_archived && new Date(l.created_at).getTime() < cutoff.getTime()
-  );
-
-  if (!toRemove.length) {
-    showSystemNotice("No audit logs were found before the selected date.", "info", "No Matching Logs");
-    el("clearModal").hidden = false;
-    return;
-  }
-
-  el("confirmModal").hidden = false;
-  el("clearModal").hidden = true;
-  el("confirmMessage").textContent =
-    `This will permanently remove ${toRemove.length} audit record(s) before ${formatDateFull(cutoff)}. ` +
-    "This action cannot be undone.";
-
-  window.__clearTarget = toRemove.map((l) => l.id);
-}
-
-// Delete selected logs
-function deleteSelected() {
-  const ids = Array.from(selectedIds);
-  if (!ids.length) {
-    showSystemNotice("Select one or more audit-log rows before choosing Delete Selected Logs.", "warning", "No Logs Selected");
-    return;
-  }
-
-  el("confirmModal").hidden = false;
-  el("confirmMessage").textContent =
-    `This will permanently remove ${ids.length} selected audit record(s). ` +
-    "This action cannot be undone.";
-
-  window.__clearTarget = ids;
-}
-
-async function confirmDelete() {
-  const ids = window.__clearTarget || [];
-  if (!ids.length) {
-    el("confirmModal").hidden = true;
-    return;
-  }
-
-  // Request the affected IDs back: with RLS, a delete may otherwise report no
-  // error even when the database was not allowed to remove any rows.
-  const { data: deletedRows, error } = await supabase
-    .from("audit_logs")
-    .delete()
-    .in("id", ids)
-    .select("id");
-  if (error) {
-    showSystemNotice(`The selected logs could not be deleted. ${error.message}`, "error", "Deletion Failed");
-    return;
-  }
-
-  const deletedIds = new Set((deletedRows || []).map((row) => String(row.id)));
-  if (deletedIds.size !== ids.length) {
-    showSystemNotice("Some selected logs could not be deleted. Confirm that you are signed in as an Administrator. If the issue continues, verify the audit-log database setup.", "error", "Deletion Incomplete");
-    await loadLogs();
-    return;
-  }
-
-  el("confirmModal").hidden = true;
-  selectedIds.clear();
-  window.__clearTarget = null;
-  // Update the visible list immediately after the database confirms deletion.
-  logs = logs.filter((log) => !deletedIds.has(String(log.id)));
-  updateSummary();
-  renderLogs();
 }
 
 /* ---------- EVENT BINDINGS ---------- */
@@ -586,30 +478,13 @@ function bindEvents() {
   el("dateFrom")?.addEventListener("change", renderLogs);
   el("dateTo")?.addEventListener("change", renderLogs);
 
-  // Select all
-  el("selectAll")?.addEventListener("change", (e) => {
-    const filtered = getFilteredLogs();
-    if (e.target.checked) {
-      filtered.forEach((l) => selectedIds.add(String(l.id)));
-    } else {
-      selectedIds.clear();
-    }
-    renderLogs();
-    updateSelectionUI();
-  });
-
   // Export
   const exportBtn = document.querySelector(".export-btn");
   if (exportBtn) exportBtn.addEventListener("click", exportLogs);
 
   // Manage
   el("manageBtn")?.addEventListener("click", openManage);
-  el("deleteSelectedBtn")?.addEventListener("click", deleteSelected);
   el("archiveOldBtn")?.addEventListener("click", archiveOldLogs);
-  el("clearOlderBtn")?.addEventListener("click", openClearModal);
-  el("clearAllBtn")?.addEventListener("click", deleteSelected);
-  el("confirmClearBtn")?.addEventListener("click", clearOlderThan);
-  el("confirmDeleteBtn")?.addEventListener("click", confirmDelete);
   el("dismissSystemNotice")?.addEventListener("click", closeSystemNotice);
   el("closeSystemNotice")?.addEventListener("click", closeSystemNotice);
 
