@@ -61,7 +61,7 @@ async function loadDashboard() {
     supabase.from("franchises").select("application_date, application_type, status, created_at", { count: "exact" }),
     supabase.from("franchises").select("id", { count: "exact", head: true }).eq("status", "active"),
     supabase.from("franchise_renewals").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
-    supabase.from("franchises").select("franchise_number, operator_name, route, expiration_date").gte("expiration_date", todayIso).lte("expiration_date", expiryDate.toISOString().slice(0, 10)).order("expiration_date").limit(10),
+    supabase.from("franchises").select("id, franchise_number, operator_name, route, expiration_date, operator_id").gte("expiration_date", todayIso).lte("expiration_date", expiryDate.toISOString().slice(0, 10)).order("expiration_date").limit(10),
     supabase.from("violations").select("violation_type, status, penalty"),
     supabase.from("operators").select("created_at"),
     supabase.from("drivers").select("created_at"),
@@ -100,8 +100,10 @@ async function loadDashboard() {
   renderFranchiseStatuses(franchises.data || []);
   document.getElementById("expiringRows").innerHTML = expiring.data?.length ? expiring.data.map((row) => {
     const days = Math.ceil((new Date(`${row.expiration_date}T00:00:00`) - today) / 86400000);
-    return `<tr><td>${escapeHtml(row.franchise_number)}</td><td>${escapeHtml(row.operator_name)}</td><td>${escapeHtml(row.route)}</td><td>${days} Day${days === 1 ? "" : "s"}</td></tr>`;
-  }).join("") : '<tr><td colspan="4">No franchises expire within 14 days.</td></tr>';
+    const disabled = row.operator_id ? "" : " disabled";
+    const label = row.operator_id ? "Notify" : "No account";
+    return `<tr><td>${escapeHtml(row.franchise_number)}</td><td>${escapeHtml(row.operator_name)}</td><td>${escapeHtml(row.route)}</td><td>${days} Day${days === 1 ? "" : "s"}</td><td><button type="button" class="reminder-btn" data-franchise-id="${row.id}"${disabled} title="${row.operator_id ? "Send an expiry reminder to this operator" : "This franchise is not linked to an operator account"}"><i class="ri-notification-3-line"></i><span>${label}</span></button></td></tr>`;
+  }).join("") : '<tr><td colspan="5">No franchises expire within 14 days.</td></tr>';
   if (typeof Chart === "function") {
     renderApplications({
       operators: operators.data || [], drivers: drivers.data || [],
@@ -150,3 +152,29 @@ async function loadUserInfo() {
 loadDashboard();
 loadUserInfo();
 document.getElementById("refreshDashboard")?.addEventListener("click", () => window.location.reload());
+
+document.getElementById("expiringRows")?.addEventListener("click", async (event) => {
+  const button = event.target.closest(".reminder-btn");
+  if (!button || button.disabled) return;
+
+  const franchiseId = Number(button.dataset.franchiseId);
+  if (!Number.isSafeInteger(franchiseId)) return;
+
+  const originalHtml = button.innerHTML;
+  button.disabled = true;
+  button.innerHTML = '<i class="ri-loader-4-line reminder-spinner"></i><span>Sending...</span>';
+
+  const { data, error } = await supabase.rpc("send_franchise_expiry_reminder", {
+    p_franchise_id: franchiseId,
+  });
+
+  if (error) {
+    button.disabled = false;
+    button.innerHTML = originalHtml;
+    alert(`Reminder could not be sent: ${error.message}`);
+    return;
+  }
+
+  button.classList.add("sent");
+  button.innerHTML = `<i class="ri-check-line"></i><span>${data ? "Sent" : "Sent today"}</span>`;
+});
