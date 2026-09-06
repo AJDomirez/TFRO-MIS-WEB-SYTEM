@@ -345,8 +345,14 @@ function csvDate(value) {
   const text = String(value || "").trim();
   if (!text) return null;
   if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
-    const date = new Date(`${text}T00:00:00`);
-    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === text ? text : null;
+    // Validate calendar components in local time. Comparing toISOString() here
+    // shifts Philippine midnight to the previous UTC date and rejects valid CSVs.
+    const [year, month, day] = text.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+    const valid = date.getFullYear() === year &&
+      date.getMonth() === month - 1 &&
+      date.getDate() === day;
+    return valid ? text : null;
   }
   const slash = text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
   if (slash) {

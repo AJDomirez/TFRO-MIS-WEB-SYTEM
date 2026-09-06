@@ -480,6 +480,149 @@ body.operator-sidebar .dashboard-container > .main-content{
   body.operator-sidebar .dashboard-container > .main-content{padding-inline:10px !important;}
 }
 
+/* Always-visible controls for wide data tables. */
+.tfro-has-scroll-controls{overflow:visible !important;}
+.tfro-table-scroll-controls{
+  position:fixed;
+  right:24px;
+  bottom:18px;
+  z-index:1400;
+  display:none;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  width:min(470px,calc(100vw - 48px));
+  margin:0;
+  padding:10px 11px 10px 15px;
+  border:1px solid #cfe0d8;
+  border-left:4px solid #f4c430;
+  border-radius:14px;
+  background:rgba(255,255,255,.98);
+  color:#365b4d;
+  box-shadow:0 12px 34px rgba(7,63,43,.2);
+  backdrop-filter:blur(8px);
+}
+.tfro-table-scroll-controls.is-needed.is-current{display:flex;}
+.tfro-table-scroll-controls > span{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;}
+.tfro-table-scroll-controls > span i{color:#138059;font-size:20px;}
+.tfro-table-scroll-controls > div{display:flex;gap:6px;}
+.tfro-table-scroll-controls button{
+  display:inline-flex !important;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  min-width:96px;
+  min-height:46px;
+  padding:10px 15px !important;
+  border:1px solid #b9d4c8 !important;
+  border-radius:10px !important;
+  background:#0f7654 !important;
+  color:#fff !important;
+  font:800 14px/1 inherit !important;
+  cursor:pointer;
+  box-shadow:none !important;
+}
+.tfro-table-scroll-controls button:hover:not(:disabled){background:#0a5d42 !important;transform:translateY(-1px);}
+.tfro-table-scroll-controls button:disabled{opacity:.35;cursor:not-allowed;}
+.tfro-table-scroll{
+  position:relative;
+  width:100%;
+  max-width:100%;
+  overflow-x:auto !important;
+  overflow-y:visible;
+  overscroll-behavior-inline:contain;
+  scrollbar-gutter:stable;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+}
+.tfro-table-scroll:focus-visible{outline:3px solid rgba(20,135,94,.24);outline-offset:2px;}
+.tfro-table-scroll > table{min-width:max-content;}
+@media(max-width:600px){
+  .tfro-table-scroll-controls{right:10px;bottom:84px;width:calc(100vw - 20px);padding:9px 10px;}
+  .tfro-table-scroll-controls > span{font-size:0;}
+  .tfro-table-scroll-controls > span i{font-size:19px;}
+  .tfro-table-scroll-controls button{min-width:84px;min-height:46px;}
+}
+@media print{
+  .tfro-table-scroll-controls{display:none !important;}
+  .tfro-table-scroll{overflow:visible !important;}
+}
+
+/* Normalize the Dashboard's legacy user widget with the shared sidebar. */
+body.admin-sidebar .sidebar .user-section.sidebar-user{
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:8px !important;
+  width:100% !important;
+  min-width:0 !important;
+  margin-top:auto !important;
+  padding:9px !important;
+  overflow:hidden !important;
+  border-radius:11px !important;
+}
+body.admin-sidebar .sidebar .user-section .user-info{
+  display:flex !important;
+  flex:1 1 auto !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  gap:9px !important;
+  min-width:0 !important;
+  overflow:hidden !important;
+}
+body.admin-sidebar .sidebar .user-section .avatar{
+  display:grid !important;
+  place-items:center !important;
+  flex:0 0 34px !important;
+  width:34px !important;
+  height:34px !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  border-radius:50% !important;
+  font-size:11px !important;
+  line-height:1 !important;
+}
+body.admin-sidebar .sidebar .user-section .user-details{
+  display:block !important;
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  max-width:150px;
+  overflow:hidden !important;
+}
+body.admin-sidebar .sidebar .user-section .user-details h4,
+body.admin-sidebar .sidebar .user-section .user-details p{
+  display:block !important;
+  width:100%;
+  margin:0 !important;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.admin-sidebar .sidebar .user-section .user-details p{margin-top:2px !important;}
+body.admin-sidebar .sidebar .user-section .logout-btn{flex:0 0 36px !important;}
+
+@media(min-width:769px){
+  body.admin-sidebar .sidebar:not(:hover):not(:focus-within) .user-section.sidebar-user{
+    justify-content:center !important;
+    padding-inline:0 !important;
+  }
+  body.admin-sidebar .sidebar:not(:hover):not(:focus-within) .user-section .user-info{
+    display:none !important;
+  }
+}
+
+@media(max-width:768px){
+  body.admin-sidebar .sidebar .user-section.sidebar-user{
+    width:auto !important;
+    margin:0 0 0 auto !important;
+    padding:0 !important;
+    overflow:visible !important;
+    background:transparent !important;
+  }
+  body.admin-sidebar .sidebar .user-section .user-info{display:none !important;}
+}
+
 /* --- Topbar / card accents --- */
 .topbar{
   background:#ffffff !important;
@@ -733,5 +876,362 @@ body.admin-sidebar .table-card {
   .date-export-controls label { flex: 1 1 calc(50% - 5px); }
   .date-export-controls input[type="date"] { width: 100%; }
   .date-export-controls .csv-btn { flex: 1 1 100%; }
-  body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
+body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
+}
+
+/* =========================================================
+   Auto-revealing desktop navigation
+   The compact rail keeps every primary icon accessible.
+   ========================================================= */
+@media (min-width:769px){
+  body.admin-sidebar,
+  body.operator-sidebar{
+    --tfro-sidebar-collapsed:76px;
+    --tfro-sidebar-expanded:240px;
+  }
+
+  body.admin-sidebar .sidebar,
+  body.operator-sidebar .sidebar{
+    width:var(--tfro-sidebar-collapsed) !important;
+    padding-inline:12px !important;
+    transition:width .3s cubic-bezier(.22,1,.36,1),box-shadow .3s ease !important;
+    will-change:width;
+  }
+  body.admin-sidebar .sidebar:hover,
+  body.admin-sidebar .sidebar:focus-within,
+  body.operator-sidebar .sidebar:hover,
+  body.operator-sidebar .sidebar:focus-within{
+    width:var(--tfro-sidebar-expanded) !important;
+    box-shadow:12px 0 34px rgba(5,42,30,.22) !important;
+  }
+
+  body.admin-sidebar .layout > .main-content,
+  body.admin-sidebar .dashboard-container > .main-content,
+  body.operator-sidebar .layout > .main-content,
+  body.operator-sidebar .dashboard-container > .main-content{
+    margin-left:var(--tfro-sidebar-collapsed) !important;
+    width:calc(100% - var(--tfro-sidebar-collapsed)) !important;
+    max-width:calc(100% - var(--tfro-sidebar-collapsed)) !important;
+    transition:margin-left .3s cubic-bezier(.22,1,.36,1),width .3s cubic-bezier(.22,1,.36,1),max-width .3s cubic-bezier(.22,1,.36,1);
+  }
+
+  body.admin-sidebar .sidebar .logo,
+  body.operator-sidebar .sidebar .logo{
+    justify-content:center;
+    gap:10px;
+    white-space:nowrap;
+  }
+  body.admin-sidebar .sidebar:hover .logo,
+  body.admin-sidebar .sidebar:focus-within .logo,
+  body.operator-sidebar .sidebar:hover .logo,
+  body.operator-sidebar .sidebar:focus-within .logo{
+    justify-content:flex-start;
+  }
+  body.admin-sidebar .logo > div,
+  body.operator-sidebar .logo > div,
+  body.admin-sidebar .menu a > span,
+  body.operator-sidebar .menu a > span,
+  body.admin-sidebar .franchise-menu-toggle > span,
+  body.admin-sidebar .franchise-menu-arrow,
+  body.admin-sidebar .sidebar-user .user-details,
+  body.operator-sidebar .sidebar-user .user-details{
+    max-width:0;
+    opacity:0;
+    overflow:hidden;
+    pointer-events:none;
+    white-space:nowrap;
+    transition:max-width .24s ease,opacity .16s ease;
+  }
+  body.admin-sidebar .sidebar:hover .logo > div,
+  body.admin-sidebar .sidebar:focus-within .logo > div,
+  body.operator-sidebar .sidebar:hover .logo > div,
+  body.operator-sidebar .sidebar:focus-within .logo > div,
+  body.admin-sidebar .sidebar:hover .menu a > span,
+  body.admin-sidebar .sidebar:focus-within .menu a > span,
+  body.operator-sidebar .sidebar:hover .menu a > span,
+  body.operator-sidebar .sidebar:focus-within .menu a > span,
+  body.admin-sidebar .sidebar:hover .franchise-menu-toggle > span,
+  body.admin-sidebar .sidebar:focus-within .franchise-menu-toggle > span,
+  body.admin-sidebar .sidebar:hover .franchise-menu-arrow,
+  body.admin-sidebar .sidebar:focus-within .franchise-menu-arrow,
+  body.admin-sidebar .sidebar:hover .sidebar-user .user-details,
+  body.admin-sidebar .sidebar:focus-within .sidebar-user .user-details,
+  body.operator-sidebar .sidebar:hover .sidebar-user .user-details,
+  body.operator-sidebar .sidebar:focus-within .sidebar-user .user-details{
+    max-width:170px;
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  body.admin-sidebar .menu li a,
+  body.admin-sidebar .franchise-menu-toggle,
+  body.operator-sidebar .menu li a{
+    justify-content:center;
+    gap:10px;
+    white-space:nowrap;
+  }
+  body.admin-sidebar .sidebar:hover .menu li a,
+  body.admin-sidebar .sidebar:focus-within .menu li a,
+  body.admin-sidebar .sidebar:hover .franchise-menu-toggle,
+  body.admin-sidebar .sidebar:focus-within .franchise-menu-toggle,
+  body.operator-sidebar .sidebar:hover .menu li a,
+  body.operator-sidebar .sidebar:focus-within .menu li a{
+    justify-content:flex-start;
+  }
+  body.admin-sidebar .menu li a > i:first-child,
+  body.admin-sidebar .franchise-menu-toggle > i:first-child,
+  body.operator-sidebar .menu li a > i:first-child{
+    width:28px;
+    min-width:28px;
+    text-align:center;
+    font-size:19px !important;
+  }
+  body.admin-sidebar .franchise-submenu{display:none !important;}
+  body.admin-sidebar .sidebar:hover .franchise-menu.open .franchise-submenu,
+  body.admin-sidebar .sidebar:focus-within .franchise-menu.open .franchise-submenu{display:block !important;}
+  body.admin-sidebar .sidebar-user,
+  body.operator-sidebar .sidebar-user{justify-content:center;overflow:hidden;}
+  body.admin-sidebar .sidebar-user .user-left,
+  body.operator-sidebar .sidebar-user .user-left{min-width:0;overflow:hidden;}
+  body.admin-sidebar .logout-btn,
+  body.operator-sidebar .logout-btn{
+    display:grid !important;
+    place-items:center;
+    width:36px !important;
+    height:36px !important;
+    min-width:36px;
+    padding:0 !important;
+    border-radius:9px;
+  }
+  body.admin-sidebar .sidebar:hover .sidebar-user,
+  body.admin-sidebar .sidebar:focus-within .sidebar-user,
+  body.operator-sidebar .sidebar:hover .sidebar-user,
+  body.operator-sidebar .sidebar:focus-within .sidebar-user{justify-content:space-between;}
+  body.admin-sidebar .sidebar:not(:hover):not(:focus-within) .sidebar-user .user-left,
+  body.operator-sidebar .sidebar:not(:hover):not(:focus-within) .sidebar-user .user-left{display:none !important;}
+  body.admin-sidebar .sidebar:not(:hover):not(:focus-within) .sidebar-user,
+  body.operator-sidebar .sidebar:not(:hover):not(:focus-within) .sidebar-user{padding-inline:0 !important;}
+}
+
+/* =========================================================
+   TFRO animated tricycle loading experience
+   ========================================================= */
+.tfro-system-loader{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:grid;
+  place-items:center;
+  padding:24px;
+  background:#fff;
+  color:#123e2d;
+  font-family:Inter,"Segoe UI",sans-serif;
+}
+.tfro-system-loader::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  opacity:.035;
+  background-image:linear-gradient(30deg,#0b5b41 12%,transparent 12.5%,transparent 87%,#0b5b41 87.5%),linear-gradient(150deg,#0b5b41 12%,transparent 12.5%,transparent 87%,#0b5b41 87.5%);
+  background-size:42px 72px;
+}
+.tfro-loader-card{position:relative;width:min(390px,90vw);text-align:center;animation:tfroLoaderEnter .55s cubic-bezier(.22,1,.36,1) both;}
+.tfro-loader-card strong{display:block;margin-top:19px;color:#0b5b41;font-size:24px;letter-spacing:.16em;}
+.tfro-loader-card p{margin:7px 0 0;color:#61766e;font-size:13px;letter-spacing:.04em;}
+.tfro-loader-scene{position:relative;height:145px;overflow:hidden;border:1px solid rgba(255,255,255,.16);border-radius:24px;background:linear-gradient(#dff7ed 0 62%,#76b79e 62% 65%,#193d34 65%);box-shadow:0 24px 60px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.4);}
+.tfro-loader-sun{position:absolute;top:19px;right:35px;width:31px;height:31px;border-radius:50%;background:#f4c430;box-shadow:0 0 0 8px rgba(244,196,48,.18),0 0 30px #f4c430;animation:tfroSunPulse 1.5s ease-in-out infinite;}
+.tfro-loader-tricycle{position:absolute;z-index:2;left:50%;bottom:22px;width:205px;transform:translateX(-50%);filter:drop-shadow(0 7px 4px rgba(0,0,0,.25));animation:tfroRide .55s ease-in-out infinite alternate;}
+.tfro-loader-cloud{position:absolute;width:50px;height:13px;border-radius:20px;background:rgba(255,255,255,.68);animation:tfroCloud 4s linear infinite;}
+.tfro-loader-cloud::before,.tfro-loader-cloud::after{content:"";position:absolute;bottom:0;border-radius:50%;background:inherit;}
+.tfro-loader-cloud::before{left:8px;width:22px;height:22px}.tfro-loader-cloud::after{right:7px;width:28px;height:28px}
+.tfro-loader-cloud-one{top:28px;left:-55px}.tfro-loader-cloud-two{top:57px;left:-90px;scale:.65;animation-delay:-2.1s}
+.tfro-loader-exhaust{position:absolute;z-index:1;left:74px;bottom:50px;width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.65);animation:tfroExhaust 1s ease-out infinite;}
+.tfro-loader-road{position:absolute;right:-80px;bottom:17px;left:-80px;display:flex;justify-content:space-around;animation:tfroRoad .72s linear infinite;}
+.tfro-loader-road span{width:55px;height:5px;border-radius:5px;background:#f7e7a7;}
+.tfro-loader-dots::after{content:"";animation:tfroDots 1.2s steps(4,end) infinite;}
+.tfro-system-loader.is-leaving{pointer-events:none;animation:tfroLoaderLeave .48s ease forwards;}
+@keyframes tfroRide{to{transform:translate(-50%,-4px) rotate(-.7deg)}}
+@keyframes tfroRoad{to{transform:translateX(-75px)}}
+@keyframes tfroCloud{to{transform:translateX(500px)}}
+@keyframes tfroExhaust{to{opacity:0;transform:translate(-30px,-18px) scale(2.2)}}
+@keyframes tfroSunPulse{50%{transform:scale(1.1);box-shadow:0 0 0 12px rgba(244,196,48,.1),0 0 35px #f4c430}}
+@keyframes tfroDots{0%{content:""}25%{content:"."}50%{content:".."}75%,100%{content:"..."}}
+@keyframes tfroLoaderEnter{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes tfroLoaderLeave{to{opacity:0;visibility:hidden;transform:scale(1.025)}}
+@media (prefers-reduced-motion:reduce){
+  .tfro-loader-card,.tfro-loader-tricycle,.tfro-loader-road,.tfro-loader-sun,.tfro-loader-cloud,.tfro-loader-exhaust,.tfro-system-loader{animation-duration:.01ms !important;animation-iteration-count:1 !important;}
+  body.admin-sidebar .sidebar,body.operator-sidebar .sidebar{transition:none !important;}
+}
+
+/* =========================================================
+   Shared phone/tablet layout for every authenticated screen
+   ========================================================= */
+@media (max-width:768px){
+  html,body{max-width:100%;overflow-x:hidden;}
+  body.admin-sidebar{padding:0 !important;}
+  body.admin-sidebar .sidebar{
+    position:fixed !important;
+    inset:0 0 auto 0 !important;
+    z-index:1000 !important;
+    width:100% !important;
+    height:64px !important;
+    min-height:64px !important;
+    padding:9px 12px !important;
+    overflow:visible !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    border-right:0 !important;
+    border-bottom:2px solid #f4c430 !important;
+    box-shadow:0 5px 18px rgba(5,42,30,.2) !important;
+  }
+  body.admin-sidebar .logo{
+    flex:0 1 auto;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    gap:8px;
+  }
+  body.admin-sidebar .logo::after{display:none;}
+  body.admin-sidebar .sidebar-logo{width:38px !important;height:38px !important;}
+  body.admin-sidebar .logo h2{font-size:13px !important;}
+  body.admin-sidebar .logo p{font-size:9px !important;}
+  body.admin-sidebar .sidebar-user{
+    width:auto !important;
+    margin:0 0 0 auto !important;
+    padding:0 !important;
+    border:0 !important;
+    background:transparent !important;
+    overflow:visible !important;
+  }
+  body.admin-sidebar .sidebar-user .user-left{display:none !important;}
+  body.admin-sidebar .logout-btn{
+    display:grid !important;
+    place-items:center;
+    width:42px !important;
+    height:42px !important;
+    min-width:42px;
+    margin:0 !important;
+    padding:0 !important;
+    border:1px solid rgba(255,255,255,.28) !important;
+    border-radius:11px !important;
+    background:rgba(255,255,255,.1) !important;
+    font-size:21px !important;
+  }
+  body.admin-sidebar .menu{
+    position:fixed !important;
+    inset:auto 0 0 0 !important;
+    z-index:1001 !important;
+    width:100% !important;
+    height:72px;
+    margin:0 !important;
+    padding:6px max(8px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)) !important;
+    display:flex !important;
+    align-items:center;
+    gap:5px;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    scrollbar-width:none;
+    background:linear-gradient(180deg,#11694d,#0a402f);
+    border-top:2px solid #f4c430;
+    box-shadow:0 -5px 18px rgba(5,42,30,.2);
+  }
+  body.admin-sidebar .menu::-webkit-scrollbar{display:none;}
+  body.admin-sidebar .menu > li{flex:0 0 70px;margin:0 !important;}
+  body.admin-sidebar .menu li a,
+  body.admin-sidebar .franchise-menu-toggle{
+    width:70px !important;
+    height:58px;
+    min-height:58px !important;
+    padding:5px 3px !important;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    overflow:hidden;
+    border:0 !important;
+    border-radius:9px;
+    box-shadow:none !important;
+    font-size:9px !important;
+    line-height:1.05;
+    text-align:center;
+    white-space:normal;
+    transform:none !important;
+  }
+  body.admin-sidebar .menu li a > i:first-child,
+  body.admin-sidebar .franchise-menu-toggle > i:first-child{font-size:20px !important;}
+  body.admin-sidebar .franchise-menu-arrow{display:none;}
+  body.admin-sidebar .franchise-menu{display:contents;}
+  body.admin-sidebar .franchise-menu-toggle{display:none !important;}
+  body.admin-sidebar .franchise-submenu{display:contents !important;}
+  body.admin-sidebar .franchise-submenu li{flex:0 0 70px;margin:0 !important;}
+  body.admin-sidebar .franchise-submenu li a{padding:5px 3px !important;font-size:9px !important;}
+  body.admin-sidebar .layout > .main-content,
+  body.admin-sidebar .dashboard-container > .main-content{
+    width:100% !important;
+    max-width:100% !important;
+    margin-left:0 !important;
+    padding:82px 14px 92px !important;
+    overflow-x:hidden !important;
+  }
+  body.admin-sidebar .topbar{
+    align-items:flex-start !important;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  body.admin-sidebar .topbar h1{font-size:clamp(22px,7vw,29px) !important;}
+  body.admin-sidebar .topbar p{font-size:13px !important;}
+  body.admin-sidebar .toolbar,
+  body.admin-sidebar .toolbar-left,
+  body.admin-sidebar .date-export-controls,
+  body.admin-sidebar .form-actions,
+  body.admin-sidebar .modal-actions{
+    width:100%;
+    align-items:stretch;
+    flex-wrap:wrap;
+  }
+  body.admin-sidebar .search-box,
+  body.admin-sidebar .toolbar input,
+  body.admin-sidebar .toolbar select{width:100% !important;max-width:none !important;}
+  body.admin-sidebar .stats-grid,
+  body.admin-sidebar .summary-grid,
+  body.admin-sidebar .analytics-grid,
+  body.admin-sidebar .charts-grid,
+  body.admin-sidebar .form-grid,
+  body.admin-sidebar #franchiseForm,
+  body.admin-sidebar #editForm,
+  body.admin-sidebar #driverForm,
+  body.admin-sidebar #operatorForm,
+  body.admin-sidebar #violationForm{
+    grid-template-columns:1fr !important;
+  }
+  body.admin-sidebar .table-card,
+  body.admin-sidebar .table-wrap,
+  body.admin-sidebar .table-responsive{max-width:100%;overflow-x:auto !important;-webkit-overflow-scrolling:touch;}
+  body.admin-sidebar table{min-width:680px;}
+  body.admin-sidebar input,
+  body.admin-sidebar select,
+  body.admin-sidebar textarea{max-width:100%;font-size:16px;}
+  body.admin-sidebar .modal{padding:10px !important;}
+  body.admin-sidebar .modal-content,
+  body.admin-sidebar .modal-box,
+  body.admin-sidebar .profile-form-sheet,
+  body.admin-sidebar .operator-record-panel{
+    width:calc(100vw - 20px) !important;
+    max-width:calc(100vw - 20px) !important;
+    max-height:calc(100dvh - 20px) !important;
+  }
+  .tfro-system-loader{padding:14px;}
+  .tfro-loader-card{width:min(340px,94vw);}
+  .tfro-loader-scene{height:132px;border-radius:19px;}
+  .tfro-loader-tricycle{width:180px;bottom:23px;}
+}
+
+@media (max-width:390px){
+  body.admin-sidebar .logo p{display:none;}
+  body.admin-sidebar .menu > li,
+  body.admin-sidebar .menu li a,
+  body.admin-sidebar .franchise-menu-toggle{flex-basis:64px;width:64px !important;}
+  body.admin-sidebar .layout > .main-content,
+  body.admin-sidebar .dashboard-container > .main-content{padding-inline:10px !important;}
 }

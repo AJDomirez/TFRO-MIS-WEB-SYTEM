@@ -5,6 +5,92 @@
    that shows a sidebar user widget.
    ========================================================= */
 let supabaseClientPromise;
+let activeTableScrollControls = null;
+
+function activateTableScrollControls(controls) {
+  if (activeTableScrollControls === controls) return;
+  activeTableScrollControls?.classList.remove("is-current");
+  activeTableScrollControls = controls;
+  activeTableScrollControls?.classList.add("is-current");
+}
+
+function refreshVisibleTableControls() {
+  const currentArea = activeTableScrollControls?.nextElementSibling;
+  if (currentArea) {
+    const rect = currentArea.getBoundingClientRect();
+    if (rect.bottom > 0 && rect.top < window.innerHeight) return;
+  }
+  let best = null;
+  let bestVisibleHeight = 0;
+  document.querySelectorAll(".tfro-table-scroll-controls.is-needed").forEach((controls) => {
+    const area = controls.nextElementSibling;
+    const rect = area?.getBoundingClientRect();
+    if (!rect) return;
+    const visibleHeight = Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0));
+    if (visibleHeight > bestVisibleHeight) {
+      bestVisibleHeight = visibleHeight;
+      best = controls;
+    }
+  });
+  activateTableScrollControls(bestVisibleHeight > 0 ? best : null);
+}
+
+function setupSystemLoader() {
+  let loader = null;
+  let shownAt = 0;
+  let finished = false;
+  const show = () => {
+    if (finished || document.querySelector(".tfro-system-loader")) return;
+    loader = document.createElement("div");
+    loader.className = "tfro-system-loader";
+    loader.setAttribute("role", "status");
+    loader.setAttribute("aria-live", "polite");
+    loader.setAttribute("aria-label", "TFRO is waiting for a connection");
+    const connectionMessage = navigator.onLine
+      ? "The connection is taking longer than usual"
+      : "No internet connection. Trying to reconnect";
+    loader.innerHTML = `
+      <div class="tfro-loader-card">
+        <div class="tfro-loader-scene" aria-hidden="true">
+          <span class="tfro-loader-sun"></span>
+          <span class="tfro-loader-cloud tfro-loader-cloud-one"></span>
+          <span class="tfro-loader-cloud tfro-loader-cloud-two"></span>
+          <img class="tfro-loader-tricycle" src="../Tricycle Image.png" alt="">
+          <span class="tfro-loader-exhaust"></span>
+          <div class="tfro-loader-road"><span></span><span></span><span></span></div>
+        </div>
+        <strong>TFRO MIS</strong>
+        <p>${connectionMessage}<span class="tfro-loader-dots" aria-hidden="true"></span></p>
+      </div>`;
+    document.body.appendChild(loader);
+    shownAt = performance.now();
+  };
+  const showProblem = () => {
+    show();
+    const message = loader?.querySelector("p");
+    if (message) {
+      message.textContent = navigator.onLine
+        ? "Unable to reach the server. Please check your connection."
+        : "No internet connection. Please reconnect and try again.";
+    }
+  };
+  const delayTimer = window.setTimeout(show, 1200);
+  const dismiss = () => {
+    if (finished) return;
+    finished = true;
+    window.clearTimeout(delayTimer);
+    if (!loader) return;
+    const remaining = Math.max(0, 400 - (performance.now() - shownAt));
+    window.setTimeout(() => {
+      loader.classList.add("is-leaving");
+      loader.addEventListener("animationend", (event) => {
+        if (event.target === loader && event.animationName === "tfroLoaderLeave") loader.remove();
+      });
+      window.setTimeout(() => loader.remove(), 700);
+    }, remaining);
+  };
+  return { dismiss, showProblem };
+}
 
 function getSupabaseClient() {
   supabaseClientPromise ||= import("./supabase.js").then((module) => module.supabase);
@@ -90,6 +176,19 @@ function setupAdminNavigation() {
     const isOpen = parentItem.classList.toggle("open");
     toggle.setAttribute("aria-expanded", String(isOpen));
   });
+
+  const sidebar = document.querySelector(".sidebar");
+  sidebar?.addEventListener("mouseleave", () => {
+    if (!window.matchMedia("(min-width: 769px)").matches) return;
+    parentItem.classList.remove("open");
+    toggle.setAttribute("aria-expanded", "false");
+  });
+  sidebar?.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    parentItem.classList.remove("open");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.blur();
+  });
 }
 
 function setupOperatorNavigation() {
@@ -141,7 +240,8 @@ function setupEnforcerNavigation() {
 async function loadSidebarUser() {
   const supabase = await getSupabaseClient();
   const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) return;
+  if (error) throw error;
+  if (!user) return;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -202,13 +302,118 @@ function setupSharedTableSearch() {
   });
 }
 
+function enhanceScrollableTable(table) {
+  if (table.dataset.scrollControlsReady || table.closest(".tfro-system-loader")) return;
+  table.dataset.scrollControlsReady = "true";
+
+  const originalParent = table.parentElement;
+  const scrollArea = document.createElement("div");
+  scrollArea.className = "tfro-table-scroll";
+  scrollArea.tabIndex = 0;
+  scrollArea.setAttribute("role", "region");
+  scrollArea.setAttribute("aria-label", "Scrollable data table");
+  originalParent.insertBefore(scrollArea, table);
+  scrollArea.appendChild(table);
+  originalParent.classList.add("tfro-has-scroll-controls");
+
+  const controls = document.createElement("div");
+  controls.className = "tfro-table-scroll-controls";
+  controls.innerHTML = `
+    <span><i class="ri-drag-move-2-line"></i> Move across table</span>
+    <div>
+      <button type="button" data-table-scroll="left" aria-label="Scroll table left" title="Scroll table left"><i class="ri-arrow-left-line"></i><span>Left</span></button>
+      <button type="button" data-table-scroll="right" aria-label="Scroll table right" title="Scroll table right"><span>Right</span><i class="ri-arrow-right-line"></i></button>
+    </div>`;
+  originalParent.insertBefore(controls, scrollArea);
+
+  const leftButton = controls.querySelector('[data-table-scroll="left"]');
+  const rightButton = controls.querySelector('[data-table-scroll="right"]');
+  const update = () => {
+    const max = Math.max(0, scrollArea.scrollWidth - scrollArea.clientWidth);
+    controls.classList.toggle("is-needed", max > 2);
+    leftButton.disabled = scrollArea.scrollLeft <= 2;
+    rightButton.disabled = scrollArea.scrollLeft >= max - 2;
+    scrollArea.classList.toggle("at-left", scrollArea.scrollLeft <= 2);
+    scrollArea.classList.toggle("at-right", scrollArea.scrollLeft >= max - 2);
+    if (max <= 2 && activeTableScrollControls === controls) activateTableScrollControls(null);
+    else refreshVisibleTableControls();
+  };
+  const move = (direction) => scrollArea.scrollBy({
+    left: direction * Math.max(240, scrollArea.clientWidth * .68),
+    behavior: "smooth",
+  });
+
+  leftButton.addEventListener("click", () => move(-1));
+  rightButton.addEventListener("click", () => move(1));
+  scrollArea.addEventListener("pointerenter", () => activateTableScrollControls(controls));
+  scrollArea.addEventListener("focusin", () => activateTableScrollControls(controls));
+  scrollArea.addEventListener("scroll", update, { passive: true });
+  scrollArea.addEventListener("wheel", (event) => {
+    if (!event.shiftKey || scrollArea.scrollWidth <= scrollArea.clientWidth) return;
+    event.preventDefault();
+    scrollArea.scrollLeft += event.deltaY;
+  }, { passive: false });
+  new ResizeObserver(update).observe(scrollArea);
+  new ResizeObserver(update).observe(table);
+  window.setTimeout(update, 0);
+}
+
+function setupTableScrollControls() {
+  document.querySelectorAll("main table").forEach(enhanceScrollableTable);
+  const main = document.querySelector("main");
+  if (!main || main.dataset.tableObserverReady) return;
+  main.dataset.tableObserverReady = "true";
+  new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
+      if (!(node instanceof Element)) return;
+      if (node.matches("table")) enhanceScrollableTable(node);
+      node.querySelectorAll?.("table").forEach(enhanceScrollableTable);
+    }));
+  }).observe(main, { childList: true, subtree: true });
+  let scheduled = false;
+  const scheduleRefresh = () => {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      scheduled = false;
+      refreshVisibleTableControls();
+    });
+  };
+  window.addEventListener("scroll", scheduleRefresh, { passive: true });
+  window.addEventListener("resize", scheduleRefresh, { passive: true });
+  window.setTimeout(scheduleRefresh, 0);
+}
+
 function initializeSidebar() {
+  const loader = setupSystemLoader();
   if (savedRole === "operator") setupOperatorNavigation();
   else if (savedRole === "traffic_enforcer") setupEnforcerNavigation();
   else if (savedRole === "staff") setupStaffNavigation();
   else if (savedRole === "admin") setupAdminNavigation();
-  loadSidebarUser();
+  loadSidebarUser().then(
+    () => loader?.dismiss(),
+    (error) => {
+      console.warn("Sidebar profile could not be loaded:", error);
+      loader?.showProblem();
+      window.setTimeout(() => loader?.dismiss(), 4500);
+    }
+  );
   setupSharedTableSearch();
+  setupTableScrollControls();
+
+  document.querySelectorAll(".sidebar .menu a, .sidebar .franchise-menu-toggle").forEach((item) => {
+    const label = item.querySelector("span")?.textContent?.trim();
+    if (label) {
+      item.title ||= label;
+      item.setAttribute("aria-label", label);
+    }
+  });
+
+  const logoutButton = document.getElementById("logoutBtn");
+  if (logoutButton) {
+    logoutButton.title = "Sign out";
+    logoutButton.setAttribute("aria-label", "Sign out");
+  }
 }
 
 // Module scripts are deferred, but this also supports pages that load the

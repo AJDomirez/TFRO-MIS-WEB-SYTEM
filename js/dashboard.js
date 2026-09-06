@@ -23,21 +23,33 @@ function renderApplications({ operators, drivers, motorRequests, renewals }) {
     });
     return counts;
   };
-  new Chart(document.getElementById("applicationsChart"), { type: "bar", data: { labels: months.map((month) => monthFormatter.format(month)), datasets: [
-    { label: "Operators", data: countByMonth(operators), backgroundColor: "#0b5c41", borderRadius: 6 },
-    { label: "Drivers", data: countByMonth(drivers), backgroundColor: "#15915e", borderRadius: 6 },
-    { label: "Change Motor", data: countByMonth(motorRequests), backgroundColor: "#e5ad17", borderRadius: 6 },
-    { label: "Renewals", data: countByMonth(renewals), backgroundColor: "#f4c430", borderRadius: 6 },
-  ] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+  new Chart(document.getElementById("applicationsChart"), { type: "line", data: { labels: months.map((month) => monthFormatter.format(month)), datasets: [
+    { label: "Operators", data: countByMonth(operators), borderColor: "#075b40", backgroundColor: "rgba(7,91,64,.1)", fill: true, tension: .38, pointRadius: 3, pointHoverRadius: 6, borderWidth: 2.5 },
+    { label: "Drivers", data: countByMonth(drivers), borderColor: "#20a66f", backgroundColor: "transparent", tension: .38, pointRadius: 3, borderWidth: 2.5 },
+    { label: "Change Motor", data: countByMonth(motorRequests), borderColor: "#d99b08", backgroundColor: "transparent", tension: .38, pointRadius: 3, borderWidth: 2.5 },
+    { label: "Renewals", data: countByMonth(renewals), borderColor: "#f4c430", backgroundColor: "transparent", tension: .38, pointRadius: 3, borderWidth: 2.5 },
+  ] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, plugins: { legend: { position: "top", align: "start", labels: { usePointStyle: true, pointStyle: "circle", boxWidth: 7, padding: 18 } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "rgba(15,80,56,.08)" } } } } });
 }
 function renderViolations(violations) {
   const counts = violations.reduce((result, row) => ({ ...result, [row.violation_type]: (result[row.violation_type] || 0) + 1 }), {});
   const labels = Object.keys(counts);
   new Chart(document.getElementById("violationsChart"), {
-    type: "pie",
+    type: "doughnut",
     data: { labels: labels.length ? labels : ["No violations recorded"], datasets: [{ data: labels.length ? Object.values(counts) : [1], backgroundColor: labels.length ? ["#0b5c41", "#15915e", "#f4c430", "#d97706", "#77b99b"] : ["#dcebe3"] }] },
-    options: { responsive: true, maintainAspectRatio: false }
+    options: { responsive: true, maintainAspectRatio: false, cutout: "70%", plugins: { legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 7, padding: 14 } } } }
   });
+}
+
+function renderFranchiseStatuses(franchises) {
+  const statusOrder = ["active", "pending", "suspended", "expired", "revoked"];
+  const labels = { active: "Active", pending: "Pending", suspended: "Suspended", expired: "Expired", revoked: "Revoked" };
+  const counts = franchises.reduce((all, row) => ({ ...all, [row.status]: (all[row.status] || 0) + 1 }), {});
+  const total = Math.max(franchises.length, 1);
+  document.getElementById("franchiseStatusBreakdown").innerHTML = statusOrder.map((status) => {
+    const count = counts[status] || 0;
+    const percent = Math.round(count / total * 100);
+    return `<div class="status-row"><div><span>${labels[status]}</span><strong>${count}</strong></div><div class="status-track"><span class="${status}" style="width:${percent}%"></span></div><small>${percent}% of registry</small></div>`;
+  }).join("");
 }
 
 async function loadDashboard() {
@@ -46,7 +58,7 @@ async function loadDashboard() {
   const today = new Date(), todayIso = today.toISOString().slice(0, 10), expiryDate = new Date(today);
   expiryDate.setDate(today.getDate() + 14);
   const results = await Promise.all([
-    supabase.from("franchises").select("application_date, application_type", { count: "exact" }),
+    supabase.from("franchises").select("application_date, application_type, status, created_at", { count: "exact" }),
     supabase.from("franchises").select("id", { count: "exact", head: true }).eq("status", "active"),
     supabase.from("franchise_renewals").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
     supabase.from("franchises").select("franchise_number, operator_name, route, expiration_date").gte("expiration_date", todayIso).lte("expiration_date", expiryDate.toISOString().slice(0, 10)).order("expiration_date").limit(10),
@@ -69,6 +81,23 @@ async function loadDashboard() {
     (violationPayments.data || []).filter((row) => row.status === "paid").reduce((sum, row) => sum + Number(row.amount || 0), 0)
   ));
   setText("expiringCount", (expiring.data || []).length);
+  const totalCount = franchises.count ?? 0;
+  const activeCount = active.count ?? 0;
+  const activeRate = totalCount ? Math.round(activeCount / totalCount * 100) : 0;
+  const pendingViolationCount = (violations.data || []).filter((row) => row.status === "pending").length;
+  const collectionTotal = (violationPayments.data || []).filter((row) => row.status === "paid").reduce((sum, row) => sum + Number(row.amount || 0), 0);
+  const money = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(collectionTotal);
+  setText("activeRate", `${activeRate}% of all registered franchises`);
+  setText("activeBadge", `${activeRate}%`);
+  setText("violationContext", `${pendingViolationCount} case${pendingViolationCount === 1 ? "" : "s"} requiring follow-up`);
+  setText("violationChartTotal", (violations.data || []).length);
+  setText("snapshotActiveRate", `${activeRate}%`);
+  setText("snapshotExpiring", (expiring.data || []).length);
+  setText("snapshotPending", (pendingRenewals.count ?? 0) + pendingViolationCount);
+  setText("snapshotCollections", money);
+  const months = lastSixMonths();
+  setText("dashboardPeriod", `${monthFormatter.format(months[0])} ${months[0].getFullYear()} – ${monthFormatter.format(months[5])} ${months[5].getFullYear()}`);
+  renderFranchiseStatuses(franchises.data || []);
   document.getElementById("expiringRows").innerHTML = expiring.data?.length ? expiring.data.map((row) => {
     const days = Math.ceil((new Date(`${row.expiration_date}T00:00:00`) - today) / 86400000);
     return `<tr><td>${escapeHtml(row.franchise_number)}</td><td>${escapeHtml(row.operator_name)}</td><td>${escapeHtml(row.route)}</td><td>${days} Day${days === 1 ? "" : "s"}</td></tr>`;
@@ -120,3 +149,4 @@ async function loadUserInfo() {
 }
 loadDashboard();
 loadUserInfo();
+document.getElementById("refreshDashboard")?.addEventListener("click", () => window.location.reload());

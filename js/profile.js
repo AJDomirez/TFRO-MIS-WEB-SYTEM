@@ -25,6 +25,14 @@ function setValue(id, value) {
 
 let currentUserId = null;
 let currentUserRole = localStorage.getItem("role") || "";
+let managedAccounts = [];
+let pendingAccountDeletion = null;
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;",
+  })[character]);
+}
 
 /* ROLE LABEL */
 function roleLabel(role) {
@@ -32,6 +40,7 @@ function roleLabel(role) {
     admin: "Administrator",
     staff: "Staff",
     operator: "Operator",
+    traffic_enforcer: "Traffic Enforcer",
     driver: "Driver",
   };
   return map[role] || role || "User";
@@ -91,7 +100,10 @@ async function loadProfile() {
   const isAdmin = role === "admin";
   document.getElementById("contactNumberGroup").hidden = isAdmin;
   document.getElementById("settingsTabButton").hidden = !isAdmin;
-  if (isAdmin) void loadSystemSettings();
+  if (isAdmin) {
+    void loadSystemSettings();
+    void loadManagedAccounts();
+  }
 
   const names = fullName.split(" ").filter(Boolean);
   setValue("firstName", names[0] || "");
@@ -210,6 +222,128 @@ async function loadSystemSettings() {
   document.getElementById("loginLockoutSeconds").value = data?.login_lockout_seconds || 60;
   status.textContent = "";
 }
+
+function filteredManagedAccounts() {
+  const term = document.getElementById("accountSearch")?.value.trim().toLowerCase() || "";
+  const role = document.getElementById("accountRoleFilter")?.value || "all";
+  return managedAccounts.filter((account) => {
+    if (role !== "all" && account.role !== role) return false;
+    if (!term) return true;
+    return [account.full_name, account.email, account.role, account.reference]
+      .some((value) => String(value || "").toLowerCase().includes(term));
+  });
+}
+
+function renderManagedAccounts() {
+  const rows = document.getElementById("accountManagementRows");
+  if (!rows) return;
+  const accounts = filteredManagedAccounts();
+  rows.innerHTML = accounts.length ? accounts.map((account) => `
+    <tr>
+      <td><div class="managed-account"><span>${escapeHtml(initials(account.full_name))}</span><div><strong>${escapeHtml(account.full_name || "Unnamed account")}</strong><small>${escapeHtml(account.email || "No email recorded")}</small></div></div></td>
+      <td><span class="account-role ${escapeHtml(account.role)}">${escapeHtml(roleLabel(account.role))}</span></td>
+      <td>${escapeHtml(account.reference || "—")}</td>
+      <td><span class="account-link-status"><i class="ri-checkbox-circle-fill"></i> Portal linked</span></td>
+      <td><button type="button" class="delete-account-btn" data-user-id="${escapeHtml(account.user_id)}" data-role="${escapeHtml(account.role)}" data-name="${escapeHtml(account.full_name)}"><i class="ri-delete-bin-6-line"></i> Delete Account</button></td>
+    </tr>`).join("") : '<tr><td colspan="5" class="account-empty">No linked accounts match this filter.</td></tr>';
+}
+
+async function loadManagedAccounts() {
+  if (currentUserRole !== "admin") return;
+  const status = document.getElementById("accountManagementStatus");
+  if (status) status.textContent = "Loading Operator and Traffic Enforcer accounts…";
+  const [operators, enforcers] = await Promise.all([
+    supabase.from("operators").select("user_id, full_name, email, franchise_number, status").not("user_id", "is", null).order("full_name"),
+    supabase.from("traffic_enforcers").select("user_id, full_name, email, enforcer_id, status").not("user_id", "is", null).order("full_name"),
+  ]);
+  const error = operators.error || enforcers.error;
+  if (error) {
+    if (status) status.textContent = `Could not load accounts: ${error.message}`;
+    return;
+  }
+  managedAccounts = [
+    ...(operators.data || []).map((row) => ({ ...row, role: "operator", reference: row.franchise_number })),
+    ...(enforcers.data || []).map((row) => ({ ...row, role: "traffic_enforcer", reference: row.enforcer_id })),
+  ];
+  if (status) status.textContent = `${managedAccounts.length} linked account${managedAccounts.length === 1 ? "" : "s"} available.`;
+  renderManagedAccounts();
+}
+
+function closeDeleteAccountModal() {
+  if (document.getElementById("confirmDeleteAccount")?.disabled) return;
+  document.getElementById("deleteAccountModal").hidden = true;
+  pendingAccountDeletion?.button?.focus();
+  pendingAccountDeletion = null;
+}
+
+function openDeleteAccountModal(button) {
+  if (currentUserRole !== "admin" || button.disabled) return;
+  pendingAccountDeletion = {
+    button,
+    userId: button.dataset.userId,
+    role: button.dataset.role,
+    name: button.dataset.name || "Selected account",
+  };
+  setText("deleteAccountName", pendingAccountDeletion.name);
+  setText("deleteAccountRole", roleLabel(pendingAccountDeletion.role));
+  setText("deleteAccountInitials", initials(pendingAccountDeletion.name));
+  document.getElementById("deleteAccountError").hidden = true;
+  document.getElementById("deleteAccountModal").hidden = false;
+  document.getElementById("cancelDeleteAccount").focus();
+}
+
+async function confirmManagedAccountDeletion() {
+  if (!pendingAccountDeletion || currentUserRole !== "admin") return;
+  const { button, userId, role, name } = pendingAccountDeletion;
+
+  const status = document.getElementById("accountManagementStatus");
+  const confirmButton = document.getElementById("confirmDeleteAccount");
+  const cancelButton = document.getElementById("cancelDeleteAccount");
+  const errorMessage = document.getElementById("deleteAccountError");
+  button.disabled = true;
+  confirmButton.disabled = true;
+  cancelButton.disabled = true;
+  confirmButton.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Deleting Account…';
+  if (status) status.textContent = `Deleting ${name}'s portal account…`;
+  const { data, error } = await supabase.functions.invoke("admin-delete-account", {
+    body: { user_id: userId, role },
+  });
+  if (error || !data?.success) {
+    const message = data?.error || error?.message || "Unknown server error.";
+    if (status) status.textContent = `Could not delete account: ${message}`;
+    button.disabled = false;
+    confirmButton.disabled = false;
+    cancelButton.disabled = false;
+    confirmButton.innerHTML = '<i class="ri-delete-bin-6-line"></i> Try Again';
+    errorMessage.textContent = message;
+    errorMessage.hidden = false;
+    return;
+  }
+  if (status) status.textContent = `${name}'s portal account was deleted. Official records were retained.`;
+  confirmButton.disabled = false;
+  cancelButton.disabled = false;
+  confirmButton.innerHTML = '<i class="ri-delete-bin-6-line"></i> Delete Account';
+  document.getElementById("deleteAccountModal").hidden = true;
+  pendingAccountDeletion = null;
+  await loadManagedAccounts();
+}
+
+document.getElementById("accountSearch")?.addEventListener("input", renderManagedAccounts);
+document.getElementById("accountRoleFilter")?.addEventListener("change", renderManagedAccounts);
+document.getElementById("refreshAccountsBtn")?.addEventListener("click", loadManagedAccounts);
+document.getElementById("accountManagementRows")?.addEventListener("click", (event) => {
+  const button = event.target.closest(".delete-account-btn");
+  if (button) openDeleteAccountModal(button);
+});
+document.getElementById("confirmDeleteAccount")?.addEventListener("click", confirmManagedAccountDeletion);
+document.getElementById("cancelDeleteAccount")?.addEventListener("click", closeDeleteAccountModal);
+document.getElementById("closeDeleteAccountModal")?.addEventListener("click", closeDeleteAccountModal);
+document.getElementById("deleteAccountModal")?.addEventListener("click", (event) => {
+  if (event.target === event.currentTarget) closeDeleteAccountModal();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !document.getElementById("deleteAccountModal")?.hidden) closeDeleteAccountModal();
+});
 
 document.getElementById("settingsForm").addEventListener("submit", async (event) => {
   event.preventDefault();
