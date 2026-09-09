@@ -4,8 +4,25 @@ import { requireRole } from "./auth-guard.js";
 import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20260828-5";
 
 async function openSavedSubmissionForm(options) {
-  const { openSubmissionForm } = await import("./submission-form.js");
+  const { openSubmissionForm } = await import("./submission-form.js?v=20260909-160000");
   openSubmissionForm(options);
+}
+
+async function driverQrDataUrl(driverId) {
+  const { data, error } = await supabase.from("driver_qr_verifications")
+    .select("qr_token").eq("driver_id", driverId).maybeSingle();
+  if (error || !data?.qr_token || !window.QRCode) return "";
+  const holder = document.createElement("div");
+  holder.style.cssText = "position:fixed;left:-9999px";
+  document.body.appendChild(holder);
+  const verificationUrl = new URL(`driververify.html?t=${encodeURIComponent(data.qr_token)}`, window.location.href).href;
+  new window.QRCode(holder, { text: verificationUrl, width: 220, height: 220,
+    colorDark: "#123f73", colorLight: "#ffffff", correctLevel: window.QRCode.CorrectLevel.H });
+  await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 25)));
+  const qr = holder.querySelector("canvas, img");
+  const dataUrl = qr?.tagName === "CANVAS" ? qr.toDataURL("image/png") : qr?.src || "";
+  holder.remove();
+  return dataUrl;
 }
 
 /* ROLE PROTECTION — server-verified, not localStorage */
@@ -320,9 +337,12 @@ async function signedDocumentUrl(path) {
 }
 
 async function showDriverSubmission(driver) {
+  const qrDataUrl = await driverQrDataUrl(driver.id);
+  if (!qrDataUrl) return alert("The Driver QR could not be rendered. Refresh the page and try again.");
   await openSavedSubmissionForm({
     title: "Driver Application Form", reference: `DRV-${driver.id}`, filename: `TFRO-Driver-${driver.id}`,
     pictureUrl: await signedDocumentUrl(driver.picture_storage_path),
+    qrDataUrl,
     fields: [
       { label: "Driver Name", value: driver.full_name }, { label: "Address", value: driver.address },
       { label: "Contact Number", value: driver.contact_number }, { label: "License Number", value: driver.license_number },
