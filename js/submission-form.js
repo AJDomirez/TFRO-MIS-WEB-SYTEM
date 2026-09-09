@@ -17,6 +17,7 @@ export function openSubmissionForm({
   fields,
   pictureUrl = "",
   qrDataUrl = "",
+  qrUrl = "",
   filename = "tfro-submission",
 }) {
   const popup = window.open("", "_blank");
@@ -45,11 +46,28 @@ export function openSubmissionForm({
   </style></head><body><div class="toolbar"><button class="save" onclick="window.print()">Save as PDF</button><button class="print" onclick="window.print()">Print Form</button></div>
   <main class="sheet"><header class="header"><img class="logo" src="${escapeHtml(logoUrl)}" alt="TFRO logo"><div><h1>TFRO MIS</h1><p>Tricycle Franchising and Regulatory Office · Lucena City</p></div></header>
   <section class="form-title"><h2>${escapeHtml(title)}</h2><p>Reference: <strong>${escapeHtml(reference)}</strong></p></section>
-  <section class="content"><div class="fields">${rows}</div><div class="identity-assets"><div class="photo">${pictureUrl ? `<img src="${escapeHtml(pictureUrl)}" alt="2×2 picture">` : "2×2<br>Picture"}</div>${qrDataUrl ? `<div class="form-qr"><img src="${escapeHtml(qrDataUrl)}" alt="Driver verification QR"><span>SCAN FOR DRIVER ID &amp; VIOLATION HISTORY</span></div>` : ""}</div></section>
+  <section class="content"><div class="fields">${rows}</div><div class="identity-assets"><div class="photo">${pictureUrl ? `<img src="${escapeHtml(pictureUrl)}" alt="2×2 picture">` : "2×2<br>Picture"}</div>${qrDataUrl || qrUrl ? `<div class="form-qr">${qrDataUrl ? `<img src="${escapeHtml(qrDataUrl)}" alt="Driver verification QR">` : `<div id="printableDriverQr" aria-label="Driver verification QR"></div>`}<span>SCAN FOR DRIVER ID &amp; VIOLATION HISTORY</span></div>` : ""}</div></section>
   <p class="cert">I certify that the information shown above is the information submitted through TFRO MIS. This system-generated copy is subject to verification by TFRO.</p>
   <div class="signatures"><div class="line">Operator / Applicant Signature</div><div class="line">TFRO Receiving Officer</div></div>
   <p class="hint">Use “Save as PDF” and choose the PDF destination in the print dialog.</p></main></body></html>`);
   popup.document.close();
+  if (qrUrl) {
+    const qrScript = popup.document.createElement("script");
+    qrScript.src = new URL("./vendor/qrcode.min.js", import.meta.url).href;
+    qrScript.onload = () => {
+      const target = popup.document.getElementById("printableDriverQr");
+      if (!target || !popup.QRCode) return;
+      new popup.QRCode(target, {
+        text: qrUrl,
+        width: 114,
+        height: 114,
+        colorDark: "#123f73",
+        colorLight: "#ffffff",
+        correctLevel: popup.QRCode.CorrectLevel.H,
+      });
+    };
+    popup.document.body.appendChild(qrScript);
+  }
 }
 
 const valueOrBlank = (value) => escapeHtml(value || "");
