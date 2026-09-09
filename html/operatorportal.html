@@ -15,6 +15,7 @@
     href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
     rel="stylesheet"
   />
+  <script src="../js/vendor/qrcode.min.js?v=1.0.0"></script>
 </head>
 
 <body class="operator-sidebar">
@@ -347,6 +348,11 @@
             <label for="driverPicture">Driver 2×2 Picture</label>
             <input id="driverPicture" name="picture" type="file" accept="image/jpeg,image/png" required>
           </div>
+          <div class="driver-field driver-field-wide driver-generated-qr" id="driverGeneratedQrPanel" hidden>
+            <div><strong>Generated Driver QR</strong><small>This QR is linked automatically to the submitted Driver record.</small></div>
+            <div id="driverGeneratedQr"></div>
+            <a id="driverGeneratedQrLink" target="_blank" rel="noopener">Test QR verification</a>
+          </div>
         </div>
         <div class="driver-form-message" id="driverFormMessage" hidden></div>
         <div class="driver-form-actions">
@@ -391,7 +397,7 @@
 
 </div>
 
-<script type="module" src="../js/operatorportal.js?v=20260828-5"></script>
+<script type="module" src="../js/operatorportal.js?v=20260909-153000"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 <script type="module" src="../js/guided-tour.js?v=20260823-1"></script>
 
