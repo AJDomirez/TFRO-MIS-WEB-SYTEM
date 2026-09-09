@@ -1,0 +1,9 @@
+import { supabase } from "./supabase.js";
+import { requireRole, destinationForRole } from "./auth-guard.js";
+
+let account = null;
+const input = document.getElementById("profilePhotoInput"), preview = document.getElementById("profilePhotoPreview"), message = document.getElementById("profilePhotoMessage");
+function showMessage(text) { message.textContent=text; message.hidden=!text; }
+input.addEventListener("change",()=>{const file=input.files[0];if(!file){preview.hidden=true;return;}preview.src=URL.createObjectURL(file);preview.hidden=false;});
+document.getElementById("profilePhotoForm").addEventListener("submit",async(event)=>{event.preventDefault();const file=input.files[0],button=document.getElementById("saveProfilePhoto");if(!file||!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024)return showMessage("Choose a JPG, PNG, or WebP formal photo no larger than 5 MB.");button.disabled=true;showMessage("");const extension=file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g,"")||"jpg",path=`${account.user.id}/formal-profile-${Date.now()}.${extension}`;const upload=await supabase.storage.from("account-profile-pictures").upload(path,file,{contentType:file.type,upsert:false});if(upload.error){button.disabled=false;return showMessage(upload.error.message);}const update=await supabase.from("profiles").update({profile_picture_path:path}).eq("id",account.user.id);if(update.error){await supabase.storage.from("account-profile-pictures").remove([path]);button.disabled=false;return showMessage(update.error.message);}location.replace(destinationForRole(account.profile.role));});
+(async()=>{account=await requireRole(["operator","traffic_enforcer"]);if(!account.user)return;if(account.profile.profile_picture_path)location.replace(destinationForRole(account.profile.role));})();
