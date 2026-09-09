@@ -131,9 +131,21 @@ async function printDriverForm() {
     const signed = await supabase.storage.from("franchise-documents").createSignedUrl(currentDriver.picture_storage_path, 600);
     pictureUrl = signed.data?.signedUrl || "";
   }
-  const { openSubmissionForm } = await import("./submission-form.js");
+  let qrDataUrl = "";
+  const qrRecord = await supabase.from("driver_qr_verifications").select("qr_token").eq("driver_id", currentDriver.id).maybeSingle();
+  if (qrRecord.data?.qr_token && window.QRCode) {
+    const holder = document.createElement("div");
+    holder.style.cssText = "position:fixed;left:-9999px";
+    document.body.appendChild(holder);
+    const verificationUrl = new URL(`driververify.html?t=${encodeURIComponent(qrRecord.data.qr_token)}`, window.location.href).href;
+    new window.QRCode(holder, { text: verificationUrl, width: 220, height: 220, colorDark: "#123f73", colorLight: "#ffffff", correctLevel: window.QRCode.CorrectLevel.H });
+    const qr = holder.querySelector("canvas, img");
+    qrDataUrl = qr?.tagName === "CANVAS" ? qr.toDataURL("image/png") : qr?.src || "";
+    holder.remove();
+  }
+  const { openSubmissionForm } = await import("./submission-form.js?v=20260909-160000");
   openSubmissionForm({
-    title: "Driver Application Form", reference: `DRV-${currentDriver.id}`, filename: `TFRO-Driver-${currentDriver.id}`, pictureUrl,
+    title: "Driver Application Form", reference: `DRV-${currentDriver.id}`, filename: `TFRO-Driver-${currentDriver.id}`, pictureUrl, qrDataUrl,
     fields: [
       { label: "Driver Name", value: currentDriver.full_name }, { label: "Address", value: currentDriver.address },
       { label: "Contact", value: currentDriver.contact_number }, { label: "License Number", value: currentDriver.license_number },
