@@ -303,7 +303,9 @@ function setupSharedTableSearch() {
 }
 
 function enhanceScrollableTable(table) {
-  if (table.dataset.scrollControlsReady || table.closest(".tfro-system-loader")) return;
+  /* Report previews already provide their own horizontal scrolling. Wrapping a
+     dynamically inserted report table creates competing intrinsic widths. */
+  if (table.dataset.scrollControlsReady || table.closest(".tfro-system-loader, .report-modal-body")) return;
   table.dataset.scrollControlsReady = "true";
 
   const originalParent = table.parentElement;

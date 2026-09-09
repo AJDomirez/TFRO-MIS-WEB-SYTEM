@@ -24,8 +24,36 @@ const enforcerFields = [...document.querySelectorAll("[data-enforcer-field]")];
 const franchiseNumberInput = document.getElementById("franchiseNumber");
 const enforcerIdInput = document.getElementById("enforcerId");
 const profilePictureInput = document.getElementById("profilePicture");
+const termsConsent = document.getElementById("termsConsent");
+const consentModal = document.getElementById("consentModal");
+const acceptConsentButton = document.getElementById("acceptConsent");
+const TERMS_VERSION = "TFRO-TERMS-2026-09-08";
+const PRIVACY_VERSION = "TFRO-PRIVACY-2026-09-08";
 let profilePreviewUrl = "";
 let registrationEnabled = true;
+
+function openConsentModal() {
+  consentModal.hidden = false;
+  document.body.classList.add("consent-modal-open");
+  document.getElementById("consentContent").scrollTop = 0;
+  consentModal.querySelector(".consent-close").focus();
+}
+
+function closeConsentModal() {
+  consentModal.hidden = true;
+  document.body.classList.remove("consent-modal-open");
+  termsConsent.focus();
+}
+
+document.querySelectorAll("[data-open-consent]").forEach((button) => button.addEventListener("click", openConsentModal));
+document.querySelectorAll("[data-close-consent]").forEach((button) => button.addEventListener("click", closeConsentModal));
+acceptConsentButton.addEventListener("click", () => {
+  termsConsent.checked = true;
+  closeConsentModal();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !consentModal.hidden) closeConsentModal();
+});
 
 async function loadRegistrationSetting() {
   const { data } = await supabase.from("system_settings")
@@ -279,6 +307,12 @@ registerForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  if (!termsConsent.checked) {
+    showRegisterWarning("Please review and accept the Terms of Use and Data Privacy Notice before creating your account.");
+    openConsentModal();
+    return;
+  }
+
   submitButton.disabled = true;
   submitButton.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Creating account...';
 
@@ -299,6 +333,9 @@ registerForm.addEventListener("submit", async (event) => {
           address,
           franchise_number: role === "operator" ? franchiseNumber : null,
           enforcer_id: role === "traffic_enforcer" ? enforcerId : null,
+          terms_accepted: true,
+          terms_version: TERMS_VERSION,
+          privacy_notice_version: PRIVACY_VERSION,
         },
       },
     }));

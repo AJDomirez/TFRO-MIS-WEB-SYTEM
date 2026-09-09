@@ -22,7 +22,7 @@ function openPdfWindow(title) {
     return null;
   }
   popup.opener = null;
-  popup.document.write(`<!doctype html><meta charset="utf-8"><title>${title}</title><style>body{margin:0;display:grid;place-items:center;min-height:100vh;background:#eef2ef;font:16px Arial;color:#173f32}</style><p>Generating auto-filled PDF&hellip;</p>`);
+  popup.document.write(`<!doctype html><meta charset="utf-8"><title>${title}</title><style>body{margin:0;display:grid;place-items:center;min-height:100vh;background:#eef2ef;font:16px Arial;color:#0d4778}</style><p>Generating auto-filled PDF&hellip;</p>`);
   return popup;
 }
 
@@ -114,7 +114,7 @@ function editFields(title, fields, editable, onSend = null) {
     dialog.setAttribute("aria-label", `${title} manual field editor`);
     dialog.style.cssText = "width:min(760px,calc(100vw - 32px));max-height:88vh;padding:0;border:0;border-radius:14px;box-shadow:0 24px 70px #0005;color:#17231e;font-family:Arial,sans-serif";
     const header = document.createElement("header");
-    header.style.cssText = "padding:18px 22px;background:#153e31;color:#fff";
+    header.style.cssText = "padding:18px 22px;background:#0d4778;color:#fff";
     const heading = document.createElement("h2");
     heading.textContent = `Review ${title}`;
     heading.style.cssText = "margin:0 0 5px;font-size:20px";
@@ -137,7 +137,7 @@ function editFields(title, fields, editable, onSend = null) {
       if (input.type === "checkbox") input.checked = Boolean(field.value);
       else input.value = value(field.value);
       input.style.cssText = input.type === "checkbox"
-        ? "width:20px;height:20px;accent-color:#17603f"
+        ? "width:20px;height:20px;accent-color:#123f73"
         : "width:100%;min-height:40px;padding:8px 10px;border:1px solid #aebbb5;border-radius:7px;font:14px Arial";
       label.append(input);
       grid.append(label);
@@ -151,7 +151,7 @@ function editFields(title, fields, editable, onSend = null) {
     const generate = document.createElement("button");
     generate.type = "submit";
     generate.textContent = "Generate PDF";
-    generate.style.cssText = "padding:10px 16px;border:0;border-radius:7px;background:#153e31;color:#fff;font-weight:700";
+    generate.style.cssText = "padding:10px 16px;border:0;border-radius:7px;background:#0d4778;color:#fff;font-weight:700";
     const send = document.createElement("button");
     if (onSend) {
       send.type = "button";

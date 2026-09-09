@@ -22,10 +22,10 @@
   width: 58px;
   height: 58px;
   border-radius: 16px;
-  background: linear-gradient(135deg,#147b55,#1cab75);
+  background: linear-gradient(135deg,#0d4778,#174f86);
   color: #fff;
   font-size: 29px;
-  box-shadow: 0 9px 20px rgba(20,123,85,.22);
+  box-shadow: 0 9px 20px rgba(18,63,115,.22);
 }
 
 .camera-card .camera-actions { justify-content: center; }

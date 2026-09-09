@@ -24,18 +24,18 @@ function renderApplications({ operators, drivers, motorRequests, renewals }) {
     return counts;
   };
   new Chart(document.getElementById("applicationsChart"), { type: "line", data: { labels: months.map((month) => monthFormatter.format(month)), datasets: [
-    { label: "Operators", data: countByMonth(operators), borderColor: "#075b40", backgroundColor: "rgba(7,91,64,.1)", fill: true, tension: .38, pointRadius: 3, pointHoverRadius: 6, borderWidth: 2.5 },
-    { label: "Drivers", data: countByMonth(drivers), borderColor: "#20a66f", backgroundColor: "transparent", tension: .38, pointRadius: 3, borderWidth: 2.5 },
+    { label: "Operators", data: countByMonth(operators), borderColor: "#123f73", backgroundColor: "rgba(18,63,115,.1)", fill: true, tension: .38, pointRadius: 3, pointHoverRadius: 6, borderWidth: 2.5 },
+    { label: "Drivers", data: countByMonth(drivers), borderColor: "#174f86", backgroundColor: "transparent", tension: .38, pointRadius: 3, borderWidth: 2.5 },
     { label: "Change Motor", data: countByMonth(motorRequests), borderColor: "#d99b08", backgroundColor: "transparent", tension: .38, pointRadius: 3, borderWidth: 2.5 },
     { label: "Renewals", data: countByMonth(renewals), borderColor: "#f4c430", backgroundColor: "transparent", tension: .38, pointRadius: 3, borderWidth: 2.5 },
-  ] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, plugins: { legend: { position: "top", align: "start", labels: { usePointStyle: true, pointStyle: "circle", boxWidth: 7, padding: 18 } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "rgba(15,80,56,.08)" } } } } });
+  ] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, plugins: { legend: { position: "top", align: "start", labels: { usePointStyle: true, pointStyle: "circle", boxWidth: 7, padding: 18 } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "rgba(13,71,120,.08)" } } } } });
 }
 function renderViolations(violations) {
   const counts = violations.reduce((result, row) => ({ ...result, [row.violation_type]: (result[row.violation_type] || 0) + 1 }), {});
   const labels = Object.keys(counts);
   new Chart(document.getElementById("violationsChart"), {
     type: "doughnut",
-    data: { labels: labels.length ? labels : ["No violations recorded"], datasets: [{ data: labels.length ? Object.values(counts) : [1], backgroundColor: labels.length ? ["#0b5c41", "#15915e", "#f4c430", "#d97706", "#77b99b"] : ["#dcebe3"] }] },
+    data: { labels: labels.length ? labels : ["No violations recorded"], datasets: [{ data: labels.length ? Object.values(counts) : [1], backgroundColor: labels.length ? ["#123f73", "#174f86", "#f4c430", "#d97706", "#cbd5e1"] : ["#dcebe3"] }] },
     options: { responsive: true, maintainAspectRatio: false, cutout: "70%", plugins: { legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 7, padding: 14 } } } }
   });
 }

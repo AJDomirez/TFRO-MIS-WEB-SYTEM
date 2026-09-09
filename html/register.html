@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TFRO Register</title>
+  <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
 
   <link rel="stylesheet" href="../css/style.css?v=20260824-031500">
 
@@ -227,6 +228,17 @@
           </ul>
         </div>
 
+        <div class="registration-consent register-full">
+          <label class="consent-checkbox" for="termsConsent">
+            <input type="checkbox" id="termsConsent" required aria-describedby="consentHelp" />
+            <span>
+              I have read and agree to the
+              <button type="button" class="consent-link" data-open-consent>Terms of Use and Data Privacy Notice</button>.
+            </span>
+          </label>
+          <small id="consentHelp">Your approval is required before an account can be created.</small>
+        </div>
+
         <div class="inline-form-message register-full" id="registerMessage" hidden role="alert"></div>
         <button type="submit" class="login-btn register-full" id="registerBtn">
           <i class="ri-user-add-line"></i>
@@ -260,9 +272,53 @@ Already have an account?
 
 </div>
 
+<div class="consent-modal" id="consentModal" hidden>
+  <div class="consent-modal-backdrop" data-close-consent></div>
+  <section class="consent-dialog" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
+    <header class="consent-dialog-header">
+      <div>
+        <p>TFRO MIS registration agreement</p>
+        <h2 id="consentTitle">Terms of Use and Data Privacy Notice</h2>
+        <span>Effective September 8, 2026 · Version TFRO-TERMS-2026-09-08</span>
+      </div>
+      <button type="button" class="consent-close" data-close-consent aria-label="Close"><i class="ri-close-line"></i></button>
+    </header>
+
+    <div class="consent-content" id="consentContent" tabindex="0">
+      <p class="consent-intro">Please read this notice before creating an account. It explains the rules for using TFRO MIS and how the Tricycle Franchising and Regulatory Office of Lucena City handles your personal data.</p>
+
+      <h3>1. Purpose and acceptable use</h3>
+      <p>TFRO MIS supports account verification, franchise and MTOP transactions, driver records, change-motor and renewal requests, violations, payments, reporting, and authorized public-service operations. You must provide accurate information, use only your own account, protect your password, and never misuse, alter, or access records without authority.</p>
+
+      <h3>2. Personal data collected</h3>
+      <p>The system may collect your name, email address, contact number, home address, franchise or enforcer ID, profile photo, vehicle and driver information, submitted documents, transaction and payment details, violations, and security or audit activity.</p>
+
+      <h3>3. Why and how data is used</h3>
+      <p>Your information is processed to verify identity and eligibility, provide TFRO services, review applications, maintain official records, communicate updates, protect the system, create required reports, and meet lawful government obligations. Only information reasonably necessary for these purposes should be collected and used.</p>
+
+      <h3>4. Access, sharing, retention, and security</h3>
+      <p>Authorized TFRO personnel and users receive access according to their role. Data may be handled by necessary technology providers, including database and hosting services, or disclosed when required by law. Records are retained only as needed for service, legal, regulatory, security, and audit requirements. TFRO applies access controls and other safeguards, but no online service can guarantee absolute security.</p>
+
+      <h3>5. Your data privacy rights</h3>
+      <p>Subject to applicable law, you may ask to be informed, access or correct your data, object to certain processing, request erasure or blocking where allowed, receive data portability where applicable, lodge a complaint, and seek damages for unlawful processing. Contact the TFRO Office or its designated Data Protection Officer through the office's official contact channels to exercise these rights.</p>
+
+      <h3>6. Consent and account approval</h3>
+      <p>By selecting “I Agree,” you confirm that you understand this notice and accept the Terms of Use. Where processing relies on consent, you may withdraw it by contacting TFRO; withdrawal does not affect earlier lawful processing and may limit services that require the affected data. Records required by law or official duties may still be retained.</p>
+
+      <h3>7. Account action and changes</h3>
+      <p>TFRO may restrict or suspend accounts used fraudulently, unlawfully, or against these terms. Material updates to this agreement should be presented for renewed acceptance. Questions may be directed to the TFRO Office through its official contact channels.</p>
+    </div>
+
+    <footer class="consent-dialog-actions">
+      <button type="button" class="consent-secondary" data-close-consent>Cancel</button>
+      <button type="button" class="consent-accept" id="acceptConsent"><i class="ri-check-line"></i> I Agree</button>
+    </footer>
+  </section>
+</div>
+
 <!-- Version query ensures browsers fetch the current registration error handling. -->
-<script type="module" src="../js/register.js?v=20260824-010500"></script>
-<script src="../js/trike-drive.js"></script>
+<script type="module" src="../js/register.js?v=20260908-210000"></script>
+<script src="../js/trike-drive.js?v=20260908-191500"></script>
 
 </body>
 </html>

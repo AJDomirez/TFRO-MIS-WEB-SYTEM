@@ -7,7 +7,7 @@
 
 /* --- Sidebar: green gradient (overrides the blue) --- */
 .sidebar{
-  background:linear-gradient(180deg,#0b3d2e 0%,#146a4f 60%,#0f4d3a 100%) !important;
+  background:linear-gradient(180deg,#0b2f55 0%,#124b7a 60%,#0d4778 100%) !important;
 }
 
 /* Sidebar logo image */
@@ -38,7 +38,7 @@
 /* Menu links */
 .menu li a,
 .menu-item{
-  color:#e5f5ee !important;
+  color:#f1f5f9 !important;
 }
 body.admin-sidebar .menu li a,
 body.admin-sidebar .franchise-menu-toggle{
@@ -47,6 +47,9 @@ body.admin-sidebar .franchise-menu-toggle{
   line-height:1.2;
   padding:7px 10px !important;
 }
+
+/* 2026 palette refresh: blue structure and actions, yellow highlights. */
+:root{--tfro-blue-900:#0b2f55;--tfro-blue-800:#0d4778;--tfro-blue-700:#124b7a;--tfro-blue-50:#f8fafc;--tfro-green-700:#123f73;--tfro-green-600:#174f86;--tfro-yellow:#f4c430;}
 body.admin-sidebar .menu li{
   margin-bottom:1px !important;
 }
@@ -114,7 +117,7 @@ body.admin-sidebar .franchise-menu-arrow{
 body.admin-sidebar .sidebar,
 body.operator-sidebar .sidebar{
   border-right:1px solid rgba(244,196,48,.38) !important;
-  box-shadow:8px 0 24px rgba(5,42,30,.12);
+  box-shadow:8px 0 24px rgba(11,47,85,.12);
 }
 body.admin-sidebar .logo,
 body.operator-sidebar .logo{
@@ -164,7 +167,7 @@ body.operator-sidebar .menu li.active > a{
 body.admin-sidebar .sidebar-user,
 body.operator-sidebar .sidebar-user{
   border-top:1px solid rgba(244,196,48,.3) !important;
-  background:rgba(4,45,32,.2) !important;
+  background:rgba(13,71,120,.2) !important;
 }
 body.admin-sidebar .logout-btn:hover,
 body.operator-sidebar .logout-btn:hover{
@@ -175,7 +178,7 @@ body.operator-sidebar .logout-btn:hover{
 /* Collapsible franchise navigation section */
 .franchise-menu-toggle{
   width:100%; display:flex; align-items:center; gap:10px; padding:12px 16px;
-  border:0; border-radius:10px; background:transparent; color:#e5f5ee;
+  border:0; border-radius:10px; background:transparent; color:#f1f5f9;
   font:inherit; text-align:left; cursor:pointer;
 }
 .franchise-menu-toggle:hover,
@@ -195,7 +198,7 @@ body.operator-sidebar .logout-btn:hover{
 .avatar,
 .user-info .avatar,
 .user-profile .avatar{
-  background:#1ea86f !important;
+  background:#123f73 !important;
   color:#fff !important;
 }
 .user-details p,
@@ -205,7 +208,7 @@ body.operator-sidebar .logout-btn:hover{
   color:#ffffff !important;
 }
 .logout-btn{
-  color:#e5f5ee !important;
+  color:#f1f5f9 !important;
 }
 
 /* Keep the administration navigation fixed on every admin/staff page. */
@@ -353,7 +356,7 @@ body.operator-sidebar .dashboard-container > .main-content{
     align-items:center;
     border-right:0 !important;
     border-bottom:1px solid rgba(244,196,48,.38);
-    box-shadow:0 5px 18px rgba(5,42,30,.16);
+    box-shadow:0 5px 18px rgba(11,47,85,.16);
   }
   body.operator-sidebar .logo{
     margin:0 !important;
@@ -378,9 +381,9 @@ body.operator-sidebar .dashboard-container > .main-content{
     grid-auto-columns:minmax(0,1fr);
     gap:3px;
     overflow:visible !important;
-    background:linear-gradient(180deg,#0f5b43,#0b3d2e);
+    background:linear-gradient(180deg,#123f73,#0b2f55);
     border-top:2px solid #f4c430;
-    box-shadow:0 -5px 18px rgba(5,42,30,.18);
+    box-shadow:0 -5px 18px rgba(11,47,85,.18);
   }
   body.operator-sidebar .menu li{margin:0 !important;min-width:0;}
   body.operator-sidebar .menu li a{
@@ -498,13 +501,13 @@ body.operator-sidebar .dashboard-container > .main-content{
   border-left:4px solid #f4c430;
   border-radius:14px;
   background:rgba(255,255,255,.98);
-  color:#365b4d;
-  box-shadow:0 12px 34px rgba(7,63,43,.2);
+  color:#123f73;
+  box-shadow:0 12px 34px rgba(13,71,120,.2);
   backdrop-filter:blur(8px);
 }
 .tfro-table-scroll-controls.is-needed.is-current{display:flex;}
 .tfro-table-scroll-controls > span{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;}
-.tfro-table-scroll-controls > span i{color:#138059;font-size:20px;}
+.tfro-table-scroll-controls > span i{color:#123f73;font-size:20px;}
 .tfro-table-scroll-controls > div{display:flex;gap:6px;}
 .tfro-table-scroll-controls button{
   display:inline-flex !important;
@@ -514,15 +517,15 @@ body.operator-sidebar .dashboard-container > .main-content{
   min-width:96px;
   min-height:46px;
   padding:10px 15px !important;
-  border:1px solid #b9d4c8 !important;
+  border:1px solid #cbd5e1 !important;
   border-radius:10px !important;
-  background:#0f7654 !important;
+  background:#123f73 !important;
   color:#fff !important;
   font:800 14px/1 inherit !important;
   cursor:pointer;
   box-shadow:none !important;
 }
-.tfro-table-scroll-controls button:hover:not(:disabled){background:#0a5d42 !important;transform:translateY(-1px);}
+.tfro-table-scroll-controls button:hover:not(:disabled){background:#123f73 !important;transform:translateY(-1px);}
 .tfro-table-scroll-controls button:disabled{opacity:.35;cursor:not-allowed;}
 .tfro-table-scroll{
   position:relative;
@@ -535,7 +538,7 @@ body.operator-sidebar .dashboard-container > .main-content{
   scroll-behavior:smooth;
   -webkit-overflow-scrolling:touch;
 }
-.tfro-table-scroll:focus-visible{outline:3px solid rgba(20,135,94,.24);outline-offset:2px;}
+.tfro-table-scroll:focus-visible{outline:3px solid rgba(18,63,115,.24);outline-offset:2px;}
 .tfro-table-scroll > table{min-width:max-content;}
 @media(max-width:600px){
   .tfro-table-scroll-controls{right:10px;bottom:84px;width:calc(100vw - 20px);padding:9px 10px;}
@@ -626,10 +629,10 @@ body.admin-sidebar .sidebar .user-section .logout-btn{flex:0 0 36px !important;}
 /* --- Topbar / card accents --- */
 .topbar{
   background:#ffffff !important;
-  border-bottom:1px solid #e2eae5 !important;
+  border-bottom:1px solid #d1d5db !important;
 }
-.topbar h1{color:#0b3d2e !important;}
-.topbar p{color:#6b8177 !important;}
+.topbar h1{color:#0b2f55 !important;}
+.topbar p{color:#64748b !important;}
 
 /* --- Primary buttons: green with yellow accent --- */
 .add-btn,
@@ -640,11 +643,11 @@ body.admin-sidebar .sidebar .user-section .logout-btn{flex:0 0 36px !important;}
 .export-btn,
 .download-btn,
 .btn-primary{
-  background:linear-gradient(135deg,#178a5e,#1ea86f) !important;
+  background:linear-gradient(135deg,#163d6b,#123f73) !important;
   color:#fff !important;
   border:none !important;
   border-bottom:2px solid #f4c430 !important;
-  box-shadow:0 4px 12px rgba(11,61,46,0.25) !important;
+  box-shadow:0 4px 12px rgba(11,47,85,0.25) !important;
 }
 .add-btn:hover,
 .new-btn:hover,
@@ -654,8 +657,8 @@ body.admin-sidebar .sidebar .user-section .logout-btn{flex:0 0 36px !important;}
 .export-btn:hover,
 .download-btn:hover,
 .btn-primary:hover{
-  background:linear-gradient(135deg,#146a4f,#178a5e) !important;
-  box-shadow:0 6px 16px rgba(11,61,46,0.32) !important;
+  background:linear-gradient(135deg,#124b7a,#163d6b) !important;
+  box-shadow:0 6px 16px rgba(11,47,85,0.32) !important;
 }
 
 /* Admin actions: keep labels legible on every page, regardless of the
@@ -672,7 +675,7 @@ body.admin-sidebar .btn-accept,
 body.admin-sidebar .btn-primary,
 body.admin-sidebar .add-btn,
 body.admin-sidebar .save-btn{
-  background:#146a4f !important;
+  background:#124b7a !important;
   color:#ffffff !important;
   text-shadow:none;
 }
@@ -685,8 +688,8 @@ body.admin-sidebar .actions button[data-action="delete"]{
 body.admin-sidebar .btn-cancel,
 body.admin-sidebar .form-actions button[type="button"]:not(.btn-reject):not(.btn-danger){
   background:#ffffff !important;
-  border:1px solid #587066 !important;
-  color:#173d2e !important;
+  border:1px solid #123f73 !important;
+  color:#0d4778 !important;
 }
 
 /* --- Accent numbers / headings that were blue --- */
@@ -696,12 +699,12 @@ body.admin-sidebar .form-actions button[type="button"]:not(.btn-reject):not(.btn
 .receipt,
 .approval,
 .create{
-  color:#178a5e !important;
+  color:#163d6b !important;
 }
 
 /* --- Welcome cards (indigo → green) --- */
 .welcome-card{
-  background:linear-gradient(135deg,#0b3d2e,#146a4f) !important;
+  background:linear-gradient(135deg,#0b2f55,#124b7a) !important;
   color:#fff !important;
 }
 .welcome-card p,
@@ -714,18 +717,18 @@ body.admin-sidebar .form-actions button[type="button"]:not(.btn-reject):not(.btn
 .profile-header .profile-avatar,
 .big-avatar,
 .top-avatar{
-  background:#178a5e !important;
+  background:#163d6b !important;
   color:#fff !important;
 }
 
 /* --- Input focus (blue → green) --- */
 .input-group input:focus,
 .form-group input:focus{
-  border-color:#1ea86f !important;
+  border-color:#123f73 !important;
 }
 .tab-btn.active,
 .tab.active{
-  background:#178a5e !important;
+  background:#163d6b !important;
   color:#fff !important;
 }
 
@@ -734,29 +737,29 @@ body.admin-sidebar .form-actions button[type="button"]:not(.btn-reject):not(.btn
 .type.operator,
 .type.driver,
 .notification-icon.info{
-  background:#d7f0e4 !important;
-  color:#146a4f !important;
+  background:#e2e8f0 !important;
+  color:#124b7a !important;
 }
 
 /* --- Notice / info banners (blue → green) --- */
 .notice{
-  background:#e5f5ee !important;
-  border:1px solid #b7e3cd !important;
-  color:#0b5c41 !important;
+  background:#f1f5f9 !important;
+  border:1px solid #cbd5e1 !important;
+  color:#0d4778 !important;
 }
 
 /* --- Report modal table header (blue → green) --- */
 .report-modal-body th{
-  background:#0b3d2e !important;
+  background:#0b2f55 !important;
   color:#ffffff !important;
 }
 
 /* --- Audit log action colors (keep distinct but green-tinted) --- */
-.create{color:#178a5e !important;}
+.create{color:#163d6b !important;}
 
 /* Body background — light green-white office feel */
 body{
-  background:#f7faf8 !important;
+  background:#f8fafc !important;
 }
 /* Shared date-range and CSV controls used by the Franchise database pages. */
 .date-export-controls {
@@ -819,16 +822,16 @@ body.admin-sidebar .table-card {
 .date-export-controls .csv-btn {
   min-height: 38px;
   padding: 8px 14px;
-  border: 1px solid #166534;
+  border: 1px solid #1e40af;
   border-radius: 8px;
-  background: #166534;
+  background: #1e40af;
   color: #fff;
   cursor: pointer;
   font-weight: 700;
   white-space: nowrap;
 }
 
-.date-export-controls .csv-btn:hover { background: #14532d; }
+.date-export-controls .csv-btn:hover { background: #1e40af; }
 .date-export-controls .csv-btn:disabled { cursor: not-allowed; opacity: .55; }
 .date-export-controls .input-invalid { border-color: #dc2626; box-shadow: 0 0 0 2px rgba(220, 38, 38, .12); }
 .renewal-export-controls { justify-content: flex-end; margin-bottom: 16px; }
@@ -902,7 +905,7 @@ body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
   body.operator-sidebar .sidebar:hover,
   body.operator-sidebar .sidebar:focus-within{
     width:var(--tfro-sidebar-expanded) !important;
-    box-shadow:12px 0 34px rgba(5,42,30,.22) !important;
+    box-shadow:12px 0 34px rgba(11,47,85,.22) !important;
   }
 
   body.admin-sidebar .layout > .main-content,
@@ -1024,7 +1027,7 @@ body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
   place-items:center;
   padding:24px;
   background:#fff;
-  color:#123e2d;
+  color:#0d4778;
   font-family:Inter,"Segoe UI",sans-serif;
 }
 .tfro-system-loader::before{
@@ -1032,13 +1035,13 @@ body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
   position:absolute;
   inset:0;
   opacity:.035;
-  background-image:linear-gradient(30deg,#0b5b41 12%,transparent 12.5%,transparent 87%,#0b5b41 87.5%),linear-gradient(150deg,#0b5b41 12%,transparent 12.5%,transparent 87%,#0b5b41 87.5%);
+  background-image:linear-gradient(30deg,#0d4778 12%,transparent 12.5%,transparent 87%,#0d4778 87.5%),linear-gradient(150deg,#0d4778 12%,transparent 12.5%,transparent 87%,#0d4778 87.5%);
   background-size:42px 72px;
 }
 .tfro-loader-card{position:relative;width:min(390px,90vw);text-align:center;animation:tfroLoaderEnter .55s cubic-bezier(.22,1,.36,1) both;}
-.tfro-loader-card strong{display:block;margin-top:19px;color:#0b5b41;font-size:24px;letter-spacing:.16em;}
-.tfro-loader-card p{margin:7px 0 0;color:#61766e;font-size:13px;letter-spacing:.04em;}
-.tfro-loader-scene{position:relative;height:145px;overflow:hidden;border:1px solid rgba(255,255,255,.16);border-radius:24px;background:linear-gradient(#dff7ed 0 62%,#76b79e 62% 65%,#193d34 65%);box-shadow:0 24px 60px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.4);}
+.tfro-loader-card strong{display:block;margin-top:19px;color:#0d4778;font-size:24px;letter-spacing:.16em;}
+.tfro-loader-card p{margin:7px 0 0;color:#123f73;font-size:13px;letter-spacing:.04em;}
+.tfro-loader-scene{position:relative;height:145px;overflow:hidden;border:1px solid rgba(255,255,255,.16);border-radius:24px;background:linear-gradient(#dff7ed 0 62%,#cbd5e1 62% 65%,#0d4778 65%);box-shadow:0 24px 60px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.4);}
 .tfro-loader-sun{position:absolute;top:19px;right:35px;width:31px;height:31px;border-radius:50%;background:#f4c430;box-shadow:0 0 0 8px rgba(244,196,48,.18),0 0 30px #f4c430;animation:tfroSunPulse 1.5s ease-in-out infinite;}
 .tfro-loader-tricycle{position:absolute;z-index:2;left:50%;bottom:22px;width:205px;transform:translateX(-50%);filter:drop-shadow(0 7px 4px rgba(0,0,0,.25));animation:tfroRide .55s ease-in-out infinite alternate;}
 .tfro-loader-cloud{position:absolute;width:50px;height:13px;border-radius:20px;background:rgba(255,255,255,.68);animation:tfroCloud 4s linear infinite;}
@@ -1082,7 +1085,7 @@ body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
     align-items:center !important;
     border-right:0 !important;
     border-bottom:2px solid #f4c430 !important;
-    box-shadow:0 5px 18px rgba(5,42,30,.2) !important;
+    box-shadow:0 5px 18px rgba(11,47,85,.2) !important;
   }
   body.admin-sidebar .logo{
     flex:0 1 auto;
@@ -1131,9 +1134,9 @@ body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
     overflow-x:auto !important;
     overflow-y:hidden !important;
     scrollbar-width:none;
-    background:linear-gradient(180deg,#11694d,#0a402f);
+    background:linear-gradient(180deg,#123f73,#0d4778);
     border-top:2px solid #f4c430;
-    box-shadow:0 -5px 18px rgba(5,42,30,.2);
+    box-shadow:0 -5px 18px rgba(11,47,85,.2);
   }
   body.admin-sidebar .menu::-webkit-scrollbar{display:none;}
   body.admin-sidebar .menu > li{flex:0 0 70px;margin:0 !important;}
@@ -1234,4 +1237,107 @@ body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
   body.admin-sidebar .franchise-menu-toggle{flex-basis:64px;width:64px !important;}
   body.admin-sidebar .layout > .main-content,
   body.admin-sidebar .dashboard-container > .main-content{padding-inline:10px !important;}
+}
+
+/* Final palette layer stays last so legacy page colors cannot override it. */
+body{background:var(--tfro-blue-50);color:#17324d;}
+.sidebar{background:linear-gradient(165deg,var(--tfro-blue-900) 0%,var(--tfro-blue-800) 58%,var(--tfro-blue-700) 100%) !important;}
+.topbar{border-bottom-color:#d1d5db !important;}
+.topbar h1{color:var(--tfro-blue-900) !important;}
+.topbar p{color:#60758a !important;}
+.add-btn,.new-btn,.login-btn,.save-btn,.mark-btn,.export-btn,.download-btn,.btn-primary{background:linear-gradient(135deg,var(--tfro-blue-800),var(--tfro-blue-700)) !important;border-bottom-color:var(--tfro-yellow) !important;box-shadow:0 4px 12px rgba(13,71,120,.20) !important;}
+.add-btn:hover,.new-btn:hover,.login-btn:hover,.save-btn:hover,.mark-btn:hover,.export-btn:hover,.download-btn:hover,.btn-primary:hover{background:linear-gradient(135deg,var(--tfro-blue-900),var(--tfro-blue-800)) !important;}
+.tfro-table-scroll-controls{border-color:#cbd5e1;border-left-color:var(--tfro-yellow);color:#334155;}
+.tfro-table-scroll-controls > span i{color:var(--tfro-blue-700);}
+.tfro-table-scroll-controls button{background:var(--tfro-blue-700) !important;border-color:#94a3b8 !important;}
+.tfro-table-scroll-controls button:hover:not(:disabled){background:var(--tfro-blue-800) !important;}
+@media(max-width:768px){body.admin-sidebar .menu,body.operator-sidebar .menu{background:linear-gradient(105deg,var(--tfro-blue-900),var(--tfro-blue-800) 62%,var(--tfro-blue-700)) !important;}}
+
+/* Franchise Records intentionally uses a concise, non-scrolling table. */
+body.admin-sidebar .concise-franchise-table,
+body.admin-sidebar .tfro-table-scroll > .concise-franchise-table{width:100% !important;min-width:0 !important;table-layout:fixed !important;white-space:normal !important;}
+body.admin-sidebar .concise-franchise-table th,
+body.admin-sidebar .concise-franchise-table td{font-size:14px !important;}
+body.admin-sidebar .concise-franchise-table th{font-size:13px !important;}
+body.admin-sidebar .concise-franchise-table + .tfro-table-scroll-controls{display:none !important;}
+@media(max-width:768px){body.admin-sidebar .concise-franchise-table{min-width:0 !important;}body.admin-sidebar .concise-franchise-table th{font-size:11px !important;}body.admin-sidebar .concise-franchise-table td{font-size:12px !important;}}
+
+/* Consistent visible grid for every system data table. */
+table{border-collapse:collapse !important;border:1px solid #94a3b8 !important;}
+table th,table td{border:1px solid #cbd5e1 !important;}
+table th{border-color:#94a3b8 !important;}
+table tbody tr:last-child td{border-bottom-color:#94a3b8 !important;}
+
+/* Report previews retain their complete multi-column details and normal rows. */
+body.admin-sidebar .report-modal-body .report-data-table,
+body.admin-sidebar .report-modal-body .tfro-table-scroll > .report-data-table{display:table !important;width:max-content !important;min-width:100% !important;max-width:none !important;table-layout:auto !important;white-space:nowrap !important;}
+body.admin-sidebar .report-modal-body .report-data-table tr{display:table-row !important;height:auto !important;min-height:0 !important;}
+body.admin-sidebar .report-modal-body .report-data-table th,
+body.admin-sidebar .report-modal-body .report-data-table td{display:table-cell !important;width:auto !important;min-width:125px !important;height:auto !important;padding:10px 12px !important;white-space:nowrap !important;}
+
+/* Operational request tables keep their natural eight-column layout. */
+body.admin-sidebar .renewal-requests-table,
+body.admin-sidebar .motor-requests-table,
+body.admin-sidebar .tfro-table-scroll > .renewal-requests-table,
+body.admin-sidebar .tfro-table-scroll > .motor-requests-table{display:table !important;width:100% !important;min-width:940px !important;table-layout:auto !important;white-space:nowrap !important;}
+body.admin-sidebar .renewal-requests-table tr,
+body.admin-sidebar .motor-requests-table tr{display:table-row !important;height:auto !important;min-height:0 !important;}
+body.admin-sidebar .renewal-requests-table th,
+body.admin-sidebar .renewal-requests-table td,
+body.admin-sidebar .motor-requests-table th,
+body.admin-sidebar .motor-requests-table td{display:table-cell !important;width:auto !important;min-width:110px !important;height:auto !important;padding:12px !important;overflow-wrap:normal !important;word-break:normal !important;white-space:nowrap !important;vertical-align:middle !important;}
+body.admin-sidebar .renewal-requests-table th:last-child,
+body.admin-sidebar .renewal-requests-table td:last-child,
+body.admin-sidebar .motor-requests-table th:last-child,
+body.admin-sidebar .motor-requests-table td:last-child{min-width:145px !important;}
+body.admin-sidebar .renewal-requests-table .verify-btn{white-space:nowrap !important;min-width:118px;}
+
+/* Registry-style table UI for all data tables except Franchise Records. */
+body.admin-sidebar table:not(.concise-franchise-table),
+body.operator-sidebar table:not(.concise-franchise-table){
+  border:1px solid #94a3b8 !important;
+  border-radius:0 !important;
+  background:#fff !important;
+  color:#0f172a !important;
+  font-size:13px !important;
+}
+body.admin-sidebar table:not(.concise-franchise-table) thead,
+body.operator-sidebar table:not(.concise-franchise-table) thead{background:#f1f5f9 !important;}
+body.admin-sidebar table:not(.concise-franchise-table) th,
+body.operator-sidebar table:not(.concise-franchise-table) th{
+  height:auto !important;
+  padding:11px 14px !important;
+  border:1px solid #94a3b8 !important;
+  background:#f1f5f9 !important;
+  color:#0b2f55 !important;
+  font-size:11px !important;
+  font-weight:800 !important;
+  line-height:1.25 !important;
+  letter-spacing:.035em;
+  text-align:left !important;
+  text-transform:uppercase;
+  vertical-align:middle !important;
+}
+body.admin-sidebar table:not(.concise-franchise-table) td,
+body.operator-sidebar table:not(.concise-franchise-table) td{
+  height:auto !important;
+  padding:11px 14px !important;
+  border:1px solid #cbd5e1 !important;
+  background:#fff;
+  color:#0f172a !important;
+  font-size:13px !important;
+  line-height:1.35 !important;
+  vertical-align:middle !important;
+}
+body.admin-sidebar table:not(.concise-franchise-table) tbody tr:nth-child(even) td,
+body.operator-sidebar table:not(.concise-franchise-table) tbody tr:nth-child(even) td{background:#f8fafc;}
+body.admin-sidebar table:not(.concise-franchise-table) tbody tr:hover td,
+body.operator-sidebar table:not(.concise-franchise-table) tbody tr:hover td{background:#f1f5f9;}
+body.admin-sidebar .table-card:not(.franchise-records-card),
+body.operator-sidebar .table-card:not(.franchise-records-card){
+  padding:18px !important;
+  border:1px solid #d1d5db !important;
+  border-radius:15px !important;
+  background:#fff !important;
+  box-shadow:0 6px 18px rgba(15,23,42,.06) !important;
 }

@@ -32,7 +32,7 @@
   // it falls back to the full window.
   const scene = trike.parentElement || document.body;
 
-  const SPEED = 320; // px per second
+  const SPEED = 430; // px per second: brisk enough to be noticed immediately
 
   const trikeWidth = trike.offsetWidth || 210;
 
@@ -43,8 +43,10 @@
   // Start fully off-screen to the RIGHT, enter, pass through CENTER,
   // travel to the LEFT, continue forward off-screen, then REPEAT —
   // all within the scene (right registration area) only.
-  const START_X = sceneWidth + trikeWidth + 40;   // off right edge
-  const END_X = -trikeWidth - 40;                 // off left edge
+  // Begin with the front of the tricycle already entering the scene. Starting
+  // beyond the right edge made the animation appear delayed on wide screens.
+  const START_X = Math.max(0, sceneWidth - Math.round(trikeWidth * 0.28));
+  const END_X = -trikeWidth - 16;
 
   let x = START_X;
   trike.style.transform = "translateX(" + x + "px)";

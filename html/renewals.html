@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Franchise Renewals - TFRO</title>
+  <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
   <link rel="stylesheet" href="../css/franchise.css">
   <link rel="stylesheet" href="../css/application.css">
   <link rel="stylesheet" href="../css/renewal-admin.css?v=20260826-190000">
@@ -33,7 +34,7 @@
     <div class="workflow-legend"><span>1–4 Operator Submission</span><i class="ri-arrow-right-line"></i><span>5 Document Verification</span><i class="ri-arrow-right-line"></i><span>6 Vehicle Inspection</span><i class="ri-arrow-right-line"></i><span>7 Assessment &amp; Payment</span><i class="ri-arrow-right-line"></i><span>8 Confirmation</span></div>
     <div class="toolbar"><div class="search-box"><i class="ri-search-line"></i><input id="searchInput" placeholder="Search request, franchise, or operator..."></div><select id="statusFilter"><option value="all">All Status</option><option value="pending_review">Pending Review</option><option value="needs_correction">Not Approved — Incomplete</option><option value="inspection_pending">Inspection Pending</option><option value="awaiting_payment">Awaiting Payment</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></div>
     <div class="date-export-controls renewal-export-controls"><label>Start Date<input type="date" id="startDate"></label><label>End Date<input type="date" id="endDate"></label><button type="button" class="csv-btn" id="exportCsvBtn"><i class="ri-file-excel-2-line"></i> Save CSV</button></div>
-    <div class="table-card"><table><thead><tr><th>Request</th><th>Franchise</th><th>Operator</th><th>Case</th><th>Expiration</th><th>Status</th><th>Submitted</th><th>Action</th></tr></thead><tbody id="renewalsTable"></tbody></table></div>
+    <div class="table-card"><table class="renewal-requests-table"><thead><tr><th>Request</th><th>Franchise</th><th>Operator</th><th>Case</th><th>Expiration</th><th>Status</th><th>Submitted</th><th>Action</th></tr></thead><tbody id="renewalsTable"></tbody></table></div>
   </main>
 </div>
 
