@@ -173,29 +173,29 @@ async function loadCatalog() {
   const { data, error } = await supabase.from("violation_catalog").select("code, violation, penalty").eq("active", true).order("code");
   if (error) throw error;
   catalog = data || [];
-  document.getElementById("violationCode").innerHTML = '<option value="">Select official violation</option>' + catalog.map((item) =>
-    `<option value="${escapeHtml(item.code)}">${escapeHtml(item.code)} — ${escapeHtml(item.violation)} (${money.format(Number(item.penalty))})</option>`
+  document.getElementById("violationChecklist").innerHTML = catalog.map((item) => `
+    <label class="violation-check-option"><input type="checkbox" name="violation_codes" value="${escapeHtml(item.code)}"><span><strong>${escapeHtml(item.code)}</strong>${escapeHtml(item.violation)}<b>${money.format(Number(item.penalty))}</b></span></label>`
   ).join("");
 }
 
 function applyCatalogSelection() {
-  const item = catalog.find((entry) => entry.code === form.elements.violation_code.value);
-  form.elements.violation_type.value = item?.violation || "";
-  form.elements.penalty.value = item ? Number(item.penalty) : "";
+  const selected = [...form.querySelectorAll('input[name="violation_codes"]:checked')]
+    .map((input) => catalog.find((entry) => entry.code === input.value)).filter(Boolean);
+  form.elements.penalty.value = selected.length ? selected.reduce((sum, item) => sum + Number(item.penalty || 0), 0).toFixed(2) : "";
 }
 
 function setFormMode(mode, row = null) {
   form.reset();
   editingViolationId = mode === "edit" ? row.id : null;
   document.getElementById("violationFormTitle").textContent = mode === "edit" ? "Edit Violation" : "Record Violation";
-  document.getElementById("saveViolationBtn").textContent = mode === "edit" ? "Save Changes" : "Save Violation";
-  document.getElementById("saveAndAddViolationBtn").hidden = mode === "edit";
+  document.getElementById("saveViolationBtn").textContent = mode === "edit" ? "Save Changes" : "Save Selected Violations";
 
   if (mode === "edit") {
     form.elements.subject_name.value = row.subject_name || "";
     form.elements.subject_type.value = row.subject_type || "driver";
-    form.elements.violation_code.value = row.violation_code || "";
-    form.elements.violation_type.value = row.violation_type || "";
+    const selectedCode = [...form.querySelectorAll('input[name="violation_codes"]')]
+      .find((input) => input.value === row.violation_code);
+    if (selectedCode) selectedCode.checked = true;
     form.elements.classification.value = row.classification || "with_franchise";
     form.elements.discounted.value = Number(row.discounted || 0).toFixed(2);
     form.elements.franchise_number.value = row.franchise_number || "";
@@ -225,84 +225,67 @@ function closeViolationForm() {
   document.getElementById("addViolationBtn").setAttribute("aria-expanded", "false");
 }
 
-function readEntry() {
+function readEntries() {
   const values = Object.fromEntries(new FormData(form));
-  const penalty = Number(values.penalty);
   const discounted = Number(values.discounted);
+  const selected = [...form.querySelectorAll('input[name="violation_codes"]:checked')]
+    .map((input) => catalog.find((item) => item.code === input.value)).filter(Boolean);
   if (!values.subject_name?.trim()) throw new Error("Subject name is required.");
-  if (!values.violation_code) throw new Error("Select an official violation code.");
-  if (!values.violation_type?.trim()) throw new Error("Violation type is required.");
+  if (!selected.length) throw new Error("Select at least one official violation.");
+  if (editingViolationId && selected.length !== 1) throw new Error("Select exactly one violation when editing.");
   if (!values.occurred_date) throw new Error("Violation date is required.");
-  if (!Number.isFinite(penalty) || penalty < 0) throw new Error("Penalty must be zero or greater.");
   if (!Number.isFinite(discounted) || discounted < 0) throw new Error("Discounted amount must be zero or greater.");
-  if (discounted > penalty) throw new Error("Discounted amount cannot be greater than the penalty.");
-  return {
+  const base = {
     subject_name: values.subject_name.trim(),
     subject_type: values.subject_type,
-    violation_code: values.violation_code,
-    violation_type: values.violation_type.trim(),
     classification: values.classification,
-    discounted,
     franchise_number: values.franchise_number?.trim() || null,
     ticket_number: values.ticket_number?.trim() || null,
     apprehending_officers: values.apprehending_officers?.trim() || null,
     recorded_by: currentUserId,
     description: values.description?.trim() || null,
-    penalty,
     status: values.status,
     occurred_at: `${values.occurred_date}T00:00:00+08:00`,
   };
+  return selected.map((item) => ({ ...base, violation_code: item.code,
+    violation_type: item.violation, penalty: Number(item.penalty || 0),
+    discounted: selected.length === 1 ? discounted : 0 }));
 }
 
 async function saveViolation(event) {
   event.preventDefault();
   const button = event.submitter || document.getElementById("saveViolationBtn");
   const submitButtons = [...form.querySelectorAll('button[type="submit"]')];
-  const addAnother = button.dataset.addAnother === "true" && !editingViolationId;
   const originalLabel = button.textContent;
   const previous = violations.find((row) => String(row.id) === String(editingViolationId));
   try {
-    const entry = readEntry();
+    const entries = readEntries();
     submitButtons.forEach((submitButton) => { submitButton.disabled = true; });
     button.textContent = "Saving...";
 
     const query = editingViolationId
-      ? supabase.from("violations").update(entry).eq("id", editingViolationId)
-      : supabase.from("violations").insert(entry);
-    const { data: saved, error } = await query.select("*").single();
+      ? supabase.from("violations").update(entries[0]).eq("id", editingViolationId)
+      : supabase.from("violations").insert(entries);
+    const { data: savedRows, error } = await query.select("*");
     if (error) throw error;
+    const saved = savedRows[0];
 
     if (editingViolationId) {
       violations = violations.map((row) => String(row.id) === String(saved.id) ? saved : row);
     } else {
-      violations.unshift(saved);
+      violations.unshift(...savedRows);
     }
     const wasEditing = Boolean(editingViolationId);
-    if (addAnother) {
-      setFormMode("add");
-      form.elements.subject_name.value = entry.subject_name;
-      form.elements.subject_type.value = entry.subject_type;
-      form.elements.classification.value = entry.classification;
-      form.elements.franchise_number.value = entry.franchise_number || "";
-      form.elements.ticket_number.value = entry.ticket_number || "";
-      form.elements.apprehending_officers.value = entry.apprehending_officers || "";
-      form.elements.occurred_date.value = dateForInput(entry.occurred_at);
-      form.elements.status.value = entry.status;
-      form.elements.violation_code.focus();
-    } else {
-      closeViolationForm();
-    }
+    closeViolationForm();
     render();
     showToast(wasEditing
       ? "Violation updated successfully."
-      : addAnother
-        ? "Violation saved. Select the next violation for this person."
-        : "Violation recorded successfully.");
+      : `${savedRows.length} violation${savedRows.length === 1 ? "" : "s"} recorded separately.`);
     void logAudit({
       action: wasEditing ? "Updated Violation" : "Recorded Violation",
       actionType: wasEditing ? "update" : "create",
       record: saved.subject_name,
-      description: `${wasEditing ? "Updated" : "Recorded"} ${saved.violation_type} violation for ${saved.subject_name} (${saved.subject_type}) with penalty ${money.format(Number(saved.penalty))}.`,
+      description: `${wasEditing ? "Updated" : "Recorded"} ${savedRows.length} separate violation record(s) for ${saved.subject_name} (${saved.subject_type}).`,
       previousValue: previous ? JSON.stringify(previous) : null,
       newValue: JSON.stringify(saved),
     });
@@ -320,7 +303,7 @@ function bindEvents() {
     document.getElementById("addViolationBtn").addEventListener("click", () => setFormMode("add"));
     document.getElementById("cancelViolationBtn").addEventListener("click", closeViolationForm);
     form.addEventListener("submit", saveViolation);
-    document.getElementById("violationCode").addEventListener("change", applyCatalogSelection);
+    document.getElementById("violationChecklist").addEventListener("change", applyCatalogSelection);
   }
   document.getElementById("searchInput").addEventListener("input", render);
   document.getElementById("statusFilter").addEventListener("change", render);

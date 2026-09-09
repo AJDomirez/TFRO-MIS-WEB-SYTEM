@@ -437,7 +437,7 @@ async function submitDriverApplication(event) {
   const write = editingDriver
     ? supabase.from("drivers").update(driverRecord).eq("id", editingDriver.id).eq("license_status", "not_verified")
     : supabase.from("drivers").insert(driverRecord);
-  const { error } = await write;
+  const { data: savedRows, error } = await write.select("id");
   button.disabled = false;
   button.innerHTML = '<i class="ri-user-add-line"></i> Submit Driver Application';
 
@@ -453,11 +453,13 @@ async function submitDriverApplication(event) {
   }
 
   const wasEditing = Boolean(editingDriver);
+  const savedDriverId = savedRows?.[0]?.id || editingDriver?.id;
   const oldPicturePath = editingDriver?.picture_storage_path;
   if (wasEditing && hasPicture && oldPicturePath && oldPicturePath !== picturePath) {
     await supabase.storage.from("franchise-documents").remove([oldPicturePath]);
   }
   endDriverEdit();
+  if (savedDriverId) await showGeneratedDriverQr(savedDriverId);
   alert(wasEditing ? "Driver application updated." : "Driver application submitted to TFRO Staff for verification.");
   logAudit({
     action: wasEditing ? "Updated Driver Application" : "Submitted Driver Application",
@@ -466,6 +468,21 @@ async function submitDriverApplication(event) {
     description: `Submitted Driver ${driverRecord.full_name} with license ${driverRecord.license_number} for TFRO verification.`,
   });
   await loadAssignedDrivers();
+}
+
+async function showGeneratedDriverQr(driverId) {
+  const panel = document.getElementById("driverGeneratedQrPanel");
+  const qrBox = document.getElementById("driverGeneratedQr");
+  const link = document.getElementById("driverGeneratedQrLink");
+  const { data, error } = await supabase.from("driver_qr_verifications")
+    .select("qr_token").eq("driver_id", driverId).maybeSingle();
+  if (error || !data?.qr_token || !window.QRCode) return;
+  const verificationUrl = new URL(`driververify.html?t=${encodeURIComponent(data.qr_token)}`, window.location.href).href;
+  qrBox.innerHTML = "";
+  new window.QRCode(qrBox, { text: verificationUrl, width: 180, height: 180,
+    colorDark: "#123f73", colorLight: "#ffffff", correctLevel: window.QRCode.CorrectLevel.H });
+  link.href = verificationUrl;
+  panel.hidden = false;
 }
 
 document

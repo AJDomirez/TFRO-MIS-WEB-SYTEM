@@ -177,8 +177,10 @@
       <form id="violationForm">
         <label>Subject name<input name="subject_name" required></label>
         <label>Subject type<select name="subject_type"><option value="driver">Driver</option><option value="operator">Operator</option></select></label>
-        <label>Violation code<select name="violation_code" id="violationCode" required><option value="">Select official violation</option></select></label>
-        <label>Violation<input name="violation_type" required readonly></label>
+        <fieldset class="violation-checklist-field">
+          <legend>Violations <small>Select one or more</small></legend>
+          <div class="violation-checklist" id="violationChecklist"><p>Loading official violations…</p></div>
+        </fieldset>
         <label>Classification<select name="classification"><option value="with_franchise">With Franchise</option><option value="colorum">Colorum</option><option value="temporary">Temporary</option></select></label>
         <label>Discounted Amount (PHP)<input name="discounted" type="number" min="0" step="0.01" value="0" required></label>
         <label>Franchise number<input name="franchise_number" placeholder="Required when applicable"></label>
@@ -190,7 +192,6 @@
         <label>Description<input name="description"></label>
         <div class="violation-form-actions">
           <button class="add-btn" id="saveViolationBtn" type="submit">Save Violation</button>
-          <button class="add-btn secondary-add" id="saveAndAddViolationBtn" type="submit" data-add-another="true">Save &amp; Add Another</button>
           <button type="button" id="cancelViolationBtn">Cancel</button>
         </div>
       </form>
@@ -230,7 +231,7 @@
 
 <div class="violation-toast" id="violationToast" hidden role="status" aria-live="polite"></div>
 
-<script type="module" src="../js/violation.js?v=20260909-150000"></script>
+<script type="module" src="../js/violation.js?v=20260909-153000"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 </body>
 </html>
