@@ -351,3 +351,8 @@ th{
 }
 
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:15px}.qr-verify-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;border:1px solid #e2e8f0;border-radius:9px;background:#f8fafc;color:#123f73;text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap}.qr-verify-btn:hover{background:#dcf2e7}@media(max-width:600px){.topbar{align-items:flex-start;flex-direction:column}}
+.violation-form-actions .secondary-add{
+  border:1px solid #f4c430;
+  background:#0a3158;
+  color:#fff;
+}
