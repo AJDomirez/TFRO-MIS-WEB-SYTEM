@@ -139,9 +139,14 @@ async function printDriverForm() {
     document.body.appendChild(holder);
     const verificationUrl = new URL(`driververify.html?t=${encodeURIComponent(qrRecord.data.qr_token)}`, window.location.href).href;
     new window.QRCode(holder, { text: verificationUrl, width: 220, height: 220, colorDark: "#123f73", colorLight: "#ffffff", correctLevel: window.QRCode.CorrectLevel.H });
+    await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 25)));
     const qr = holder.querySelector("canvas, img");
     qrDataUrl = qr?.tagName === "CANVAS" ? qr.toDataURL("image/png") : qr?.src || "";
     holder.remove();
+  }
+  if (!qrDataUrl) {
+    alert("The Driver QR could not be rendered. Refresh this page and generate the form again.");
+    return;
   }
   const { openSubmissionForm } = await import("./submission-form.js?v=20260909-160000");
   openSubmissionForm({
