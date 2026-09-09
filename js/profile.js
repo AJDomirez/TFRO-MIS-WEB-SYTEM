@@ -70,12 +70,10 @@ async function loadProfile() {
   if (!user) return;
   currentUserId = user.id;
 
-// Select only well-known columns so a missing 'contact_number' column
-  // doesn't break profile loading before the schema is fixed.
   let profile = null;
   const { data: profileData, error: profileError } = await supabase
     .from("profiles")
-    .select("id, role, full_name, contact_number")
+    .select("id, role, full_name")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -93,12 +91,10 @@ async function loadProfile() {
   }
 
   const fullName = profile?.full_name || user.user_metadata?.full_name || "";
-  const contact = profile?.contact_number || user.user_metadata?.contact_number || "";
   const email = user.email || "";
   const role = profile?.role || currentUserRole || "";
   currentUserRole = role;
   const isAdmin = role === "admin";
-  document.getElementById("contactNumberGroup").hidden = isAdmin;
   document.getElementById("settingsTabButton").hidden = !isAdmin;
   if (isAdmin) {
     void loadSystemSettings();
@@ -109,7 +105,6 @@ async function loadProfile() {
   setValue("firstName", names[0] || "");
   setValue("lastName", names.slice(1).join(" ") || "");
   setValue("email", email);
-  if (!isAdmin) setValue("contactNumber", contact);
   setValue("role", roleLabel(role));
 
   const label = roleLabel(role);
@@ -150,15 +145,12 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
 
   const firstName = document.getElementById("firstName").value.trim();
   const lastName = document.getElementById("lastName").value.trim();
-  const contactNumber = document.getElementById("contactNumber").value.trim();
   const fullName = `${firstName} ${lastName}`.trim();
 
   if (!fullName) {
     alert("Please enter your full name.");
     return;
   }
-
-let contactWarned = false;
 
   // 1) Always update the full name first — this is required and its success
   //    is what refreshes the sidebar name.
@@ -179,28 +171,6 @@ let contactWarned = false;
   await supabase.auth.updateUser({
     data: { full_name: fullName },
   }).then(() => {}).catch((err) => console.error("Metadata sync failed:", err));
-
-  // 2) Update the contact number if one was provided. If the column is still
-  //    missing from the database (schema not fixed yet), warn once but do NOT
-  //    block the name update / UI refresh.
-  if (currentUserRole !== "admin" && contactNumber) {
-    const { error: contactError } = await supabase
-      .from("profiles")
-      .update({ contact_number: contactNumber })
-      .eq("id", currentUserId);
-
-    if (contactError) {
-      console.error("Contact number update error:", contactError);
-      if (!contactWarned) {
-        contactWarned = true;
-        alert(
-          "Your name was updated, but the contact number could not be saved. " +
-            "Please run supabase/setup-fix-profiles.sql in the Supabase SQL Editor, " +
-            "then try saving the contact number again."
-        );
-      }
-    }
-  }
 
   await logAudit("Updated profile", fullName);
   alert("Profile updated successfully!");
