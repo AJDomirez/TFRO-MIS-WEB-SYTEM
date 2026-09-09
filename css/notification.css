@@ -37,7 +37,7 @@ body{
 
 .logo p{
   font-size:12px;
-  color:#bfdbfe;
+  color:#cbd5e1;
 }
 .menu {
 list-style: none;
@@ -53,7 +53,7 @@ display: flex;
 align-items: center;
 gap: 10px;
 text-decoration: none;
-color: #dbeafe;
+color: #e2e8f0;
 padding: 12px 16px;
 border-radius: 10px;
 transition: 0.3s;
@@ -95,7 +95,7 @@ font-weight: 600;
   width:34px;
   height:34px;
   border-radius:50%;
-  background:#3b82f6;
+  background:#174f86;
 
   display:flex;
   align-items:center;
@@ -114,7 +114,7 @@ font-weight: 600;
 
 .user-details p{
   font-size:11px;
-  color:#bfdbfe;
+  color:#cbd5e1;
 }
 
 .logout-btn{
@@ -122,7 +122,7 @@ font-weight: 600;
   height:30px;
   border:none;
   background:transparent;
-  color:#dbeafe;
+  color:#e2e8f0;
   border-radius:8px;
   cursor:pointer;
 
@@ -166,7 +166,7 @@ font-weight: 600;
 
 .mark-btn{
   border:none;
-  background:#2563eb;
+  background:#123f73;
   color:white;
   padding:10px 15px;
   border-radius:10px;
@@ -174,7 +174,7 @@ font-weight: 600;
 }
 
 .mark-btn:hover{
-  background:#1d4ed8;
+  background:#163d6b;
 }
 
 /* STATS */
@@ -206,7 +206,7 @@ font-weight: 600;
 }
 
 .notification-card.unread{
-  border-left:5px solid #2563eb;
+  border-left:5px solid #123f73;
 }
 
 .notification-icon{
@@ -261,8 +261,8 @@ font-weight: 600;
 }
 
 .info{
-  background:#dbeafe;
-  color:#2563eb;
+  background:#e2e8f0;
+  color:#123f73;
 }
 
 .warning{
@@ -279,7 +279,7 @@ font-weight: 600;
   margin-top:10px;
   border:0;
   background:transparent;
-  color:#178a5e;
+  color:#163d6b;
   font-weight:700;
   cursor:pointer;
   display:inline-flex;

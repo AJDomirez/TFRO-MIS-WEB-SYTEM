@@ -1,0 +1,80 @@
+{
+  "runAt": "2026-09-08T15:05:49.826Z",
+  "results": [
+    {
+      "name": "All four roles authenticate",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Admin creates/links operator",
+      "result": "PASS",
+      "detail": "record 5"
+    },
+    {
+      "name": "Admin creates linked franchise",
+      "result": "PASS",
+      "detail": "record 125"
+    },
+    {
+      "name": "Operator uploads driver picture",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Operator submits driver",
+      "result": "PASS",
+      "detail": "record 5"
+    },
+    {
+      "name": "Operator uploads change-motor files",
+      "result": "FAIL",
+      "detail": "new row violates row-level security policy; new row violates row-level security policy"
+    },
+    {
+      "name": "Operator submits change-motor request",
+      "result": "PASS",
+      "detail": "record 2"
+    },
+    {
+      "name": "Admin approves change-motor request",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Approval updates franchise vehicle",
+      "result": "PASS",
+      "detail": "{\"engine_number\":\"TEST-ENG-NEW-001\",\"chassis_number\":\"TEST-CHS-NEW-001\",\"plate_number\":\"TEST-PLATE-NEW-001\"}"
+    },
+    {
+      "name": "Enforcer uploads ticket evidence",
+      "result": "FAIL",
+      "detail": "Gateway Timeout"
+    },
+    {
+      "name": "Enforcer submits ticket",
+      "result": "PASS",
+      "detail": "record 2"
+    },
+    {
+      "name": "Operator uploads Treasurer receipt",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Operator submits receipt against ticket",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Staff records payment/release",
+      "result": "PASS",
+      "detail": "record 2"
+    },
+    {
+      "name": "Old motor details preserved in history",
+      "result": "FAIL",
+      "detail": "column change_motor_history.request_id does not exist"
+    }
+  ]
+}

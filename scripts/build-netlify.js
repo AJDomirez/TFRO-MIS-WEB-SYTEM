@@ -4,7 +4,7 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const output = path.join(root, "dist");
 const publicDirectories = ["css", "html", "js", "Logo"];
-const publicRootFiles = ["Tricycle Image.png", "index.html", ".nojekyll"];
+const publicRootFiles = ["Tricycle Image.png", "index.html", ".nojekyll", "service-worker.js"];
 const formTemplateDirectory = path.join(root, "forms");
 
 if (path.dirname(output) !== root || path.basename(output) !== "dist") {

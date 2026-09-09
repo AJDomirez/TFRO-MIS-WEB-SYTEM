@@ -58,10 +58,18 @@ export async function requireRole(allowedRoles) {
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
   document.documentElement.dataset.authState = "checking";
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  let user = null;
+  let userError = null;
+  if (!navigator.onLine) {
+    // getUser requires the network. Offline access is limited to an existing
+    // local session and the cached, server-controlled profile loaded below.
+    const { data: { session } } = await supabase.auth.getSession();
+    user = session?.user || null;
+  } else {
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+    userError = result.error;
+  }
 
   if (userError || !user) {
     clearCachedIdentity();

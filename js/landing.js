@@ -77,3 +77,8 @@ document.addEventListener("DOMContentLoaded", () => {
     yearEl.textContent = new Date().getFullYear();
   }
 });
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("../service-worker.js").catch((error) =>
+    console.warn("Offline application worker could not be registered:", error)
+  );
+}

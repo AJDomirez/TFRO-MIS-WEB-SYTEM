@@ -1,45 +1,45 @@
-.workflow-legend{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:#fff;border:1px solid #e1ebe5;border-radius:12px;padding:13px 16px;margin-bottom:18px;font-size:.78rem;font-weight:700;color:#285443;}
-.workflow-legend i{color:#15915e;}
+.workflow-legend{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:13px 16px;margin-bottom:18px;font-size:.78rem;font-weight:700;color:#123f73;}
+.workflow-legend i{color:#124b7a;}
 .main-content{min-width:0;}
 .main-content>.topbar{padding:4px 2px 14px;margin-bottom:18px;}
-.main-content>.workflow-legend{box-shadow:0 3px 12px rgba(20,72,52,.04);}
-.main-content>.toolbar{min-height:70px;padding:13px 455px 13px 14px;margin-bottom:18px;background:#fff;border:1px solid #e1ebe5;border-radius:12px;box-shadow:0 3px 12px rgba(20,72,52,.04);}
+.main-content>.workflow-legend{box-shadow:0 3px 12px rgba(13,71,120,.04);}
+.main-content>.toolbar{min-height:70px;padding:13px 455px 13px 14px;margin-bottom:18px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 3px 12px rgba(13,71,120,.04);}
 .main-content>.toolbar .search-box{flex:1 1 280px;max-width:390px;min-height:42px;}
 .main-content>.toolbar #statusFilter{min-width:190px;min-height:42px;background:#fff;}
 .renewal-export-controls{position:relative;z-index:2;margin-top:-88px;margin-right:14px;margin-bottom:31px;align-items:end;}
 .renewal-export-controls input[type="date"]{min-width:134px;min-height:42px;}
 .renewal-export-controls .csv-btn{min-height:42px;white-space:nowrap;}
-.main-content>.table-card{margin-top:0;border:1px solid #e1ebe5;border-radius:12px;background:#fff;box-shadow:0 5px 18px rgba(20,72,52,.05);}
+.main-content>.table-card{margin-top:0;border:1px solid #e2e8f0;border-radius:12px;background:#fff;box-shadow:0 5px 18px rgba(13,71,120,.05);}
 .main-content>.table-card table{min-width:940px;}
-.main-content>.table-card thead th{white-space:nowrap;background:#f6faf8;}
+.main-content>.table-card thead th{white-space:nowrap;background:#f8fafc;}
 .renewal-review-modal{max-width:1050px;}
-.review-section{border:1px solid #e1ebe5;border-radius:13px;padding:17px;margin-top:16px;background:#fbfdfc;}
+.review-section{border:1px solid #e2e8f0;border-radius:13px;padding:17px;margin-top:16px;background:#fbfdfc;}
 .review-section-title{display:flex;align-items:center;gap:10px;margin-bottom:15px;}
-.review-section-title>span{width:30px;height:30px;border-radius:50%;background:#126b2a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;}
-.review-section-title h4{color:#153f2f;}
-.review-section-title p{color:#6b8177;font-size:.78rem;margin-top:2px;}
+.review-section-title>span{width:30px;height:30px;border-radius:50%;background:#123f73;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;}
+.review-section-title h4{color:#0d4778;}
+.review-section-title p{color:#64748b;font-size:.78rem;margin-top:2px;}
 .staff-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
-.staff-grid label,.staff-field label{font-size:.8rem;font-weight:700;color:#254a3b;}
-.staff-grid input,.staff-grid select,.staff-field input,.staff-field select,.staff-field textarea{display:block;width:100%;margin-top:6px;padding:10px 11px;border:1px solid #d5e2da;border-radius:9px;background:#fff;}
+.staff-grid label,.staff-field label{font-size:.8rem;font-weight:700;color:#0d4778;}
+.staff-grid input,.staff-grid select,.staff-field input,.staff-field select,.staff-field textarea{display:block;width:100%;margin-top:6px;padding:10px 11px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;}
 .staff-field{margin:12px 0;}
 .inspection-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;}
-.inspection-grid label,.checkbox-field{display:flex!important;align-items:center;gap:8px;background:#fff;border:1px solid #dfe9e3;border-radius:9px;padding:10px;font-size:.8rem;color:#254a3b;}
+.inspection-grid label,.checkbox-field{display:flex!important;align-items:center;gap:8px;background:#fff;border:1px solid #dfe9e3;border-radius:9px;padding:10px;font-size:.8rem;color:#0d4778;}
 .inspection-grid input,.checkbox-field input{width:auto;margin:0;}
 .tfro004-inspection{grid-template-columns:repeat(2,minmax(0,1fr));}
 .tfro004-inspection label{align-items:flex-start;line-height:1.35;}
 .renewal-doc-row{display:grid;grid-template-columns:minmax(180px,1fr) auto minmax(180px,1fr);align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #e4ece7;}
 .renewal-doc-row:last-child{border-bottom:0;}
-.renewal-doc-row strong{font-size:.82rem;color:#234839;}
+.renewal-doc-row strong{font-size:.82rem;color:#0d4778;}
 .renewal-doc-actions{display:flex;gap:7px;align-items:center;}
-.renewal-doc-actions select{padding:7px;border:1px solid #d5e2da;border-radius:8px;background:#fff;font-size:.78rem;}
-.renewal-doc-row input{padding:8px;border:1px solid #d5e2da;border-radius:8px;font-size:.78rem;width:100%;}
+.renewal-doc-actions select{padding:7px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;font-size:.78rem;}
+.renewal-doc-row input{padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-size:.78rem;width:100%;}
 .renewal-actions{position:sticky;bottom:-22px;display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:stretch;gap:10px;background:#fff;padding:16px 0 4px;z-index:2;}
 .renewal-actions button{min-height:46px;justify-content:center;text-align:center;line-height:1.2}.renewal-actions .form-action-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:1 1 138px;max-width:160px;height:46px;padding:10px 14px;white-space:nowrap}.renewal-actions .form-action-button i{display:inline-flex;width:18px;justify-content:center;font-size:18px;line-height:1}.renewal-actions .form-action-button span{line-height:1}.renewal-actions #sendTemporaryMtopBtn{flex:1 1 165px;max-width:190px}.renewal-actions #incompleteBtn{flex:1 1 185px;max-width:220px}.renewal-actions #saveProgressBtn,.renewal-actions #approveRenewalBtn{flex:1 1 145px;max-width:175px}.renewal-actions [hidden]{display:none!important}
 #reviewModal .renewal-actions{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(145px,1fr))!important;justify-content:stretch!important;align-items:stretch!important;gap:10px!important;width:100%!important;overflow:visible!important}
 #reviewModal .renewal-actions button{display:inline-flex;align-items:center;justify-content:center;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;white-space:normal!important}
 #reviewModal .renewal-actions button[hidden]{display:none!important}
 .status-badge{display:inline-flex;padding:5px 10px;border-radius:99px;font-size:.74rem;font-weight:700;text-transform:capitalize;}
-.status-badge.approved{background:#dcfce7;color:#15803d;}.status-badge.rejected{background:#fee2e2;color:#b91c1c;}.status-badge.pending{background:#fef3c7;color:#92400e;}
+.status-badge.approved{background:#e2e8f0;color:#163d6b;}.status-badge.rejected{background:#fee2e2;color:#b91c1c;}.status-badge.pending{background:#fef3c7;color:#92400e;}
 @media(max-width:1180px){.main-content>.toolbar{padding-right:14px}.renewal-export-controls{position:static;margin:0 0 18px;justify-content:flex-start}.renewal-export-controls label{flex:1}.renewal-export-controls input[type="date"]{width:100%}}
 @media(max-width:800px){.staff-grid,.inspection-grid{grid-template-columns:1fr 1fr}.renewal-doc-row{grid-template-columns:1fr}.renewal-actions{position:static;flex-direction:column}.renewal-actions button{width:100%;justify-content:center}.main-content>.toolbar .search-box,.main-content>.toolbar #statusFilter{width:100%;max-width:none}.renewal-export-controls{align-items:stretch}.renewal-export-controls label{flex:1 1 140px}.renewal-export-controls .csv-btn{flex:1 1 100%}}
 @media(max-width:520px){.staff-grid,.inspection-grid{grid-template-columns:1fr}}

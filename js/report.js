@@ -125,36 +125,25 @@ const reportDefinitions = {
       ]);
     },
   },
-  applications: {
-    title: "Franchise Applications Report", description: "Submitted MTOP/franchise applications with verification and approval status.",
-    icon: "ri-file-add-line", accent: "teal",
-    headers: ["Application Code", "Franchise No.", "Operator", "Route", "Status", "Complete", "Submitted"],
-    async load(period) {
-      const rows = await selectRows("franchise_applications", "application_code,franchise_number,operator_name,route,status,info_complete,created_at", { order: "created_at" });
-      return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
-        text(row.application_code), text(row.franchise_number), text(row.operator_name), text(row.route), text(row.status), row.info_complete ? "Yes" : "No", formatDate(row.created_at),
-      ]);
-    },
-  },
   renewals: {
     title: "Franchise Renewals / MTOP Report", description: "Renewal requests, assessment, payment, MTOP issuance, and current status.",
     icon: "ri-refresh-line", accent: "yellow",
-    headers: ["Renewal Code", "Franchise / MTOP", "Operator", "Renewal Type", "Status", "Payment", "Submitted"],
+    headers: ["Renewal Code", "Franchise / MTOP", "Operator", "Address", "Contact", "Renewal Type", "Current Expiry", "Driver", "Driver License", "Plate", "Engine", "Chassis", "Assessment #", "Amount", "Payment", "Payment OR", "MTOP #", "Status", "Remarks", "Submitted"],
     async load(period) {
-      const rows = await selectRows("franchise_renewals", "renewal_code,franchise_id,franchise:franchises!franchise_renewals_franchise_id_fkey(franchise_number),operator_name,renewal_type,status,payment_status,created_at", { order: "created_at" });
+      const rows = await selectRows("franchise_renewals", "renewal_code,franchise_id,franchise:franchises!franchise_renewals_franchise_id_fkey(franchise_number),operator_name,operator_address,operator_contact,renewal_type,current_expiration_date,driver_name,driver_license_number,plate_number,engine_number,chassis_number,assessment_number,assessed_amount,payment_status,payment_or_number,mtop_number,status,decision_reason,created_at", { order: "created_at" });
       return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
-        text(row.renewal_code), text(row.franchise?.franchise_number || row.franchise_id), text(row.operator_name), text(row.renewal_type), text(row.status), text(row.payment_status), formatDate(row.created_at),
+        text(row.renewal_code), text(row.franchise?.franchise_number || row.franchise_id), text(row.operator_name), text(row.operator_address), text(row.operator_contact), text(row.renewal_type), formatDate(row.current_expiration_date), text(row.driver_name), text(row.driver_license_number), text(row.plate_number), text(row.engine_number), text(row.chassis_number), text(row.assessment_number), text(row.assessed_amount), text(row.payment_status), text(row.payment_or_number), text(row.mtop_number), text(row.status), text(row.decision_reason), formatDate(row.created_at),
       ]);
     },
   },
   motorRequests: {
     title: "Change Motor Requests Report", description: "Change motor applications with old/new vehicle details and review status.",
     icon: "ri-settings-5-line", accent: "orange",
-    headers: ["Request Code", "Franchise", "New Brand", "New Engine", "New Chassis", "Status", "Submitted"],
+    headers: ["Request Code", "Franchise", "Current Brand", "Current Model", "Current Engine", "Current Chassis", "Current Plate", "New Brand", "Motor Serial", "New Engine", "New Chassis", "New Plate", "Status", "Submitted"],
     async load(period) {
-      const rows = await selectRows("change_motor_requests", "request_code,franchise_id,franchise:franchises!change_motor_requests_franchise_id_fkey(franchise_number),new_motor_brand,new_engine_number,new_chassis_number,status,created_at", { order: "created_at" });
+      const rows = await selectRows("change_motor_requests", "request_code,franchise_id,franchise:franchises!change_motor_requests_franchise_id_fkey(franchise_number),old_motor_brand,old_motor_model,old_engine_number,old_chassis_number,old_plate_number,new_motor_brand,new_motor_serial,new_engine_number,new_chassis_number,new_plate_number,status,created_at", { order: "created_at" });
       return rows.filter((row) => withinPeriod(row.created_at, period)).map((row) => [
-        text(row.request_code), text(row.franchise?.franchise_number || row.franchise_id), text(row.new_motor_brand), text(row.new_engine_number), text(row.new_chassis_number), text(row.status), formatDate(row.created_at),
+        text(row.request_code), text(row.franchise?.franchise_number || row.franchise_id), text(row.old_motor_brand), text(row.old_motor_model), text(row.old_engine_number), text(row.old_chassis_number), text(row.old_plate_number), text(row.new_motor_brand), text(row.new_motor_serial), text(row.new_engine_number), text(row.new_chassis_number), text(row.new_plate_number), text(row.status), formatDate(row.created_at),
       ]);
     },
   },
@@ -205,7 +194,7 @@ const reportDefinitions = {
 };
 
 const accentStyles = {
-  blue: ["#dbeafe", "#1d4ed8"], green: ["#d1fae5", "#047857"], teal: ["#ccfbf1", "#0f766e"],
+  blue: ["#e2e8f0", "#163d6b"], green: ["#f8fafc", "#123f73"], teal: ["#ccfbf1", "#123f73"],
   yellow: ["#fef3c7", "#b45309"], orange: ["#ffedd5", "#c2410c"], purple: ["#ede9fe", "#6d28d9"],
   red: ["#fee2e2", "#b91c1c"], gray: ["#f1f5f9", "#475569"],
 };
@@ -254,7 +243,7 @@ async function ensureAccess() {
 
 function createTableHtml(headers, rows) {
   if (!rows.length) return `<div class="empty-report-state"><i class="ri-inbox-2-line"></i>No records found for the selected report period.</div>`;
-  return `<table><thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  return `<table class="report-data-table"><thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
 }
 
 function showPreview(payload) {
@@ -295,7 +284,7 @@ function savePdf(payload) {
   doc.autoTable({
     startY: 37, head: [payload.headers],
     body: payload.rows.length ? payload.rows : [["No records found for the selected report period.", ...payload.headers.slice(1).map(() => "")]],
-    theme: "grid", headStyles: { fillColor: [15, 118, 88], textColor: 255, fontSize: 8 },
+    theme: "grid", headStyles: { fillColor: [11, 47, 85], textColor: 255, fontSize: 8 },
     bodyStyles: { fontSize: 7.5, textColor: [30, 41, 59] }, alternateRowStyles: { fillColor: [248, 250, 252] },
     margin: { left: 10, right: 10 },
     didDrawPage() {
@@ -314,7 +303,7 @@ function printReport(payload) {
   const table = payload.rows.length
     ? `<table><thead><tr>${payload.headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${payload.rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table>`
     : '<p class="empty">No records found for the selected report period.</p>';
-  printWindow.document.write(`<!doctype html><html><head><title>${escapeHtml(payload.title)}</title><style>@page{size:auto;margin:14mm}body{font:12px Arial,sans-serif;color:#17202a}h1{color:#0f4d3d;margin:0 0 4px}p{margin:0 0 18px;color:#5f6b76}table{width:100%;border-collapse:collapse}th,td{padding:7px;border:1px solid #b8c3cc;text-align:left;vertical-align:top}th{background:#0f7658;color:#fff}.empty{padding:35px;text-align:center;border:1px solid #ccd6dd}.footer{margin-top:14px;font-size:10px;color:#68737d}</style></head><body><h1>TFRO - Lucena City</h1><p>${escapeHtml(payload.title)}<br>Period: ${escapeHtml(payload.periodText)} · ${payload.rows.length} record(s)</p>${table}<div class="footer">Generated ${escapeHtml(new Date().toLocaleString("en-PH"))}</div></body></html>`);
+  printWindow.document.write(`<!doctype html><html><head><title>${escapeHtml(payload.title)}</title><style>@page{size:auto;margin:14mm}body{font:12px Arial,sans-serif;color:#17202a}h1{color:#0d4778;margin:0 0 4px}p{margin:0 0 18px;color:#5f6b76}table{width:100%;border-collapse:collapse}th,td{padding:7px;border:1px solid #b8c3cc;text-align:left;vertical-align:top}th{background:#123f73;color:#fff}.empty{padding:35px;text-align:center;border:1px solid #ccd6dd}.footer{margin-top:14px;font-size:10px;color:#68737d}</style></head><body><h1>TFRO - Lucena City</h1><p>${escapeHtml(payload.title)}<br>Period: ${escapeHtml(payload.periodText)} · ${payload.rows.length} record(s)</p>${table}<div class="footer">Generated ${escapeHtml(new Date().toLocaleString("en-PH"))}</div></body></html>`);
   printWindow.document.close();
   printWindow.addEventListener("load", () => { printWindow.focus(); printWindow.print(); }, { once: true });
 }

@@ -1,5 +1,7 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/+esm";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./supabase-config.js";
+import { initializeOfflineSync, offlineFetch } from "./offline-sync.js";
+import "./offline-status.js";
 
 if (
   SUPABASE_URL === "PASTE_YOUR_PROJECT_URL_HERE" ||
@@ -9,9 +11,12 @@ if (
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  global: { fetch: offlineFetch },
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
   },
 });
+
+initializeOfflineSync(supabase);

@@ -46,6 +46,12 @@ function formatDate(value) {
   return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" });
 }
 
+function conciseFranchiseNumber(value) {
+  const text = String(value ?? "").trim();
+  const trailingNumber = text.match(/(\d+)$/)?.[1];
+  return trailingNumber ? trailingNumber.padStart(4, "0") : (text || "—");
+}
+
 function ageFromBirthDate(value) {
   if (!value) return "—";
   const birthDate = new Date(`${value}T00:00:00`);
@@ -218,33 +224,12 @@ function renderTable() {
   table.innerHTML = rows.length ? rows.map((row) => {
     const status = displayStatus(row.status);
     return `<tr>
-      <td>${escapeHtml(row.franchise_number)}</td>
-      <td>${escapeHtml(row.previous_registration) || "—"}</td>
-      <td>${escapeHtml(row.operator_name)}</td>
-      <td>${formatRegistrationDate(row)}</td>
-      <td>${escapeHtml(monthName(row.registration_month))}</td>
-      <td>${escapeHtml(row.registration_day) || "—"}</td>
-      <td>${escapeHtml(row.registration_year) || "—"}</td>
+      <td class="franchise-number">${escapeHtml(conciseFranchiseNumber(row.franchise_number))}</td>
+      <td>${escapeHtml(row.operator_name) || "—"}</td>
+      <td>${escapeHtml(row.address) || "—"}</td>
       <td>${escapeHtml(formatDate(row.previous_mtop_expiration))}</td>
       <td>${escapeHtml(formatDate(row.expiration_date))}</td>
-      <td>${escapeHtml(row.address) || "—"}</td>
-      <td>${escapeHtml(ageFromBirthDate(row.birth_date))}</td>
-      <td>${escapeHtml(row.birth_place) || "—"}</td>
-      <td>${escapeHtml(formatDate(row.birth_date))}</td>
-      <td>${escapeHtml(row.civil_status) || "—"}</td>
-      <td>${escapeHtml(row.barangay_clearance_cedula) || "—"}</td>
-      <td>${escapeHtml(row.motorcycle_brand) || "—"}</td>
-      <td>${escapeHtml(row.motorcycle_year_model) || "—"}</td>
-      <td>${escapeHtml(row.engine_number) || "—"}</td>
-      <td>${escapeHtml(row.engine_cr_number) || "—"}</td>
-      <td>${escapeHtml(row.chassis_number) || "—"}</td>
-      <td>${escapeHtml(row.chassis_cr_number) || "—"}</td>
-      <td>${escapeHtml(row.plate_number) || "—"}</td>
-      <td>${escapeHtml(row.contact_number) || "—"}</td>
       <td>${escapeHtml(row.toda_name) || "—"}</td>
-      <td>${escapeHtml(row.official_receipt_number) || "—"}</td>
-      <td>${escapeHtml(row.driver_name) || "—"}</td>
-      <td>${escapeHtml(row.driver_contact_number) || "—"}</td>
       <td>
         <div class="actions">
           <button data-action="view" data-id="${row.id}" title="View"><i class="ri-eye-line"></i></button>
@@ -254,17 +239,21 @@ function renderTable() {
         </div>
       </td>
     </tr>`;
-  }).join("") : '<tr><td colspan="28">No franchise records found.</td></tr>';
+  }).join("") : '<tr><td colspan="7">No franchise records found.</td></tr>';
 }
 
 async function loadFranchises() {
-  const { data, error } = await supabase.from("franchises").select("*").order("created_at", { ascending: false });
+  const { data, error } = await supabase.from("franchises").select("*").order("franchise_number", { ascending: true });
   if (error) {
     console.error(error);
     showToast("Could not load franchises. Check database setup.");
     return;
   }
-  franchises = data || [];
+  franchises = (data || []).sort((a, b) => String(a.franchise_number || "").localeCompare(
+    String(b.franchise_number || ""),
+    undefined,
+    { numeric: true, sensitivity: "base" },
+  ));
   renderTable();
   const selector = el("edit_record_selector");
   if (selector) {

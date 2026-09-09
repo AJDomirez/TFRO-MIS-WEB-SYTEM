@@ -5,7 +5,7 @@ const path = require("node:path");
 const root = __dirname;
 const port = Number(process.env.PORT) || 5500;
 const publicDirectories = new Set(["css", "html", "js", "Logo"]);
-const publicRootFiles = new Set(["Tricycle Image.png"]);
+const publicRootFiles = new Set(["Tricycle Image.png", "service-worker.js"]);
 
 const mimeTypes = {
   ".css": "text/css; charset=utf-8",

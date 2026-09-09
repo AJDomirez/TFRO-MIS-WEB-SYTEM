@@ -35,7 +35,7 @@ body{
 
 .logo p{
   font-size:12px;
-  color:#bfdbfe;
+  color:#cbd5e1;
 }
 .menu {
 list-style: none;
@@ -51,7 +51,7 @@ display: flex;
 align-items: center;
 gap: 10px;
 text-decoration: none;
-color: #dbeafe;
+color: #e2e8f0;
 padding: 12px 16px;
 border-radius: 10px;
 transition: 0.3s;
@@ -93,7 +93,7 @@ font-weight: 600;
   width:34px;
   height:34px;
   border-radius:50%;
-  background:#3b82f6;
+  background:#174f86;
 
   display:flex;
   align-items:center;
@@ -112,7 +112,7 @@ font-weight: 600;
 
 .user-details p{
   font-size:11px;
-  color:#bfdbfe;
+  color:#cbd5e1;
 }
 
 .logout-btn{
@@ -120,7 +120,7 @@ font-weight: 600;
   height:30px;
   border:none;
   background:transparent;
-  color:#dbeafe;
+  color:#e2e8f0;
   border-radius:8px;
   cursor:pointer;
 
@@ -168,7 +168,7 @@ font-weight: 600;
 }
 
 .card h2{
-  color:#1d4ed8;
+  color:#163d6b;
   margin-bottom:5px;
 }
 
@@ -212,7 +212,7 @@ select{
 }
 
 .add-btn{
-  background:#1d4ed8;
+  background:#163d6b;
   color:white;
   border:none;
   padding:10px 16px;
@@ -251,8 +251,8 @@ td{
 }
 
 .paid{
-  background:#d1fae5;
-  color:#065f46;
+  background:#e2e8f0;
+  color:#0d4778;
 }
 
 .pending{
@@ -272,13 +272,13 @@ td{
 }
 
 .application{
-  background:#dbeafe;
-  color:#1d4ed8;
+  background:#e2e8f0;
+  color:#163d6b;
 }
 
 .renewal{
-  background:#ccfbf1;
-  color:#0f766e;
+  background:#e2e8f0;
+  color:#124b7a;
 }
 
 .penalty{
@@ -299,8 +299,8 @@ td{
   padding:7px 9px;
   border:1px solid #d7e3dd;
   border-radius:7px;
-  background:#f7faf8;
-  color:#176348;
+  background:#f8fafc;
+  color:#123f73;
   cursor:pointer;
   font-size:12px;
   font-weight:700;
@@ -315,12 +315,12 @@ td{
 .modal-close { border: 0; background: transparent; font-size: 1.75rem; line-height: 1; cursor: pointer; }
 .payment-modal-card label { display: grid; gap: .35rem; margin: .8rem 0; font-weight: 600; }
 .payment-modal-card input, .payment-modal-card select { padding: .7rem; border: 1px solid #cbd5e1; border-radius: 7px; font: inherit; }
-.payment-modal-card input[readonly] { background: #f1f5f9; color: #0f5132; font-weight: 700; cursor: not-allowed; }
-.payment-confirmation { display: flex; gap: .55rem; padding: .8rem; border: 1px solid #a7f3d0; border-radius: 8px; background: #ecfdf5; color: #065f46; font-size: .85rem; line-height: 1.4; }
+.payment-modal-card input[readonly] { background: #f1f5f9; color: #123f73; font-weight: 700; cursor: not-allowed; }
+.payment-confirmation { display: flex; gap: .55rem; padding: .8rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; color: #0d4778; font-size: .85rem; line-height: 1.4; }
 .payment-confirmation i { font-size: 1.2rem; }
 .actions button[disabled] { color: #94a3b8; cursor: not-allowed; }
 .print-state { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; color: #64748b; }
 .payment-modal-actions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.25rem; }
 .payment-modal-actions > button:not(.add-btn) { padding: .65rem 1rem; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; cursor: pointer; }
-.receipt-ready-modal[hidden]{display:none}.receipt-ready-modal{position:fixed;inset:0;z-index:1500;display:grid;place-items:center;padding:18px;background:rgba(7,35,26,.66);backdrop-filter:blur(4px)}.receipt-ready-card{width:min(100%,460px);padding:30px;border-top:5px solid #f4c430;border-radius:18px;background:#fff;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.3)}.receipt-success-icon{color:#189667;font-size:58px;line-height:1}.receipt-eyebrow{display:block;margin-top:8px;color:#b77e00;font-size:10px;font-weight:900;letter-spacing:.14em}.receipt-ready-card h2{margin:6px 0 8px;color:#153c2f}.receipt-ready-card>p{margin:0 auto 20px;color:#667970;line-height:1.5}.receipt-ready-summary{display:grid;grid-template-columns:1fr auto;gap:9px;padding:15px;border-radius:11px;background:#f2f8f5;text-align:left}.receipt-ready-summary span{color:#6c7e76;font-size:12px}.receipt-ready-summary strong{color:#173d30}.receipt-ready-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:20px}.receipt-ready-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px;border-radius:9px;font-weight:800;cursor:pointer}.receipt-print-button{border:0;border-bottom:3px solid #f4c430;background:#16845c;color:#fff}.receipt-view-button{border:1px solid #b8d2c6;background:#fff;color:#176348}.receipt-done-button{margin-top:13px;border:0;background:transparent;color:#63756e;font-weight:700;cursor:pointer}@media(max-width:480px){.receipt-ready-actions{grid-template-columns:1fr}}
-.release-details{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:8px 0;padding:15px;border:1px solid #c9ddd2;border-radius:12px}.release-details legend{padding:0 8px;font-weight:800;color:#155f45}@media(max-width:700px){.release-details{grid-template-columns:1fr}}
+.receipt-ready-modal[hidden]{display:none}.receipt-ready-modal{position:fixed;inset:0;z-index:1500;display:grid;place-items:center;padding:18px;background:rgba(13,71,120,.66);backdrop-filter:blur(4px)}.receipt-ready-card{width:min(100%,460px);padding:30px;border-top:5px solid #f4c430;border-radius:18px;background:#fff;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.3)}.receipt-success-icon{color:#174f86;font-size:58px;line-height:1}.receipt-eyebrow{display:block;margin-top:8px;color:#b77e00;font-size:10px;font-weight:900;letter-spacing:.14em}.receipt-ready-card h2{margin:6px 0 8px;color:#0d4778}.receipt-ready-card>p{margin:0 auto 20px;color:#667970;line-height:1.5}.receipt-ready-summary{display:grid;grid-template-columns:1fr auto;gap:9px;padding:15px;border-radius:11px;background:#f2f8f5;text-align:left}.receipt-ready-summary span{color:#6c7e76;font-size:12px}.receipt-ready-summary strong{color:#0d4778}.receipt-ready-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:20px}.receipt-ready-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px;border-radius:9px;font-weight:800;cursor:pointer}.receipt-print-button{border:0;border-bottom:3px solid #f4c430;background:#174f86;color:#fff}.receipt-view-button{border:1px solid #cbd5e1;background:#fff;color:#123f73}.receipt-done-button{margin-top:13px;border:0;background:transparent;color:#63756e;font-weight:700;cursor:pointer}@media(max-width:480px){.receipt-ready-actions{grid-template-columns:1fr}}
+.release-details{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:8px 0;padding:15px;border:1px solid #c9ddd2;border-radius:12px}.release-details legend{padding:0 8px;font-weight:800;color:#123f73}@media(max-width:700px){.release-details{grid-template-columns:1fr}}

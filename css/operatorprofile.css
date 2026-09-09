@@ -39,7 +39,7 @@ body{
 
 .logo p{
   font-size:12px;
-  color:#bfdbfe;
+  color:#cbd5e1;
 }
 
 /* MENU */
@@ -57,7 +57,7 @@ body{
   align-items:center;
   gap:10px;
   text-decoration:none;
-  color:#dbeafe;
+  color:#e2e8f0;
   padding:12px 16px;
   border-radius:10px;
   transition:0.3s;
@@ -93,7 +93,7 @@ body{
   width:35px;
   height:35px;
   border-radius:50%;
-  background:#2563eb;
+  background:#123f73;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -107,7 +107,7 @@ body{
 
 .user-details p{
   font-size:11px;
-  color:#bfdbfe;
+  color:#cbd5e1;
 }
 
 .logout-btn{
@@ -157,7 +157,7 @@ body{
   width:60px;
   height:60px;
   border-radius:50%;
-  background:#2563eb;
+  background:#123f73;
   color:white;
   display:flex;
   align-items:center;
@@ -207,13 +207,13 @@ body{
 }
 
 .form-group input:focus{
-  border-color:#2563eb;
+  border-color:#123f73;
 }
 
 .save-btn{
   margin-top:25px;
   padding:12px 20px;
-  background:#2563eb;
+  background:#123f73;
   color:white;
   border:none;
   border-radius:10px;
@@ -222,7 +222,7 @@ body{
 }
 
 .save-btn:hover{
-  background:#1d4ed8;
+  background:#163d6b;
 }
 
 /* TABS */

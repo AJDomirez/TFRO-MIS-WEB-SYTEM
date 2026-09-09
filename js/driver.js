@@ -260,7 +260,7 @@ async function openDriverQr(id) {
   const qrBox = document.getElementById("driverQrCode");
   qrBox.innerHTML = "";
   if (!window.QRCode) return alert("The QR generator could not load. Check your internet connection and try again.");
-  new window.QRCode(qrBox, { text: currentQrUrl, width: 220, height: 220, colorDark: "#0b5138", colorLight: "#ffffff", correctLevel: window.QRCode.CorrectLevel.H });
+  new window.QRCode(qrBox, { text: currentQrUrl, width: 220, height: 220, colorDark: "#123f73", colorLight: "#ffffff", correctLevel: window.QRCode.CorrectLevel.H });
   document.getElementById("driverQrName").textContent = driver.full_name;
   document.getElementById("driverQrLicense").textContent = `License: ${driver.license_number}`;
   document.getElementById("openDriverQrBtn").href = currentQrUrl;
@@ -274,7 +274,7 @@ function printDriverQr() {
   if (!source) return;
   const tab = window.open("", "_blank");
   if (!tab) return alert("Please allow pop-ups to print the QR card.");
-  tab.document.write(`<!doctype html><html><head><title>Driver QR</title><style>body{font-family:Arial;text-align:center;padding:30px}.card{display:inline-block;padding:24px;border:3px solid #0b5138;border-radius:16px}.card img{width:260px}.brand{color:#0b5138;font-weight:800}.license{font-weight:700}@media print{button{display:none}}</style></head><body><div class="card"><div class="brand">TFRO MIS · VERIFIED DRIVER RECORD</div><h2>${escapeHtml(currentDriver.full_name)}</h2><img src="${source}"><p class="license">License: ${escapeHtml(currentDriver.license_number)}</p><small>Scan and sign in to authenticate this Driver record.</small></div><p><button onclick="print()">Print QR Card</button></p></body></html>`);
+  tab.document.write(`<!doctype html><html><head><title>Driver QR</title><style>body{font-family:Arial;text-align:center;padding:30px}.card{display:inline-block;padding:24px;border:3px solid #123f73;border-radius:16px}.card img{width:260px}.brand{color:#123f73;font-weight:800}.license{font-weight:700}@media print{button{display:none}}</style></head><body><div class="card"><div class="brand">TFRO MIS · VERIFIED DRIVER RECORD</div><h2>${escapeHtml(currentDriver.full_name)}</h2><img src="${source}"><p class="license">License: ${escapeHtml(currentDriver.license_number)}</p><small>Scan and sign in to authenticate this Driver record.</small></div><p><button onclick="print()">Print QR Card</button></p></body></html>`);
   tab.document.close();
 }
 
