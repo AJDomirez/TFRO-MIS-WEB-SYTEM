@@ -189,6 +189,7 @@ function setFormMode(mode, row = null) {
   editingViolationId = mode === "edit" ? row.id : null;
   document.getElementById("violationFormTitle").textContent = mode === "edit" ? "Edit Violation" : "Record Violation";
   document.getElementById("saveViolationBtn").textContent = mode === "edit" ? "Save Changes" : "Save Violation";
+  document.getElementById("saveAndAddViolationBtn").hidden = mode === "edit";
 
   if (mode === "edit") {
     form.elements.subject_name.value = row.subject_name || "";
@@ -255,12 +256,14 @@ function readEntry() {
 
 async function saveViolation(event) {
   event.preventDefault();
-  const button = document.getElementById("saveViolationBtn");
+  const button = event.submitter || document.getElementById("saveViolationBtn");
+  const submitButtons = [...form.querySelectorAll('button[type="submit"]')];
+  const addAnother = button.dataset.addAnother === "true" && !editingViolationId;
   const originalLabel = button.textContent;
   const previous = violations.find((row) => String(row.id) === String(editingViolationId));
   try {
     const entry = readEntry();
-    button.disabled = true;
+    submitButtons.forEach((submitButton) => { submitButton.disabled = true; });
     button.textContent = "Saving...";
 
     const query = editingViolationId
@@ -275,9 +278,26 @@ async function saveViolation(event) {
       violations.unshift(saved);
     }
     const wasEditing = Boolean(editingViolationId);
-    closeViolationForm();
+    if (addAnother) {
+      setFormMode("add");
+      form.elements.subject_name.value = entry.subject_name;
+      form.elements.subject_type.value = entry.subject_type;
+      form.elements.classification.value = entry.classification;
+      form.elements.franchise_number.value = entry.franchise_number || "";
+      form.elements.ticket_number.value = entry.ticket_number || "";
+      form.elements.apprehending_officers.value = entry.apprehending_officers || "";
+      form.elements.occurred_date.value = dateForInput(entry.occurred_at);
+      form.elements.status.value = entry.status;
+      form.elements.violation_code.focus();
+    } else {
+      closeViolationForm();
+    }
     render();
-    showToast(wasEditing ? "Violation updated successfully." : "Violation recorded successfully.");
+    showToast(wasEditing
+      ? "Violation updated successfully."
+      : addAnother
+        ? "Violation saved. Select the next violation for this person."
+        : "Violation recorded successfully.");
     void logAudit({
       action: wasEditing ? "Updated Violation" : "Recorded Violation",
       actionType: wasEditing ? "update" : "create",
@@ -290,8 +310,8 @@ async function saveViolation(event) {
     console.error("Could not save violation:", error);
     window.alert(`Could not save violation: ${error.message}`);
   } finally {
-    button.disabled = false;
-    if (!formPanel.hidden) button.textContent = originalLabel;
+    submitButtons.forEach((submitButton) => { submitButton.disabled = false; });
+    button.textContent = originalLabel;
   }
 }
 

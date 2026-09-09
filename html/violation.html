@@ -188,7 +188,11 @@
         <label>Date<input name="occurred_date" type="date" required></label>
         <label>Status<select name="status"><option value="pending">Pending</option><option value="paid">Paid</option><option value="dismissed">Dismissed</option></select></label>
         <label>Description<input name="description"></label>
-        <div class="violation-form-actions"><button class="add-btn" id="saveViolationBtn" type="submit">Save Violation</button><button type="button" id="cancelViolationBtn">Cancel</button></div>
+        <div class="violation-form-actions">
+          <button class="add-btn" id="saveViolationBtn" type="submit">Save Violation</button>
+          <button class="add-btn secondary-add" id="saveAndAddViolationBtn" type="submit" data-add-another="true">Save &amp; Add Another</button>
+          <button type="button" id="cancelViolationBtn">Cancel</button>
+        </div>
       </form>
     </section>
 
@@ -226,7 +230,7 @@
 
 <div class="violation-toast" id="violationToast" hidden role="status" aria-live="polite"></div>
 
-<script type="module" src="../js/violation.js?v=20260828-6"></script>
+<script type="module" src="../js/violation.js?v=20260909-150000"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 </body>
 </html>
