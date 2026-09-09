@@ -2,7 +2,7 @@ import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
-import { openSubmissionForm } from "./submission-form.js";
+import { openSubmissionForm } from "./submission-form.js?v=20260909-180000";
 
 let requests = [];
 let currentReq = null;

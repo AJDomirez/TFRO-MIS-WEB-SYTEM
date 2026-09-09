@@ -3,3 +3,4 @@
 @page{size:A4;margin:0}
 @media print{aside,.toolbar{display:none!important}#root,main{display:block}.canvas{padding:0;background:white}.paper,.paper.landscape{box-shadow:none;margin:0;page-break-after:always;width:210mm;min-height:297mm;padding-left:14mm;padding-right:14mm}.paper.landscape{width:297mm;min-height:210mm;transform:scale(.707);transform-origin:top left}.fill{background:transparent!important}footer{bottom:6mm}}
 .paper-header:not(.pmbl){height:104px}
+.paper-header,.paper-header.pmbl,.paper-header:not(.pmbl){height:auto}.paper-header img{display:block;width:100%;height:auto;object-fit:contain}.paper-header span,.paper-header.pmbl span{bottom:3px;background:#f5ed00;color:#07341d}footer{border:0;padding:0}footer img{display:block;width:100%;height:auto}
