@@ -28,7 +28,7 @@ export function openSubmissionForm({
   popup.opener = null;
 
   const headerUrl = new URL("../Logo/TFRO-005 Header.png", window.location.href).href;
-  const footerUrl = new URL("../Logo/TFRO-005 Footer.png", window.location.href).href;
+  const footerUrl = new URL("../Logo/TFRO-005 Footer.png?v=20260909-190000", window.location.href).href;
   const rows = fields
     .map(
       ({ label, value }) => `
@@ -116,7 +116,7 @@ export function openRenewalProfileForm({
     window.location.href,
   ).href;
   const tfro005Footer = new URL(
-    "../Logo/TFRO-005 Footer.png",
+    "../Logo/TFRO-005 Footer.png?v=20260909-190000",
     window.location.href,
   ).href;
   const docs = new Set(documentTypes);
