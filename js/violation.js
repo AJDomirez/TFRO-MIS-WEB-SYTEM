@@ -98,7 +98,7 @@ function render() {
           <i class="ri-pencil-line"></i>
         </button>` : ""}
         <button type="button" data-action="order" data-id="${row.id}" title="View TFRO-009 Order of Payment"><i class="ri-file-pdf-2-line"></i></button>
-        ${payment
+        ${payment?.release_date
           ? `<button type="button" class="release-action" data-action="release" data-id="${row.id}" title="View and print TFRO-010 Vehicle/Unit Releasing Slip"><i class="ri-file-check-line"></i><span>Vehicle Release</span></button>`
           : !canEditPdfFields && row.status === "pending"
             ? `<button type="button" class="payment-action" data-action="record-payment" data-id="${row.id}" title="Verify the City Treasurer paper or uploaded receipt, record payment, and enter vehicle-release details"><i class="ri-money-peso-circle-line"></i><span>Record Treasurer Payment</span></button>`
