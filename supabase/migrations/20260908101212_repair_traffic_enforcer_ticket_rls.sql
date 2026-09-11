@@ -51,6 +51,18 @@ using (
   and (select private.is_active_traffic_enforcer((select auth.uid())))
 );
 
+-- Keep ticket evidence authorization on the same non-recursive identity
+-- helper. Directly querying traffic_enforcers here makes Storage authorization
+-- depend on that table's RLS policies and can reject otherwise valid uploads.
+drop policy if exists "Traffic Enforcers upload ticket photos" on storage.objects;
+create policy "Traffic Enforcers upload ticket photos"
+on storage.objects for insert to authenticated
+with check (
+  bucket_id = 'violation-tickets'
+  and (storage.foldername(name))[1] = (select auth.uid()::text)
+  and (select private.is_active_traffic_enforcer((select auth.uid())))
+);
+
 notify pgrst, 'reload schema';
 
 commit;

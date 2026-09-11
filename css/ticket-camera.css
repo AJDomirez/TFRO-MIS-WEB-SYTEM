@@ -28,14 +28,29 @@
   box-shadow: 0 9px 20px rgba(18,63,115,.22);
 }
 
-.camera-card .camera-actions { justify-content: center; }
+.camera-card .camera-actions { align-items:center; justify-content: center; }
+.camera-card .camera-actions [hidden],
+.camera-card .camera-stage[hidden],
+.camera-card .camera-stage [hidden] { display:none !important; }
 .camera-main-btn { min-width: 190px; justify-content: center; padding: 13px 20px !important; font-size: 15px !important; }
 .camera-card .camera-status,
 .camera-card .camera-evidence > small { text-align: center; }
-.camera-card .upload-fallback { justify-content: center; }
+.camera-card .camera-consent{align-items:center;justify-content:center;flex-wrap:wrap;text-align:center}
+.camera-card .camera-consent strong{padding:2px 5px;border-radius:4px;background:#fff1b8;color:#714e00;white-space:nowrap}
+.camera-card .camera-status{width:fit-content;max-width:100%;margin:8px auto 12px;padding:7px 12px;border-radius:999px;background:#edf5f1}
+.camera-card .camera-status.success{background:#e2f5ea}.camera-card .camera-status.error{background:#fff0ee}
+.camera-card .upload-fallback { width:min(100%,560px);margin:14px auto;justify-content:center;padding:12px 14px;border:1px dashed #b9cec4;border-radius:10px;background:#fff; }
+.camera-card .upload-fallback input{min-width:0;max-width:310px;border-radius:7px}
 
 @media (max-width: 650px) {
   .camera-card-heading { align-items: flex-start; }
   .camera-card-heading h2 { font-size: 21px; }
   .camera-card-icon { flex-basis: 48px; width: 48px; height: 48px; font-size: 24px; }
+  .camera-card .camera-actions{display:grid;grid-template-columns:1fr 1fr}
+  .camera-card .camera-actions .camera-btn{width:100%;min-width:0}
+  .camera-card .camera-main-btn{grid-column:1/-1}
+  .camera-card .camera-consent{display:grid;grid-template-columns:auto 1fr;text-align:left}
+  .camera-card .camera-consent strong{padding:0;background:transparent}
+  .camera-card .upload-fallback{align-items:stretch}
+  .camera-card .upload-fallback input{width:100%;max-width:none}
 }
