@@ -12,6 +12,8 @@ let editingViolationId = null;
 let toastTimer = null;
 let canManageViolations = false;
 let canEditPdfFields = false;
+let ticketPhotoObjectUrl = "";
+let ticketPhotoFilename = "ticket-image.jpg";
 
 const table = document.getElementById("violationsTable");
 const formPanel = document.getElementById("violationFormPanel");
@@ -96,7 +98,13 @@ function render() {
           <i class="ri-pencil-line"></i>
         </button>` : ""}
         <button type="button" data-action="order" data-id="${row.id}" title="View TFRO-009 Order of Payment"><i class="ri-file-pdf-2-line"></i></button>
-        ${payment ? `<button type="button" data-action="release" data-id="${row.id}" title="View${canEditPdfFields ? " / Edit" : ""} TFRO-010 Vehicle/Unit Releasing Slip"><i class="ri-file-check-line"></i></button>` : ""}
+        ${payment
+          ? `<button type="button" class="release-action" data-action="release" data-id="${row.id}" title="View and print TFRO-010 Vehicle/Unit Releasing Slip"><i class="ri-file-check-line"></i><span>Vehicle Release</span></button>`
+          : !canEditPdfFields && row.status === "pending" && row.treasurer_receipt_path
+            ? `<button type="button" class="payment-action" data-action="record-payment" data-id="${row.id}" title="Verify the submitted Treasurer receipt, record payment, and enter vehicle-release details"><i class="ri-money-peso-circle-line"></i><span>Record Payment & Release</span></button>`
+            : !canEditPdfFields && row.status === "pending"
+              ? `<span class="workflow-waiting" title="The Operator must submit the City Treasurer receipt before payment can be recorded"><i class="ri-time-line"></i> Awaiting receipt</span>`
+              : ""}
       </div></td>
     </tr>`;
   }).join("") : '<tr><td colspan="12">No violations found.</td></tr>';
@@ -146,12 +154,51 @@ function openVehicleReleaseSlip(row) {
 
 async function openTicketPhoto(row) {
   if (!row.ticket_photo_path) return;
+  const modal = document.getElementById("ticketPhotoModal");
+  const image = document.getElementById("ticketPhotoImage");
+  const status = document.getElementById("ticketPhotoStatus");
+  const controls = [document.getElementById("saveTicketPhotoBtn"), document.getElementById("printTicketPhotoBtn")];
+  document.getElementById("ticketPhotoTitle").textContent = `Ticket ${row.ticket_number || row.id}`;
+  status.textContent = "Loading ticket imageâ€¦";
+  status.hidden = false;
+  image.hidden = true;
+  controls.forEach((control) => { control.disabled = true; });
+  modal.hidden = false;
+  document.body.classList.add("ticket-photo-open");
   const { data, error } = await supabase.storage.from("violation-tickets").createSignedUrl(row.ticket_photo_path, 300);
   if (error) {
-    window.alert(`Could not open ticket photo: ${error.message}`);
+    status.textContent = `Could not open ticket photo: ${error.message}`;
     return;
   }
-  window.open(data.signedUrl, "_blank", "noopener");
+  try {
+    const response = await fetch(data.signedUrl);
+    if (!response.ok) throw new Error(`Image request failed (${response.status})`);
+    const blob = await response.blob();
+    if (ticketPhotoObjectUrl) URL.revokeObjectURL(ticketPhotoObjectUrl);
+    ticketPhotoObjectUrl = URL.createObjectURL(blob);
+    ticketPhotoFilename = `ticket-${String(row.ticket_number || row.id).replace(/[^a-zA-Z0-9._-]/g, "-")}.${blob.type.split("/")[1]?.replace("jpeg", "jpg") || "jpg"}`;
+    image.src = ticketPhotoObjectUrl;
+    image.hidden = false;
+    status.hidden = true;
+    controls.forEach((control) => { control.disabled = false; });
+  } catch (fetchError) {
+    status.textContent = `Could not load ticket photo: ${fetchError.message}`;
+  }
+}
+
+function closeTicketPhoto() {
+  document.getElementById("ticketPhotoModal").hidden = true;
+  document.body.classList.remove("ticket-photo-open");
+}
+
+function saveTicketPhoto() {
+  if (!ticketPhotoObjectUrl) return;
+  const link = document.createElement("a");
+  link.href = ticketPhotoObjectUrl;
+  link.download = ticketPhotoFilename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }
 
 async function loadViolations() {
@@ -314,8 +361,19 @@ function bindEvents() {
     if (!row) return;
     if (button.dataset.action === "edit") setFormMode("edit", row);
     if (button.dataset.action === "photo") void openTicketPhoto(row);
+    if (button.dataset.action === "record-payment") window.location.href = `payment.html?violation=${encodeURIComponent(row.id)}`;
     if (button.dataset.action === "order") printOrderPayment(row);
     if (button.dataset.action === "release") openVehicleReleaseSlip(row);
+  });
+  document.getElementById("closeTicketPhotoBtn").addEventListener("click", closeTicketPhoto);
+  document.getElementById("cancelTicketPhotoBtn").addEventListener("click", closeTicketPhoto);
+  document.getElementById("saveTicketPhotoBtn").addEventListener("click", saveTicketPhoto);
+  document.getElementById("printTicketPhotoBtn").addEventListener("click", () => window.print());
+  document.getElementById("ticketPhotoModal").addEventListener("click", (event) => {
+    if (event.target.id === "ticketPhotoModal") closeTicketPhoto();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !document.getElementById("ticketPhotoModal").hidden) closeTicketPhoto();
   });
   bindDateCsvExport({
     getRows: filteredViolations,

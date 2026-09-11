@@ -6,7 +6,7 @@
   <title>TFRO Violations</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
 
-<link rel="stylesheet" href="../css/violation.css?v=20260909-154500">
+<link rel="stylesheet" href="../css/violation.css?v=20260911-2">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
 
   <!-- Remix Icons -->
@@ -231,7 +231,25 @@
 
 <div class="violation-toast" id="violationToast" hidden role="status" aria-live="polite"></div>
 
-<script type="module" src="../js/violation.js?v=20260909-153000"></script>
+<div class="ticket-photo-modal" id="ticketPhotoModal" hidden role="dialog" aria-modal="true" aria-labelledby="ticketPhotoTitle">
+  <div class="ticket-photo-dialog">
+    <header class="ticket-photo-header">
+      <div><span>Ticket evidence</span><h2 id="ticketPhotoTitle">Violation Ticket Image</h2></div>
+      <button type="button" id="closeTicketPhotoBtn" aria-label="Close ticket image"><i class="ri-close-line"></i></button>
+    </header>
+    <div class="ticket-photo-body">
+      <p class="ticket-photo-status" id="ticketPhotoStatus">Loading ticket imageâ€¦</p>
+      <img id="ticketPhotoImage" alt="Submitted violation ticket evidence" hidden>
+    </div>
+    <footer class="ticket-photo-actions">
+      <button type="button" class="ticket-photo-secondary" id="cancelTicketPhotoBtn">Close</button>
+      <button type="button" class="ticket-photo-primary" id="saveTicketPhotoBtn" disabled><i class="ri-download-2-line"></i> Save Image</button>
+      <button type="button" class="ticket-photo-primary" id="printTicketPhotoBtn" disabled><i class="ri-printer-line"></i> Print</button>
+    </footer>
+  </div>
+</div>
+
+<script type="module" src="../js/violation.js?v=20260911-2"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 </body>
 </html>
