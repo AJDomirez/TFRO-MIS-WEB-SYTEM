@@ -188,7 +188,7 @@
         <label>Apprehending officer/s<input name="apprehending_officers" required></label>
         <label>Penalty (PHP)<input name="penalty" type="number" min="0" step="0.01" required readonly></label>
         <label>Date<input name="occurred_date" type="date" required></label>
-        <label>Status<select name="status"><option value="pending">Pending</option><option value="paid">Paid</option><option value="dismissed">Dismissed</option></select></label>
+        <label>Status<select name="status"><option value="pending">Pending payment</option><option value="paid" disabled>Paid (set after Treasurer payment)</option><option value="dismissed">Dismissed</option></select></label>
         <label>Description<input name="description"></label>
         <div class="violation-form-actions">
           <button class="add-btn" id="saveViolationBtn" type="submit">Save Violation</button>
