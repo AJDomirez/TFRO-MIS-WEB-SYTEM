@@ -6,7 +6,7 @@
   <title>Payments</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
 
-<link rel="stylesheet" href="../css/payment.css?v=20260911-1">
+<link rel="stylesheet" href="../css/payment.css?v=20260911-2">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
 
   <!-- Remix Icons -->
@@ -223,7 +223,8 @@
       <h2 id="paymentModalTitle">Record Payment</h2>
       <button type="button" class="modal-close" id="closePaymentModal" aria-label="Close">&times;</button>
     </div>
-    <label>Violation notice<select id="paymentViolation" name="violation_id"><option value="">Select an unpaid violation</option></select></label>
+    <div class="payment-workflow-note"><i class="ri-information-line"></i><p><strong>Returning from the City Treasurer?</strong> Select the unpaid ticket, verify the paper or uploaded Treasurer receipt, enter its official OR number, then complete the TFRO-010 vehicle-release details.</p></div>
+    <label>Violation ticket / TFRO-009<select id="paymentViolation" name="violation_id" required><option value="">Select an unpaid violation ticket</option></select></label>
     <label>Payer name<input id="paymentPayer" name="payer" required maxlength="100" autocomplete="name"></label>
     <label>Official receipt number<input name="receipt" required maxlength="50" placeholder="City Treasurer OR number"></label>
     <label>Date paid<input name="paid_date" type="date" required></label>
@@ -251,7 +252,7 @@
 
 <div class="receipt-ready-modal" id="receiptReadyModal" hidden role="dialog" aria-modal="true" aria-labelledby="receiptReadyTitle"><div class="receipt-ready-card"><div class="receipt-success-icon"><i class="ri-checkbox-circle-fill"></i></div><span class="receipt-eyebrow">PAYMENT COMPLETED</span><h2 id="receiptReadyTitle">Official Receipt Ready</h2><p>The payment was secured and the receipt was created automatically.</p><div class="receipt-ready-summary"><span>Receipt Number</span><strong id="readyReceiptNumber">—</strong><span>Amount Paid</span><strong id="readyReceiptAmount">₱0.00</strong></div><div class="receipt-ready-actions"><button type="button" class="receipt-print-button" id="printReadyReceipt"><i class="ri-printer-line"></i> Print Official Receipt</button><button type="button" class="receipt-view-button" id="viewReadyReceipt"><i class="ri-eye-line"></i> View Receipt</button></div><button type="button" class="receipt-done-button" id="closeReadyReceipt">Done</button></div></div>
 
-<script type="module" src="../js/payment.js?v=20260911-1"></script>
+<script type="module" src="../js/payment.js?v=20260911-2"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 
 </body>

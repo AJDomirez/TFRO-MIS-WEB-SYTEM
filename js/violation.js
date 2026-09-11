@@ -100,11 +100,9 @@ function render() {
         <button type="button" data-action="order" data-id="${row.id}" title="View TFRO-009 Order of Payment"><i class="ri-file-pdf-2-line"></i></button>
         ${payment
           ? `<button type="button" class="release-action" data-action="release" data-id="${row.id}" title="View and print TFRO-010 Vehicle/Unit Releasing Slip"><i class="ri-file-check-line"></i><span>Vehicle Release</span></button>`
-          : !canEditPdfFields && row.status === "pending" && row.treasurer_receipt_path
-            ? `<button type="button" class="payment-action" data-action="record-payment" data-id="${row.id}" title="Verify the submitted Treasurer receipt, record payment, and enter vehicle-release details"><i class="ri-money-peso-circle-line"></i><span>Record Payment & Release</span></button>`
-            : !canEditPdfFields && row.status === "pending"
-              ? `<span class="workflow-waiting" title="The Operator must submit the City Treasurer receipt before payment can be recorded"><i class="ri-time-line"></i> Awaiting receipt</span>`
-              : ""}
+          : !canEditPdfFields && row.status === "pending"
+            ? `<button type="button" class="payment-action" data-action="record-payment" data-id="${row.id}" title="Verify the City Treasurer paper or uploaded receipt, record payment, and enter vehicle-release details"><i class="ri-money-peso-circle-line"></i><span>Record Treasurer Payment</span></button>`
+            : ""}
       </div></td>
     </tr>`;
   }).join("") : '<tr><td colspan="12">No violations found.</td></tr>';
