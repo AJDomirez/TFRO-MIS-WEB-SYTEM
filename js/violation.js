@@ -297,6 +297,14 @@ function readEntries() {
     discounted: selected.length === 1 ? discounted : 0 }));
 }
 
+async function resolveDriverId(subjectName) {
+  const { data, error } = await supabase.from("drivers").select("id,full_name");
+  if (error) throw new Error(`Could not match the Driver record: ${error.message}`);
+  const normalizedName = String(subjectName || "").trim().toLocaleLowerCase();
+  const matches = (data || []).filter((driver) => String(driver.full_name || "").trim().toLocaleLowerCase() === normalizedName);
+  return matches.length === 1 ? matches[0].id : null;
+}
+
 async function saveViolation(event) {
   event.preventDefault();
   const button = event.submitter || document.getElementById("saveViolationBtn");
@@ -305,6 +313,10 @@ async function saveViolation(event) {
   const previous = violations.find((row) => String(row.id) === String(editingViolationId));
   try {
     const entries = readEntries();
+    if (entries[0]?.subject_type === "driver") {
+      const driverId = await resolveDriverId(entries[0].subject_name);
+      entries.forEach((entry) => { entry.driver_id = driverId; });
+    }
     submitButtons.forEach((submitButton) => { submitButton.disabled = true; });
     button.textContent = "Saving...";
 

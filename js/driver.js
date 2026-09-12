@@ -14,6 +14,7 @@ function writeAudit(entry) {
 }
 
 let drivers = [];
+let driverChanges = null;
 const table = document.getElementById("driversTable");
 function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" })[c]); }
 function initials(name) { return name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase(); }
@@ -51,10 +52,19 @@ async function loadDrivers() {
   }
   drivers = data || []; render();
 }
+
+function watchDriverChanges() {
+  if (driverChanges) return;
+  driverChanges = supabase.channel("admin-driver-registry")
+    .on("postgres_changes", { event: "*", schema: "public", table: "drivers" }, () => void loadDrivers())
+    .subscribe();
+  window.addEventListener("focus", loadDrivers);
+}
 async function verifyAccess() {
   const { user } = await requireRole(["admin"]);
   if (!user) return;
-  loadDrivers();
+  await loadDrivers();
+  watchDriverChanges();
 }
 document.getElementById("searchInput").addEventListener("input", render);
 document.getElementById("complianceFilter").addEventListener("change", render);
