@@ -5,6 +5,7 @@ import { logAudit } from "./audit-helper.js";
 let enforcers = [];
 let ticketCounts = new Map();
 let profilePictures = new Map();
+let registryChanges = null;
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" }[character]));
 const normalize = (value) => String(value || "").toLowerCase().trim();
 function showMessage(text, error = false) { const element = document.getElementById("enforcerFormMessage"); element.textContent = text; element.hidden = !text; element.classList.toggle("error", error); }
@@ -34,6 +35,15 @@ async function loadData() {
   renderEnforcers();
 }
 
+function watchRegistryChanges() {
+  if (registryChanges) return;
+  registryChanges = supabase.channel("admin-enforcer-ticket-counts")
+    .on("postgres_changes", { event:"*", schema:"public", table:"violations" }, () => void loadData())
+    .on("postgres_changes", { event:"*", schema:"public", table:"traffic_enforcers" }, () => void loadData())
+    .subscribe();
+  window.addEventListener("focus", () => void loadData());
+}
+
 const detail = (label,value) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value || "—")}</strong></div>`;
 async function viewProfile(id) { const row=enforcers.find((item)=>String(item.id)===String(id)); if(!row)return; document.getElementById("enforcerProfileDetails").innerHTML=[detail("Full Name",row.full_name),detail("Enforcer ID",row.enforcer_id),detail("Email",row.email),detail("Contact Number",row.contact_number),detail("Unit / Assignment",row.unit_assignment),detail("Account",row.user_id?"Linked":"Awaiting signup"),detail("Status",row.status),detail("Tickets Submitted",ticketCounts.get(row.user_id)||0),detail("Registered",row.created_at?new Date(row.created_at).toLocaleString("en-PH"):"—")].join(""); const image=document.getElementById("enforcerFormalPhoto"),missing=document.getElementById("enforcerPhotoMissing"); image.hidden=true; image.removeAttribute("src"); missing.hidden=false; const path=profilePictures.get(row.user_id); if(path){const {data}=await supabase.storage.from("account-profile-pictures").createSignedUrl(path,600);if(data?.signedUrl){image.src=data.signedUrl;image.hidden=false;missing.hidden=true;}} document.getElementById("enforcerProfileModal").hidden=false;}
 
@@ -57,6 +67,7 @@ async function saveStatus(id) {
 async function initialize() {
   const { user } = await requireRole("admin"); if (!user) return;
   try { await loadData(); } catch (error) { alert(`Could not load Traffic Enforcers: ${error.message}`); }
+  watchRegistryChanges();
   document.getElementById("showEnforcerForm").addEventListener("click", () => { document.getElementById("enforcerFormPanel").hidden = false; });
   document.getElementById("cancelEnforcerForm").addEventListener("click", () => { document.getElementById("enforcerFormPanel").hidden = true; });
   document.getElementById("enforcerForm").addEventListener("submit", createEnforcer);
