@@ -75,23 +75,31 @@ function ageFromBirthDate(input) {
   return age >= 0 ? String(age) : "";
 }
 
+function fitTextSize(font, text, preferredSize, maxWidth, minimumSize = 6.5) {
+  const content = value(text);
+  let fittedSize = Math.max(Number(preferredSize) || 12, minimumSize);
+  while (fittedSize > minimumSize && font.widthOfTextAtSize(content, fittedSize) > maxWidth) {
+    fittedSize = Math.max(minimumSize, fittedSize - 0.25);
+  }
+  return fittedSize;
+}
+
+function alignedTextX(font, text, size, x, maxWidth, align = "left") {
+  const textWidth = font.widthOfTextAtSize(value(text), size);
+  if (align === "center") return x + Math.max(0, (maxWidth - textWidth) / 2);
+  if (align === "right") return x + Math.max(0, maxWidth - textWidth);
+  return x;
+}
+
 function drawScaled(page, font, text, x, y, size = 12, options = {}) {
   if (!value(text)) return;
   const sx = page.getWidth() / (options.baseWidth || 612);
   const sy = page.getHeight() / (options.baseHeight || 936);
   const content = value(text);
   const maxWidth = options.maxWidth || 500;
-  const minimumSize = options.minSize || 12;
-  let fittedSize = Math.max(size, minimumSize);
-  while (fittedSize > minimumSize && font.widthOfTextAtSize(content, fittedSize) > maxWidth) {
-    fittedSize = Math.max(minimumSize, fittedSize - 0.25);
-  }
-  const textWidth = font.widthOfTextAtSize(content, fittedSize);
-  const alignedX = options.align === "center"
-    ? x + Math.max(0, (maxWidth - textWidth) / 2)
-    : options.align === "right"
-      ? x + Math.max(0, maxWidth - textWidth)
-      : x;
+  const minimumSize = options.minSize ?? 6.5;
+  const fittedSize = fitTextSize(font, content, size, maxWidth, minimumSize);
+  const alignedX = alignedTextX(font, content, fittedSize, x, maxWidth, options.align);
   page.drawText(content, {
     x: alignedX * sx,
     y: y * sy,
@@ -288,9 +296,8 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     const fit = (page, text, x, y, maxWidth, size = 12, useBold = false, align = "left") => {
       if (!text) return;
       const selectedFont = useBold ? bold : font;
-      let fitted = Math.max(size, 12);
-      const textWidth = selectedFont.widthOfTextAtSize(text, fitted);
-      const drawX = align === "center" ? x + Math.max(0, (maxWidth - textWidth) / 2) : x;
+      const fitted = fitTextSize(selectedFont, text, size, maxWidth, 7);
+      const drawX = alignedTextX(selectedFont, text, fitted, x, maxWidth, align);
       page.drawText(text, { x: drawX, y, maxWidth, size: fitted, font: selectedFont, color: ink });
     };
     const row = (page, y, columns) => columns.forEach(([text, x, width]) => fit(page, text, x, y, width, 12, true, "center"));
@@ -337,8 +344,8 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
       barangay: value(renewal.residential_barangay || fallbackAddress.barangay),
     };
     const ink = rgb(0, 0, 0);
-    const write = (text, x, y, size = 12, maxWidth = 500, useBold = true) =>
-      drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 11), { maxWidth, minSize: 11, color: ink });
+    const write = (text, x, y, size = 12, maxWidth = 500, useBold = false) =>
+      drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, minSize: 7, color: ink });
 
     const fullRenewalFranchiseNumber = value(franchise.franchise_number);
     const birthDate = renewal.applicant_birth_date || franchise.birth_date;
@@ -415,7 +422,7 @@ export async function openPmblPdfForm({ renewal, franchise = {}, editable = fals
       if (!value(text)) return;
       const selectedFont = useBold ? bold : font;
       const content = value(text);
-      const fittedSize = Math.max(size, 13);
+      const fittedSize = fitTextSize(selectedFont, content, size, maxWidth, 8);
       page.drawText(content, { x: x * sx, y: y * sy, size: fittedSize * Math.min(sx, sy), maxWidth: maxWidth * sx, font: selectedFont, color: black });
     };
     const issued = new Date();
@@ -569,10 +576,9 @@ export async function openDroppingPetitionPdfForm({ request, franchise = {}, ope
     const write = (text, x, y, maxWidth, size = 11, centered = false, useBold = false, wrapAtHyphens = false) => {
       if (!text) return;
       const selected = useBold ? bold : font;
-      const fitted = Math.max(size, 11);
-      const width = selected.widthOfTextAtSize(text, fitted);
+      const fitted = fitTextSize(selected, text, size, maxWidth, 7);
       const textOptions = {
-        x: centered ? x + Math.max(0, (maxWidth - width) / 2) : x,
+        x: centered ? alignedTextX(selected, text, fitted, x, maxWidth, "center") : x,
         y, maxWidth, size: fitted, lineHeight: 11, font: selected, color: ink,
       };
       if (wrapAtHyphens) textOptions.wordBreaks = ["-", " "];
@@ -629,7 +635,7 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
     const write = (text, x, y, maxWidth, size = 11, useBold = false) => {
       if (!text) return;
       const selected = useBold ? bold : font;
-      const fitted = Math.max(size, 11);
+      const fitted = fitTextSize(selected, text, size, maxWidth, 7);
       page.drawText(text, { x, y, maxWidth, size: fitted, lineHeight: 13, font: selected, color: ink });
     };
     write(`This is to certify that the tricycle franchise Number. ${data.franchise}`, 80, 592, 445, 11);
@@ -663,8 +669,8 @@ export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, ed
     page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: 92, color: rgb(1, 1, 1) });
     const snapshot = payment.receipt_snapshot || {};
     const amount = snapshot.amount_paid ?? payment.amount ?? violation.penalty ?? 0;
-    const write = (text, x, y, maxWidth, size = 11, align = "left", useBold = true) =>
-      drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 11), { maxWidth, minSize: 11, align, color: ink, baseHeight: 468 });
+    const write = (text, x, y, maxWidth, size = 11, align = "left", useBold = false) =>
+      drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, minSize: 6.5, align, color: ink, baseHeight: 468 });
 
     const manual = await editFields("TFRO-009 Order of Payment", [
       { key: "payer", label: "Payor", value: snapshot.payer || payment.payer || payment.unit_owner_name },
@@ -708,8 +714,8 @@ export async function openUnitReleasePdfForm({ payment = {}, violation = {}, edi
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const ink = rgb(0, 0, 0);
     page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: 92, color: rgb(1, 1, 1) });
-    const write = (text, x, y, maxWidth, size = 8.5, align = "left", useBold = true) =>
-      drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 12), { maxWidth, minSize: 12, align, color: ink, baseHeight: 468 });
+    const write = (text, x, y, maxWidth, size = 8.5, align = "left", useBold = false) =>
+      drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, minSize: 6.5, align, color: ink, baseHeight: 468 });
 
     const manual = await editFields("TFRO-010 Vehicle/Unit Releasing Slip", [
       { key: "owner", label: "Unit owner", value: payment.unit_owner_name || payment.payer },

@@ -1341,3 +1341,17 @@ body.operator-sidebar .table-card:not(.franchise-records-card){
   background:#fff !important;
   box-shadow:0 6px 18px rgba(15,23,42,.06) !important;
 }
+/* Unified form typography and alignment across authenticated role screens. */
+body.admin-sidebar form,body.operator-sidebar form{font-family:Inter,"Segoe UI",Arial,sans-serif;font-size:14px;line-height:1.4;}
+body.admin-sidebar form label:not(.checkbox-option):not(.release-required-option),body.operator-sidebar form label:not(.checkbox-option):not(.release-required-option){min-width:0;color:#334155;font-size:13px !important;font-weight:700 !important;line-height:1.3 !important;text-align:left !important;}
+body.admin-sidebar form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),body.admin-sidebar form select,body.admin-sidebar form textarea,body.operator-sidebar form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),body.operator-sidebar form select,body.operator-sidebar form textarea{width:100%;min-width:0;min-height:42px;padding:10px 12px !important;border:1px solid #b8c6d1 !important;border-radius:8px !important;background:#fff;color:#0f172a;font-family:Inter,"Segoe UI",Arial,sans-serif !important;font-size:14px !important;font-weight:400 !important;line-height:1.4 !important;text-align:left !important;vertical-align:middle;}
+body.admin-sidebar form textarea,body.operator-sidebar form textarea{min-height:96px;resize:vertical;}
+body.admin-sidebar form input[readonly],body.admin-sidebar form textarea[readonly],body.operator-sidebar form input[readonly],body.operator-sidebar form textarea[readonly]{background:#f1f5f9;color:#475569;}
+body.admin-sidebar form input::placeholder,body.admin-sidebar form textarea::placeholder,body.operator-sidebar form input::placeholder,body.operator-sidebar form textarea::placeholder{color:#94a3b8;font-weight:400;opacity:1;}
+body.admin-sidebar form input:focus,body.admin-sidebar form select:focus,body.admin-sidebar form textarea:focus,body.operator-sidebar form input:focus,body.operator-sidebar form select:focus,body.operator-sidebar form textarea:focus{outline:0;border-color:#174f86 !important;box-shadow:0 0 0 3px rgba(23,79,134,.14) !important;}
+body.admin-sidebar form input[type="checkbox"],body.admin-sidebar form input[type="radio"],body.operator-sidebar form input[type="checkbox"],body.operator-sidebar form input[type="radio"]{width:18px;height:18px;margin:1px 0 0;accent-color:#174f86;flex:0 0 auto;}
+body.admin-sidebar form button,body.operator-sidebar form button{font-family:Inter,"Segoe UI",Arial,sans-serif;font-size:13px;font-weight:700;line-height:1.2;}
+body.enforcer-sidebar form{font-family:Inter,"Segoe UI",Arial,sans-serif;font-size:14px;line-height:1.4;}
+body.enforcer-sidebar form label{min-width:0;color:#334155;font-size:13px !important;font-weight:700 !important;line-height:1.3 !important;text-align:left !important;}
+body.enforcer-sidebar form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),body.enforcer-sidebar form select,body.enforcer-sidebar form textarea{width:100%;min-width:0;min-height:42px;padding:10px 12px !important;color:#0f172a;font-family:Inter,"Segoe UI",Arial,sans-serif !important;font-size:14px !important;font-weight:400 !important;line-height:1.4 !important;text-align:left !important;}
+body.enforcer-sidebar form textarea{min-height:96px;resize:vertical;}body.enforcer-sidebar form button{font-family:Inter,"Segoe UI",Arial,sans-serif;font-size:13px;font-weight:700;line-height:1.2;}

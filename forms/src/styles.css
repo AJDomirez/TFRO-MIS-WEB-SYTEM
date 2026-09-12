@@ -5,3 +5,9 @@
 .paper-header:not(.pmbl){height:104px}
 .paper-header,.paper-header.pmbl,.paper-header:not(.pmbl){height:auto}.paper-header img{display:block;width:100%;height:auto;object-fit:contain}.paper-header span,.paper-header.pmbl span{bottom:3px;background:#f5ed00;color:#07341d}footer{border:0;padding:0}footer img{display:block;width:100%;height:auto}
 .paper-header.form-002 span,.paper-header.form-007 span{right:16px;bottom:0;min-width:145px;padding:7px 16px;text-align:center;white-space:nowrap}.petition-vehicle .vehicle{table-layout:fixed}.petition-vehicle .vehicle th{font-size:13px;white-space:nowrap}.petition-vehicle .vehicle td{overflow:hidden;padding:4px 2px}.petition-vehicle .vehicle .fill{display:block;width:100%;min-width:0;max-width:100%;padding:2px;font-size:12px;font-weight:700;text-align:center}.drop-fields{width:68%;margin:120px 70px 210px}.drop-fields .line{display:grid;grid-template-columns:105px minmax(0,1fr);align-items:center}.drop-fields .fill{width:100%;min-width:0}.drop-signature{display:flex;justify-content:flex-end;padding-right:55px}.drop-signature .signature{width:270px;margin:0}
+/* Consistent editable-value typography for every official form preview. */
+.paper .fill{height:24px;min-width:0;padding:2px 5px;color:#111;font-family:"Times New Roman",serif;font-size:15px;font-weight:400;line-height:20px;text-align:left;vertical-align:baseline;}
+.paper .line{min-height:27px;line-height:1.35;}
+.paper .vehicle .fill,.paper .check-table .fill{width:100%;height:24px;font-size:13px;font-weight:400;text-align:center;}
+.paper .signature-line{min-height:23px;font-size:15px;font-weight:700;line-height:23px;text-align:center;}
+.paper input[type="checkbox"]{width:14px;height:14px;margin:0 5px 0 0;vertical-align:-2px;accent-color:#111;}
