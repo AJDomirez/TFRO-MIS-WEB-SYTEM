@@ -1,4 +1,4 @@
-const CACHE_NAME = "tfro-imis-shell-v1";
+const CACHE_NAME = "tfro-imis-shell-v2";
 const CORE_ASSETS = [
   "./",
   "html/application.html", "html/auditlog.html", "html/dashboard.html", "html/driver.html",
@@ -30,6 +30,7 @@ const CORE_ASSETS = [
   "forms/TFRO-002 Petition for Dropping.pdf", "forms/TFRO-004 Checklist for Renewal.pdf",
   "forms/TFRO-005 Application Form.pdf", "forms/TFRO-007 Certification of Dropping.pdf",
   "forms/TFRO-009 Order of Payment.pdf", "forms/TFRO-010 Unit Releasing Slip.pdf",
+  "forms/public/assets/tfro-official-header.png", "forms/public/assets/tfro-official-footer-v2.png",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/+esm",
   "https://cdn.jsdelivr.net/npm/chart.js",
   "https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"

@@ -37,6 +37,13 @@ for (const entry of fs.readdirSync(formTemplateDirectory, { withFileTypes: true 
   }
 }
 
+// Profile print views use the same official header/footer artwork as the forms.
+fs.cpSync(
+  path.join(formTemplateDirectory, "public", "assets"),
+  path.join(outputFormsDirectory, "public", "assets"),
+  { recursive: true },
+);
+
 // Provide an email-client-safe logo URL without spaces in the filename.
 fs.copyFileSync(
   path.join(root, "Logo", "TFRO Logo.jpg"),
@@ -70,10 +77,9 @@ function verify(directory) {
 
 verify(output);
 
-const deployedForms = fs.readdirSync(outputFormsDirectory, { withFileTypes: true });
-if (!deployedForms.length || deployedForms.some((entry) =>
-  !entry.isFile() || path.extname(entry.name).toLowerCase() !== ".pdf"
-)) {
-  throw new Error("The deployed forms directory must contain PDF templates only");
+const deployedForms = fs.readdirSync(outputFormsDirectory, { withFileTypes: true })
+  .filter((entry) => entry.isFile());
+if (!deployedForms.length || deployedForms.some((entry) => path.extname(entry.name).toLowerCase() !== ".pdf")) {
+  throw new Error("The deployed forms root must contain PDF templates only");
 }
 console.log(`Netlify frontend built at ${output}`);
