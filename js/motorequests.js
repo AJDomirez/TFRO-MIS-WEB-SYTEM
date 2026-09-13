@@ -240,7 +240,7 @@ alert("Request rejected. The operator has been notified.");
 
 async function openChangeMotorPdf(formCode) {
   if (!currentReq) return;
-  const module = await import("./pdf-form.js?v=20260831-1");
+  const module = await import("./pdf-form.js?v=20260913-4");
   const options = {
     request: currentReq,
     franchise: currentReq.franchise || {},
