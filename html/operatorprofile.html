@@ -6,7 +6,7 @@
   <title>Operator Profile</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
 
-<link rel="stylesheet" href="../css/operatorprofile.css">
+<link rel="stylesheet" href="../css/operatorprofile.css?v=20260913-2">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-030000">
 
   <!-- Remix Icons -->
@@ -123,12 +123,17 @@
 
           <div class="form-group">
             <label>First Name</label>
-            <input type="text" id="firstName">
+            <input type="text" id="firstName" required>
           </div>
 
           <div class="form-group">
+            <label>Middle Name <span class="optional-label">(Optional)</span></label>
+            <input type="text" id="middleName">
+          </div>
+
+          <div class="form-group full">
             <label>Last Name</label>
-            <input type="text" id="lastName">
+            <input type="text" id="lastName" required>
           </div>
 
           <div class="form-group full">
@@ -141,12 +146,12 @@
             <input type="text" id="contactNumber">
           </div>
 
-          <div class="form-group full">
+          <div class="form-group full operator-only-field">
             <label>Home Address</label>
             <input type="text" id="address">
           </div>
 
-          <div class="form-group full">
+          <div class="form-group full operator-only-field">
             <label>Franchise Number</label>
             <input type="text" id="franchiseNumber" disabled>
           </div>
@@ -203,8 +208,8 @@
 
 </div>
 
-<script type="module" src="../js/operatorprofile.js"></script>
-<script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
+<script type="module" src="../js/operatorprofile.js?v=20260913-2"></script>
+<script type="module" src="../js/sidebar-user.js?v=20260913-2"></script>
 
 </body>
 </html>

@@ -4,7 +4,7 @@ import { requireRole } from "./auth-guard.js";
 /* ROLE PROTECTION — server-verified, not localStorage */
 let currentUserId = null;
 let currentUserRole = "operator";
-requireRole(["operator"]).then(({ user, profile }) => {
+requireRole(["operator", "traffic_enforcer"]).then(({ user, profile }) => {
   if (!user) return;
   currentUserId = user.id;
   if (profile?.role) currentUserRole = profile.role;
@@ -75,31 +75,31 @@ async function loadProfile() {
     .eq("id", user.id)
     .maybeSingle();
 
-  const { data: operator } = await supabase
-    .from("operators")
-    .select("address, franchise_number")
-    .eq("user_id", user.id)
-    .order("id", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const { data: operator } = currentUserRole === "operator"
+    ? await supabase.from("operators").select("address, franchise_number").eq("user_id", user.id).order("id", { ascending: true }).limit(1).maybeSingle()
+    : { data: null };
 
   const fullName = profile?.full_name || user.user_metadata?.full_name || "";
   const contact = profile?.contact_number || user.user_metadata?.contact_number || "";
   const email = user.email || "";
 
   const names = fullName.split(" ").filter(Boolean);
-  setValue("firstName", names[0] || "");
-  setValue("lastName", names.slice(1).join(" ") || "");
+  setValue("firstName", user.user_metadata?.first_name || names[0] || "");
+  setValue("middleName", user.user_metadata?.middle_name || (names.length > 2 ? names.slice(1, -1).join(" ") : ""));
+  setValue("lastName", user.user_metadata?.last_name || (names.length > 1 ? names.at(-1) : ""));
   setValue("email", email);
   setValue("contactNumber", contact);
   setValue("address", operator?.address || "");
   setValue("franchiseNumber", operator?.franchise_number || "");
-  setValue("role", "Operator");
+  const roleLabel = currentUserRole === "traffic_enforcer" ? "Traffic Enforcer" : "Operator";
+  setValue("role", roleLabel);
+  document.querySelectorAll(".operator-only-field").forEach((field) => { field.hidden = currentUserRole !== "operator"; });
 
   /* Display headers */
   const init = initials(fullName);
-  setText("userName", fullName || "Operator");
-  setText("profileName", fullName || "Operator");
+  setText("userName", fullName || roleLabel);
+  setText("profileName", fullName || roleLabel);
+  document.querySelector("#profileName + p").textContent = roleLabel;
   setText("profileEmail", email);
   setText("userAvatar", init);
   setText("profileAvatar", init);
@@ -112,17 +112,18 @@ if (profileForm) {
     document.getElementById("profileMessage").hidden = true;
 
     const firstName = document.getElementById("firstName").value.trim();
+    const middleName = document.getElementById("middleName").value.trim();
     const lastName = document.getElementById("lastName").value.trim();
     const contactNumber = document.getElementById("contactNumber").value.trim();
     const address = document.getElementById("address").value.trim();
-    const fullName = `${firstName} ${lastName}`.trim();
+    const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
 
-    if (!fullName) {
-      showProfileWarning("profileMessage", "Please enter your full name.");
+    if (!firstName || !lastName) {
+      showProfileWarning("profileMessage", "Please enter your first and last name.");
       return;
     }
 
-    if (!address) {
+    if (currentUserRole === "operator" && !address) {
       showProfileWarning("profileMessage", "Please enter your home address.");
       return;
     }
@@ -138,14 +139,17 @@ if (profileForm) {
       return;
     }
 
-    const { error: operatorError } = await supabase
-      .from("operators")
-      .update({ full_name: fullName, contact_number: contactNumber, address })
-      .eq("user_id", currentUserId);
+    await supabase.auth.updateUser({ data: { full_name: fullName, first_name: firstName, middle_name: middleName || null, last_name: lastName } });
+
+    const relatedTable = currentUserRole === "traffic_enforcer" ? "traffic_enforcers" : "operators";
+    const relatedChanges = currentUserRole === "traffic_enforcer"
+      ? { full_name: fullName, contact_number: contactNumber }
+      : { full_name: fullName, contact_number: contactNumber, address };
+    const { error: operatorError } = await supabase.from(relatedTable).update(relatedChanges).eq("user_id", currentUserId);
 
     if (operatorError) {
       console.error("Operator record update error:", operatorError);
-      showProfileWarning("profileMessage", "Profile was updated, but the Operator record could not be synchronized: " + operatorError.message);
+      showProfileWarning("profileMessage", `Profile was updated, but the ${currentUserRole === "traffic_enforcer" ? "Enforcer" : "Operator"} record could not be synchronized: ${operatorError.message}`);
       return;
     }
 

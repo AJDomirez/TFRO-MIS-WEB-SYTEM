@@ -231,6 +231,7 @@ function setupEnforcerNavigation() {
   const currentPage = window.location.pathname.split("/").pop() || "enforcerportal.html";
   const pages = [
     { href: "enforcerportal.html", icon: "ri-shield-user-line", label: "Ticketing & Driver Search" },
+    { href: "operatorprofile.html", icon: "ri-user-settings-line", label: "My Profile" },
   ];
   menu.dataset.enforcerMenuReady = "true";
   menu.innerHTML = pages.map((page) => `<li class="${page.href === currentPage ? "active" : ""}"><a href="${page.href}"><i class="${page.icon}"></i><span>${page.label}</span></a></li>`).join("");
