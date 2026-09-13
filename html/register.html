@@ -6,7 +6,7 @@
   <title>TFRO Register</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
 
-  <link rel="stylesheet" href="../css/style.css?v=20260824-031500">
+  <link rel="stylesheet" href="../css/style.css?v=20260913-2">
 
   <!-- Remix Icons -->
   <link
@@ -90,13 +90,23 @@
         </p>
 
         <div class="input-group">
-          <label>Full Name</label>
+          <label>First Name</label>
           <input
             type="text"
-            id="fullName"
-            placeholder="Juan Dela Cruz"
+            id="firstName"
+            placeholder="Juan"
             required
           />
+        </div>
+
+        <div class="input-group">
+          <label>Middle Name <span class="optional-label">(Optional)</span></label>
+          <input type="text" id="middleName" placeholder="Santos" />
+        </div>
+
+        <div class="input-group register-full">
+          <label>Last Name</label>
+          <input type="text" id="lastName" placeholder="Dela Cruz" required />
         </div>
 
         <div class="input-group">

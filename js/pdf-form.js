@@ -257,13 +257,12 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
   if (!editable && !popup) return;
   try {
     const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
-    const templateUrl = new URL("../forms/TFRO-001 Temporary MTOP.pdf?v=20260826-200000", import.meta.url);
-    const templateBytes = await fetch(templateUrl).then((response) => response.arrayBuffer());
-    const pdfDoc = await PDFDocument.load(templateBytes);
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([612, 936]);
     const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const bold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+    const italic = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
     const ink = rgb(0, 0, 0);
-    const pages = pdfDoc.getPages();
     let details = {
       name: value(renewal.operator_name || franchise.operator_name),
       franchise: value(franchise.franchise_number),
@@ -293,27 +292,82 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     if (!details) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-001 Temporary MTOP");
     if (!popup) return;
-    const fit = (page, text, x, y, maxWidth, size = 12, useBold = false, align = "left") => {
+    const fit = (targetPage, text, x, y, maxWidth, size = 12, useBold = false, align = "left") => {
       if (!text) return;
       const selectedFont = useBold ? bold : font;
       const fitted = fitTextSize(selectedFont, text, size, maxWidth, 7);
       const drawX = alignedTextX(selectedFont, text, fitted, x, maxWidth, align);
-      page.drawText(text, { x: drawX, y, maxWidth, size: fitted, font: selectedFont, color: ink });
+      targetPage.drawText(text, { x: drawX, y, maxWidth, size: fitted, font: selectedFont, color: ink });
     };
-    const row = (page, y, columns) => columns.forEach(([text, x, width]) => fit(page, text, x, y, width, 12, true, "center"));
+    const headerUrl = new URL("../forms/public/assets/tfro-official-header.png?v=20260913-1", import.meta.url);
+    const footerUrl = new URL("../forms/public/assets/tfro-official-footer-v2.png?v=20260913-1", import.meta.url);
+    const [headerBytes, footerBytes] = await Promise.all([
+      fetch(headerUrl).then((response) => {
+        if (!response.ok) throw new Error(`Official TFRO header could not be loaded (${response.status}).`);
+        return response.arrayBuffer();
+      }),
+      fetch(footerUrl).then((response) => {
+        if (!response.ok) throw new Error(`Official TFRO footer could not be loaded (${response.status}).`);
+        return response.arrayBuffer();
+      }),
+    ]);
+    const [header, footer] = await Promise.all([pdfDoc.embedPng(headerBytes), pdfDoc.embedPng(footerBytes)]);
+    page.drawImage(header, { x: 18, y: 852, width: 576, height: 63 });
+    page.drawImage(footer, { x: 18, y: 14, width: 576, height: 56 });
+    page.drawRectangle({ x: 475, y: 828, width: 91, height: 22, color: rgb(.34, .56, .78) });
+    fit(page, "TFRO - 001", 475, 835, 91, 10, true, "center");
 
-    if (pages[1]) {
-      fit(pages[1], details.name, 112, 845, 240, 12, true);
-      fit(pages[1], details.franchise, 498, 845, 70, 12, true);
-      fit(pages[1], details.address, 112, 829, 265, 12, true);
-      pages[1].drawRectangle({ x: 150, y: 760, width: 315, height: 18, color: rgb(1, 1, 1) });
-      fit(pages[1], details.route, 18, 763, 576, 12, true, "center");
-      row(pages[1], 699, [[details.make, 51, 68], [details.model, 128, 72], [details.motor, 209, 135], [details.chassis, 353, 127], [details.plate, 489, 81]]);
-      if (details.expiration) {
-        pages[1].drawRectangle({ x: 145, y: 329, width: 260, height: 27, color: rgb(1, 1, 1) });
-        fit(pages[1], `GOOD UNTIL ${details.expiration}`, 145, 336, 260, 18, true, "center");
-      }
-    }
+    fit(page, "TEMPORARY MOTORIZED TRICYCLE OPERATOR'S PERMIT", 55, 798, 502, 15, true, "center");
+    page.drawLine({ start: { x: 108, y: 794 }, end: { x: 504, y: 794 }, thickness: .8, color: ink });
+    fit(page, "Applicant is hereby authorized to operate a motorized tricycle service for hire on the route", 60, 777, 492, 9, false, "center");
+    fit(page, details.route || "LUCENA CITY PROPER", 60, 761, 492, 11, true, "center");
+    page.drawLine({ start: { x: 62, y: 756 }, end: { x: 550, y: 756 }, thickness: 1, color: ink });
+
+    fit(page, "Name:", 66, 729, 42, 9, true);
+    fit(page, details.name, 108, 729, 230, 9, true);
+    fit(page, "Franchise No.:", 390, 729, 78, 9, true);
+    fit(page, details.franchise, 468, 729, 92, 9, true);
+    fit(page, "Address:", 66, 714, 42, 9, true);
+    fit(page, details.address, 108, 714, 315, 9, true);
+    fit(page, "O.R. No.:", 426, 714, 48, 9, true);
+    fit(page, details.orNumber, 474, 714, 86, 9, true);
+
+    const columns = [
+      ["MAKE", details.make, 55, 91],
+      ["MODEL", details.model, 146, 91],
+      ["MOTOR NO.", details.motor, 237, 121],
+      ["CHASSIS NO.", details.chassis, 358, 121],
+      ["PLATE NO.", details.plate, 479, 78],
+    ];
+    columns.forEach(([label, fieldValue, x, width]) => {
+      page.drawRectangle({ x, y: 665, width, height: 36, borderColor: rgb(.45, .45, .45), borderWidth: .6 });
+      page.drawLine({ start: { x, y: 683 }, end: { x: x + width, y: 683 }, thickness: .6, color: rgb(.45, .45, .45) });
+      fit(page, label, x + 2, 688, width - 4, 8, false, "center");
+      fit(page, fieldValue, x + 3, 671, width - 6, 8, true, "center");
+    });
+
+    const intro = "Applicant / Operator shall comply with rules and regulations prescribed by the TFRC. Failure to comply therewith and in any of the conditions herein set forth shall be sufficient cause for the suspension or cancellation of the authority herein granted.";
+    page.drawText(intro, { x: 58, y: 628, maxWidth: 496, size: 8, lineHeight: 10, font, color: ink, wordBreaks: [" "] });
+    const conditions = [
+      "1. The unit shall be registered as FOR HIRE with the Land Transportation Office in LUCENA CITY in accordance with its prescribed rules and regulations;",
+      "2. Within the authorized route, applicant shall charge fare rates as provided by existing City Ordinance;",
+      "3. This MTOP shall be valid from the date hereof indicated below and shall constitute a franchise certificate giving the operator the privilege to operate the unit herein described as for hire and/or compensation;",
+      "4. Without authority from within TFRC, the operator shall not transfer, increase, drop and/or substitute unit, as well as suspend or abandon the service herein authorized, otherwise franchise herein granted shall be declared forfeited, revoked or cancelled;",
+      "5. Applicant/Operator shall pay the TFRC Mayor's Permit Fee and Supervision Fee upon approval of this authority and every anniversary date thereafter, subject to penalty and surcharge in case of late payment;",
+      "6. Applicant shall not operate outside authorized route and/or along national highways, unless there is no alternative path;",
+      "7. Protect this document. Its loss or destruction may affect your legal rights to operate the service. Any addition, alteration or deletion not otherwise authorized will invalidate this document.",
+    ];
+    page.drawText(conditions.join("\n"), { x: 55, y: 575, maxWidth: 502, size: 7.35, lineHeight: 10.2, font, color: ink, wordBreaks: [" "] });
+
+    fit(page, "SO ORDERED", 63, 258, 90, 10, true);
+    page.drawRectangle({ x: 155, y: 238, width: 305, height: 45, borderColor: ink, borderWidth: 1.2 });
+    fit(page, "GRANTED", 155, 263, 305, 14, true, "center");
+    fit(page, details.expiration ? `GOOD UNTIL ${details.expiration}` : "TEMPORARY AUTHORITY", 155, 246, 305, 13, true, "center");
+    fit(page, "NOTE: This Temporary Motorized Tricycle Operator's Permit is valid for 15 days only, intended for reclassification purposes. Once the requirements are met, please return it to the Tricycle Franchising and Regulatory Office.", 62, 213, 488, 6.5, false);
+    fit(page, "CRISELDA C. DAVID, DPPA", 350, 125, 190, 9, true, "center");
+    fit(page, "TFRO HEAD", 350, 110, 190, 8, true, "center");
+    fit(page, "REMINDER: ERASURES AND/OR ALTERATION WILL INVALIDATE THIS PERMIT.", 62, 102, 285, 6, true);
+    fit(page, "THIS MTOP IS A PRIVILEGE AND NOT A RIGHT.", 62, 92, 285, 6, true);
 
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-001-${value(renewal.renewal_code || renewal.id)}.pdf`);
@@ -589,11 +643,21 @@ export async function openDroppingPetitionPdfForm({ request, franchise = {}, ope
     write(data.toda, 493, 774, 66, 11, true, true);
     write(data.contact, 487, 748, 75, 11, true, true);
     write(data.address, 72, 647, 467, 11, true, true);
-    write(data.make, 83, 604, 92, 11, true, true);
-    write(data.model, 181, 604, 95, 11, true, true);
-    write(data.motor, 348, 604, 92, 11, true, true, true);
-    write(data.chassis, 454, 604, 100, 11, true, true, true);
-    write(data.plate, 276, 601, 86, 11, true, true);
+    // Rebuild the vehicle row so every heading and value uses the same baseline.
+    // The source form places PLATE on a lower line, which caused long values to
+    // overlap the Motor and Chassis fields.
+    page.drawRectangle({ x: 45, y: 595, width: 520, height: 34, color: rgb(1, 1, 1) });
+    const vehicleColumns = [
+      ["MAKE", data.make, 48, 92],
+      ["MODEL", data.model, 145, 92],
+      ["MOTOR No.", data.motor, 242, 112],
+      ["CHASSIS No.", data.chassis, 359, 118],
+      ["PLATE", data.plate, 482, 80],
+    ];
+    vehicleColumns.forEach(([label, fieldValue, x, columnWidth]) => {
+      write(label, x, 617, columnWidth, 10, true, true);
+      write(fieldValue, x, 601, columnWidth, 10, true, true, true);
+    });
     write(data.route, 181, 572, 210, 11, true, true);
     write(data.franchise, 183, 557, 200, 11, true, true);
     write(data.operator, 112, 397, 143, 11, true, true);
@@ -611,18 +675,22 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
   if (!editable && !popup) return;
   try {
     const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
-    const templateUrl = new URL("../forms/TFRO-007 Certification of Dropping.pdf?v=20260826-224000", import.meta.url);
-    const pdfDoc = await PDFDocument.load(await fetch(templateUrl).then((response) => response.arrayBuffer()));
-    const page = pdfDoc.getPage(0);
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([595.28, 841.89]);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const italic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
     const ink = rgb(0, 0, 0);
-    page.drawRectangle({ x: 465, y: 735, width: 115, height: 48, color: rgb(1, 1, 1) });
-    page.drawRectangle({ x: 475, y: 754, width: 96, height: 22, color: rgb(0.34, 0.56, 0.78) });
-    const formCode = "TFRO - 007";
-    const formCodeSize = 10;
-    const formCodeWidth = bold.widthOfTextAtSize(formCode, formCodeSize);
-    page.drawText(formCode, { x: 475 + (96 - formCodeWidth) / 2, y: 761, size: formCodeSize, font: bold, color: ink });
+    const headerUrl = new URL("../forms/public/assets/tfro-official-header.png?v=20260913-1", import.meta.url);
+    const headerBytes = await fetch(headerUrl).then((response) => {
+      if (!response.ok) throw new Error(`Official TFRO header could not be loaded (${response.status}).`);
+      return response.arrayBuffer();
+    });
+    const header = await pdfDoc.embedPng(headerBytes);
+    page.drawImage(header, { x: 18, y: 760, width: 559, height: 61.15 });
+    page.drawRectangle({ x: 452, y: 738, width: 96, height: 22, color: rgb(0.34, 0.56, 0.78) });
+    page.drawText("TFRO - 007", { x: 469, y: 745, size: 10, font: bold, color: ink });
+    page.drawRectangle({ x: 558, y: 736, width: 6, height: 23, color: rgb(0.34, 0.56, 0.78) });
     const issued = request.admin_reviewed_at ? new Date(request.admin_reviewed_at) : new Date();
     const issuedDefault = issued.toLocaleDateString("en-PH", { month: "long", day: "2-digit", year: "numeric" }).toUpperCase();
     const data = await editFields("TFRO-007 Certification of Dropping", [
@@ -632,21 +700,42 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
     if (!data) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-007 Certification of Dropping");
     if (!popup) return;
-    const write = (text, x, y, maxWidth, size = 11, useBold = false) => {
+    const write = (text, x, y, maxWidth, size = 11, useBold = false, align = "left") => {
       if (!text) return;
       const selected = useBold ? bold : font;
       const fitted = fitTextSize(selected, text, size, maxWidth, 7);
-      page.drawText(text, { x, y, maxWidth, size: fitted, lineHeight: 13, font: selected, color: ink });
+      const drawX = alignedTextX(selected, text, fitted, x, maxWidth, align);
+      page.drawText(text, { x: drawX, y, maxWidth, size: fitted, lineHeight: 13, font: selected, color: ink });
     };
-    write(`This is to certify that the tricycle franchise Number. ${data.franchise}`, 80, 592, 445, 11);
-    write("has been cancelled/dropped due to privatization of tricycle described hereunder;", 80, 576, 445, 11);
-    write(data.operator, 241, 497, 246, 9, true);
-    write([data.make, data.model].filter(Boolean).join(" "), 241, 481, 246, 9);
-    write(data.motor, 241, 465, 246, 9);
-    write(data.chassis, 241, 449, 246, 9);
-    write(data.plate, 241, 433, 246, 9);
-    const issuedText = `Issued this ${data.issued}.`;
-    write(issuedText, 70, 320, 250, 9, true);
+
+    write("C E R T I F I C A T I O N", 80, 665, 435, 22, false, "center");
+    const subtitle = "of Dropping";
+    const subtitleSize = 12;
+    page.drawText(subtitle, {
+      x: alignedTextX(italic, subtitle, subtitleSize, 80, 435, "center"),
+      y: 634, size: subtitleSize, font: italic, color: rgb(.32, .32, .32),
+    });
+
+    write(`This is to certify that the tricycle franchise Number. ${data.franchise}`, 80, 584, 435, 10);
+    write("has been cancelled/dropped due to privatization of tricycle described hereunder;", 80, 568, 435, 10);
+
+    const detailRows = [
+      ["Owner", data.operator],
+      ["Make", data.make],
+      ["Motor No.", data.motor],
+      ["Chassis No.", data.chassis],
+      ["Plate No.", data.plate],
+    ];
+    detailRows.forEach(([label, fieldValue], index) => {
+      const y = 488 - (index * 17);
+      write(label, 115, y, 90, 9, true);
+      write(":", 208, y, 10, 9, true);
+      write(fieldValue, 228, y, 250, 9, true);
+    });
+
+    write(`Issued this ${data.issued}.`, 70, 330, 260, 9, true);
+    write("CRISELDA C. DAVID, DPPA", 330, 195, 205, 9, true, "center");
+    write("TFRO HEAD", 330, 176, 205, 9, true, "center");
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-007-${value(request.request_code || request.id)}.pdf`);
   } catch (error) {

@@ -502,6 +502,7 @@ body.signup-page{
 
 .register-box form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px;}
 .register-box form > .register-full{grid-column:1/-1;}
+.optional-label{color:#64748b;font-size:11px;font-weight:500}
 .register-box .role-selector{
   width:100%;
   min-width:0;
