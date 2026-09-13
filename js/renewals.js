@@ -10,7 +10,7 @@ const renewalFormSender = (formCode, renewal) => () => sendOperatorForm({
 });
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260831-2");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260913-4");
   openRenewalPdfForm({ ...options, editable: true, onSend: renewalFormSender("TFRO-005", options.renewal) });
 }
 
@@ -192,7 +192,7 @@ async function printCurrentTemporaryMtop() {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260831-2");
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260913-4");
   openTemporaryMtopPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, changeMotor, editable: true, onSend: renewalFormSender("TFRO-001", currentRenewal) });
 }
 
@@ -232,13 +232,13 @@ async function sendCurrentTemporaryMtop() {
 
 async function printCurrentPmblCertification() {
   if (!currentRenewal) return;
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20260831-2");
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20260913-4");
   openPmblPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, editable: true, onSend: renewalFormSender("TFRO-003", currentRenewal) });
 }
 
 async function printCurrentChecklist() {
   if (!currentRenewal) return;
-  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260831-2");
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260913-4");
   openChecklistPdfForm({ renewal: currentRenewal, documents: currentDocuments, editable: true, onSend: renewalFormSender("TFRO-004", currentRenewal) });
 }
 
