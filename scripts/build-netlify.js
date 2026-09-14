@@ -11,6 +11,7 @@ const publicRootFiles = [
   "service-worker.js",
   "robots.txt",
   "sitemap.xml",
+  "googlec1d70af44af5fb0b.html",
 ];
 const formTemplateDirectory = path.join(root, "forms");
 
