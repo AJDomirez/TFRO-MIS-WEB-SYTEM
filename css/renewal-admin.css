@@ -24,6 +24,9 @@
 .requirements-schedule-grid{align-items:end;grid-template-columns:minmax(220px,1fr) minmax(220px,2fr);}
 .schedule-action{display:flex;align-items:end;height:100%;}
 .schedule-action button{min-height:42px;}
+.hardcopy-status{display:inline-flex;margin-bottom:12px;padding:8px 12px;border:1px solid #f0cf63;border-radius:999px;background:#fff8dc;color:#765d08;font-weight:700;}
+.hardcopy-status.received{border-color:#9fd6b8;background:#e7f6ee;color:#17623a;}
+.hardcopy-record-button{margin-top:12px;}
 .staff-field{margin:12px 0;}
 .inspection-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;}
 .inspection-grid label,.checkbox-field{display:flex!important;align-items:center;gap:8px;background:#fff;border:1px solid #dfe9e3;border-radius:9px;padding:10px;font-size:.8rem;color:#0d4778;}

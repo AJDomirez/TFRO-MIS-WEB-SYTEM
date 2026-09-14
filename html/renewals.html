@@ -46,6 +46,8 @@
 
       <section class="review-section"><div class="review-section-title"><span><i class="ri-calendar-event-line"></i></span><div><h4>Requirements Submission Schedule</h4><p>Set the date when the operator should bring the original requirements to the TFRO office.</p></div></div><div class="staff-grid requirements-schedule-grid"><label>Submission Date<input id="requirementsSubmissionDate" type="date"></label><div class="schedule-action"><button class="btn-accept" id="sendRequirementsDateBtn" type="button"><i class="ri-send-plane-line"></i> Send Date to Operator</button></div></div></section>
 
+      <section class="review-section"><div class="review-section-title"><span><i class="ri-archive-stack-line"></i></span><div><h4>Original Hardcopy Requirements</h4><p>Record when TFRO physically receives the operator's original documents. This remains available after approval.</p></div></div><div class="hardcopy-status" id="hardcopyReceiptStatus">Not yet received</div><div class="staff-field"><label>Receiving Notes<textarea id="hardcopyReceivedNotes" rows="2" placeholder="Optional notes about the received originals..."></textarea></label></div><button class="btn-accept hardcopy-record-button" id="recordHardcopyBtn" type="button"><i class="ri-inbox-archive-line"></i> Record Hardcopies Received</button></section>
+
       <section class="review-section"><div class="review-section-title"><span>5</span><div><h4>Document Verification</h4><p>View each photocopy and mark its result.</p></div></div><div class="staff-grid"><label>Franchise Status Check<select id="franchiseCheck"><option value="pending">Pending Check</option><option value="up_to_date">Up to Date</option><option value="expired">Expired</option><option value="revoked">Revoked</option></select></label><label>Verified OR Classification<select id="verifiedOrClass"><option value="expired">Expired</option><option value="private">Private</option><option value="for_hire">For Hire</option></select></label><label>Verified CR Classification<select id="verifiedCrClass"><option value="private">Private</option><option value="for_hire">For Hire</option></select></label><label class="checkbox-field"><input id="ltoForHireVerified" type="checkbox"> LTO Lucena City registration and For Hire OR/CR verified</label></div><div id="renewalDocuments"></div></section>
 
       <section class="review-section"><div class="review-section-title"><span>6</span><div><h4>TFRO-004 Physical Requirements</h4><p>Mark PASS only after the unit complies with every stated requirement.</p></div></div><div class="inspection-grid tfro004-inspection" id="inspectionChecklist">
@@ -61,7 +63,7 @@
   </div>
 </div>
 
-<script type="module" src="../js/renewals.js?v=20260914-4"></script>
+<script type="module" src="../js/renewals.js?v=20260914-5"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 </body>
 </html>
