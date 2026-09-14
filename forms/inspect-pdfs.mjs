@@ -14,6 +14,8 @@ for (const filename of fs.readdirSync('.').filter((name) => name.endsWith('.pdf'
     data: new Uint8Array(fs.readFileSync(filename)),
     disableWorker: true,
     standardFontDataUrl: `${pathToFileURL(path.resolve('node_modules/pdfjs-dist/standard_fonts')).href}/`,
+    useSystemFonts: true,
+    verbosity: 0,
   }).promise;
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
