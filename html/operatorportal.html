@@ -6,7 +6,7 @@
   <title>Operator Portal</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
 
-<link rel="stylesheet" href="../css/operatorportal.css?v=20260913-3">
+<link rel="stylesheet" href="../css/operatorportal.css?v=20260913-7">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-030000">
   <link rel="stylesheet" href="../css/guided-tour.css?v=20260913-1">
   <link rel="stylesheet" href="../css/guided-tour-bilingual.css?v=20260913-1">
@@ -227,12 +227,17 @@
         </p>
 
         <div class="cm-grid">
+          <h4 class="cm-section-title">Registered Operator and Franchise</h4>
           <div class="cm-field"><label>Operator</label><input type="text" id="cmOperatorName" readonly></div>
           <div class="cm-field"><label>Franchise Number</label><input type="text" id="cmFranchiseNumber" readonly></div>
+          <div class="cm-field"><label>Assigned Route</label><input type="text" id="cmAssignedRoute" readonly></div>
+          <h4 class="cm-section-title">Current Registered Vehicle Details</h4>
+          <div class="cm-field"><label>Current Motor Brand</label><input type="text" id="cmCurrentBrand" readonly></div>
+          <div class="cm-field"><label>Current Motor Model</label><input type="text" id="cmCurrentModel" readonly></div>
           <div class="cm-field"><label>Current Engine No.</label><input type="text" id="cmCurrentEngine" readonly></div>
           <div class="cm-field"><label>Current Chassis No.</label><input type="text" id="cmCurrentChassis" readonly></div>
           <div class="cm-field"><label>Current Plate No.</label><input type="text" id="cmCurrentPlate" readonly></div>
-          <div class="cm-field"><label>Assigned Route</label><input type="text" id="cmAssignedRoute" readonly></div>
+          <h4 class="cm-section-title">Proposed Replacement Details</h4>
           <div class="cm-field">
             <label>New Engine No.</label>
             <input type="text" id="cmEngine" placeholder="New engine number">
@@ -246,13 +251,14 @@
             <input type="text" id="cmPlate" placeholder="New plate number">
           </div>
           <div class="cm-field">
-            <label>Motor Brand</label>
+            <label>New Motor Brand</label>
             <input type="text" id="cmBrand" placeholder="e.g. Yamaha, Honda">
           </div>
           <div class="cm-field">
-            <label>Motor Serial</label>
+            <label>New Motor Model / Serial</label>
             <input type="text" id="cmSerial" placeholder="Motor serial number">
           </div>
+          <h4 class="cm-section-title">Required Supporting Files</h4>
           <div class="cm-field">
             <label>Supporting Document (PDF)</label>
             <input type="file" id="cmDoc" accept="application/pdf">
@@ -398,7 +404,7 @@
 
 </div>
 
-<script type="module" src="../js/operatorportal.js?v=20260913-4"></script>
+<script type="module" src="../js/operatorportal.js?v=20260913-7"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 <script type="module" src="../js/guided-tour.js?v=20260913-1"></script>
 

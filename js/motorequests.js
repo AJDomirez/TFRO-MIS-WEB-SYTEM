@@ -111,11 +111,15 @@ async function openReview(id) {
       safeDetail("Current Plate", currentReq.old_plate_number) +
       safeDetail("Current Make", currentReq.old_motor_brand || currentReq.franchise?.motorcycle_brand) +
       safeDetail("Current Model", currentReq.old_motor_model || currentReq.franchise?.motorcycle_year_model) +
+      safeDetail("Current Route", currentReq.franchise?.route) +
       safeDetail("New Engine", currentReq.new_engine_number) +
       safeDetail("New Chassis", currentReq.new_chassis_number) +
       safeDetail("New Plate", currentReq.new_plate_number) +
-      safeDetail("Motor Brand", currentReq.new_motor_brand) +
-      safeDetail("Motor Serial", currentReq.new_motor_serial) +
+      safeDetail("New Motor Brand", currentReq.new_motor_brand) +
+      safeDetail("New Motor Model / Serial", currentReq.new_motor_serial) +
+      safeDetail("Effective Engine After Approval", currentReq.new_engine_number || currentReq.old_engine_number) +
+      safeDetail("Effective Chassis After Approval", currentReq.new_chassis_number || currentReq.old_chassis_number) +
+      safeDetail("Effective Plate After Approval", currentReq.new_plate_number || currentReq.old_plate_number) +
       safeDetail("Supporting Doc", docHtml, true) +
     "</div>" +
     '<div class="review-actions motor-form-actions"><button type="button" class="btn-cancel" id="printTfro002Btn"><i class="ri-file-pdf-2-line"></i> TFRO-002</button><button type="button" class="btn-cancel" id="printTfro007Btn"><i class="ri-file-pdf-2-line"></i> TFRO-007</button>' +
@@ -240,15 +244,12 @@ alert("Request rejected. The operator has been notified.");
 
 async function openChangeMotorPdf(formCode) {
   if (!currentReq) return;
-  const module = await import("./pdf-form.js?v=20260913-4");
+  const module = await import("./pdf-form.js?v=20260913-7");
   const options = {
     request: currentReq,
     franchise: currentReq.franchise || {},
     operator: currentReq.operator_profile || {},
-    editable: true,
-    onSend: currentReq.status === "approved" && !currentReq.forms_sent_to_operator_at
-      ? sendChangeMotorForms
-      : null,
+    editable: false,
   };
   if (formCode === "TFRO-002") module.openDroppingPetitionPdfForm(options);
   else module.openDroppingCertificationPdfForm(options);

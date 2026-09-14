@@ -3,7 +3,7 @@ import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260913-4");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260913-7");
   openRenewalPdfForm(options);
 }
 
@@ -238,13 +238,13 @@ async function showRenewalSubmission(renewal) {
 }
 
 async function showPmblCertification(renewal) {
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20260913-4");
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20260913-7");
   openPmblPdfForm({ renewal, franchise: currentFranchise || {} });
 }
 
 async function showRenewalChecklist(renewal) {
   const { data: documents } = await supabase.from("renewal_documents").select("doc_type,status,verified").eq("renewal_id", renewal.id);
-  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260913-4");
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260913-7");
   openChecklistPdfForm({ renewal, documents: documents || [] });
 }
 
@@ -258,7 +258,7 @@ async function showTemporaryMtop(renewal) {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260913-4");
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260913-7");
   openTemporaryMtopPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor });
 }
 
@@ -360,7 +360,7 @@ async function submitRenewal(event) {
         cedula_number: byId("cedulaNumber").value.trim() || null, barangay_clearance_number: byId("barangayNumber").value.trim() || null,
         driver_name: byId("driverName").value, driver_license_number: byId("driverLicense").value,
         motorcycle_make: byId("motorcycleMake").value.trim(), motorcycle_model: byId("motorcycleModel").value.trim(),
-        plate_number: byId("plateNumber").value.trim(), engine_number: byId("engineNumber").value.trim(), chassis_number: byId("chassisNumber").value.trim(),
+        plate_number: byId("plateNumber").value.trim().toUpperCase(), engine_number: byId("engineNumber").value.trim().toUpperCase(), chassis_number: byId("chassisNumber").value.trim().toUpperCase(),
         pmbl_certificate_number: byId("pmblNumber").value.trim() || null, current_or_number: byId("orNumber").value.trim() || null,
         current_or_date: byId("orDate").value,
         current_cr_number: byId("crNumber").value.trim() || null, or_registration_class: byId("orClass").value,
@@ -376,11 +376,22 @@ async function submitRenewal(event) {
     if (resubmitting) {
       const update = await supabase.from("franchise_renewals").update({
         status: "pending_review",
+        renewal_type: byId("renewalType").value,
+        current_expiration_date: byId("currentExpiration").value,
+        operator_name: byId("operatorName").value.trim(), operator_address: byId("operatorAddress").value.trim(),
+        operator_contact: byId("operatorContact").value.trim(), voters_certificate_number: byId("votersNumber").value.trim() || null,
         residential_street: byId("residentialStreet").value.trim(), residential_barangay: byId("residentialBarangay").value.trim(),
         applicant_birth_date: byId("applicantBirthDate").value, applicant_birth_place: byId("applicantBirthPlace").value.trim(),
         applicant_civil_status: byId("applicantCivilStatus").value,
+        cedula_number: byId("cedulaNumber").value.trim() || null, barangay_clearance_number: byId("barangayNumber").value.trim() || null,
+        driver_id: Number(byId("driverId").value), driver_name: byId("driverName").value, driver_license_number: byId("driverLicense").value,
         motorcycle_make: byId("motorcycleMake").value.trim(), motorcycle_model: byId("motorcycleModel").value.trim(),
-        current_or_date: byId("orDate").value,
+        plate_number: byId("plateNumber").value.trim().toUpperCase(), engine_number: byId("engineNumber").value.trim().toUpperCase(),
+        chassis_number: byId("chassisNumber").value.trim().toUpperCase(), pmbl_certificate_number: byId("pmblNumber").value.trim() || null,
+        current_or_number: byId("orNumber").value.trim() || null, current_or_date: byId("orDate").value,
+        current_cr_number: byId("crNumber").value.trim() || null, or_registration_class: byId("orClass").value,
+        cr_registration_class: byId("crClass").value,
+        change_motor_request_id: byId("renewalType").value === "change_motor" ? Number(byId("changeMotorRequestId").value) : null,
         temporary_mtop_expiration_date: byId("renewalType").value === "regular" ? null : (byId("temporaryUntilDate").value || null),
       }).eq("id", renewalId);
       if (update.error) throw update.error;
