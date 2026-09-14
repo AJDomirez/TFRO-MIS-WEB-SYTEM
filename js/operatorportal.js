@@ -360,6 +360,7 @@ document.getElementById("assignedDriversTable")?.addEventListener("click", (even
 });
 
 function beginDriverEdit(driver) {
+  setDriverFormOpen(true, { scroll: true });
   editingDriver = driver;
   setValue("driverFullName", driver.full_name);
   setValue("driverLicenseNumber", driver.license_number);
@@ -371,19 +372,48 @@ function beginDriverEdit(driver) {
   document.getElementById("submitDriverBtn").innerHTML = '<i class="ri-save-line"></i> Save Driver Changes';
   document.getElementById("cancelDriverEditBtn").hidden = false;
   setDriverFormMessage("Editing this pending Driver application. Upload a new picture only if it must be replaced.");
-  document.getElementById("driverApplicationCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function endDriverEdit() {
+function endDriverEdit({ close = false } = {}) {
   editingDriver = null;
   document.getElementById("driverApplicationForm")?.reset();
   document.getElementById("driverPicture").required = true;
   document.getElementById("submitDriverBtn").innerHTML = '<i class="ri-user-add-line"></i> Submit Driver Application';
   document.getElementById("cancelDriverEditBtn").hidden = true;
   setDriverFormMessage("");
+  if (close) setDriverFormOpen(false);
 }
 
-document.getElementById("cancelDriverEditBtn")?.addEventListener("click", endDriverEdit);
+function setDriverFormOpen(open, { scroll = false } = {}) {
+  const form = document.getElementById("driverApplicationForm");
+  const toggle = document.getElementById("driverFormToggle");
+  if (!form || !toggle) return;
+  form.hidden = !open;
+  toggle.setAttribute("aria-expanded", String(open));
+  toggle.innerHTML = open
+    ? '<i class="ri-close-line"></i> Close Form'
+    : '<i class="ri-user-add-line"></i> Add Driver';
+  if (open && scroll) {
+    document.getElementById("driverApplicationCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => document.getElementById("driverFullName")?.focus({ preventScroll: true }), 350);
+  }
+}
+
+document.getElementById("driverFormToggle")?.addEventListener("click", () => {
+  const form = document.getElementById("driverApplicationForm");
+  if (!form?.hidden && editingDriver) endDriverEdit();
+  setDriverFormOpen(Boolean(form?.hidden), { scroll: true });
+});
+
+document.querySelector("[data-open-driver-form]")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  setDriverFormOpen(true, { scroll: true });
+  history.replaceState(null, "", "#driverApplicationCard");
+});
+
+if (window.location.hash === "#driverApplicationCard") setDriverFormOpen(true);
+
+document.getElementById("cancelDriverEditBtn")?.addEventListener("click", () => endDriverEdit({ close: true }));
 
 function setDriverFormMessage(message) {
   const element = document.getElementById("driverFormMessage");
@@ -470,7 +500,7 @@ async function submitDriverApplication(event) {
   if (wasEditing && hasPicture && oldPicturePath && oldPicturePath !== picturePath) {
     await supabase.storage.from("franchise-documents").remove([oldPicturePath]);
   }
-  endDriverEdit();
+  endDriverEdit({ close: true });
   if (savedDriverId) await showGeneratedDriverQr(savedDriverId);
   alert(wasEditing ? "Driver application updated." : "Driver application submitted to TFRO Staff for verification.");
   logAudit({
@@ -510,6 +540,34 @@ function cmShowError(msg) {
   el.textContent = msg;
   el.hidden = !msg;
 }
+
+function setChangeMotorFormOpen(open, { scroll = false } = {}) {
+  const form = document.getElementById("changeMotorWrap");
+  const toggle = document.getElementById("changeMotorToggle");
+  if (!form || !toggle) return;
+  form.hidden = !open;
+  toggle.setAttribute("aria-expanded", String(open));
+  toggle.innerHTML = open
+    ? '<i class="ri-close-line"></i> Close Form'
+    : '<i class="ri-edit-box-line"></i> Request';
+  if (open && scroll) {
+    document.getElementById("changeMotorCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => document.getElementById("cmEngine")?.focus({ preventScroll: true }), 350);
+  }
+}
+
+document.getElementById("changeMotorToggle")?.addEventListener("click", () => {
+  const form = document.getElementById("changeMotorWrap");
+  setChangeMotorFormOpen(Boolean(form?.hidden), { scroll: true });
+});
+
+document.querySelector("[data-open-change-motor]")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  setChangeMotorFormOpen(true, { scroll: true });
+  history.replaceState(null, "", "#changeMotorCard");
+});
+
+if (window.location.hash === "#changeMotorCard") setChangeMotorFormOpen(true);
 
 async function loadChangeMotorHistory(userId) {
   const table = document.getElementById("cmHistoryTable");
@@ -727,6 +785,7 @@ async function submitChangeMotor() {
   fileInput.value = "";
   pictureInput.value = "";
   alert("Change Motor request submitted for review.");
+  setChangeMotorFormOpen(false);
   logAudit({
     action: "Submitted Change Motor Request",
     actionType: "create",

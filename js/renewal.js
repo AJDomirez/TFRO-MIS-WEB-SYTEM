@@ -203,10 +203,12 @@ async function loadHistory() {
   banner.className = `renewal-alert ${statusClass(currentRenewal.status)}`;
   banner.textContent = `${statusLabel(currentRenewal.status)}: ${currentRenewal.decision_reason || "Your renewal is being processed by TFRO Staff."}`;
 
-  if (currentRenewal.status === "needs_correction") {
+  if (["pending_review", "needs_correction"].includes(currentRenewal.status)) {
     document.querySelectorAll('#renewalForm input[type="file"]').forEach((input) => { input.required = false; });
-    byId("submitRenewalBtn").innerHTML = '<i class="ri-refresh-line"></i> Resubmit Corrected Documents';
     prefillRenewal(currentRenewal);
+    const nextAttempt = Number(currentRenewal.submission_attempt_count || 1) + 1;
+    byId("submitRenewalBtn").innerHTML = '<i class="ri-refresh-line"></i> Update & Resubmit (Attempt ' + nextAttempt + ')';
+    banner.textContent += ' You may review all four steps and correct the submission before Admin processing continues. Current submission attempt: ' + (currentRenewal.submission_attempt_count || 1) + '.';
   } else {
     byId("renewalFormCard").style.opacity = ".65";
     byId("renewalForm").querySelectorAll("input, select, button").forEach((element) => { element.disabled = true; });
@@ -335,11 +337,10 @@ async function submitRenewal(event) {
   event.preventDefault();
   setError("");
   if (!currentFranchise) return setError("A linked franchise is required.");
-  const resubmitting = currentRenewal?.status === "needs_correction";
+  const resubmitting = Boolean(currentRenewal && ["pending_review", "needs_correction"].includes(currentRenewal.status));
   const files = getFiles();
   const fileError = validateFiles(files, resubmitting);
   if (fileError) return setError(fileError);
-  if (resubmitting && !files.length) return setError("Upload at least one corrected or missing document before resubmitting.");
 
   const button = byId("submitRenewalBtn");
   button.disabled = true;
@@ -396,8 +397,9 @@ async function submitRenewal(event) {
       }).eq("id", renewalId);
       if (update.error) throw update.error;
     }
-    await logAudit({ action: resubmitting ? "Resubmitted Renewal Requirements" : "Submitted Franchise Renewal", actionType: "create", record: String(renewalId), description: `${resubmitting ? "Resubmitted" : "Submitted"} franchise renewal documents for ${currentFranchise.franchise_number}.` });
-    alert(resubmitting ? "Corrected requirements resubmitted to TFRO Staff." : "Renewal submitted. TFRO Staff will verify the documents and inspect your unit.");
+    const attempt = resubmitting ? Number(currentRenewal.submission_attempt_count || 1) + 1 : 1;
+    await logAudit({ action: resubmitting ? "Revised and Resubmitted Renewal" : "Submitted Franchise Renewal", actionType: "create", record: String(renewalId), description: (resubmitting ? "Submitted renewal attempt " + attempt : "Submitted renewal") + " for " + currentFranchise.franchise_number + "." });
+    alert(resubmitting ? "Renewal corrections submitted as attempt " + attempt + ". Admin will see the updated details." : "Renewal submitted. TFRO Staff will verify the documents and inspect your unit.");
     window.location.reload();
   } catch (error) {
     console.error("Renewal submission error:", error);

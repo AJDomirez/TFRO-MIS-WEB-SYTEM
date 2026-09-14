@@ -6,7 +6,7 @@
   <title>Operator Portal</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
 
-<link rel="stylesheet" href="../css/operatorportal.css?v=20260913-7">
+<link rel="stylesheet" href="../css/operatorportal.css?v=20260914-2">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-030000">
   <link rel="stylesheet" href="../css/guided-tour.css?v=20260913-1">
   <link rel="stylesheet" href="../css/guided-tour-bilingual.css?v=20260913-1">
@@ -127,10 +127,10 @@
         <a href="renewal.html" class="operator-action-card action-renew">
           <i class="ri-refresh-line"></i><div><strong>Renew Franchise</strong><span>Three-year franchise and MTOP renewal</span><b>Start Renewal <i class="ri-arrow-right-line"></i></b></div>
         </a>
-        <a href="#changeMotorCard" class="operator-action-card action-motor">
+        <a href="#changeMotorCard" class="operator-action-card action-motor" data-open-change-motor>
           <i class="ri-settings-5-line"></i><div><strong>Change Motor</strong><span>Submit engine, chassis, or plate changes</span><b>Open Request <i class="ri-arrow-right-line"></i></b></div>
         </a>
-        <a href="#driverApplicationCard" class="operator-action-card action-driver">
+        <a href="#driverApplicationCard" class="operator-action-card action-driver" data-open-driver-form>
           <i class="ri-user-add-line"></i><div><strong>Add Driver</strong><span>Apply and submit Driver credentials</span><b>Start Application <i class="ri-arrow-right-line"></i></b></div>
         </a>
       </div>
@@ -217,10 +217,10 @@
 
       <div class="card-header">
         <h3>Change Motor / MTOP</h3>
-        <span class="badge approved" id="changeMotorBadge">Request</span>
+        <button class="request-toggle-btn" id="changeMotorToggle" type="button" aria-expanded="false" aria-controls="changeMotorWrap"><i class="ri-edit-box-line"></i> Request</button>
       </div>
 
-      <div class="change-motor-form" id="changeMotorWrap">
+      <div class="change-motor-form" id="changeMotorWrap" hidden>
         <p class="change-motor-note">
           Request to update the engine, chassis, or plate number of your registered tricycle.
           Please provide the new details and attach a supporting document (PDF).
@@ -314,14 +314,16 @@
             Drivers do not receive an email or password and cannot sign in.
           </p>
         </div>
-        <span class="badge pending">Operator submission</span>
+        <button class="request-toggle-btn driver-toggle-btn" id="driverFormToggle" type="button" aria-expanded="false" aria-controls="driverApplicationForm"><i class="ri-user-add-line"></i> Add Driver</button>
       </div>
 
-      <form id="driverApplicationForm">
+      <form id="driverApplicationForm" hidden>
         <div class="driver-form-grid">
+          <h4 class="driver-section-title">Operator and Franchise Assignment</h4>
           <div class="driver-field"><label for="driverOperatorName">Operator</label><input id="driverOperatorName" type="text" readonly></div>
           <div class="driver-field"><label for="driverFranchiseNumber">Franchise Number</label><input id="driverFranchiseNumber" type="text" readonly></div>
           <div class="driver-field driver-field-wide"><label for="driverAssignedRoute">Assigned Route</label><input id="driverAssignedRoute" type="text" readonly></div>
+          <h4 class="driver-section-title">Driver Identity and License Details</h4>
           <div class="driver-field">
             <label for="driverFullName">Full Name</label>
             <input id="driverFullName" name="full_name" type="text" required>
@@ -351,6 +353,7 @@
             <label for="driverAddress">Address</label>
             <input id="driverAddress" name="address" type="text" required>
           </div>
+          <h4 class="driver-section-title">Required Driver Picture</h4>
           <div class="driver-field driver-field-wide">
             <label for="driverPicture">Driver 2×2 Picture</label>
             <input id="driverPicture" name="picture" type="file" accept="image/jpeg,image/png" required>
@@ -404,7 +407,7 @@
 
 </div>
 
-<script type="module" src="../js/operatorportal.js?v=20260913-7"></script>
+<script type="module" src="../js/operatorportal.js?v=20260914-2"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 <script type="module" src="../js/guided-tour.js?v=20260913-1"></script>
 
