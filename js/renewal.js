@@ -194,9 +194,10 @@ async function loadHistory() {
       <td><span class="status-pill ${statusClass(renewal.status)}">${escapeHtml(statusLabel(renewal.status))}</span></td>
       <td>${escapeHtml(renewal.decision_reason || (renewal.status === "approved" ? `MTOP ${renewal.mtop_number || "for issuance"}; expected ${renewal.expected_release_date || "within 1–2 weeks"}` : "Awaiting TFRO processing"))}</td>
       <td>${escapeHtml(renewal.requirements_submission_date ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Manila" }).format(new Date(`${renewal.requirements_submission_date}T00:00:00+08:00`)) : "Not scheduled")}</td>
+      <td>${renewal.hardcopy_requirements_received ? `<span class="status-pill approved">Received</span><br><small>${escapeHtml(new Date(renewal.hardcopy_received_at).toLocaleString("en-PH"))}</small>` : '<span class="status-pill pending">Pending</span>'}</td>
       <td>${new Date(renewal.created_at).toLocaleDateString()}</td>
       <td><div class="form-buttons"><button type="button" class="page-button page-button-back" data-pmbl-form="${renewal.id}"><i class="ri-file-text-line"></i><span>TFRO-003</span></button>${renewal.temporary_mtop_issued ? `<button type="button" class="page-button page-button-back" data-tfro001-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i><span>TFRO-001</span></button>` : ""}${renewal.status === "approved" ? `<button type="button" class="page-button page-button-back" data-checklist-form="${renewal.id}"><i class="ri-checkbox-multiple-line"></i><span>TFRO-004</span></button><button type="button" class="page-button page-button-back" data-renewal-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i><span>TFRO-005</span></button>` : ""}</div></td>
-    </tr>`).join("") : '<tr><td colspan="7">No renewal requests yet.</td></tr>';
+    </tr>`).join("") : '<tr><td colspan="8">No renewal requests yet.</td></tr>';
 
   if (!currentRenewal) return;
   const banner = byId("renewalStatus");

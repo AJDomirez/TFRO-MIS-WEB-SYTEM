@@ -110,6 +110,7 @@ async function openReview(id) {
     detail("Operator", currentRenewal.operator_name), detail("Renewal Case", TYPE_LABELS[currentRenewal.renewal_type]),
     detail("Submission Attempts", String(currentRenewal.submission_attempt_count || 1)),
     detail("Requirements Submission Date", formatPhilippineDate(currentRenewal.requirements_submission_date)),
+    detail("Original Hardcopies", currentRenewal.hardcopy_requirements_received ? `Received ${new Date(currentRenewal.hardcopy_received_at).toLocaleString("en-PH")}` : "Not yet received"),
     detail("Operator Address", currentRenewal.operator_address), detail("Operator Contact", currentRenewal.operator_contact),
     detail("Home No. / Street / Purok", currentRenewal.residential_street), detail("Barangay", currentRenewal.residential_barangay),
     detail("Birth Date", currentRenewal.applicant_birth_date), detail("Place of Birth", currentRenewal.applicant_birth_place),
@@ -141,6 +142,17 @@ async function openReview(id) {
 
   byId("franchiseCheck").value = currentRenewal.franchise_check_status;
   byId("requirementsSubmissionDate").value = currentRenewal.requirements_submission_date || "";
+  const hardcopyReceived = Boolean(currentRenewal.hardcopy_requirements_received);
+  const hardcopyStatus = byId("hardcopyReceiptStatus");
+  hardcopyStatus.classList.toggle("received", hardcopyReceived);
+  hardcopyStatus.textContent = hardcopyReceived
+    ? `Received on ${new Date(currentRenewal.hardcopy_received_at).toLocaleString("en-PH")}`
+    : "Not yet received";
+  byId("hardcopyReceivedNotes").value = currentRenewal.hardcopy_received_notes || "";
+  byId("recordHardcopyBtn").disabled = hardcopyReceived;
+  byId("recordHardcopyBtn").innerHTML = hardcopyReceived
+    ? '<i class="ri-checkbox-circle-line"></i> Hardcopies Recorded'
+    : '<i class="ri-inbox-archive-line"></i> Record Hardcopies Received';
   byId("verifiedOrClass").value = currentRenewal.or_registration_class;
   byId("verifiedCrClass").value = currentRenewal.cr_registration_class;
   byId("ltoForHireVerified").checked = currentRenewal.lto_lucena_for_hire_verified;
@@ -335,6 +347,27 @@ async function sendRequirementsDate() {
   await loadRenewals();
 }
 
+async function recordHardcopyRequirements() {
+  if (!currentRenewal || currentRenewal.hardcopy_requirements_received) return;
+  if (!confirm("Confirm that TFRO has physically received all original hardcopy requirements from this operator?")) return;
+  const receivedAt = new Date().toISOString();
+  const notes = byId("hardcopyReceivedNotes").value.trim() || null;
+  const { data: { user } } = await supabase.auth.getUser();
+  const payload = {
+    hardcopy_requirements_received: true,
+    hardcopy_received_at: receivedAt,
+    hardcopy_received_by: user.id,
+    hardcopy_received_notes: notes,
+  };
+  const { error } = await supabase.from("franchise_renewals").update(payload).eq("id", currentRenewal.id);
+  if (error) return alert(`Could not record the hardcopy requirements: ${error.message}`);
+  Object.assign(currentRenewal, payload);
+  await logAudit({ action: "Received Renewal Hardcopies", actionType: "update", record: currentRenewal.renewal_code, description: `TFRO received the original hardcopy requirements for ${currentRenewal.renewal_code}.` });
+  alert("Original hardcopy requirements recorded. The Operator has been notified.");
+  byId("reviewModal").hidden = true;
+  await loadRenewals();
+}
+
 async function handleSaveProgress() {
   try {
     await saveProgress();
@@ -432,6 +465,7 @@ byId("renewalsTable").addEventListener("click", (event) => { const button = even
 document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => { byId(button.dataset.close).hidden = true; }));
 byId("saveProgressBtn").addEventListener("click", handleSaveProgress);
 byId("sendRequirementsDateBtn").addEventListener("click", sendRequirementsDate);
+byId("recordHardcopyBtn").addEventListener("click", recordHardcopyRequirements);
 byId("incompleteBtn").addEventListener("click", markIncomplete);
 byId("approveRenewalBtn").addEventListener("click", approveRenewal);
 byId("printPmblBtn").insertAdjacentHTML("beforebegin", '<button class="btn-cancel form-action-button" id="printTemporaryMtopBtn"><i class="ri-file-pdf-2-line"></i><span>TFRO-001</span></button>');
