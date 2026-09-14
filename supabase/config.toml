@@ -158,11 +158,11 @@ enabled = true
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "https://ajdomirez.github.io/TFRO-MIS-WEB-SYTEM/"
+site_url = "https://visionary-crisp-f6c6cb.netlify.app/html/index.html"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://ajdomirez.github.io/TFRO-MIS-WEB-SYTEM/**", "http://127.0.0.1:5500/**"]
+additional_redirect_urls = ["https://visionary-crisp-f6c6cb.netlify.app/**", "https://ajdomirez.github.io/TFRO-MIS-WEB-SYTEM/**", "http://127.0.0.1:5500/**"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -249,6 +249,10 @@ otp_expiry = 3600
 # [auth.email.template.invite]
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.confirmation]
+subject = "Confirm Your TFRO Account"
+content_path = "./supabase/email-template-confirm-signup.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
