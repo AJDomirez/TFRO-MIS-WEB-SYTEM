@@ -79,10 +79,11 @@ function renderTable() {
   byId("renewalsTable").innerHTML = rows.length ? rows.map((renewal) => `<tr>
     <td>${escapeHtml(renewal.renewal_code)}</td><td>${escapeHtml(renewal.franchises?.franchise_number)}</td>
     <td>${escapeHtml(renewal.operator_name)}</td><td>${escapeHtml(TYPE_LABELS[renewal.renewal_type])}</td>
+    <td><strong>${Number(renewal.submission_attempt_count || 1)}</strong></td>
     <td>${escapeHtml(renewal.current_expiration_date)}</td><td>${badge(renewal.status)}</td>
-    <td>${new Date(renewal.created_at).toLocaleDateString()}</td>
+    <td>${new Date(renewal.updated_at || renewal.created_at).toLocaleString("en-PH")}</td>
     <td><button class="verify-btn" data-review-id="${renewal.id}"><i class="ri-eye-line"></i> View / Review</button></td>
-  </tr>`).join("") : '<tr><td colspan="8">No renewal requests found.</td></tr>';
+  </tr>`).join("") : '<tr><td colspan="9">No renewal requests found.</td></tr>';
 }
 
 async function signedUrl(path) {
@@ -101,6 +102,7 @@ async function openReview(id) {
   byId("renewalDetails").innerHTML = [
     detail("Request", currentRenewal.renewal_code), detail("Franchise", currentRenewal.franchises?.franchise_number),
     detail("Operator", currentRenewal.operator_name), detail("Renewal Case", TYPE_LABELS[currentRenewal.renewal_type]),
+    detail("Submission Attempts", String(currentRenewal.submission_attempt_count || 1)),
     detail("Operator Address", currentRenewal.operator_address), detail("Operator Contact", currentRenewal.operator_contact),
     detail("Home No. / Street / Purok", currentRenewal.residential_street), detail("Barangay", currentRenewal.residential_barangay),
     detail("Birth Date", currentRenewal.applicant_birth_date), detail("Place of Birth", currentRenewal.applicant_birth_place),

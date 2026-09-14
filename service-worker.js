@@ -1,4 +1,4 @@
-const CACHE_NAME = "tfro-imis-shell-v6";
+const CACHE_NAME = "tfro-imis-shell-v9";
 const CORE_ASSETS = [
   "./",
   "html/application.html", "html/auditlog.html", "html/dashboard.html", "html/driver.html",
