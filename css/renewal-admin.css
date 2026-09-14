@@ -21,6 +21,9 @@
 .staff-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
 .staff-grid label,.staff-field label{font-size:.8rem;font-weight:700;color:#0d4778;}
 .staff-grid input,.staff-grid select,.staff-field input,.staff-field select,.staff-field textarea{display:block;width:100%;margin-top:6px;padding:10px 11px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;}
+.requirements-schedule-grid{align-items:end;grid-template-columns:minmax(220px,1fr) minmax(220px,2fr);}
+.schedule-action{display:flex;align-items:end;height:100%;}
+.schedule-action button{min-height:42px;}
 .staff-field{margin:12px 0;}
 .inspection-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;}
 .inspection-grid label,.checkbox-field{display:flex!important;align-items:center;gap:8px;background:#fff;border:1px solid #dfe9e3;border-radius:9px;padding:10px;font-size:.8rem;color:#0d4778;}
