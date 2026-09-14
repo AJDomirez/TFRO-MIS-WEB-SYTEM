@@ -58,6 +58,12 @@ function detail(label, value, html = false) {
   return `<div><label>${escapeHtml(label)}</label><strong>${html ? value : escapeHtml(value || "—")}</strong></div>`;
 }
 
+function formatPhilippineDate(value) {
+  if (!value) return "Not scheduled";
+  return new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Manila" })
+    .format(new Date(`${value}T00:00:00+08:00`));
+}
+
 async function loadRenewals() {
   const { data, error } = await supabase.from("franchise_renewals").select("*, franchises(franchise_number, status, birth_date, birth_place, civil_status, motorcycle_brand, motorcycle_year_model, chassis_cr_number, route)").order("created_at", { ascending: false });
   if (error) return alert(`Could not load renewals: ${error.message}`);
@@ -103,6 +109,7 @@ async function openReview(id) {
     detail("Request", currentRenewal.renewal_code), detail("Franchise", currentRenewal.franchises?.franchise_number),
     detail("Operator", currentRenewal.operator_name), detail("Renewal Case", TYPE_LABELS[currentRenewal.renewal_type]),
     detail("Submission Attempts", String(currentRenewal.submission_attempt_count || 1)),
+    detail("Requirements Submission Date", formatPhilippineDate(currentRenewal.requirements_submission_date)),
     detail("Operator Address", currentRenewal.operator_address), detail("Operator Contact", currentRenewal.operator_contact),
     detail("Home No. / Street / Purok", currentRenewal.residential_street), detail("Barangay", currentRenewal.residential_barangay),
     detail("Birth Date", currentRenewal.applicant_birth_date), detail("Place of Birth", currentRenewal.applicant_birth_place),
@@ -133,6 +140,7 @@ async function openReview(id) {
   }).join("");
 
   byId("franchiseCheck").value = currentRenewal.franchise_check_status;
+  byId("requirementsSubmissionDate").value = currentRenewal.requirements_submission_date || "";
   byId("verifiedOrClass").value = currentRenewal.or_registration_class;
   byId("verifiedCrClass").value = currentRenewal.cr_registration_class;
   byId("ltoForHireVerified").checked = currentRenewal.lto_lucena_for_hire_verified;
@@ -282,6 +290,7 @@ async function saveProgress(forcedStatus = null) {
   }
   let status = forcedStatus || (documentsComplete ? (inspectionPassed ? "awaiting_payment" : "inspection_pending") : "pending_review");
   const payload = {
+    requirements_submission_date: byId("requirementsSubmissionDate").value || null,
     franchise_check_status: byId("franchiseCheck").value,
     or_registration_class: byId("verifiedOrClass").value,
     cr_registration_class: byId("verifiedCrClass").value,
@@ -309,6 +318,21 @@ async function saveProgress(forcedStatus = null) {
   if (error) throw error;
   currentRenewal = { ...currentRenewal, ...payload };
   return { documentsComplete, inspectionPassed };
+}
+
+async function sendRequirementsDate() {
+  if (!currentRenewal) return;
+  const submissionDate = byId("requirementsSubmissionDate").value;
+  if (!submissionDate) return alert("Select the requirements submission date first.");
+  const { error } = await supabase.from("franchise_renewals")
+    .update({ requirements_submission_date: submissionDate })
+    .eq("id", currentRenewal.id);
+  if (error) return alert(`Could not send the date: ${error.message}`);
+  currentRenewal.requirements_submission_date = submissionDate;
+  await logAudit({ action: "Sent Requirements Submission Date", actionType: "update", record: currentRenewal.renewal_code, description: `Requirements submission for ${currentRenewal.renewal_code} was scheduled on ${formatPhilippineDate(submissionDate)}.` });
+  alert(`Submission date sent to the Operator: ${formatPhilippineDate(submissionDate)}.`);
+  byId("reviewModal").hidden = true;
+  await loadRenewals();
 }
 
 async function handleSaveProgress() {
@@ -407,6 +431,7 @@ bindDateCsvExport({
 byId("renewalsTable").addEventListener("click", (event) => { const button = event.target.closest("[data-review-id]"); if (button) openReview(button.dataset.reviewId); });
 document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => { byId(button.dataset.close).hidden = true; }));
 byId("saveProgressBtn").addEventListener("click", handleSaveProgress);
+byId("sendRequirementsDateBtn").addEventListener("click", sendRequirementsDate);
 byId("incompleteBtn").addEventListener("click", markIncomplete);
 byId("approveRenewalBtn").addEventListener("click", approveRenewal);
 byId("printPmblBtn").insertAdjacentHTML("beforebegin", '<button class="btn-cancel form-action-button" id="printTemporaryMtopBtn"><i class="ri-file-pdf-2-line"></i><span>TFRO-001</span></button>');

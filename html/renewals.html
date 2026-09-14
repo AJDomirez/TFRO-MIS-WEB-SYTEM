@@ -7,7 +7,7 @@
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
   <link rel="stylesheet" href="../css/franchise.css">
   <link rel="stylesheet" href="../css/application.css">
-  <link rel="stylesheet" href="../css/renewal-admin.css?v=20260826-190000">
+  <link rel="stylesheet" href="../css/renewal-admin.css?v=20260914-2">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
 </head>
@@ -44,6 +44,8 @@
     <div class="modal-body">
       <section class="review-section"><div class="review-section-title"><span>1-4</span><div><h4>Operator Submitted Form</h4><p>Answers submitted for renewal and MTOP processing.</p></div></div><div class="review-info-grid" id="renewalDetails"></div></section>
 
+      <section class="review-section"><div class="review-section-title"><span><i class="ri-calendar-event-line"></i></span><div><h4>Requirements Submission Schedule</h4><p>Set the date when the operator should bring the original requirements to the TFRO office.</p></div></div><div class="staff-grid requirements-schedule-grid"><label>Submission Date<input id="requirementsSubmissionDate" type="date"></label><div class="schedule-action"><button class="btn-accept" id="sendRequirementsDateBtn" type="button"><i class="ri-send-plane-line"></i> Send Date to Operator</button></div></div></section>
+
       <section class="review-section"><div class="review-section-title"><span>5</span><div><h4>Document Verification</h4><p>View each photocopy and mark its result.</p></div></div><div class="staff-grid"><label>Franchise Status Check<select id="franchiseCheck"><option value="pending">Pending Check</option><option value="up_to_date">Up to Date</option><option value="expired">Expired</option><option value="revoked">Revoked</option></select></label><label>Verified OR Classification<select id="verifiedOrClass"><option value="expired">Expired</option><option value="private">Private</option><option value="for_hire">For Hire</option></select></label><label>Verified CR Classification<select id="verifiedCrClass"><option value="private">Private</option><option value="for_hire">For Hire</option></select></label><label class="checkbox-field"><input id="ltoForHireVerified" type="checkbox"> LTO Lucena City registration and For Hire OR/CR verified</label></div><div id="renewalDocuments"></div></section>
 
       <section class="review-section"><div class="review-section-title"><span>6</span><div><h4>TFRO-004 Physical Requirements</h4><p>Mark PASS only after the unit complies with every stated requirement.</p></div></div><div class="inspection-grid tfro004-inspection" id="inspectionChecklist">
@@ -59,7 +61,7 @@
   </div>
 </div>
 
-<script type="module" src="../js/renewals.js?v=20260914-3"></script>
+<script type="module" src="../js/renewals.js?v=20260914-4"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 </body>
 </html>
