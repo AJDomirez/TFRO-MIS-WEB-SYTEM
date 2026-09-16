@@ -7,6 +7,7 @@ const publicDirectories = ["css", "html", "js", "Logo"];
 const publicRootFiles = [
   "Tricycle Image.png",
   "index.html",
+  "favicon.svg",
   ".nojekyll",
   "service-worker.js",
   "robots.txt",
@@ -31,6 +32,14 @@ for (const directory of publicDirectories) {
 for (const file of publicRootFiles) {
   fs.copyFileSync(path.join(root, file), path.join(output, file));
 }
+
+// Publish the landing page at the canonical root URL. Keep html/index.html as
+// the editable source; Netlify permanently redirects that legacy URL to `/`.
+const landingSource = fs.readFileSync(path.join(root, "html", "index.html"), "utf8");
+const rootLandingPage = landingSource
+  .replaceAll("../", "/")
+  .replace(/href="(login|register)\.html"/g, 'href="/html/$1.html"');
+fs.writeFileSync(path.join(output, "index.html"), rootLandingPage);
 
 // The forms directory also contains a local React development workspace. Only
 // publish the official PDF templates consumed by js/pdf-form.js.
