@@ -17,7 +17,7 @@ function renderEnforcers() {
   document.getElementById("activeEnforcers").textContent = enforcers.filter((row) => row.status === "active").length;
   document.getElementById("linkedEnforcers").textContent = enforcers.filter((row) => row.user_id).length;
   document.getElementById("submittedTickets").textContent = [...ticketCounts.values()].reduce((sum, count) => sum + count, 0);
-  document.getElementById("enforcerTable").innerHTML = rows.length ? rows.map((row) => `<tr><td><strong>${escapeHtml(row.enforcer_id)}</strong></td><td>${escapeHtml(row.full_name)}<br><small>${escapeHtml(row.email || "")}</small></td><td>${escapeHtml(row.contact_number || "—")}</td><td>${escapeHtml(row.unit_assignment || "—")}</td><td><span class="${row.user_id ? "account-linked" : "account-waiting"}">${row.user_id ? "Linked" : "Awaiting signup"}</span></td><td><select class="status-select" data-status-id="${row.id}" aria-label="Status for ${escapeHtml(row.full_name)}"><option value="active"${row.status === "active" ? " selected" : ""}>Active</option><option value="suspended"${row.status === "suspended" ? " selected" : ""}>Suspended</option><option value="inactive"${row.status === "inactive" ? " selected" : ""}>Inactive</option></select></td><td>${ticketCounts.get(row.user_id) || 0}</td><td><div class="registry-actions"><button class="row-action" data-view-id="${row.id}">View Form</button><button class="row-action" data-save-id="${row.id}">Save</button></div></td></tr>`).join("") : '<tr><td class="empty-row" colspan="8">No Traffic Enforcers found.</td></tr>';
+  document.getElementById("enforcerTable").innerHTML = rows.length ? rows.map((row) => `<tr><td><strong>${escapeHtml(row.enforcer_id)}</strong></td><td>${escapeHtml(row.full_name)}<br><small>${escapeHtml(row.email || "")}</small></td><td>${escapeHtml(row.contact_number || "—")}</td><td>${escapeHtml(row.unit_assignment || "—")}</td><td><span class="${row.user_id ? "account-linked" : "account-waiting"}">${row.user_id ? "Linked" : "Awaiting signup"}</span></td><td><select class="status-select" data-status-id="${row.id}" aria-label="Status for ${escapeHtml(row.full_name)}"><option value="active"${row.status === "active" ? " selected" : ""}>Active</option><option value="suspended"${row.status === "suspended" ? " selected" : ""}>Suspended</option><option value="inactive"${row.status === "inactive" ? " selected" : ""}>Inactive</option></select></td><td>${ticketCounts.get(row.user_id) || 0}</td><td><div class="registry-actions"><button class="row-action" data-view-id="${row.id}">View Form</button><button class="row-action" data-save-id="${row.id}">Save</button></div></td></tr>`).join("") : '<tr><td class="empty-row" colspan="8">No TFRO Enforcers found.</td></tr>';
 }
 
 async function loadData() {
@@ -50,23 +50,23 @@ async function viewProfile(id) { const row=enforcers.find((item)=>String(item.id
 async function createEnforcer(event) {
   event.preventDefault(); const form = event.currentTarget, values = Object.fromEntries(new FormData(form));
   const record = { enforcer_id:values.enforcer_id.trim().toUpperCase(), full_name:values.full_name.trim(), contact_number:values.contact_number.trim() || null, unit_assignment:values.unit_assignment.trim() || null, status:"active" };
-  showMessage("Saving Traffic Enforcer ID…");
+  showMessage("Saving TFRO Enforcer ID…");
   const { data, error } = await supabase.from("traffic_enforcers").insert(record).select("*").single();
-  if (error) return showMessage(error.code === "23505" ? "That Traffic Enforcer ID is already registered." : error.message, true);
-  await logAudit({ action:"Registered Traffic Enforcer ID", actionType:"create", record:data.enforcer_id, description:`Added ${data.full_name} to the authorized Traffic Enforcer roster.` });
-  form.reset(); showMessage("Traffic Enforcer ID registered. The Enforcer may now sign up."); await loadData();
+  if (error) return showMessage(error.code === "23505" ? "That TFRO Enforcer ID is already registered." : error.message, true);
+  await logAudit({ action:"Registered TFRO Enforcer ID", actionType:"create", record:data.enforcer_id, description:`Added ${data.full_name} to the authorized TFRO Enforcer roster.` });
+  form.reset(); showMessage("TFRO Enforcer ID registered. The Enforcer may now sign up."); await loadData();
 }
 
 async function saveStatus(id) {
   const row = enforcers.find((item) => String(item.id) === String(id)), select = document.querySelector(`[data-status-id="${id}"]`); if (!row || !select) return;
   const status = select.value, { error } = await supabase.from("traffic_enforcers").update({ status, updated_at:new Date().toISOString() }).eq("id",id);
   if (error) return alert(`Could not update Enforcer: ${error.message}`);
-  await logAudit({ action:"Updated Traffic Enforcer Status", actionType:"update", record:row.enforcer_id, description:`Changed ${row.full_name} from ${row.status} to ${status}.`, previousValue:row.status, newValue:status }); await loadData();
+  await logAudit({ action:"Updated TFRO Enforcer Status", actionType:"update", record:row.enforcer_id, description:`Changed ${row.full_name} from ${row.status} to ${status}.`, previousValue:row.status, newValue:status }); await loadData();
 }
 
 async function initialize() {
-  const { user } = await requireRole("admin"); if (!user) return;
-  try { await loadData(); } catch (error) { alert(`Could not load Traffic Enforcers: ${error.message}`); }
+  const { user } = await requireRole(["admin", "admin_viewer"]); if (!user) return;
+  try { await loadData(); } catch (error) { alert(`Could not load TFRO Enforcers: ${error.message}`); }
   watchRegistryChanges();
   document.getElementById("showEnforcerForm").addEventListener("click", () => { document.getElementById("enforcerFormPanel").hidden = false; });
   document.getElementById("cancelEnforcerForm").addEventListener("click", () => { document.getElementById("enforcerFormPanel").hidden = true; });

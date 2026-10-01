@@ -3,10 +3,26 @@ import { SUPABASE_URL } from "./supabase-config.js";
 
 export const ROLE_DESTINATIONS = Object.freeze({
   admin: "dashboard.html",
+  admin_viewer: "dashboard.html",
   staff: "violation.html",
   operator: "operatorportal.html",
   traffic_enforcer: "enforcerportal.html",
 });
+
+export const ADMIN_PORTAL_ROLES = Object.freeze(["admin", "admin_viewer"]);
+
+export function isReadOnlyAdmin(role) {
+  return role === "admin_viewer";
+}
+
+function applyReadOnlyAdminMode() {
+  document.body?.classList.add("read-only-admin");
+  document.querySelectorAll("button, input, select, textarea").forEach((control) => {
+    if (control.id === "logoutBtn") return;
+    control.disabled = true;
+    control.setAttribute("title", "View-only Administrator access");
+  });
+}
 
 function clearCachedIdentity() {
   localStorage.removeItem("role");
@@ -106,6 +122,8 @@ export async function requireRole(allowedRoles) {
   }
 
   document.documentElement.dataset.authState = "authorized";
+  document.documentElement.dataset.readOnlyAdmin = String(isReadOnlyAdmin(profile.role));
+  if (isReadOnlyAdmin(profile.role)) applyReadOnlyAdminMode();
   return { user, profile };
 }
 
@@ -121,12 +139,12 @@ export async function signOutAndRedirect(destination = "index.html") {
         import("./audit-helper.js").then(({ logAudit }) => logAudit({
           action: "Logged out of system",
           actionType: "logout",
-          description: "Traffic Enforcer ended the authenticated system session.",
+          description: "TFRO Enforcer ended the authenticated system session.",
         })),
         new Promise((resolve) => window.setTimeout(resolve, 800)),
       ]);
     } catch (error) {
-      console.error("Traffic Enforcer logout audit failed:", error);
+      console.error("TFRO Enforcer logout audit failed:", error);
     }
   }
 

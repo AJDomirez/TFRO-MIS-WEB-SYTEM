@@ -91,7 +91,7 @@ function render() {
       <td>${escapeHtml(payment?.receipt || "—")}</td>
       <td>${escapeHtml(row.apprehending_officers || "—")}</td>
       <td>${row.ticket_photo_path
-        ? `<button type="button" class="photo-link" data-action="photo" data-id="${row.id}" title="View ticket image submitted by the Traffic Enforcer"><i class="ri-image-line"></i> View Ticket Image</button>`
+        ? `<button type="button" class="photo-link" data-action="photo" data-id="${row.id}" title="View ticket image submitted by the TFRO Enforcer"><i class="ri-image-line"></i> View Ticket Image</button>`
         : '<span class="ticket-image-missing">No image submitted</span>'}</td>
       <td><div class="actions">
         ${canManageViolations ? `<button type="button" data-action="edit" data-id="${row.id}" title="Edit violation" aria-label="Edit violation for ${escapeHtml(row.subject_name || "record")}">
@@ -405,7 +405,7 @@ function bindEvents() {
 }
 
 async function initialize() {
-  const { user, profile } = await requireRole(["admin", "staff"]);
+  const { user, profile } = await requireRole(["admin", "admin_viewer", "staff"]);
   if (user) {
     currentUserId = user.id;
     canManageViolations = ["admin", "staff"].includes(profile?.role);

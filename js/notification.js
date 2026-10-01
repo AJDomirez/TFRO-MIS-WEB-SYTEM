@@ -26,7 +26,7 @@ const totalCount = document.getElementById("totalCount");
 
 /* SIDEBAR USER */
 async function loadSidebarUser() {
-  const { user, profile } = await requireRole(["admin", "staff", "operator"]);
+  const { user, profile } = await requireRole(["admin", "admin_viewer", "staff", "operator"]);
   if (!user || !profile) return null;
 
   const fullName = profile?.full_name || user.user_metadata?.full_name || "";

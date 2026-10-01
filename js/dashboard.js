@@ -53,7 +53,7 @@ function renderFranchiseStatuses(franchises) {
 }
 
 async function loadDashboard() {
-  const { user } = await requireRole(["admin"]);
+  const { user } = await requireRole(["admin", "admin_viewer"]);
   if (!user) return;
   const today = new Date(), todayIso = today.toISOString().slice(0, 10), expiryDate = new Date(today);
   expiryDate.setDate(today.getDate() + 14);

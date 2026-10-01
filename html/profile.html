@@ -237,11 +237,11 @@
         </div>
         <form id="settingsForm">
           <label class="setting-row">
-            <span><strong>Operator Registration</strong><small>Allow operators and registered Traffic Enforcers to create accounts.</small></span>
+            <span><strong>Operator Registration</strong><small>Allow operators and registered TFRO Enforcers to create accounts.</small></span>
             <input type="checkbox" id="registrationEnabled">
           </label>
           <label class="setting-row warning-setting">
-            <span><strong>Maintenance Mode</strong><small>Temporarily block staff, operators, and Traffic Enforcers. Administrators retain access.</small></span>
+            <span><strong>Maintenance Mode</strong><small>Temporarily block staff, operators, and TFRO Enforcers. Administrators retain access.</small></span>
             <input type="checkbox" id="maintenanceMode">
           </label>
           <div class="settings-number-grid">
@@ -254,12 +254,12 @@
 
         <section class="account-management" aria-labelledby="accountManagementTitle">
           <div class="account-management-heading">
-            <div><span class="settings-kicker">ADMINISTRATOR ONLY</span><h3 id="accountManagementTitle">Account Management</h3><p>Remove portal access for Operator and Traffic Enforcer accounts while retaining their official records.</p></div>
+            <div><span class="settings-kicker">ADMINISTRATOR ONLY</span><h3 id="accountManagementTitle">Account Management</h3><p>Remove portal access for Operator and TFRO Enforcer accounts while retaining their official records.</p></div>
             <button type="button" class="account-refresh-btn" id="refreshAccountsBtn"><i class="ri-refresh-line"></i> Refresh</button>
           </div>
           <div class="account-management-tools">
             <div class="account-search"><i class="ri-search-line"></i><input type="search" id="accountSearch" placeholder="Search name, email, role, or ID"></div>
-            <select id="accountRoleFilter" aria-label="Filter accounts by role"><option value="all">All account types</option><option value="operator">Operators</option><option value="traffic_enforcer">Traffic Enforcers</option></select>
+            <select id="accountRoleFilter" aria-label="Filter accounts by role"><option value="all">All account types</option><option value="operator">Operators</option><option value="traffic_enforcer">TFRO Enforcers</option></select>
           </div>
           <p class="settings-status" id="accountManagementStatus" aria-live="polite">Loading accounts…</p>
           <div class="account-table-wrap">

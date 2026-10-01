@@ -1,7 +1,7 @@
 import { supabase } from "./supabase.js";
 import { requireRole, destinationForRole } from "./auth-guard.js";
 
-const allowedRoles = ["admin", "staff", "operator", "traffic_enforcer"];
+const allowedRoles = ["admin", "admin_viewer", "staff", "operator", "traffic_enforcer"];
 const result = document.getElementById("verificationResult"), status = document.getElementById("scanStatus"), video = document.getElementById("scannerVideo"), cameraBox = document.getElementById("cameraBox");
 let stream = null, scanning = false;
 const escapeHtml = (v) => String(v ?? "").replace(/[&<>'"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#039;",'"':"&quot;"})[c]);

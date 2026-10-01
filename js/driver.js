@@ -61,7 +61,7 @@ function watchDriverChanges() {
   window.addEventListener("focus", loadDrivers);
 }
 async function verifyAccess() {
-  const { user } = await requireRole(["admin"]);
+  const { user } = await requireRole(["admin", "admin_viewer"]);
   if (!user) return;
   await loadDrivers();
   watchDriverChanges();

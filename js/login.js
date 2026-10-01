@@ -131,6 +131,10 @@ function passwordMeetsRequirements(value) {
 async function sendRecoveryCode() {
   recoveryEmail = recoveryEmailInput.value.trim().toLowerCase();
   if (!recoveryEmail) return;
+  if (!recoveryEmail.includes("@")) {
+    showRecoveryMessage("View-only Administrator accounts use usernames and do not have email recovery. Ask a Head Administrator to delete and recreate the account with a new password.");
+    return;
+  }
 
   sendRecoveryCodeButton.disabled = true;
   sendRecoveryCodeButton.textContent = "Sending code...";
@@ -338,7 +342,12 @@ loginForm.addEventListener("submit", async (event) => {
   if (refreshLockout()) return;
   loginMessage.hidden = true;
 
-  const email = document.getElementById("email").value.trim();
+  const accountInput = document.getElementById("email").value.trim();
+  // Administrator usernames map to an internal, auto-confirmed email identity.
+  // Regular users continue to sign in with their real email address.
+  const email = accountInput.includes("@")
+    ? accountInput
+    : `${accountInput.toLowerCase()}@admin.tfro-mis.local`;
   const password = document.getElementById("password").value;
   const franchiseNumber = document.getElementById("franchiseNumber").value;
 

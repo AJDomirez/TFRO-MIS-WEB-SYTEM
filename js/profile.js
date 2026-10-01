@@ -40,7 +40,7 @@ function roleLabel(role) {
     admin: "Administrator",
     staff: "Staff",
     operator: "Operator",
-    traffic_enforcer: "Traffic Enforcer",
+    traffic_enforcer: "TFRO Enforcer",
     driver: "Driver",
   };
   return map[role] || role || "User";
@@ -66,7 +66,7 @@ await supabase.from("audit_logs").insert({
 
 /* LOAD PROFILE */
 async function loadProfile() {
-  const { user } = await requireRole(["admin", "staff"]);
+  const { user } = await requireRole(["admin", "admin_viewer", "staff"]);
   if (!user) return;
   currentUserId = user.id;
 
@@ -221,7 +221,7 @@ function renderManagedAccounts() {
 async function loadManagedAccounts() {
   if (currentUserRole !== "admin") return;
   const status = document.getElementById("accountManagementStatus");
-  if (status) status.textContent = "Loading Operator and Traffic Enforcer accounts…";
+  if (status) status.textContent = "Loading Operator and TFRO Enforcer accounts…";
   const [operators, enforcers] = await Promise.all([
     supabase.from("operators").select("user_id, full_name, email, franchise_number, status").not("user_id", "is", null).order("full_name"),
     supabase.from("traffic_enforcers").select("user_id, full_name, email, enforcer_id, status").not("user_id", "is", null).order("full_name"),

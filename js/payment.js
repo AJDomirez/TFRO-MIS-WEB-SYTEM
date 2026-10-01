@@ -15,7 +15,7 @@ const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => 
 const normalize = (payment) => ({ ...payment, receipt:payment.receipt || `LEGACY-${payment.id}`, payer:payment.payer || "Unknown payer", type:payment.payment_type || "Penalty", status:payment.status || "paid", date:payment.paid_at ? String(payment.paid_at).slice(0,10) : "—" });
 
 async function verifyAccess() {
-  const { user, profile } = await requireRole(["staff", "admin"]);
+  const { user, profile } = await requireRole(["staff", "admin", "admin_viewer"]);
   currentUserId = user?.id || null; currentRole = profile?.role || null;
   document.getElementById("recordPaymentBtn").hidden = currentRole !== "staff";
   document.querySelector(".topbar h1").textContent = currentRole === "admin" ? "Administrator — Payment & Release Records" : "TFRO Staff / PAYA — Violation Payments";

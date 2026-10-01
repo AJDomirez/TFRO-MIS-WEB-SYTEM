@@ -34,7 +34,7 @@ function statusBadge(status) {
 }
 
 async function verifyAccess() {
-  const { profile } = await requireRole(["admin"]);
+  const { profile } = await requireRole(["admin", "admin_viewer"]);
   return profile;
 }
 
