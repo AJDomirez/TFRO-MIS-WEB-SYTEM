@@ -17,25 +17,38 @@
       <div class="user-section sidebar-user"><div class="user-info"><div class="avatar" id="userAvatar">U</div><div class="user-details"><h4 id="userName">User</h4><p id="userRole">Head Administrator</p></div></div><button class="logout-btn" id="logoutBtn" aria-label="Log out"><i class="ri-logout-box-r-line"></i></button></div>
     </aside>
     <main class="admin-users-main">
-      <header><span class="eyebrow">ACCESS CONTROL</span><h1>Admin Users</h1><p>Head Administrators can create up to 40 view-only Administrator accounts.</p></header>
-      <section class="capacity-card"><div><span>View-only Administrator accounts</span><strong id="viewerCount">0 / 40</strong></div><i class="ri-shield-user-line" aria-hidden="true"></i></section>
+      <header><span class="eyebrow">ACCESS CONTROL</span><h1>Portal Accounts</h1><p>Head Administrators can create and remove restricted Administrator and TFRO Staff accounts.</p></header>
+      <section class="capacity-card"><div><span>Restricted Administrator accounts</span><strong id="viewerCount">0 / 40</strong></div><i class="ri-shield-user-line" aria-hidden="true"></i></section>
       <section class="content-card"><h2>Head Administrator accounts</h2><p class="hint">These are the two full-access accounts. Existing accounts sign in with their email address; passwords are never displayed or recoverable.</p><div class="table-wrap"><table><thead><tr><th>Name</th><th>Sign-in account</th></tr></thead><tbody id="headAdminRows"><tr><td colspan="2">Loading accounts…</td></tr></tbody></table></div></section>
       <section class="content-card">
-        <h2>Add view-only Administrator</h2>
-        <p class="hint">This account can view administrator pages and reports but cannot create, edit, approve, archive, or delete records.</p>
+        <h2>Add restricted Administrator</h2>
+        <p class="hint">This account can view, add, edit, save, and approve records. It cannot delete or archive data, manage system settings, or create and delete Administrator accounts.</p>
         <form id="createAdminForm" novalidate>
           <label>Full name<input id="fullName" name="full_name" maxlength="120" required autocomplete="name"></label>
           <label>Username<input id="username" name="username" maxlength="32" pattern="[a-z][a-z0-9_.-]{2,31}" required autocomplete="username" placeholder="e.g. admin.juan"></label>
-          <label>Password<input id="password" name="password" type="password" minlength="12" required autocomplete="new-password"></label>
+          <label>Password <span class="field-requirement">12+ characters with uppercase, lowercase, number, and symbol</span><input id="password" name="password" type="password" minlength="12" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{12,}" title="Use at least 12 characters including an uppercase letter, lowercase letter, number, and symbol." required autocomplete="new-password"></label>
           <label>Contact number <span class="optional">(optional)</span><input id="contactNumber" name="contact_number" maxlength="40" autocomplete="tel"></label>
-          <button class="primary-button" id="createAdminButton" type="submit"><i class="ri-user-add-line"></i> Create view-only Administrator</button>
+          <button class="primary-button" id="createAdminButton" type="submit"><i class="ri-user-add-line"></i> Create restricted Administrator</button>
         </form>
         <p class="hint">No email address or email confirmation is required for these accounts. Keep the username and password private.</p><p id="formMessage" class="form-message" role="status" aria-live="polite"></p>
       </section>
-      <section class="content-card"><div class="section-heading"><h2>Current view-only Administrators</h2><button id="refreshList" type="button" class="icon-button" title="Refresh"><i class="ri-refresh-line"></i></button></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Contact</th><th>Action</th></tr></thead><tbody id="adminRows"><tr><td colspan="4">Loading accounts…</td></tr></tbody></table></div></section>
+      <section class="content-card"><div class="section-heading"><h2>Current restricted Administrators</h2><button id="refreshList" type="button" class="icon-button" title="Refresh"><i class="ri-refresh-line"></i></button></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Contact</th><th>Action</th></tr></thead><tbody id="adminRows"><tr><td colspan="4">Loading accounts…</td></tr></tbody></table></div></section>
+      <section class="content-card">
+        <h2>Add TFRO Staff</h2>
+        <p class="hint">Create a staff login for violation, payment, and other authorized TFRO operations.</p>
+        <form id="createStaffForm" novalidate>
+          <label>Full name<input id="staffFullName" maxlength="120" required autocomplete="name"></label>
+          <label>Username<input id="staffUsername" maxlength="32" pattern="[a-z][a-z0-9_.-]{2,31}" required autocomplete="username" placeholder="e.g. staff.juan"></label>
+          <label>Password <span class="field-requirement">12+ characters with uppercase, lowercase, number, and symbol</span><input id="staffPassword" type="password" minlength="12" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{12,}" required autocomplete="new-password"></label>
+          <label>Contact number <span class="optional">(optional)</span><input id="staffContactNumber" maxlength="40" autocomplete="tel"></label>
+          <button class="primary-button" id="createStaffButton" type="submit"><i class="ri-user-add-line"></i> Create TFRO Staff</button>
+        </form>
+        <p id="staffFormMessage" class="form-message" role="status" aria-live="polite"></p>
+      </section>
+      <section class="content-card"><div class="section-heading"><h2>Current TFRO Staff</h2><button id="refreshStaffList" type="button" class="icon-button" title="Refresh"><i class="ri-refresh-line"></i></button></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Contact</th><th>Action</th></tr></thead><tbody id="staffRows"><tr><td colspan="4">Loading accounts…</td></tr></tbody></table></div></section>
     </main>
   </div>
   <script type="module" src="../js/sidebar-user.js"></script>
-  <script type="module" src="../js/admin-users.js"></script>
+  <script type="module" src="../js/admin-users.js?v=20261002-2"></script>
 </body>
 </html>

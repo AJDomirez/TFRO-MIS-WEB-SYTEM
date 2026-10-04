@@ -5,7 +5,7 @@ const path = require("node:path");
 const root = __dirname;
 const port = Number(process.env.PORT) || 5500;
 const publicDirectories = new Set(["css", "html", "js", "Logo"]);
-const publicRootFiles = new Set(["Tricycle Image.png", "service-worker.js"]);
+const publicRootFiles = new Set(["Tricycle Image.png", "favicon.svg", "service-worker.js"]);
 
 const mimeTypes = {
   ".css": "text/css; charset=utf-8",
@@ -40,7 +40,9 @@ http
     const isFormTemplate = topLevelEntry === "forms" &&
       path.dirname(projectRelativePath) === "forms" &&
       path.extname(projectRelativePath).toLowerCase() === ".pdf";
-    const isPublicPath = isQrVendor || isFormTemplate || publicDirectories.has(topLevelEntry) ||
+    const formAssetsDirectory = path.join("forms", "public", "assets");
+    const isFormAsset = projectRelativePath.startsWith(`${formAssetsDirectory}${path.sep}`);
+    const isPublicPath = isQrVendor || isFormTemplate || isFormAsset || publicDirectories.has(topLevelEntry) ||
       (projectRelativePath === topLevelEntry && publicRootFiles.has(topLevelEntry));
 
     if (

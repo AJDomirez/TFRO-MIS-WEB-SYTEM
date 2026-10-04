@@ -157,7 +157,7 @@ async function openTicketPhoto(row) {
   const status = document.getElementById("ticketPhotoStatus");
   const controls = [document.getElementById("saveTicketPhotoBtn"), document.getElementById("printTicketPhotoBtn")];
   document.getElementById("ticketPhotoTitle").textContent = `Ticket ${row.ticket_number || row.id}`;
-  status.textContent = "Loading ticket imageâ€¦";
+  status.textContent = "Loading ticket image…";
   status.hidden = false;
   image.hidden = true;
   controls.forEach((control) => { control.disabled = true; });

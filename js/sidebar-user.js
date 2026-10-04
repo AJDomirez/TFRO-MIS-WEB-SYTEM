@@ -4,6 +4,8 @@
    logged-in profile. Include after supabase.js on any page
    that shows a sidebar user widget.
    ========================================================= */
+import "./theme-toggle.js";
+
 let supabaseClientPromise;
 let activeTableScrollControls = null;
 
@@ -119,8 +121,8 @@ function initials(name = "") {
 
 function roleLabel(role) {
   const map = {
-    admin: "Administrator",
-    admin_viewer: "View-only Administrator",
+    admin: "Head Administrator",
+    admin_viewer: "Restricted Administrator",
     staff: "TFRO Staff",
     operator: "Operator",
     traffic_enforcer: "TFRO Enforcer",

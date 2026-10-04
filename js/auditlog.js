@@ -63,7 +63,9 @@ async function loadSidebarUser() {
 
   setText("userName", fullName || role || "User");
   setText("userAvatar", initials(fullName || role || "User"));
-  const roleText = role.charAt(0).toUpperCase() + role.slice(1);
+  const roleText = role === "admin" ? "Head Administrator"
+    : role === "admin_viewer" ? "Restricted Administrator"
+    : role.charAt(0).toUpperCase() + role.slice(1);
   setText("userRole", roleText || "");
 
   // Manage Logs is admin only

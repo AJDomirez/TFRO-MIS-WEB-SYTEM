@@ -1,4 +1,4 @@
-const CACHE_NAME = "tfro-imis-shell-v11";
+const CACHE_NAME = "tfro-imis-shell-v13";
 const CORE_ASSETS = [
   "./",
   "html/application.html", "html/auditlog.html", "html/dashboard.html", "html/driver.html",
@@ -23,7 +23,7 @@ const CORE_ASSETS = [
   "js/renewals.js", "js/report.js", "js/sidebar-user.js", "js/submission-form.js",
   "js/supabase-config.js", "js/supabase.js", "js/trike-drive.js", "js/violation.js",
   "js/vendor/pdf-lib.min.js", "js/vendor/qrcode.min.js",
-  "Logo/BG1.jpg", "Logo/BG2.jpg", "Logo/BG3.png", "Logo/BG4.png", "Logo/BG5.jpg",
+  "Logo/BG2.jpg", "Logo/BG3.png", "Logo/BG4.png", "Logo/BG5.jpg",
   "Logo/Lucena City Logo.png", "Logo/PMBL Logo.png", "Logo/TFRO Logo.jpg",
   "Logo/TFRO-005 Footer.png", "Logo/TFRO-005 Header.png",
   "forms/PMBL TFRO-003 Certification.pdf", "forms/TFRO-001 Temporary MTOP.pdf",

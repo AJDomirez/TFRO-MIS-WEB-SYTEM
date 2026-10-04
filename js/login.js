@@ -132,7 +132,7 @@ async function sendRecoveryCode() {
   recoveryEmail = recoveryEmailInput.value.trim().toLowerCase();
   if (!recoveryEmail) return;
   if (!recoveryEmail.includes("@")) {
-    showRecoveryMessage("View-only Administrator accounts use usernames and do not have email recovery. Ask a Head Administrator to delete and recreate the account with a new password.");
+    showRecoveryMessage("Restricted Administrator accounts use usernames and do not have email recovery. Ask a Head Administrator to delete and recreate the account with a new password.");
     return;
   }
 

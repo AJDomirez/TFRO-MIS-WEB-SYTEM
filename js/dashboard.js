@@ -3,6 +3,13 @@ import { requireRole } from "./auth-guard.js";
 
 const monthFormatter = new Intl.DateTimeFormat("en", { month: "short" });
 
+function configureChartTheme() {
+  if (typeof Chart !== "function") return;
+  const dark = document.documentElement.dataset.theme === "dark";
+  Chart.defaults.color = dark ? "#c6d5e5" : "#38536d";
+  Chart.defaults.borderColor = dark ? "rgba(149, 184, 217, .2)" : "rgba(13,71,120,.08)";
+}
+
 function setText(id, value) { document.getElementById(id).textContent = value; }
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;" })[character]);
@@ -13,6 +20,7 @@ function lastSixMonths() {
   return months;
 }
 function renderApplications({ operators, drivers, motorRequests, renewals }) {
+  configureChartTheme();
   const months = lastSixMonths();
   const countByMonth = (rows) => {
     const counts = Array(6).fill(0);
@@ -31,6 +39,7 @@ function renderApplications({ operators, drivers, motorRequests, renewals }) {
   ] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, plugins: { legend: { position: "top", align: "start", labels: { usePointStyle: true, pointStyle: "circle", boxWidth: 7, padding: 18 } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "rgba(13,71,120,.08)" } } } } });
 }
 function renderViolations(violations) {
+  configureChartTheme();
   const counts = violations.reduce((result, row) => ({ ...result, [row.violation_type]: (result[row.violation_type] || 0) + 1 }), {});
   const labels = Object.keys(counts);
   new Chart(document.getElementById("violationsChart"), {
@@ -152,6 +161,20 @@ async function loadUserInfo() {
 loadDashboard();
 loadUserInfo();
 document.getElementById("refreshDashboard")?.addEventListener("click", () => window.location.reload());
+
+window.addEventListener("tfrothemechange", () => {
+  configureChartTheme();
+  if (typeof Chart !== "function") return;
+  Object.values(Chart.instances || {}).forEach((chart) => {
+    const scales = chart.options.scales || {};
+    Object.values(scales).forEach((scale) => {
+      if (scale.ticks) scale.ticks.color = Chart.defaults.color;
+      if (scale.grid) scale.grid.color = Chart.defaults.borderColor;
+    });
+    if (chart.options.plugins?.legend?.labels) chart.options.plugins.legend.labels.color = Chart.defaults.color;
+    chart.update();
+  });
+});
 
 document.getElementById("expiringRows")?.addEventListener("click", async (event) => {
   const button = event.target.closest(".reminder-btn");

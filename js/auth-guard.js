@@ -11,17 +11,32 @@ export const ROLE_DESTINATIONS = Object.freeze({
 
 export const ADMIN_PORTAL_ROLES = Object.freeze(["admin", "admin_viewer"]);
 
-export function isReadOnlyAdmin(role) {
+export function isRestrictedAdmin(role) {
   return role === "admin_viewer";
 }
 
-function applyReadOnlyAdminMode() {
-  document.body?.classList.add("read-only-admin");
-  document.querySelectorAll("button, input, select, textarea").forEach((control) => {
-    if (control.id === "logoutBtn") return;
+const HEAD_ADMIN_ONLY_SELECTOR = [
+  '[data-action="delete"]', '[data-head-admin-only]', '.delete-account',
+  '.delete-account-btn', '.notification-card .close-btn', '#confirmDeleteBtn', '#manageBtn', '#archiveOldBtn',
+].join(',');
+
+function applyRestrictedAdminMode() {
+  document.body?.classList.add("restricted-admin");
+  const restrict = (root = document) => root.querySelectorAll?.(HEAD_ADMIN_ONLY_SELECTOR).forEach((control) => {
+    control.hidden = true;
     control.disabled = true;
-    control.setAttribute("title", "View-only Administrator access");
+    control.setAttribute("aria-hidden", "true");
+    control.setAttribute("title", "Head Administrator only");
   });
+  restrict();
+  new MutationObserver((mutations) => mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
+    if (node.nodeType === Node.ELEMENT_NODE) restrict(node.matches?.(HEAD_ADMIN_ONLY_SELECTOR) ? node.parentElement : node);
+  }))).observe(document.body, { childList: true, subtree: true });
+  document.addEventListener("click", (event) => {
+    if (!event.target?.closest?.(HEAD_ADMIN_ONLY_SELECTOR)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, { capture: true });
 }
 
 function clearCachedIdentity() {
@@ -122,8 +137,8 @@ export async function requireRole(allowedRoles) {
   }
 
   document.documentElement.dataset.authState = "authorized";
-  document.documentElement.dataset.readOnlyAdmin = String(isReadOnlyAdmin(profile.role));
-  if (isReadOnlyAdmin(profile.role)) applyReadOnlyAdminMode();
+  document.documentElement.dataset.restrictedAdmin = String(isRestrictedAdmin(profile.role));
+  if (isRestrictedAdmin(profile.role)) applyRestrictedAdminMode();
   return { user, profile };
 }
 
