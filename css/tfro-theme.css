@@ -49,7 +49,7 @@ body.admin-sidebar .franchise-menu-toggle{
 }
 
 /* 2026 palette refresh: blue structure and actions, yellow highlights. */
-:root{--tfro-blue-900:#0b2f55;--tfro-blue-800:#0d4778;--tfro-blue-700:#124b7a;--tfro-blue-50:#f8fafc;--tfro-green-700:#123f73;--tfro-green-600:#174f86;--tfro-yellow:#f4c430;}
+:root{--tfro-blue-900:#061d38;--tfro-blue-800:#0a315c;--tfro-blue-700:#145187;--tfro-blue-50:#f1f6fc;--tfro-green-700:#0c3d70;--tfro-green-600:#145187;--tfro-yellow:#f4c430;}
 body.admin-sidebar .menu li{
   margin-bottom:1px !important;
 }
@@ -1355,3 +1355,311 @@ body.enforcer-sidebar form{font-family:Inter,"Segoe UI",Arial,sans-serif;font-si
 body.enforcer-sidebar form label{min-width:0;color:#334155;font-size:13px !important;font-weight:700 !important;line-height:1.3 !important;text-align:left !important;}
 body.enforcer-sidebar form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),body.enforcer-sidebar form select,body.enforcer-sidebar form textarea{width:100%;min-width:0;min-height:42px;padding:10px 12px !important;color:#0f172a;font-family:Inter,"Segoe UI",Arial,sans-serif !important;font-size:14px !important;font-weight:400 !important;line-height:1.4 !important;text-align:left !important;}
 body.enforcer-sidebar form textarea{min-height:96px;resize:vertical;}body.enforcer-sidebar form button{font-family:Inter,"Segoe UI",Arial,sans-serif;font-size:13px;font-weight:700;line-height:1.2;}
+
+/* Appearance controls and dark-mode surfaces. This layer stays last so it can
+   safely update legacy pages without changing their feature-specific layout. */
+.tfro-theme-actions{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.tfro-theme-actions-floating{position:fixed;top:16px;right:16px;z-index:5000;margin:0;}
+.tfro-theme-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:9px 12px;border:1px solid #b8c8d8;border-radius:10px;background:#fff;color:var(--tfro-blue-800);font:700 13px/1 Inter,"Segoe UI",Arial,sans-serif;cursor:pointer;box-shadow:0 3px 12px rgba(6,29,56,.08);transition:transform .18s ease,background .18s ease,border-color .18s ease;}
+.tfro-theme-toggle:hover{transform:translateY(-1px);border-color:var(--tfro-blue-700);background:#f1f6fc;}
+.tfro-theme-toggle:focus-visible{outline:3px solid rgba(20,81,135,.28);outline-offset:2px;}
+.admin-users-main>header{position:relative;display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 14px;}
+.admin-users-main>header .eyebrow,.admin-users-main>header h1,.admin-users-main>header p{width:100%;}
+.admin-users-main>header .tfro-theme-actions{position:absolute;top:0;right:0;}
+
+html[data-theme="dark"]{color-scheme:dark;}
+html[data-theme="dark"] body{background:#071421 !important;color:#e7eef8 !important;}
+html[data-theme="dark"] .main-content,html[data-theme="dark"] .admin-users-main,html[data-theme="dark"] main{color:#e7eef8;}
+html[data-theme="dark"] .topbar,html[data-theme="dark"] .content-card,html[data-theme="dark"] .table-card,html[data-theme="dark"] .form-card,html[data-theme="dark"] .card,html[data-theme="dark"] .welcome-card,html[data-theme="dark"] .info-card,html[data-theme="dark"] .modal-content,html[data-theme="dark"] .modal-box,html[data-theme="dark"] .system-notice-card{background:#0c2136 !important;border-color:#28445f !important;color:#e7eef8 !important;box-shadow:0 12px 32px rgba(0,0,0,.28) !important;}
+html[data-theme="dark"] .topbar h1,html[data-theme="dark"] h1,html[data-theme="dark"] h2,html[data-theme="dark"] h3,html[data-theme="dark"] h4{color:#f3f7fc !important;}
+html[data-theme="dark"] .topbar p,html[data-theme="dark"] p,html[data-theme="dark"] .hint,html[data-theme="dark"] .muted,html[data-theme="dark"] small{color:#b8c9db !important;}
+html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:#091a2a !important;border-color:#35536f !important;color:#edf5ff !important;}
+html[data-theme="dark"] input::placeholder,html[data-theme="dark"] textarea::placeholder{color:#8fa8c1 !important;}
+html[data-theme="dark"] table,html[data-theme="dark"] body.admin-sidebar table:not(.concise-franchise-table),html[data-theme="dark"] body.operator-sidebar table:not(.concise-franchise-table){background:#0c2136 !important;color:#e7eef8 !important;border-color:#35536f !important;}
+html[data-theme="dark"] table thead,html[data-theme="dark"] body.admin-sidebar table:not(.concise-franchise-table) thead,html[data-theme="dark"] body.operator-sidebar table:not(.concise-franchise-table) thead{background:#102d48 !important;}
+html[data-theme="dark"] table th,html[data-theme="dark"] table td,html[data-theme="dark"] body.admin-sidebar table:not(.concise-franchise-table) th,html[data-theme="dark"] body.admin-sidebar table:not(.concise-franchise-table) td,html[data-theme="dark"] body.operator-sidebar table:not(.concise-franchise-table) th,html[data-theme="dark"] body.operator-sidebar table:not(.concise-franchise-table) td{background:#0c2136 !important;border-color:#28445f !important;color:#e7eef8 !important;}
+html[data-theme="dark"] table tbody tr:nth-child(even) td,html[data-theme="dark"] body.admin-sidebar table:not(.concise-franchise-table) tbody tr:nth-child(even) td,html[data-theme="dark"] body.operator-sidebar table:not(.concise-franchise-table) tbody tr:nth-child(even) td{background:#0a1c2d !important;}
+html[data-theme="dark"] table tbody tr:hover td{background:#102d48 !important;}
+html[data-theme="dark"] .tfro-theme-toggle{background:#102d48;border-color:#436483;color:#f5f9ff;box-shadow:none;}
+html[data-theme="dark"] .tfro-theme-toggle:hover{background:#163b5c;border-color:#6f9bc3;}
+html[data-theme="dark"] .tfro-table-scroll-controls{background:#0c2136;border-color:#35536f;color:#e7eef8;}
+html[data-theme="dark"] [class*="card"],html[data-theme="dark"] [class*="panel"],html[data-theme="dark"] [class*="box"],html[data-theme="dark"] [class*="sheet"]{border-color:#28445f;}
+html[data-theme="dark"] .dashboard-period,html[data-theme="dark"] .snapshot-list>div,html[data-theme="dark"] .status-track,html[data-theme="dark"] .metric-badge.neutral,html[data-theme="dark"] .reminder-btn.sent{background:#102d48 !important;border-color:#35536f !important;color:#e7eef8 !important;}
+html[data-theme="dark"] .card-copy>span,html[data-theme="dark"] .card-copy small,html[data-theme="dark"] .analytics-heading p,html[data-theme="dark"] .snapshot-list small,html[data-theme="dark"] .status-row small{color:#b8c9db !important;}
+html[data-theme="dark"] .analytics-heading,html[data-theme="dark"] .section-heading,html[data-theme="dark"] .table-header{border-color:#28445f !important;}
+html[data-theme="dark"] .dashboard-period>i,html[data-theme="dark"] .analytics-heading>i,html[data-theme="dark"] .snapshot-list>div>i{background:#163b5c !important;color:#a9cdf0 !important;}
+html[data-theme="dark"] .dashboard-period button,html[data-theme="dark"] .icon-button{background:#145187 !important;color:#fff !important;}
+html[data-theme="dark"] .status-track{background:#17324b !important;}
+html[data-theme="dark"] .modal,html[data-theme="dark"] .overlay{background:rgba(1,10,19,.72) !important;}
+html[data-theme="dark"] a:not(.menu a):not(.btn-primary):not(.add-btn):not(.save-btn){color:#9dccf5;}
+html[data-theme="dark"] .badge,html[data-theme="dark"] .status-badge{color:#e7eef8;}
+html[data-theme="dark"] .dashboard-eyebrow,html[data-theme="dark"] .analytics-heading span,html[data-theme="dark"] .status-row>div:first-child,html[data-theme="dark"] .snapshot-list strong,html[data-theme="dark"] .doughnut-total strong{color:#d8eaff !important;}
+html[data-theme="dark"] .metric-badge.positive{background:#123d4b !important;color:#b7f0d1 !important;}
+html[data-theme="dark"] .metric-badge.warning{background:#4c3a12 !important;color:#ffe59a !important;}
+html[data-theme="dark"] .right-panel,html[data-theme="dark"] .register-box,html[data-theme="dark"] .login-box,html[data-theme="dark"] .consent-dialog,html[data-theme="dark"] .scanner-card,html[data-theme="dark"] .result-card,html[data-theme="dark"] body:not(.admin-sidebar):not(.operator-sidebar):not(.enforcer-sidebar) main>section{background:#0c2136 !important;border-color:#28445f !important;color:#e7eef8 !important;}
+html[data-theme="dark"] .upload-box,html[data-theme="dark"] .verification-grid div,html[data-theme="dark"] .status-message,html[data-theme="dark"] .registration-consent,html[data-theme="dark"] .consent-secondary{background:#102d48 !important;border-color:#35536f !important;color:#e7eef8 !important;}
+html[data-theme="dark"] .right-panel label,html[data-theme="dark"] .scanner-card form label,html[data-theme="dark"] .verification-grid span,html[data-theme="dark"] .upload-box span{color:#c5d5e5 !important;}
+html[data-theme="dark"] .nav{background:rgba(6,29,56,.96) !important;border-color:rgba(164,204,242,.18) !important;}
+html[data-theme="dark"] .nav-links a,html[data-theme="dark"] .brand-text span,html[data-theme="dark"] .brand-text strong{color:#edf5ff !important;}
+html[data-theme="dark"] .left-panel{background:linear-gradient(145deg,#061d38,#0a315c) !important;}
+
+/* Admin content uses several page-specific card names. Keep all of them on
+   the same dark surface and restore strong foreground contrast. */
+html[data-theme="dark"] body.admin-sidebar .main-content{background:#071421 !important;}
+
+/* Keep admin page headings visually open in dark mode. The surrounding main
+   canvas already provides sufficient contrast, so an additional header card
+   creates an unnecessary boxed band across the page. */
+html[data-theme="dark"] body.admin-sidebar .topbar,
+html[data-theme="dark"] body.admin-sidebar .admin-users-main>header{
+  background:transparent !important;
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+}
+html[data-theme="dark"] body.admin-sidebar .stat-card,
+html[data-theme="dark"] body.admin-sidebar .summary-grid>article,
+html[data-theme="dark"] body.admin-sidebar .summary-card,
+html[data-theme="dark"] body.admin-sidebar .chart-card,
+html[data-theme="dark"] body.admin-sidebar .notification-card,
+html[data-theme="dark"] body.admin-sidebar .workflow-legend,
+html[data-theme="dark"] body.admin-sidebar .toolbar,
+html[data-theme="dark"] body.admin-sidebar .review-section,
+html[data-theme="dark"] body.admin-sidebar .record-section,
+html[data-theme="dark"] body.admin-sidebar .record-profile-grid>div,
+html[data-theme="dark"] body.admin-sidebar .operator-record-panel,
+html[data-theme="dark"] body.admin-sidebar .operator-driver-card,
+html[data-theme="dark"] body.admin-sidebar .operator-driver-card summary,
+html[data-theme="dark"] body.admin-sidebar .checkbox-field,
+html[data-theme="dark"] body.admin-sidebar .inspection-grid label{background:#0c2136 !important;border-color:#28445f !important;color:#e7eef8 !important;box-shadow:none !important;}
+html[data-theme="dark"] body.admin-sidebar .filters-card,
+html[data-theme="dark"] body.admin-sidebar .report-toolbar,
+html[data-theme="dark"] body.admin-sidebar .analytics-section,
+html[data-theme="dark"] body.admin-sidebar .analytics-grid>article,
+html[data-theme="dark"] body.admin-sidebar .report-card,
+html[data-theme="dark"] body.admin-sidebar .tab-content,
+html[data-theme="dark"] body.admin-sidebar .setting-row,
+html[data-theme="dark"] body.admin-sidebar .account-management,
+html[data-theme="dark"] body.admin-sidebar .account-search,
+html[data-theme="dark"] body.admin-sidebar .account-management-tools select{background:#0c2136 !important;border-color:#28445f !important;color:#e7eef8 !important;}
+html[data-theme="dark"] body.admin-sidebar .stat-card h2,
+html[data-theme="dark"] body.admin-sidebar .summary-grid strong,
+html[data-theme="dark"] body.admin-sidebar .summary-grid span,
+html[data-theme="dark"] body.admin-sidebar .summary-value,
+html[data-theme="dark"] body.admin-sidebar .summary-label,
+html[data-theme="dark"] body.admin-sidebar .analytics-grid strong,
+html[data-theme="dark"] body.admin-sidebar .analytics-grid span,
+html[data-theme="dark"] body.admin-sidebar .report-card h3,
+html[data-theme="dark"] body.admin-sidebar .report-card p,
+html[data-theme="dark"] body.admin-sidebar .notification-title,
+html[data-theme="dark"] body.admin-sidebar .notification-message,
+html[data-theme="dark"] body.admin-sidebar .notification-time,
+html[data-theme="dark"] body.admin-sidebar .notification-stats h3,
+html[data-theme="dark"] body.admin-sidebar .record-section-title h3,
+html[data-theme="dark"] body.admin-sidebar .record-profile-grid strong,
+html[data-theme="dark"] body.admin-sidebar .record-profile-grid span,
+html[data-theme="dark"] body.admin-sidebar .operator-name-button{color:#edf5ff !important;}
+html[data-theme="dark"] body.admin-sidebar .notification-view,
+html[data-theme="dark"] body.admin-sidebar .view-record-btn,
+html[data-theme="dark"] body.admin-sidebar .operator-form-actions button[type="button"],
+html[data-theme="dark"] body.admin-sidebar .close-btn{background:#163b5c !important;border-color:#436483 !important;color:#edf5ff !important;}
+html[data-theme="dark"] body.admin-sidebar .notification-icon.info,
+html[data-theme="dark"] body.admin-sidebar .notification-icon.error{background:#163b5c !important;color:#b9dcfb !important;}
+html[data-theme="dark"] body.admin-sidebar .summary-grid>article>i{background:#163b5c !important;color:#b9dcfb !important;}
+html[data-theme="dark"] body.admin-sidebar .summary-icon,
+html[data-theme="dark"] body.admin-sidebar .analytics-grid i{background:#163b5c !important;color:#b9dcfb !important;}
+html[data-theme="dark"] body.admin-sidebar .tab-btn{background:#163b5c !important;border-color:#436483 !important;color:#dbeafe !important;}
+html[data-theme="dark"] body.admin-sidebar .tab-btn.active{background:#145187 !important;border-color:#6da5d3 !important;color:#fff !important;}
+html[data-theme="dark"] body.admin-sidebar .report-card .download-btn,
+html[data-theme="dark"] body.admin-sidebar .report-card .print-btn,
+html[data-theme="dark"] body.admin-sidebar .report-toolbar .reset-btn,
+html[data-theme="dark"] body.admin-sidebar .account-refresh-btn{background:#163b5c !important;border-color:#436483 !important;color:#edf5ff !important;}
+html[data-theme="dark"] body.admin-sidebar .notification-icon.warning{background:#4c3a12 !important;color:#ffe59a !important;}
+html[data-theme="dark"] body.admin-sidebar .notification-icon.urgent{background:#4b242b !important;color:#ffc0c8 !important;}
+html[data-theme="dark"] body.admin-sidebar .status-badge,
+html[data-theme="dark"] body.admin-sidebar .status,
+html[data-theme="dark"] body.admin-sidebar .active,
+html[data-theme="dark"] body.admin-sidebar .inactive{background:#163b5c !important;color:#edf5ff !important;}
+
+/* Review dialogs use compact information tiles rather than tables.  Several
+   legacy pages style those tiles independently, so keep their surface and
+   foreground colours explicit in dark mode. */
+html[data-theme="dark"] body.admin-sidebar .modal-box,
+html[data-theme="dark"] body.admin-sidebar .modal-content,
+html[data-theme="dark"] body.admin-sidebar .modal-card,
+html[data-theme="dark"] body.admin-sidebar .modal-dialog,
+html[data-theme="dark"] body.admin-sidebar .profile-form-sheet,
+html[data-theme="dark"] body.admin-sidebar .operator-record-panel,
+html[data-theme="dark"] body.admin-sidebar .payment-modal-card,
+html[data-theme="dark"] body.admin-sidebar .receipt-ready-card,
+html[data-theme="dark"] body.admin-sidebar .report-modal,
+html[data-theme="dark"] body.admin-sidebar .report-modal-content{
+  background:#0c2136 !important;
+  border-color:#28445f !important;
+  color:#e7eef8 !important;
+}
+html[data-theme="dark"] body.admin-sidebar .modal-head,
+html[data-theme="dark"] body.admin-sidebar .record-modal-head,
+html[data-theme="dark"] body.admin-sidebar .payment-modal-header,
+html[data-theme="dark"] body.admin-sidebar .report-modal-header{
+  background:#102d48 !important;
+  border-color:#35536f !important;
+}
+html[data-theme="dark"] body.admin-sidebar .modal-head h3,
+html[data-theme="dark"] body.admin-sidebar .record-modal-head h2,
+html[data-theme="dark"] body.admin-sidebar .payment-modal-header h2,
+html[data-theme="dark"] body.admin-sidebar .modal-body,
+html[data-theme="dark"] body.admin-sidebar .modal-body label{color:#edf5ff !important;}
+html[data-theme="dark"] body.admin-sidebar .modal-close,
+html[data-theme="dark"] body.admin-sidebar .record-head-actions button,
+html[data-theme="dark"] body.admin-sidebar .btn-cancel,
+html[data-theme="dark"] body.admin-sidebar .verify-btn,
+html[data-theme="dark"] body.admin-sidebar .correct-btn{
+  background:#163b5c !important;
+  border-color:#436483 !important;
+  color:#edf5ff !important;
+}
+html[data-theme="dark"] body.admin-sidebar .modal-close:hover,
+html[data-theme="dark"] body.admin-sidebar .btn-cancel:hover,
+html[data-theme="dark"] body.admin-sidebar .verify-btn:hover{background:#1b486e !important;}
+html[data-theme="dark"] body.admin-sidebar .review-info-grid,
+html[data-theme="dark"] body.admin-sidebar .review-actions,
+html[data-theme="dark"] body.admin-sidebar .detail-row{border-color:#35536f !important;}
+html[data-theme="dark"] body.admin-sidebar .review-info-grid>div,
+html[data-theme="dark"] body.admin-sidebar .check-item,
+html[data-theme="dark"] body.admin-sidebar .review-doc,
+html[data-theme="dark"] body.admin-sidebar .review-summary,
+html[data-theme="dark"] body.admin-sidebar .detail-row,
+html[data-theme="dark"] body.admin-sidebar .profile-form-details>div,
+html[data-theme="dark"] body.admin-sidebar .receipt-ready-summary,
+html[data-theme="dark"] body.admin-sidebar .payment-workflow-note{
+  background:#102d48 !important;
+  border-color:#35536f !important;
+  color:#e7eef8 !important;
+}
+html[data-theme="dark"] body.admin-sidebar .review-info-grid>div>label,
+html[data-theme="dark"] body.admin-sidebar .review-info-grid>div>strong,
+html[data-theme="dark"] body.admin-sidebar .check-label,
+html[data-theme="dark"] body.admin-sidebar .review-doc-label,
+html[data-theme="dark"] body.admin-sidebar .review-summary,
+html[data-theme="dark"] body.admin-sidebar .detail-label,
+html[data-theme="dark"] body.admin-sidebar .detail-value,
+html[data-theme="dark"] body.admin-sidebar .profile-form-details span,
+html[data-theme="dark"] body.admin-sidebar .profile-form-details strong{color:#edf5ff !important;}
+html[data-theme="dark"] body.admin-sidebar .review-info-grid>div>label,
+html[data-theme="dark"] body.admin-sidebar .detail-label,
+html[data-theme="dark"] body.admin-sidebar .profile-form-details span{color:#b8c9db !important;}
+html[data-theme="dark"] body.admin-sidebar .doc-link{color:#9dccf5 !important;}
+html[data-theme="dark"] body.admin-sidebar .approved-note{color:#a9e7c3 !important;}
+html[data-theme="dark"] body.admin-sidebar .rejected-note,
+html[data-theme="dark"] body.admin-sidebar .doc-missing{color:#ffb4bd !important;}
+
+/* Broad legacy-card fallback: older admin pages use different card names for
+   the same type of summary and review data. */
+html[data-theme="dark"] body.admin-sidebar [class*="-card"],
+html[data-theme="dark"] body.admin-sidebar [class*="-panel"],
+html[data-theme="dark"] body.admin-sidebar [class*="-sheet"]{
+  background-color:#0c2136 !important;
+  border-color:#28445f !important;
+  color:#e7eef8 !important;
+}
+html[data-theme="dark"] body.admin-sidebar [class*="-card"] :is(h1,h2,h3,h4,strong),
+html[data-theme="dark"] body.admin-sidebar [class*="-panel"] :is(h1,h2,h3,h4,strong),
+html[data-theme="dark"] body.admin-sidebar [class*="-sheet"] :is(h1,h2,h3,h4,strong){color:#f3f7fc !important;}
+html[data-theme="dark"] body.admin-sidebar [class*="-card"] :is(p,small,span,label),
+html[data-theme="dark"] body.admin-sidebar [class*="-panel"] :is(p,small,span,label),
+html[data-theme="dark"] body.admin-sidebar [class*="-sheet"] :is(p,small,span,label){color:#b8c9db !important;}
+/* Tables stay dark without the bright boxed-grid look. Row separators retain
+   enough contrast to scan records while keeping the surface visually calm. */
+html[data-theme="dark"] body.admin-sidebar .table-card,
+html[data-theme="dark"] body.admin-sidebar .admin-card:has(table),
+html[data-theme="dark"] body.admin-sidebar .registry-card{border-color:#28445f !important;background:#0c2136 !important;}
+html[data-theme="dark"] body.admin-sidebar table,
+html[data-theme="dark"] body.admin-sidebar .tfro-table-scroll>table{border:0 !important;background:#0c2136 !important;}
+html[data-theme="dark"] body.admin-sidebar table thead,
+html[data-theme="dark"] body.admin-sidebar table thead tr,
+html[data-theme="dark"] body.admin-sidebar table th{background:#102d48 !important;}
+html[data-theme="dark"] body.admin-sidebar table th{border:0 !important;border-bottom:1px solid #35536f !important;color:#dbeafe !important;}
+html[data-theme="dark"] body.admin-sidebar table td{border:0 !important;border-bottom:1px solid rgba(67,100,131,.58) !important;background:#0c2136 !important;color:#edf5ff !important;}
+html[data-theme="dark"] body.admin-sidebar table tbody tr:nth-child(even) td{background:#0a1c2d !important;}
+html[data-theme="dark"] body.admin-sidebar table tbody tr:hover td{background:#123553 !important;}
+html[data-theme="dark"] body.admin-sidebar table tbody tr:last-child td{border-bottom:0 !important;}
+html[data-theme="dark"] body.admin-sidebar table a{color:#9dccf5 !important;}
+html[data-theme="dark"] body.admin-sidebar table select{background:#0a1c2d !important;border-color:#436483 !important;color:#edf5ff !important;}
+body.admin-sidebar .topbar{display:flex !important;align-items:center;gap:14px;min-width:0;}
+body.admin-sidebar .topbar>div:first-child{min-width:0;}
+body.admin-sidebar .topbar>.dashboard-period{margin-left:auto;}
+body.admin-sidebar .topbar .tfro-theme-actions{display:flex;flex:0 0 auto;align-items:center;margin-left:auto;}
+body.admin-sidebar .topbar>.dashboard-period+.tfro-theme-actions{margin-left:0;}
+body.admin-sidebar .topbar .tfro-theme-toggle{min-width:126px;white-space:nowrap;}
+
+@media(max-width:768px){.tfro-theme-toggle{min-height:38px;padding:8px 10px;font-size:12px;}.tfro-theme-actions-floating{top:10px;right:10px;}.admin-users-main>header .tfro-theme-actions{position:static;order:-1;width:100%;justify-content:flex-end;margin:0 0 4px;}body.admin-sidebar .topbar .tfro-theme-actions{width:auto;margin-left:auto;}}
+
+@media(max-width:700px){
+  body.admin-sidebar .modal{padding:8px !important;align-items:flex-start !important;overflow-y:auto;}
+  body.admin-sidebar .modal-box,
+  body.admin-sidebar .modal-content,
+  body.admin-sidebar .modal-card,
+  body.admin-sidebar .modal-dialog{width:100% !important;max-width:100% !important;max-height:none !important;margin:auto 0;}
+  body.admin-sidebar .modal-head{padding:14px 16px !important;gap:12px;}
+  body.admin-sidebar .modal-head h3{font-size:17px !important;line-height:1.25;}
+  body.admin-sidebar .modal-body{padding:16px !important;}
+  body.admin-sidebar .review-info-grid{grid-template-columns:1fr !important;gap:10px !important;}
+  body.admin-sidebar .review-info-grid>div{padding:11px 12px !important;}
+  body.admin-sidebar .review-actions{align-items:stretch !important;gap:9px !important;}
+  body.admin-sidebar .review-actions button{width:100%;min-height:44px;justify-content:center;}
+}
+
+/* Dark-mode contrast fixes for operational toolbars, summaries and review
+   actions. Keep these selectors scoped so the light palette is unchanged. */
+html[data-theme="dark"] body.admin-sidebar .search-box{
+  overflow:hidden;
+  background:#091a2a !important;
+  border-color:#35536f !important;
+}
+html[data-theme="dark"] body.admin-sidebar .search-box input{
+  width:100% !important;
+  background:transparent !important;
+  border-color:transparent !important;
+  box-shadow:none !important;
+  color:#edf5ff !important;
+}
+html[data-theme="dark"] body.admin-sidebar .search-box i{color:#9dccf5 !important;}
+
+html[data-theme="dark"] body.admin-sidebar .staff-summary article{
+  background:#0c2136 !important;
+  border-color:#35536f !important;
+  border-top-color:#f4c430 !important;
+  box-shadow:none !important;
+}
+html[data-theme="dark"] body.admin-sidebar .staff-summary article>i{
+  background:#163b5c !important;
+  color:#b9dcfb !important;
+}
+html[data-theme="dark"] body.admin-sidebar .staff-summary strong{color:#f3f7fc !important;}
+html[data-theme="dark"] body.admin-sidebar .staff-summary span{color:#b8c9db !important;}
+
+html[data-theme="dark"] body.admin-sidebar .qr-verify-btn{
+  background:#163b5c !important;
+  border-color:#436483 !important;
+  color:#edf5ff !important;
+}
+html[data-theme="dark"] body.admin-sidebar .qr-verify-btn:hover{background:#1b486e !important;}
+html[data-theme="dark"] body.admin-sidebar .date-export-controls label{color:#9fb6cc !important;}
+
+html[data-theme="dark"] body.admin-sidebar .renewal-actions{
+  background:#0c2136 !important;
+  border-color:#35536f !important;
+}
+html[data-theme="dark"] body.admin-sidebar .renewal-actions .btn-accept:disabled{
+  background:#29445c !important;
+  border-color:#436483 !important;
+  color:#b7cadb !important;
+  opacity:.78;
+}
+
+html[data-theme="dark"] body.admin-sidebar .role-badge{
+  background:#163b5c !important;
+  border:1px solid #436483 !important;
+  color:#edf5ff !important;
+}

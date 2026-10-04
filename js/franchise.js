@@ -8,6 +8,7 @@ let operatorAccounts = [];
 let editingId = null;
 let deleteTargetId = null;
 let preparedCsvImport = [];
+let currentRole = localStorage.getItem("role") || "";
 
 /* ---------- Safe element access ---------- */
 function el(id) { return document.getElementById(id); }
@@ -235,7 +236,7 @@ function renderTable() {
           <button data-action="view" data-id="${row.id}" title="View"><i class="ri-eye-line"></i></button>
           <button data-action="forms" data-id="${row.id}" title="View all saved forms"><i class="ri-file-list-3-line"></i></button>
           <button data-action="edit" data-id="${row.id}" title="Edit"><i class="ri-pencil-line"></i></button>
-          <button data-action="delete" data-id="${row.id}" title="Delete"><i class="ri-delete-bin-line"></i></button>
+          ${currentRole === "admin" ? `<button data-action="delete" data-id="${row.id}" title="Delete"><i class="ri-delete-bin-line"></i></button>` : ""}
         </div>
       </td>
     </tr>`;
@@ -501,8 +502,9 @@ function downloadCsvTemplate() {
 }
 
 async function verifyAccess() {
-  const { user } = await requireRole(["admin"]);
+  const { user, profile } = await requireRole(["admin", "admin_viewer"]);
   if (!user) return;
+  currentRole = profile?.role || currentRole;
   await Promise.all([loadFranchises(), loadOperatorAccounts()]);
 }
 
@@ -909,6 +911,11 @@ function openDeleteModal(row) {
 }
 
 async function confirmDelete() {
+  if (currentRole !== "admin") {
+    alert("Only a Head Administrator can remove a franchise record.");
+    closeModal("deleteModal");
+    return;
+  }
   if (!deleteTargetId) { closeModal("deleteModal"); return; }
   const target = franchises.find((r) => String(r.id) === String(deleteTargetId));
   const confirmButton = el("confirmDeleteBtn");

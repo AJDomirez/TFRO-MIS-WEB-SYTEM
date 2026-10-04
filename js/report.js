@@ -235,7 +235,7 @@ async function loadAnalytics() {
 
 async function ensureAccess() {
   if (reportState.access) return reportState.access;
-  const { user, profile } = await requireRole(["admin"]);
+  const { user, profile } = await requireRole(["admin", "admin_viewer"]);
   if (!user || !profile) return null;
   reportState.access = { user, profile };
   return reportState.access;

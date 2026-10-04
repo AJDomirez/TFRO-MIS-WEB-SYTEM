@@ -91,7 +91,7 @@ async function loadProfile() {
   setValue("contactNumber", contact);
   setValue("address", operator?.address || "");
   setValue("franchiseNumber", operator?.franchise_number || "");
-  const roleLabel = currentUserRole === "traffic_enforcer" ? "Traffic Enforcer" : "Operator";
+  const roleLabel = currentUserRole === "traffic_enforcer" ? "TFRO Enforcer" : "Operator";
   setValue("role", roleLabel);
   document.querySelectorAll(".operator-only-field").forEach((field) => { field.hidden = currentUserRole !== "operator"; });
 

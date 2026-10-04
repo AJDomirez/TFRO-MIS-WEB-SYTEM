@@ -3,10 +3,41 @@ import { SUPABASE_URL } from "./supabase-config.js";
 
 export const ROLE_DESTINATIONS = Object.freeze({
   admin: "dashboard.html",
+  admin_viewer: "dashboard.html",
   staff: "violation.html",
   operator: "operatorportal.html",
   traffic_enforcer: "enforcerportal.html",
 });
+
+export const ADMIN_PORTAL_ROLES = Object.freeze(["admin", "admin_viewer"]);
+
+export function isRestrictedAdmin(role) {
+  return role === "admin_viewer";
+}
+
+const HEAD_ADMIN_ONLY_SELECTOR = [
+  '[data-action="delete"]', '[data-head-admin-only]', '.delete-account',
+  '.delete-account-btn', '.notification-card .close-btn', '#confirmDeleteBtn', '#manageBtn', '#archiveOldBtn',
+].join(',');
+
+function applyRestrictedAdminMode() {
+  document.body?.classList.add("restricted-admin");
+  const restrict = (root = document) => root.querySelectorAll?.(HEAD_ADMIN_ONLY_SELECTOR).forEach((control) => {
+    control.hidden = true;
+    control.disabled = true;
+    control.setAttribute("aria-hidden", "true");
+    control.setAttribute("title", "Head Administrator only");
+  });
+  restrict();
+  new MutationObserver((mutations) => mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
+    if (node.nodeType === Node.ELEMENT_NODE) restrict(node.matches?.(HEAD_ADMIN_ONLY_SELECTOR) ? node.parentElement : node);
+  }))).observe(document.body, { childList: true, subtree: true });
+  document.addEventListener("click", (event) => {
+    if (!event.target?.closest?.(HEAD_ADMIN_ONLY_SELECTOR)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, { capture: true });
+}
 
 function clearCachedIdentity() {
   localStorage.removeItem("role");
@@ -106,6 +137,8 @@ export async function requireRole(allowedRoles) {
   }
 
   document.documentElement.dataset.authState = "authorized";
+  document.documentElement.dataset.restrictedAdmin = String(isRestrictedAdmin(profile.role));
+  if (isRestrictedAdmin(profile.role)) applyRestrictedAdminMode();
   return { user, profile };
 }
 
@@ -121,12 +154,12 @@ export async function signOutAndRedirect(destination = "index.html") {
         import("./audit-helper.js").then(({ logAudit }) => logAudit({
           action: "Logged out of system",
           actionType: "logout",
-          description: "Traffic Enforcer ended the authenticated system session.",
+          description: "TFRO Enforcer ended the authenticated system session.",
         })),
         new Promise((resolve) => window.setTimeout(resolve, 800)),
       ]);
     } catch (error) {
-      console.error("Traffic Enforcer logout audit failed:", error);
+      console.error("TFRO Enforcer logout audit failed:", error);
     }
   }
 

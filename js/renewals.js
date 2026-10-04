@@ -426,7 +426,7 @@ async function approveRenewal() {
 }
 
 async function init() {
-  const auth = await requireRole(["admin"]);
+  const auth = await requireRole(["admin", "admin_viewer"]);
   if (!auth.user) return;
   currentProfile = auth.profile;
   await loadRenewals();

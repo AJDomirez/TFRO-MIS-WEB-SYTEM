@@ -13,7 +13,7 @@ const tours = {
     { selector: ".sidebar-user", title: "Account and logout", text: "Your name and role appear here. Use the logout button when you finish, especially on a shared device." },
   ],
   traffic_enforcer: [
-    { selector: ".sidebar .menu", title: "Traffic Enforcer navigation", text: "This menu returns you to the ticketing and Driver-search workspace. Your Enforcer tools are separated from TFRO Staff and Admin tools." },
+    { selector: ".sidebar .menu", title: "TFRO Enforcer navigation", text: "This menu returns you to the ticketing and Driver-search workspace. Your Enforcer tools are separated from TFRO Staff and Admin tools." },
     { selector: "#enforcerBadge", title: "Verified Enforcer identity", text: "Your administrator-registered Enforcer ID appears here. Only an active ID can search Drivers or submit tickets." },
     { selector: ".driver-search-card", title: "Verify a Driver", text: "Enter the complete Driver's License number and select Verify Driver. The system displays identity, license status, compliance, and previous violations." },
     { selector: "#driverSearchForm button", title: "Verify Driver button", text: "This performs an exact license-number lookup. Confirm the returned Driver before preparing a ticket." },
@@ -36,7 +36,7 @@ const filipinoGuides = {
     ["Account at pag-logout", "Dito makikita ang iyong pangalan at tungkulin. Gamitin ang logout kapag tapos na, lalo na kung pinagsasaluhang device ang gamit."],
   ],
   traffic_enforcer: [
-    ["Nabigasyon ng Traffic Enforcer", "Gamitin ang menu upang bumalik sa ticketing at paghahanap ng Driver. Hiwalay ang Enforcer tools sa mga gamit ng TFRO Staff at Admin."],
+    ["Nabigasyon ng TFRO Enforcer", "Gamitin ang menu upang bumalik sa ticketing at paghahanap ng Driver. Hiwalay ang Enforcer tools sa mga gamit ng TFRO Staff at Admin."],
     ["Beripikadong pagkakakilanlan ng Enforcer", "Dito makikita ang Enforcer ID na inirehistro ng Administrator. Aktibong ID lamang ang maaaring maghanap ng Driver o magsumite ng ticket."],
     ["Beripikahin ang Driver", "Ilagay ang kumpletong numero ng lisensya at piliin ang Verify Driver. Ipapakita ng system ang pagkakakilanlan, license status, compliance, at mga dating paglabag."],
     ["Button na Verify Driver", "Eksaktong numero ng lisensya ang hahanapin nito. Tiyaking tama ang Driver bago gumawa ng ticket."],

@@ -1,5 +1,6 @@
 import { supabase } from "./supabase.js";
 import { requireRole } from "./auth-guard.js";
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./supabase-config.js";
 
 /* HELPERS */
 function initials(name = "") {
@@ -28,6 +29,19 @@ let currentUserRole = localStorage.getItem("role") || "";
 let managedAccounts = [];
 let pendingAccountDeletion = null;
 
+async function manageAdministratorAccounts(action, body = {}) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error("Your Head Administrator session has expired.");
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-create-viewer`, {
+    method: "POST",
+    headers: { apikey: SUPABASE_PUBLISHABLE_KEY, authorization: `Bearer ${session.access_token}`, "content-type": "application/json" },
+    body: JSON.stringify({ action, ...body }),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok || data?.error) throw new Error(data?.error || "The account service rejected the request.");
+  return data;
+}
+
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>'"]/g, (character) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;",
@@ -37,10 +51,11 @@ function escapeHtml(value) {
 /* ROLE LABEL */
 function roleLabel(role) {
   const map = {
-    admin: "Administrator",
+    admin: "Head Administrator",
+    admin_viewer: "Restricted Administrator",
     staff: "Staff",
     operator: "Operator",
-    traffic_enforcer: "Traffic Enforcer",
+    traffic_enforcer: "TFRO Enforcer",
     driver: "Driver",
   };
   return map[role] || role || "User";
@@ -66,7 +81,7 @@ await supabase.from("audit_logs").insert({
 
 /* LOAD PROFILE */
 async function loadProfile() {
-  const { user } = await requireRole(["admin", "staff"]);
+  const { user } = await requireRole(["admin", "admin_viewer", "staff"]);
   if (!user) return;
   currentUserId = user.id;
 
@@ -199,7 +214,7 @@ function filteredManagedAccounts() {
   return managedAccounts.filter((account) => {
     if (role !== "all" && account.role !== role) return false;
     if (!term) return true;
-    return [account.full_name, account.email, account.role, account.reference]
+    return [account.full_name, account.login, account.email, account.role, account.reference]
       .some((value) => String(value || "").toLowerCase().includes(term));
   });
 }
@@ -210,33 +225,95 @@ function renderManagedAccounts() {
   const accounts = filteredManagedAccounts();
   rows.innerHTML = accounts.length ? accounts.map((account) => `
     <tr>
-      <td><div class="managed-account"><span>${escapeHtml(initials(account.full_name))}</span><div><strong>${escapeHtml(account.full_name || "Unnamed account")}</strong><small>${escapeHtml(account.email || "No email recorded")}</small></div></div></td>
+      <td><button type="button" class="managed-account account-history-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-name="${escapeHtml(account.full_name || "Unnamed account")}" title="View account activity history"><span>${escapeHtml(initials(account.full_name))}</span><div><strong>${escapeHtml(account.full_name || "Unnamed account")}</strong><small>${escapeHtml(account.login || account.email || "No login recorded")}</small><em><i class="ri-history-line"></i> View activity history</em></div></button></td>
       <td><span class="account-role ${escapeHtml(account.role)}">${escapeHtml(roleLabel(account.role))}</span></td>
-      <td>${escapeHtml(account.reference || "—")}</td>
+      <td>${escapeHtml(account.contact_number || account.reference || "—")}</td>
       <td><span class="account-link-status"><i class="ri-checkbox-circle-fill"></i> Portal linked</span></td>
-      <td><button type="button" class="delete-account-btn" data-user-id="${escapeHtml(account.user_id)}" data-role="${escapeHtml(account.role)}" data-name="${escapeHtml(account.full_name)}"><i class="ri-delete-bin-6-line"></i> Delete Account</button></td>
+      <td><button type="button" class="reset-password-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-username="${escapeHtml(account.username || "")}" data-name="${escapeHtml(account.full_name)}"><i class="ri-key-2-line"></i> Reset Password</button>${account.can_delete && ["staff", "operator", "traffic_enforcer"].includes(account.role) ? ` <button type="button" class="delete-account-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-name="${escapeHtml(account.full_name)}"><i class="ri-delete-bin-6-line"></i> Delete</button>` : ""}</td>
     </tr>`).join("") : '<tr><td colspan="5" class="account-empty">No linked accounts match this filter.</td></tr>';
+}
+
+function formatAccountHistoryDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("en-PH", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true });
+}
+
+function closeAccountHistoryModal() {
+  document.getElementById("accountHistoryModal").hidden = true;
+}
+
+async function openAccountHistory(button) {
+  if (currentUserRole !== "admin") return;
+  const modal = document.getElementById("accountHistoryModal");
+  const rows = document.getElementById("accountHistoryRows");
+  const status = document.getElementById("accountHistoryStatus");
+  const name = button.dataset.name || "Selected account";
+  setText("accountHistoryName", name);
+  setText("accountHistoryRole", roleLabel(button.dataset.role || ""));
+  setText("accountHistoryInitials", initials(name));
+  rows.innerHTML = '<tr><td colspan="4" class="account-history-empty"><i class="ri-loader-4-line ri-spin"></i> Loading activity history…</td></tr>';
+  status.textContent = "Loading…";
+  modal.hidden = false;
+  document.getElementById("closeAccountHistoryModal").focus();
+
+  const { data, error } = await supabase.from("audit_logs")
+    .select("id, action, action_type, record, description, created_at")
+    .eq("user_id", button.dataset.userId)
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error) {
+    status.textContent = "History unavailable";
+    rows.innerHTML = `<tr><td colspan="4" class="account-history-empty error">Could not load account history: ${escapeHtml(error.message)}</td></tr>`;
+    return;
+  }
+  status.textContent = `${data.length} recorded action${data.length === 1 ? "" : "s"}${data.length === 200 ? " (latest 200)" : ""}`;
+  rows.innerHTML = data.length ? data.map((entry) => `
+    <tr><td><time datetime="${escapeHtml(entry.created_at)}">${escapeHtml(formatAccountHistoryDate(entry.created_at))}</time></td>
+    <td><span class="history-action-type">${escapeHtml(String(entry.action_type || "activity").replaceAll("_", " "))}</span></td>
+    <td><strong>${escapeHtml(entry.action || "System activity")}</strong><small>${escapeHtml(entry.description || "No additional description recorded.")}</small></td>
+    <td>${escapeHtml(entry.record || "—")}</td></tr>`).join("")
+    : '<tr><td colspan="4" class="account-history-empty">No attributable actions have been recorded for this account yet.</td></tr>';
 }
 
 async function loadManagedAccounts() {
   if (currentUserRole !== "admin") return;
   const status = document.getElementById("accountManagementStatus");
-  if (status) status.textContent = "Loading Operator and Traffic Enforcer accounts…";
-  const [operators, enforcers] = await Promise.all([
-    supabase.from("operators").select("user_id, full_name, email, franchise_number, status").not("user_id", "is", null).order("full_name"),
-    supabase.from("traffic_enforcers").select("user_id, full_name, email, enforcer_id, status").not("user_id", "is", null).order("full_name"),
-  ]);
-  const error = operators.error || enforcers.error;
-  if (error) {
+  if (status) status.textContent = "Loading all portal accounts…";
+  try {
+    const result = await manageAdministratorAccounts("list_accounts");
+    managedAccounts = result.accounts || [];
+  } catch (error) {
     if (status) status.textContent = `Could not load accounts: ${error.message}`;
     return;
   }
-  managedAccounts = [
-    ...(operators.data || []).map((row) => ({ ...row, role: "operator", reference: row.franchise_number })),
-    ...(enforcers.data || []).map((row) => ({ ...row, role: "traffic_enforcer", reference: row.enforcer_id })),
-  ];
   if (status) status.textContent = `${managedAccounts.length} linked account${managedAccounts.length === 1 ? "" : "s"} available.`;
   renderManagedAccounts();
+}
+
+async function resetManagedAccountPassword(button) {
+  if (currentUserRole !== "admin" || button.disabled) return;
+  const role = button.dataset.role;
+  let username = button.dataset.username || "";
+  if (["admin", "admin_viewer"].includes(role)) {
+    username = window.prompt("Enter the Administrator username. This will be used for login:", username) ?? "";
+    if (!username.trim()) return;
+  }
+  if (!window.confirm(`Reset the password for ${button.dataset.name || "this account"}? The temporary password will be shown only once.`)) return;
+  button.disabled = true;
+  const status = document.getElementById("accountManagementStatus");
+  if (status) status.textContent = "Generating secure temporary credentials…";
+  try {
+    const result = await manageAdministratorAccounts("reset_password", { user_id: button.dataset.userId, username: username.trim() });
+    const credentials = `Login: ${result.username}\nTemporary password: ${result.temporary_password}`;
+    await navigator.clipboard?.writeText(credentials).catch(() => {});
+    window.alert(`Temporary credentials (shown once):\n\n${credentials}\n\nThey were copied to the clipboard when browser permission allowed it.`);
+    if (status) status.textContent = `Password reset completed for ${button.dataset.name}. The action was recorded in the Audit Log.`;
+    await loadManagedAccounts();
+  } catch (error) {
+    if (status) status.textContent = `Could not reset password: ${error.message}`;
+    button.disabled = false;
+  }
 }
 
 function closeDeleteAccountModal() {
@@ -275,9 +352,21 @@ async function confirmManagedAccountDeletion() {
   cancelButton.disabled = true;
   confirmButton.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Deleting Account…';
   if (status) status.textContent = `Deleting ${name}'s portal account…`;
-  const { data, error } = await supabase.functions.invoke("admin-delete-account", {
-    body: { user_id: userId, role },
-  });
+  let data;
+  let error;
+  if (role === "staff") {
+    try {
+      data = await manageAdministratorAccounts("delete_staff", { user_id: userId });
+    } catch (staffDeleteError) {
+      error = staffDeleteError;
+    }
+  } else {
+    const result = await supabase.functions.invoke("admin-delete-account", {
+      body: { user_id: userId, role },
+    });
+    data = result.data;
+    error = result.error;
+  }
   if (error || !data?.success) {
     const message = data?.error || error?.message || "Unknown server error.";
     if (status) status.textContent = `Could not delete account: ${message}`;
@@ -302,6 +391,16 @@ document.getElementById("accountSearch")?.addEventListener("input", renderManage
 document.getElementById("accountRoleFilter")?.addEventListener("change", renderManagedAccounts);
 document.getElementById("refreshAccountsBtn")?.addEventListener("click", loadManagedAccounts);
 document.getElementById("accountManagementRows")?.addEventListener("click", (event) => {
+  const historyButton = event.target.closest(".account-history-btn");
+  if (historyButton) {
+    void openAccountHistory(historyButton);
+    return;
+  }
+  const resetButton = event.target.closest(".reset-password-btn");
+  if (resetButton) {
+    void resetManagedAccountPassword(resetButton);
+    return;
+  }
   const button = event.target.closest(".delete-account-btn");
   if (button) openDeleteAccountModal(button);
 });
@@ -313,6 +412,12 @@ document.getElementById("deleteAccountModal")?.addEventListener("click", (event)
 });
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !document.getElementById("deleteAccountModal")?.hidden) closeDeleteAccountModal();
+  if (event.key === "Escape" && !document.getElementById("accountHistoryModal")?.hidden) closeAccountHistoryModal();
+});
+document.getElementById("closeAccountHistoryModal")?.addEventListener("click", closeAccountHistoryModal);
+document.getElementById("accountHistoryDone")?.addEventListener("click", closeAccountHistoryModal);
+document.getElementById("accountHistoryModal")?.addEventListener("click", (event) => {
+  if (event.target === event.currentTarget) closeAccountHistoryModal();
 });
 
 document.getElementById("settingsForm").addEventListener("submit", async (event) => {

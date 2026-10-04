@@ -10,7 +10,7 @@ let catalog = [];
 let cameraStream = null;
 let capturedTicketPhoto = null;
 let capturedPreviewUrl = "";
-const enforcerAudit = (entry) => logAudit({ ...entry, description: `Traffic Enforcer ${enforcer?.enforcer_id || "account"}: ${entry.description || entry.action}.` });
+const enforcerAudit = (entry) => logAudit({ ...entry, description: `TFRO Enforcer ${enforcer?.enforcer_id || "account"}: ${entry.description || entry.action}.` });
 
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;" }[character]));
 const localDate = () => { const now = new Date(); return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
@@ -113,7 +113,7 @@ function handleFilePhoto(event) {
 
 async function loadIdentity() {
   const { data, error } = await supabase.from("traffic_enforcers").select("*").eq("user_id", currentUser.id).maybeSingle();
-  if (error || !data || data.status !== "active") throw error || new Error("Your Traffic Enforcer ID is not active.");
+  if (error || !data || data.status !== "active") throw error || new Error("Your TFRO Enforcer ID is not active.");
   enforcer = data;
   document.getElementById("enforcerBadge").textContent = `ID ${data.enforcer_id}`;
 }
@@ -187,7 +187,7 @@ async function submitTicket(event) {
     };
     const saved = await supabase.from("violations").insert(record).select("id,ticket_number").single();
     if (saved.error) { await supabase.storage.from("violation-tickets").remove([path]); throw saved.error; }
-    await logAudit({ action: "Submitted Violation Ticket", actionType: "create", record: saved.data.ticket_number, description: `Traffic Enforcer ${enforcer.enforcer_id} submitted ${item.code} for Driver license ${selectedDriver.license_number}.` });
+    await logAudit({ action: "Submitted Violation Ticket", actionType: "create", record: saved.data.ticket_number, description: `TFRO Enforcer ${enforcer.enforcer_id} submitted ${item.code} for Driver license ${selectedDriver.license_number}.` });
     form.reset();
     document.getElementById("ticketPhotoFile").value = "";
     stopCamera();
@@ -224,9 +224,9 @@ async function initialize() {
   if (!auth.user) return;
   currentUser = auth.user;
   try { await Promise.all([loadIdentity(), loadCatalog(), loadTickets()]); }
-  catch (error) { window.alert(`Could not open Traffic Enforcer portal: ${error.message}`); return; }
+  catch (error) { window.alert(`Could not open TFRO Enforcer portal: ${error.message}`); return; }
   document.getElementById("ticketForm").elements.occurred_date.value = localDate();
-  void enforcerAudit({ action: "Opened Traffic Enforcer Portal", actionType: "login", record: enforcer.enforcer_id, description: "accessed the ticketing and Driver search workspace" });
+  void enforcerAudit({ action: "Opened TFRO Enforcer Portal", actionType: "login", record: enforcer.enforcer_id, description: "accessed the ticketing and Driver search workspace" });
   document.getElementById("driverSearchForm").addEventListener("submit", searchDriver);
   document.getElementById("violationCode").addEventListener("change", applyViolationCode);
   document.getElementById("ticketForm").addEventListener("submit", submitTicket);

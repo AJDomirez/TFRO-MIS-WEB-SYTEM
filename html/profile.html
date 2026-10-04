@@ -237,11 +237,11 @@
         </div>
         <form id="settingsForm">
           <label class="setting-row">
-            <span><strong>Operator Registration</strong><small>Allow operators and registered Traffic Enforcers to create accounts.</small></span>
+            <span><strong>Operator Registration</strong><small>Allow operators and registered TFRO Enforcers to create accounts.</small></span>
             <input type="checkbox" id="registrationEnabled">
           </label>
           <label class="setting-row warning-setting">
-            <span><strong>Maintenance Mode</strong><small>Temporarily block staff, operators, and Traffic Enforcers. Administrators retain access.</small></span>
+            <span><strong>Maintenance Mode</strong><small>Temporarily block staff, operators, and TFRO Enforcers. Administrators retain access.</small></span>
             <input type="checkbox" id="maintenanceMode">
           </label>
           <div class="settings-number-grid">
@@ -254,12 +254,12 @@
 
         <section class="account-management" aria-labelledby="accountManagementTitle">
           <div class="account-management-heading">
-            <div><span class="settings-kicker">ADMINISTRATOR ONLY</span><h3 id="accountManagementTitle">Account Management</h3><p>Remove portal access for Operator and Traffic Enforcer accounts while retaining their official records.</p></div>
+            <div><span class="settings-kicker">HEAD ADMINISTRATOR ONLY</span><h3 id="accountManagementTitle">Account Credentials</h3><p>View login usernames and securely reset passwords. Existing passwords are hashed and can never be displayed.</p></div>
             <button type="button" class="account-refresh-btn" id="refreshAccountsBtn"><i class="ri-refresh-line"></i> Refresh</button>
           </div>
           <div class="account-management-tools">
-            <div class="account-search"><i class="ri-search-line"></i><input type="search" id="accountSearch" placeholder="Search name, email, role, or ID"></div>
-            <select id="accountRoleFilter" aria-label="Filter accounts by role"><option value="all">All account types</option><option value="operator">Operators</option><option value="traffic_enforcer">Traffic Enforcers</option></select>
+            <div class="account-search"><i class="ri-search-line"></i><input type="search" id="accountSearch" placeholder="Search name, username, email, or role"></div>
+            <select id="accountRoleFilter" aria-label="Filter accounts by role"><option value="all">All account types</option><option value="admin">Head Administrators</option><option value="admin_viewer">Restricted Administrators</option><option value="staff">TFRO Staff</option><option value="operator">Operators</option><option value="traffic_enforcer">TFRO Enforcers</option></select>
           </div>
           <p class="settings-status" id="accountManagementStatus" aria-live="polite">Loading accounts…</p>
           <div class="account-table-wrap">
@@ -275,6 +275,18 @@
 
   </main>
 
+</div>
+
+<div class="account-history-modal" id="accountHistoryModal" hidden>
+  <section class="account-history-card" role="dialog" aria-modal="true" aria-labelledby="accountHistoryTitle">
+    <header class="account-history-head">
+      <div class="account-history-person"><span id="accountHistoryInitials">U</span><div><small>ACCOUNT ACTIVITY</small><h2 id="accountHistoryTitle"><span id="accountHistoryName">Selected account</span></h2><p><span id="accountHistoryRole">Portal user</span> · <span id="accountHistoryStatus">Loading…</span></p></div></div>
+      <button type="button" id="closeAccountHistoryModal" aria-label="Close account history"><i class="ri-close-line"></i></button>
+    </header>
+    <div class="account-history-notice"><i class="ri-shield-check-line"></i><span>Showing system actions attributable to this account. Newest actions appear first.</span></div>
+    <div class="account-history-table-wrap"><table class="account-history-table"><thead><tr><th>Date &amp; time</th><th>Type</th><th>Action and description</th><th>Record</th></tr></thead><tbody id="accountHistoryRows"></tbody></table></div>
+    <footer><a href="auditlog.html"><i class="ri-external-link-line"></i> Open complete Audit Log</a><button type="button" id="accountHistoryDone">Done</button></footer>
+  </section>
 </div>
 
 <div class="system-confirm-modal" id="deleteAccountModal" hidden>
@@ -298,7 +310,7 @@
   </section>
 </div>
 
-<script type="module" src="../js/profile.js"></script>
+<script type="module" src="../js/profile.js?v=20261003-1"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 
 <script>
@@ -313,7 +325,6 @@
   }
 
 </script>
-
 </body>
 </html>
 
