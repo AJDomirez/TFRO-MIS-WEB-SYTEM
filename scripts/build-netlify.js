@@ -37,8 +37,10 @@ for (const file of publicRootFiles) {
 // the editable source; Netlify permanently redirects that legacy URL to `/`.
 const landingSource = fs.readFileSync(path.join(root, "html", "index.html"), "utf8");
 const rootLandingPage = landingSource
-  .replaceAll("../", "/")
-  .replace(/href="(login|register)\.html"/g, 'href="/html/$1.html"');
+  // Relative URLs work at both a domain root (Netlify) and a repository
+  // subpath (GitHub Pages).
+  .replaceAll("../", "./")
+  .replace(/href="(login|register)\.html"/g, 'href="./html/$1.html"');
 fs.writeFileSync(path.join(output, "index.html"), rootLandingPage);
 
 // The forms directory also contains a local React development workspace. Only
