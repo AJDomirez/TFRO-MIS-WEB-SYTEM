@@ -49,7 +49,7 @@ body.admin-sidebar .franchise-menu-toggle{
 }
 
 /* 2026 palette refresh: blue structure and actions, yellow highlights. */
-:root{--tfro-blue-900:#061d38;--tfro-blue-800:#0a315c;--tfro-blue-700:#145187;--tfro-blue-50:#f1f6fc;--tfro-green-700:#0c3d70;--tfro-green-600:#145187;--tfro-yellow:#f4c430;}
+:root{--tfro-blue-950:#061d38;--tfro-blue-900:#0b2f55;--tfro-blue-800:#0d4778;--tfro-blue-700:#145187;--tfro-blue-50:#f4f8fb;--tfro-green-700:#0d4778;--tfro-green-600:#145187;--tfro-yellow:#f4c430;--tfro-ink:#17324d;--tfro-muted:#64748b;--tfro-border:#d5e0e8;--tfro-surface:#ffffff;--tfro-canvas:#f4f7fa;}
 body.admin-sidebar .menu li{
   margin-bottom:1px !important;
 }
@@ -1662,4 +1662,55 @@ html[data-theme="dark"] body.admin-sidebar .role-badge{
   background:#163b5c !important;
   border:1px solid #436483 !important;
   color:#edf5ff !important;
+}
+
+/* Unified light palette across administrator, operator, and staff screens. */
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar){
+  background:var(--tfro-canvas) !important;
+  color:var(--tfro-ink) !important;
+}
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) .main-content,
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) .admin-users-main{
+  background:linear-gradient(145deg,#f8fafc 0%,var(--tfro-canvas) 100%) !important;
+}
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) :is(.topbar,h1,h2,h3,h4,strong){
+  color:var(--tfro-ink);
+}
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) :is(.topbar p,.subtitle,.hint,.muted,small){
+  color:var(--tfro-muted);
+}
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) :is(.card,.content-card,.admin-card,.portal-card,.summary-card,.table-card,.profile-card,.application-card,.report-card,.notification-card){
+  background:var(--tfro-surface) !important;
+  border-color:var(--tfro-border) !important;
+  box-shadow:0 8px 24px rgba(11,47,85,.07) !important;
+}
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) :is(input,select,textarea){
+  border-color:#bccbd7 !important;
+  background:#fff !important;
+  color:var(--tfro-ink) !important;
+}
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) :is(input,select,textarea):focus{
+  border-color:var(--tfro-blue-700) !important;
+  box-shadow:0 0 0 3px rgba(20,81,135,.14) !important;
+  outline:0;
+}
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) :is(.primary-button,.btn-primary,.submit-btn,.save-btn,.action-btn){
+  background:linear-gradient(135deg,var(--tfro-blue-900),var(--tfro-blue-700)) !important;
+  border-color:var(--tfro-blue-800) !important;
+  color:#fff !important;
+}
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) table thead,
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) table th{
+  background:var(--tfro-blue-900) !important;
+  color:#fff !important;
+}
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) table td{
+  border-bottom-color:#e1e8ee !important;
+  color:var(--tfro-ink);
+}
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) table tbody tr:nth-child(even){
+  background:#f8fafc;
+}
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) table tbody tr:hover{
+  background:#eef4f8 !important;
 }
