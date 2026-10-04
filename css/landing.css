@@ -5,32 +5,32 @@
    ========================================================= */
 
 :root{
-  --blue-950:#071b66;
-  --blue-900:#0a238e;
-  --blue-800:#1239b8;
-  --blue-700:#1558d6;
-  --green-900:#071b66;
-  --green-800:#0a238e;
-  --green-700:#1239b8;
-  --green-600:#1646c4;
-  --green-500:#1558d6;
-  --green-400:#3478eb;
-  --green-100:#eaf4ff;
-  --green-50:#f5faff;
-  --yellow-500:#ffe600;
-  --yellow-400:#fff133;
-  --yellow-100:#fffbd1;
-  --dark:#0a1d5e;
-  --ink:#10265f;
-  --ink-light:#334c85;
-  --muted:#60729a;
+  --blue-950:#061d38;
+  --blue-900:#0b2f55;
+  --blue-800:#0d4778;
+  --blue-700:#145187;
+  --green-900:#061d38;
+  --green-800:#0b2f55;
+  --green-700:#0d4778;
+  --green-600:#145187;
+  --green-500:#17639f;
+  --green-400:#2f79ad;
+  --green-100:#e7f1f8;
+  --green-50:#f4f8fb;
+  --yellow-500:#f4c430;
+  --yellow-400:#f8d45d;
+  --yellow-100:#fff7d6;
+  --dark:#061d38;
+  --ink:#17324d;
+  --ink-light:#38536d;
+  --muted:#64748b;
   --white:#ffffff;
-  --gray-50:#f4f9ff;
-  --gray-100:#eaf3ff;
-  --gray-200:#c8daf5;
-  --shadow-sm:0 8px 22px rgba(18,57,184,0.09);
-  --shadow-md:0 18px 38px rgba(18,57,184,0.15);
-  --shadow-lg:0 28px 60px rgba(7,27,102,0.2);
+  --gray-50:#f6f8fa;
+  --gray-100:#edf2f6;
+  --gray-200:#d5e0e8;
+  --shadow-sm:0 8px 22px rgba(11,47,85,0.09);
+  --shadow-md:0 18px 38px rgba(11,47,85,0.15);
+  --shadow-lg:0 28px 60px rgba(6,29,56,0.2);
   --radius:18px;
   --font:'Inter','Poppins','Segoe UI',system-ui,-apple-system,sans-serif;
 }
@@ -98,9 +98,9 @@ body{
   inset:0;
   background:
     linear-gradient(100deg,
-      rgba(7,27,102,0.92) 0%,
-      rgba(18,57,184,0.72) 48%,
-      rgba(9,34,126,0.72) 100%);
+      rgba(6,29,56,0.9) 0%,
+      rgba(11,47,85,0.68) 48%,
+      rgba(13,71,120,0.64) 100%);
   z-index:1;
 }
 
