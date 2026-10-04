@@ -37,11 +37,14 @@ Deno.serve(async (request) => {
     const { data: callerProfile, error: callerProfileError } = await adminClient
       .from("profiles").select("role").eq("id", callerData.user.id).maybeSingle();
     if (callerProfileError) throw callerProfileError;
-    if (callerProfile?.role !== "admin") return json({ error: "Only Administrators can delete accounts." }, 403);
+    if (callerProfile?.role !== "admin") return json({ error: "Only Head Administrators can delete accounts." }, 403);
 
     const body = await request.json();
     const userId = String(body?.user_id || "").trim();
     const expectedRole = String(body?.role || "").trim();
+    if (body?.confirmed !== true) {
+      return json({ error: "Account deletion requires confirmation from the Head Administrator." }, 400);
+    }
     if (!userId || !["operator", "traffic_enforcer"].includes(expectedRole)) {
       return json({ error: "A valid Operator or Traffic Enforcer account is required." }, 400);
     }
@@ -67,8 +70,17 @@ Deno.serve(async (request) => {
       if (error) throw error;
     }
 
-    // Soft deletion prevents sign-in and refresh-token use while preserving the
-    // Auth row required by historical foreign keys. It is intentionally final.
+    // Keep the profile as the stable identity behind historical foreign keys,
+    // but remove every portal permission before touching Auth. This also makes
+    // the account disappear from active account lists immediately. Soft-deleting
+    // an Auth user alone leaves its profiles row active.
+    const { error: disableError } = await adminClient.from("profiles")
+      .update({ role: "disabled_account", username: null })
+      .eq("id", userId);
+    if (disableError) throw disableError;
+
+    // Preserve the Auth row required by historical foreign keys. Authorization
+    // has already been revoked through the server-controlled profile role.
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(userId, true);
     if (deleteError) throw deleteError;
 

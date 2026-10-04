@@ -229,7 +229,7 @@ function renderManagedAccounts() {
       <td><span class="account-role ${escapeHtml(account.role)}">${escapeHtml(roleLabel(account.role))}</span></td>
       <td>${escapeHtml(account.contact_number || account.reference || "—")}</td>
       <td><span class="account-link-status"><i class="ri-checkbox-circle-fill"></i> Portal linked</span></td>
-      <td><button type="button" class="reset-password-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-username="${escapeHtml(account.username || "")}" data-name="${escapeHtml(account.full_name)}"><i class="ri-key-2-line"></i> Reset Password</button>${account.can_delete && ["staff", "operator", "traffic_enforcer"].includes(account.role) ? ` <button type="button" class="delete-account-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-name="${escapeHtml(account.full_name)}"><i class="ri-delete-bin-6-line"></i> Delete</button>` : ""}</td>
+      <td><button type="button" class="reset-password-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-username="${escapeHtml(account.username || "")}" data-name="${escapeHtml(account.full_name)}"><i class="ri-key-2-line"></i> Reset Password</button>${account.can_delete && ["admin_viewer", "staff", "operator", "traffic_enforcer"].includes(account.role) ? ` <button type="button" class="delete-account-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-name="${escapeHtml(account.full_name)}"><i class="ri-delete-bin-6-line"></i> Delete</button>` : ""}</td>
     </tr>`).join("") : '<tr><td colspan="5" class="account-empty">No linked accounts match this filter.</td></tr>';
 }
 
@@ -354,15 +354,21 @@ async function confirmManagedAccountDeletion() {
   if (status) status.textContent = `Deleting ${name}'s portal account…`;
   let data;
   let error;
-  if (role === "staff") {
+  if (role === "admin_viewer") {
     try {
-      data = await manageAdministratorAccounts("delete_staff", { user_id: userId });
+      data = await manageAdministratorAccounts("delete", { user_id: userId, confirmed: true });
+    } catch (administratorDeleteError) {
+      error = administratorDeleteError;
+    }
+  } else if (role === "staff") {
+    try {
+      data = await manageAdministratorAccounts("delete_staff", { user_id: userId, confirmed: true });
     } catch (staffDeleteError) {
       error = staffDeleteError;
     }
   } else {
     const result = await supabase.functions.invoke("admin-delete-account", {
-      body: { user_id: userId, role },
+      body: { user_id: userId, role, confirmed: true },
     });
     data = result.data;
     error = result.error;

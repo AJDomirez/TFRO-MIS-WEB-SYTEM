@@ -12,6 +12,8 @@ const staffForm = document.getElementById("createStaffForm");
 const staffMessage = document.getElementById("staffFormMessage");
 const staffRows = document.getElementById("staffRows");
 const createStaffButton = document.getElementById("createStaffButton");
+const deleteModal = document.getElementById("accountDeleteModal");
+let pendingDeletion = null;
 const escapeHtml = (value) => { const element = document.createElement("div"); element.textContent = value ?? ""; return element.innerHTML; };
 function showMessage(text, type = "") { message.textContent = text; message.className = `form-message ${type}`; }
 function showStaffMessage(text, type = "") { staffMessage.textContent = text; staffMessage.className = `form-message ${type}`; }
@@ -71,10 +73,10 @@ async function loadAdminAccounts() {
       ? heads.map((account) => `<tr><td>${escapeHtml(account.full_name || "—")}</td><td><code>${escapeHtml(account.username)}</code></td></tr>`).join("")
       : '<tr><td colspan="2">No Head Administrator account was found.</td></tr>';
     viewerRows.innerHTML = viewers.length
-      ? viewers.map((account) => `<tr><td>${escapeHtml(account.full_name || "—")}</td><td><code>${escapeHtml(account.username)}</code></td><td>${escapeHtml(account.contact_number || "—")}</td><td><button type="button" class="delete-account" data-user-id="${escapeHtml(account.id)}"><i class="ri-delete-bin-line"></i> Delete</button></td></tr>`).join("")
+      ? viewers.map((account) => `<tr><td>${escapeHtml(account.full_name || "—")}</td><td><code>${escapeHtml(account.username)}</code></td><td>${escapeHtml(account.contact_number || "—")}</td><td><button type="button" class="delete-account" data-user-id="${escapeHtml(account.id)}" data-name="${escapeHtml(account.full_name || account.username || "Restricted Administrator")}" data-role="Restricted Administrator"><i class="ri-delete-bin-line"></i> Delete</button></td></tr>`).join("")
       : '<tr><td colspan="4">No restricted Administrator accounts yet.</td></tr>';
     staffRows.innerHTML = staff.length
-      ? staff.map((account) => `<tr><td>${escapeHtml(account.full_name || "—")}</td><td><code>${escapeHtml(account.username || account.login)}</code></td><td>${escapeHtml(account.contact_number || "—")}</td><td><button type="button" class="delete-staff-account" data-user-id="${escapeHtml(account.id)}"><i class="ri-delete-bin-line"></i> Delete</button></td></tr>`).join("")
+      ? staff.map((account) => `<tr><td>${escapeHtml(account.full_name || "—")}</td><td><code>${escapeHtml(account.username || account.login)}</code></td><td>${escapeHtml(account.contact_number || "—")}</td><td><button type="button" class="delete-staff-account" data-user-id="${escapeHtml(account.id)}" data-name="${escapeHtml(account.full_name || account.username || "TFRO Staff")}" data-role="TFRO Staff"><i class="ri-delete-bin-line"></i> Delete</button></td></tr>`).join("")
       : '<tr><td colspan="4">No TFRO Staff accounts yet.</td></tr>';
   } catch (error) {
     const safeMessage = escapeHtml(error.message);
@@ -136,33 +138,74 @@ staffForm.addEventListener("submit", async (event) => {
   await loadAdminAccounts();
 });
 
-viewerRows.addEventListener("click", async (event) => {
-  const button = event.target.closest(".delete-account");
-  if (!button || !window.confirm("Delete this restricted Administrator account? This cannot be undone.")) return;
-  button.disabled = true;
-  showMessage("Deleting account…");
-  try {
-    await manage("delete", { user_id: button.dataset.userId });
-    showMessage("Restricted Administrator account deleted.", "success");
-  } catch (error) {
-    showMessage(error.message, "error");
-  }
-  await loadAdminAccounts();
-});
+function initials(name = "") {
+  return name.split(/\s+/).filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "U";
+}
 
-staffRows.addEventListener("click", async (event) => {
-  const button = event.target.closest(".delete-staff-account");
-  if (!button || !window.confirm("Delete this TFRO Staff account? The account will lose portal access, but official records will remain.")) return;
-  button.disabled = true;
-  showStaffMessage("Deleting TFRO Staff account…");
+function openDeleteModal(button, action) {
+  pendingDeletion = { button, action, userId: button.dataset.userId, name: button.dataset.name, role: button.dataset.role };
+  const confirmButton = document.getElementById("confirmAccountDelete");
+  confirmButton.disabled = false;
+  confirmButton.innerHTML = '<i class="ri-delete-bin-6-line"></i> Delete Account';
+  document.getElementById("cancelAccountDelete").disabled = false;
+  document.getElementById("closeAccountDelete").disabled = false;
+  document.getElementById("accountDeleteName").textContent = pendingDeletion.name;
+  document.getElementById("accountDeleteRole").textContent = pendingDeletion.role;
+  document.getElementById("accountDeleteInitials").textContent = initials(pendingDeletion.name);
+  document.getElementById("accountDeleteError").hidden = true;
+  deleteModal.hidden = false;
+  document.body.classList.add("modal-open");
+  document.getElementById("cancelAccountDelete").focus();
+}
+
+function closeDeleteModal() {
+  if (document.getElementById("confirmAccountDelete").disabled) return;
+  deleteModal.hidden = true;
+  document.body.classList.remove("modal-open");
+  pendingDeletion?.button?.focus();
+  pendingDeletion = null;
+}
+
+async function confirmDeletion() {
+  if (!pendingDeletion) return;
+  const { button, action, userId, name, role } = pendingDeletion;
+  const confirmButton = document.getElementById("confirmAccountDelete");
+  const cancelButton = document.getElementById("cancelAccountDelete");
+  const closeButton = document.getElementById("closeAccountDelete");
+  const errorElement = document.getElementById("accountDeleteError");
+  [button, confirmButton, cancelButton, closeButton].forEach((item) => { item.disabled = true; });
+  confirmButton.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Deleting…';
+  const report = action === "delete_staff" ? showStaffMessage : showMessage;
+  report(`Deleting ${name}'s account…`);
   try {
-    await manage("delete_staff", { user_id: button.dataset.userId });
-    showStaffMessage("TFRO Staff account deleted.", "success");
+    await manage(action, { user_id: userId, confirmed: true });
+    report(`${role} account deleted successfully.`, "success");
+    deleteModal.hidden = true;
+    document.body.classList.remove("modal-open");
+    pendingDeletion = null;
+    await loadAdminAccounts();
   } catch (error) {
-    showStaffMessage(error.message, "error");
+    report(error.message, "error");
+    errorElement.textContent = error.message;
+    errorElement.hidden = false;
+    [button, confirmButton, cancelButton, closeButton].forEach((item) => { item.disabled = false; });
+    confirmButton.innerHTML = '<i class="ri-delete-bin-6-line"></i> Try Again';
   }
-  await loadAdminAccounts();
+}
+
+viewerRows.addEventListener("click", (event) => {
+  const button = event.target.closest(".delete-account");
+  if (button) openDeleteModal(button, "delete");
 });
+staffRows.addEventListener("click", (event) => {
+  const button = event.target.closest(".delete-staff-account");
+  if (button) openDeleteModal(button, "delete_staff");
+});
+document.getElementById("confirmAccountDelete").addEventListener("click", confirmDeletion);
+document.getElementById("cancelAccountDelete").addEventListener("click", closeDeleteModal);
+document.getElementById("closeAccountDelete").addEventListener("click", closeDeleteModal);
+deleteModal.addEventListener("click", (event) => { if (event.target === deleteModal) closeDeleteModal(); });
+document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !deleteModal.hidden) closeDeleteModal(); });
 
 document.getElementById("refreshList").addEventListener("click", () => void loadAdminAccounts());
 document.getElementById("refreshStaffList").addEventListener("click", () => void loadAdminAccounts());

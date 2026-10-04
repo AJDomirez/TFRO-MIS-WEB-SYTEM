@@ -139,6 +139,7 @@ Deno.serve(async (request) => {
 
     if (action === "delete") {
       const userId = cleanText(body?.user_id, 64);
+      if (body?.confirmed !== true) return rejected("Account deletion requires confirmation from the Head Administrator.");
       if (!userId || userId === caller.id) return rejected("Choose a valid restricted Administrator account.");
       const { data: target, error: targetError } = await adminClient.from("profiles").select("id, role, full_name, username").eq("id", userId).maybeSingle();
       if (targetError) throw targetError;
@@ -153,6 +154,7 @@ Deno.serve(async (request) => {
 
     if (action === "delete_staff") {
       const userId = cleanText(body?.user_id, 64);
+      if (body?.confirmed !== true) return rejected("Account deletion requires confirmation from the Head Administrator.");
       if (!userId || userId === caller.id) return rejected("Choose a valid TFRO Staff account.");
       const { data: target, error: targetError } = await adminClient.from("profiles")
         .select("id, role, full_name, username").eq("id", userId).maybeSingle();

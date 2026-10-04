@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin Users | TFRO MIS</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
-  <link rel="stylesheet" href="../css/admin-users.css">
+  <link rel="stylesheet" href="../css/admin-users.css?v=20261004-2">
   <link rel="stylesheet" href="../css/tfro-theme.css">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
 </head>
@@ -48,7 +48,21 @@
       <section class="content-card"><div class="section-heading"><h2>Current TFRO Staff</h2><button id="refreshStaffList" type="button" class="icon-button" title="Refresh"><i class="ri-refresh-line"></i></button></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Contact</th><th>Action</th></tr></thead><tbody id="staffRows"><tr><td colspan="4">Loading accounts…</td></tr></tbody></table></div></section>
     </main>
   </div>
+  <div class="account-delete-modal" id="accountDeleteModal" hidden>
+    <section class="account-delete-dialog" role="alertdialog" aria-modal="true" aria-labelledby="accountDeleteTitle" aria-describedby="accountDeleteDescription">
+      <button type="button" class="account-delete-close" id="closeAccountDelete" aria-label="Close confirmation"><i class="ri-close-line"></i></button>
+      <div class="account-delete-icon"><i class="ri-user-unfollow-line"></i></div>
+      <span class="account-delete-kicker">ACCOUNT MANAGEMENT</span>
+      <h2 id="accountDeleteTitle">Delete portal account?</h2>
+      <p id="accountDeleteDescription">Review this account carefully before removing its access.</p>
+      <div class="account-delete-user"><span id="accountDeleteInitials">U</span><div><strong id="accountDeleteName">Selected account</strong><small id="accountDeleteRole">Portal user</small></div></div>
+      <div class="account-delete-retained"><i class="ri-shield-check-line"></i><p><strong>Official records will be retained</strong><span>Audit and operational history will not be erased.</span></p></div>
+      <p class="account-delete-warning"><i class="ri-error-warning-line"></i> This is the only warning. Account access cannot be restored after deletion.</p>
+      <p class="account-delete-error" id="accountDeleteError" role="alert" hidden></p>
+      <div class="account-delete-actions"><button type="button" class="account-delete-cancel" id="cancelAccountDelete">Keep Account</button><button type="button" class="account-delete-confirm" id="confirmAccountDelete"><i class="ri-delete-bin-6-line"></i> Delete Account</button></div>
+    </section>
+  </div>
   <script type="module" src="../js/sidebar-user.js"></script>
-  <script type="module" src="../js/admin-users.js?v=20261002-2"></script>
+  <script type="module" src="../js/admin-users.js?v=20261004-2"></script>
 </body>
 </html>
