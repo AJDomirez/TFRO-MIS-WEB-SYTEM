@@ -194,7 +194,7 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
 
 async function loadSystemSettings() {
   const { data, error } = await supabase.from("system_settings")
-    .select("operator_registration_enabled, maintenance_mode, max_login_attempts, login_lockout_seconds")
+    .select("operator_registration_enabled, maintenance_mode, max_login_attempts, login_lockout_seconds, violation_commission_rate")
     .eq("id", true).maybeSingle();
   const status = document.getElementById("settingsStatus");
   if (error) {
@@ -205,6 +205,7 @@ async function loadSystemSettings() {
   document.getElementById("maintenanceMode").checked = Boolean(data?.maintenance_mode);
   document.getElementById("maxLoginAttempts").value = data?.max_login_attempts || 5;
   document.getElementById("loginLockoutSeconds").value = data?.login_lockout_seconds || 60;
+  document.getElementById("violationCommissionRate").value = Number(data?.violation_commission_rate ?? 0.20) * 100;
   status.textContent = "";
 }
 
@@ -438,14 +439,16 @@ document.getElementById("settingsForm").addEventListener("submit", async (event)
     maintenance_mode: document.getElementById("maintenanceMode").checked,
     max_login_attempts: Number(document.getElementById("maxLoginAttempts").value),
     login_lockout_seconds: Number(document.getElementById("loginLockoutSeconds").value),
+    violation_commission_rate: Number(document.getElementById("violationCommissionRate").value) / 100,
     updated_at: new Date().toISOString(),
     updated_by: currentUserId,
   };
   if (!Number.isInteger(settings.max_login_attempts) || settings.max_login_attempts < 1 || settings.max_login_attempts > 10
-      || !Number.isInteger(settings.login_lockout_seconds) || settings.login_lockout_seconds < 10 || settings.login_lockout_seconds > 3600) {
+      || !Number.isInteger(settings.login_lockout_seconds) || settings.login_lockout_seconds < 10 || settings.login_lockout_seconds > 3600
+      || !Number.isFinite(settings.violation_commission_rate) || settings.violation_commission_rate < 0 || settings.violation_commission_rate > 1) {
     button.disabled = false;
     button.textContent = "Save System Settings";
-    status.textContent = "Enter 1–10 attempts and a lockout duration from 10–3600 seconds.";
+    status.textContent = "Enter 1–10 attempts, a lockout duration from 10–3600 seconds, and a commission from 0–100%.";
     return;
   }
   const { error } = await supabase.from("system_settings").update(settings).eq("id", true);

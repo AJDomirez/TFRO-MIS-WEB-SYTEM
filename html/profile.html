@@ -247,6 +247,7 @@
           <div class="settings-number-grid">
             <label class="input-group"><span>Maximum Wrong Password Attempts</span><input type="number" id="maxLoginAttempts" min="1" max="10" step="1" required><small>Allowed range: 1–10 attempts.</small></label>
             <label class="input-group"><span>Login Lockout Duration (seconds)</span><input type="number" id="loginLockoutSeconds" min="10" max="3600" step="1" required><small>Allowed range: 10–3600 seconds.</small></label>
+            <label class="input-group"><span>Violation Enforcer Commission (%)</span><input type="number" id="violationCommissionRate" min="0" max="100" step="0.01" required><small>Default: 20%. Changes apply to newly recorded payments.</small></label>
           </div>
           <p class="settings-status" id="settingsStatus" aria-live="polite"></p>
           <button type="submit" class="save-btn">Save System Settings</button>
@@ -310,7 +311,7 @@
   </section>
 </div>
 
-<script type="module" src="../js/profile.js?v=20261004-1"></script>
+<script type="module" src="../js/profile.js?v=20261008-1"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 
 <script>

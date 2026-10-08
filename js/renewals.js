@@ -42,6 +42,7 @@ let renewals = [];
 let currentRenewal = null;
 let currentDocuments = [];
 let currentProfile = null;
+let manualFranchises = [];
 const byId = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" })[char]);
 
@@ -82,13 +83,55 @@ function filteredRenewals() {
 function renderTable() {
   const rows = filteredRenewals();
   byId("renewalsTable").innerHTML = rows.length ? rows.map((renewal) => `<tr>
-    <td>${escapeHtml(renewal.renewal_code)}</td><td>${escapeHtml(renewal.franchises?.franchise_number)}</td>
+    <td>${escapeHtml(renewal.renewal_code)}</td><td>${renewal.submission_source === "staff_manual" ? '<span class="status-badge pending">Staff Manual</span>' : '<span class="status-badge approved">Operator Online</span>'}</td><td>${escapeHtml(renewal.franchises?.franchise_number)}</td>
     <td>${escapeHtml(renewal.operator_name)}</td><td>${escapeHtml(TYPE_LABELS[renewal.renewal_type])}</td>
     <td><strong>${Number(renewal.submission_attempt_count || 1)}</strong></td>
     <td>${escapeHtml(renewal.current_expiration_date)}</td><td>${badge(renewal.status)}</td>
     <td>${new Date(renewal.updated_at || renewal.created_at).toLocaleString("en-PH")}</td>
     <td><button class="verify-btn" data-review-id="${renewal.id}"><i class="ri-eye-line"></i> View / Review</button></td>
-  </tr>`).join("") : '<tr><td colspan="9">No renewal requests found.</td></tr>';
+  </tr>`).join("") : '<tr><td colspan="10">No renewal requests found.</td></tr>';
+}
+
+async function openManualRenewal() {
+  const { data, error } = await supabase.from("franchises")
+    .select("id,franchise_number,operator_name,contact_number,expiration_date,status")
+    .neq("status", "revoked").order("operator_name");
+  if (error) return alert(`Could not load franchise records: ${error.message}`);
+  manualFranchises = data || [];
+  byId("manualFranchiseId").innerHTML = '<option value="">Select an existing franchise</option>' + manualFranchises.map((franchise) =>
+    `<option value="${franchise.id}">${escapeHtml(franchise.franchise_number)} — ${escapeHtml(franchise.operator_name)}</option>`
+  ).join("");
+  byId("manualRequestDate").value = new Date().toISOString().slice(0, 10);
+  byId("manualRenewalModal").hidden = false;
+}
+
+function fillManualFranchise() {
+  const franchise = manualFranchises.find((row) => String(row.id) === byId("manualFranchiseId").value);
+  byId("manualOperatorName").value = franchise?.operator_name || "";
+  byId("manualFranchiseNumber").value = franchise?.franchise_number || "";
+  byId("manualContact").value = franchise?.contact_number || "";
+}
+
+async function saveManualRenewal(event) {
+  event.preventDefault();
+  const submit = event.submitter;
+  submit.disabled = true;
+  const { data, error } = await supabase.rpc("create_manual_franchise_renewal", {
+    p_franchise_id: Number(byId("manualFranchiseId").value),
+    p_request_date: byId("manualRequestDate").value,
+    p_renewal_type: byId("manualRenewalType").value,
+    p_contact: byId("manualContact").value.trim() || null,
+    p_assessed_amount: byId("manualAssessedAmount").value === "" ? null : Number(byId("manualAssessedAmount").value),
+    p_payment_or_number: byId("manualPaymentOrNumber").value.trim() || null,
+    p_status: byId("manualRenewalStatus").value,
+    p_notes: byId("manualRenewalNotes").value.trim() || null,
+  });
+  submit.disabled = false;
+  if (error) return alert(`Could not create manual renewal: ${error.message}`);
+  byId("manualRenewalForm").reset();
+  byId("manualRenewalModal").hidden = true;
+  await loadRenewals();
+  alert("Manual renewal request saved and added to the standard review workflow.");
 }
 
 async function signedUrl(path) {
@@ -437,6 +480,7 @@ bindDateCsvExport({
   filename: "tfro_franchise_renewals",
   columns: [
     { header: "Request Number", value: (row) => row.renewal_code },
+    { header: "Submission Source", value: (row) => row.submission_source === "staff_manual" ? "Staff Manual" : "Operator Online" },
     { header: "Franchise Number", value: (row) => row.franchises?.franchise_number },
     { header: "Operator", value: (row) => row.operator_name },
     { header: "Operator Address", value: (row) => row.operator_address },
@@ -459,6 +503,9 @@ bindDateCsvExport({
   ],
 });
 byId("renewalsTable").addEventListener("click", (event) => { const button = event.target.closest("[data-review-id]"); if (button) openReview(button.dataset.reviewId); });
+byId("manualRenewalBtn").addEventListener("click", openManualRenewal);
+byId("manualFranchiseId").addEventListener("change", fillManualFranchise);
+byId("manualRenewalForm").addEventListener("submit", saveManualRenewal);
 document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => { byId(button.dataset.close).hidden = true; }));
 byId("saveProgressBtn").addEventListener("click", handleSaveProgress);
 byId("sendRequirementsDateBtn").addEventListener("click", sendRequirementsDate);
