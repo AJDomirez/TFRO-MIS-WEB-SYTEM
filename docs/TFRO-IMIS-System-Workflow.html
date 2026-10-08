@@ -84,17 +84,17 @@
 
     <section class="page">
       <header class="page-head"><div><span class="page-kicker">Continuing authority</span><h1>4. Franchise Renewal Workflow</h1></div><span class="page-no">04</span></header>
-      <div class="flow"><div class="node start"><b>Eligible Franchise</b><span>Operator selects a franchise due for renewal</span></div><div class="arrow">→</div><div class="node action"><b>Complete Renewal</b><span>Form answers and nine requirements</span></div><div class="arrow">→</div><div class="node action"><b>Submit for Review</b></div><div class="arrow">→</div><div class="node decision"><b>Admin Verification</b><span>Documents, inspection, assessment, payment</span></div><div class="arrow">→</div><div class="node success"><b>Approve & Update MTOP</b></div></div>
+      <div class="flow"><div class="node start"><b>Eligible Franchise</b><span>Operator may apply up to three months before expiration</span></div><div class="arrow">→</div><div class="node action"><b>Complete Renewal</b><span>Form answers and eight requirements</span></div><div class="arrow">→</div><div class="node action"><b>Submit for Review</b></div><div class="arrow">→</div><div class="node decision"><b>Admin Verification</b><span>Documents, inspection, and assessment</span></div><div class="arrow">→</div><div class="node success"><b>Approve & Update MTOP</b></div></div>
       <div class="steps">
-        <div class="step"><b>Operator checks eligibility</b><span>The selected franchise must be linked to the signed-in operator and allowed to renew.</span></div>
+        <div class="step"><b>Operator checks eligibility</b><span>The selected franchise must be linked to the signed-in operator. Renewal may be requested up to three months before expiration; the franchise does not need to be expired.</span></div>
         <div class="step"><b>Operator uploads requirements</b><span>Required documents and the 2×2 picture are validated by type and completeness.</span></div>
         <div class="step"><b>Administrator reviews documents</b><span>Each requirement is marked verified, rejected, or requiring correction.</span></div>
-        <div class="step"><b>Administrator records assessment</b><span>Inspection results, fees, payment verification, and hard-copy requirements are recorded.</span></div>
+        <div class="step"><b>Administrator records assessment</b><span>Inspection results, fees, and hard-copy requirements are recorded. Payment may be completed after renewal approval.</span></div>
         <div class="step"><b>Administrator approves</b><span>Approval is allowed only when the required review conditions are satisfied.</span></div>
         <div class="step"><b>System synchronizes franchise</b><span>The new expiration date is applied and the previous MTOP expiration is preserved.</span></div>
       </div>
       <div class="branch"><div class="yes"><b>COMPLETE</b><p>Renewal becomes approved, printable forms become available, franchise expiry is updated, and the operator receives a notification.</p></div><div class="no"><b>INCOMPLETE</b><p>The request stays pending/reviewing or is returned with remarks until the operator supplies acceptable requirements.</p></div></div>
-      <div class="notes"><article class="note warning"><h3>Control point</h3><p>Approval should never be used to bypass missing documents, inspection results, assessment, or payment confirmation.</p></article><article class="note"><h3>Printable output</h3><p>The system can prepare renewal checklist and related official forms using the saved record.</p></article><article class="note"><h3>Traceability</h3><p>Submission attempts, reviewers, dates, verification results, and approval activity are retained.</p></article></div>
+      <div class="notes"><article class="note warning"><h3>Control point</h3><p>Approval should never bypass required documents, inspection results, or assessment. City Treasurer payment is tracked separately and may follow renewal approval.</p></article><article class="note"><h3>Printable output</h3><p>The system can prepare renewal checklist and related official forms using the saved record.</p></article><article class="note"><h3>Traceability</h3><p>Submission attempts, reviewers, dates, verification results, and approval activity are retained.</p></article></div>
       <div class="footer">Renewal processing preserves the former expiration value for historical comparison.</div>
     </section>
 
@@ -170,7 +170,7 @@
         <div class="step"><b>Track the application</b><span><b>pending_review</b> means wait for Admin review. If returned, read the reason, correct the record/documents, and resubmit as allowed.</span></div>
         <div class="step"><b>Add a driver after franchise setup</b><span>Open Add Driver, complete licence and identity details, upload the required 2×2 JPG/PNG (maximum 5 MB), and submit. Duplicate licence numbers are not allowed.</span></div>
         <div class="step"><b>Wait for driver verification</b><span>The Administrator reviews and assigns the driver to the Operator/franchise. Pending submissions may be edited or deleted by the Operator.</span></div>
-        <div class="step"><b>Use renewal or change-motor when applicable</b><span>Select only a franchise linked to your account. Submit through the dedicated workflow so previous values and review history are preserved.</span></div>
+        <div class="step"><b>Use renewal or change-motor when applicable</b><span>Select only a franchise linked to your account. Renewal may be filed up to three months before expiration, and Change Motor may be requested while the franchise is still active. Submit through the dedicated workflow so previous values and review history are preserved.</span></div>
         <div class="step"><b>Respond to violations and messages</b><span>Review the violation, pay through the authorized office procedure, upload the Treasurer receipt once when offered, and wait for TFRO Staff verification.</span></div>
       </div>
       <div class="callout"><b>Franchise approval result:</b> the system creates the franchise and tricycle records only after Administrator approval. A submitted application by itself is not an active franchise.</div>
@@ -188,14 +188,14 @@
       <table class="guide-table">
         <thead><tr><th>Renewal type</th><th>Operator requirement</th><th>Office result</th></tr></thead>
         <tbody>
-          <tr><td><b>Regular</b></td><td>Submit all nine configured requirements: payment receipt, voter’s certificate, cedula, barangay clearance, driver’s licence, 2×2 picture, PMBL certification, official receipt/registration evidence, and insurance.</td><td>Admin verifies documents, hard copies, inspection, assessment, and payment before approval.</td></tr>
+          <tr><td><b>Regular</b></td><td>Submit the eight configured requirements: voter’s certificate, cedula, barangay clearance, driver’s licence, 2×2 picture, PMBL certification, official receipt/registration evidence, and insurance. The City Treasurer payment receipt is not required for the renewal request.</td><td>Admin verifies documents, hard copies, inspection, and assessment before approval. Payment may be completed afterward.</td></tr>
           <tr><td><b>Expired OR</b></td><td>Submit the available base requirements, then provide the updated vehicle registration/official receipt evidence and insurance requested by the office.</td><td>A temporary MTOP may be issued; the renewal remains pending until required updated evidence is verified.</td></tr>
           <tr><td><b>Change Motor</b></td><td>Select the approved Change Motor request associated with the franchise and submit the renewal requirements shown by the form.</td><td>A temporary MTOP may be issued; final approval waits for the required updated vehicle and insurance evidence.</td></tr>
         </tbody>
       </table>
       <h2 style="margin:16px 0 8px;font-size:17px">Change Motor</h2>
       <div class="steps">
-        <div class="step"><b>Select an approved franchise</b><span>The request cannot be used for an unrelated Operator or unapproved franchise.</span></div>
+        <div class="step"><b>Select an approved franchise</b><span>The request cannot be used for an unrelated Operator or unapproved franchise. It may be submitted before the franchise expires.</span></div>
         <div class="step"><b>Enter changed identifiers</b><span>At least one new engine, chassis, or plate value is required. If engine/chassis changes, new motor brand and model/serial are required.</span></div>
         <div class="step"><b>Attach evidence</b><span>A new motor picture in JPG/PNG is required (maximum 5 MB). The supporting PDF is optional unless office policy requires it.</span></div>
         <div class="step"><b>Confirm before submission</b><span>The current vehicle remains unchanged while the request is pending. Admin compares old and new details.</span></div>

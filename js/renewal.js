@@ -8,7 +8,7 @@ async function openSavedSubmissionForm(options) {
 }
 
 const BASE_DOCUMENTS = [
-  "payment_receipt", "voters_certificate", "cedula", "barangay_clearance", "drivers_license",
+  "voters_certificate", "cedula", "barangay_clearance", "drivers_license",
   "picture_2x2", "pmbl_certification",
 ];
 const UPDATED_DOCUMENTS = ["official_receipt", "insurance"];
@@ -95,8 +95,8 @@ function updateCaseRequirements() {
       ? "TFRO may issue a Temporary MTOP. Renewal remains pending until updated OR, CR, and insurance are submitted and verified."
       : "TFRO may issue a Temporary MTOP. Renewal remains pending until OR and CR are updated to For Hire and valid insurance is submitted.";
   byId("documentNote").textContent = needsAllNow
-    ? "Upload all nine clear PDF or image photocopies."
-    : "Upload the six basic requirements now. Updated For Hire OR, CR, and insurance may follow, but approval remains pending until all are verified.";
+    ? "Upload all eight required clear PDF or image photocopies. The City Treasurer payment receipt may be submitted after renewal."
+    : "Upload the five basic requirements now. Updated For Hire OR, CR, and insurance may follow, but approval remains pending until all required documents are verified.";
 }
 
 async function loadChangeMotorRequests() {
@@ -151,8 +151,13 @@ async function loadFranchise() {
   }
   const today = new Date();
   const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  if (data.expiration_date && data.expiration_date > localToday) {
-    setError(`This franchise is not yet due for renewal. It becomes eligible on ${data.expiration_date}.`);
+  const eligibilityDate = data.expiration_date ? new Date(`${data.expiration_date}T00:00:00`) : null;
+  if (eligibilityDate) eligibilityDate.setMonth(eligibilityDate.getMonth() - 3);
+  const localEligibilityDate = eligibilityDate
+    ? `${eligibilityDate.getFullYear()}-${String(eligibilityDate.getMonth() + 1).padStart(2, "0")}-${String(eligibilityDate.getDate()).padStart(2, "0")}`
+    : null;
+  if (localEligibilityDate && localToday < localEligibilityDate) {
+    setError(`This franchise may be renewed up to three months before expiration. It becomes eligible on ${localEligibilityDate}.`);
     byId("submitRenewalBtn").disabled = true;
   }
   if (data.status === "revoked") {
@@ -280,9 +285,6 @@ function prefillRenewal(renewal) {
   byId("applicantBirthDate").value = renewal.applicant_birth_date || "";
   byId("applicantBirthPlace").value = renewal.applicant_birth_place || "";
   byId("applicantCivilStatus").value = renewal.applicant_civil_status || "";
-  byId("votersNumber").value = renewal.voters_certificate_number || "";
-  byId("cedulaNumber").value = renewal.cedula_number || "";
-  byId("barangayNumber").value = renewal.barangay_clearance_number || "";
   byId("driverId").value = renewal.driver_id || "";
   byId("driverName").value = renewal.driver_name;
   byId("driverLicense").value = renewal.driver_license_number;
@@ -291,7 +293,6 @@ function prefillRenewal(renewal) {
   byId("plateNumber").value = renewal.plate_number;
   byId("engineNumber").value = renewal.engine_number;
   byId("chassisNumber").value = renewal.chassis_number;
-  byId("pmblNumber").value = renewal.pmbl_certificate_number || "";
   byId("orNumber").value = renewal.current_or_number || "";
   byId("orDate").value = renewal.current_or_date || "";
   byId("crNumber").value = renewal.current_cr_number || "";
@@ -360,15 +361,14 @@ async function submitRenewal(event) {
         renewal_code: `REN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
         renewal_type: byId("renewalType").value, current_expiration_date: byId("currentExpiration").value,
         operator_name: byId("operatorName").value.trim(), operator_address: byId("operatorAddress").value.trim(),
-        operator_contact: byId("operatorContact").value.trim(), voters_certificate_number: byId("votersNumber").value.trim() || null,
+        operator_contact: byId("operatorContact").value.trim(),
         residential_street: byId("residentialStreet").value.trim(), residential_barangay: byId("residentialBarangay").value.trim(),
         applicant_birth_date: byId("applicantBirthDate").value, applicant_birth_place: byId("applicantBirthPlace").value.trim(),
         applicant_civil_status: byId("applicantCivilStatus").value,
-        cedula_number: byId("cedulaNumber").value.trim() || null, barangay_clearance_number: byId("barangayNumber").value.trim() || null,
         driver_name: byId("driverName").value, driver_license_number: byId("driverLicense").value,
         motorcycle_make: byId("motorcycleMake").value.trim(), motorcycle_model: byId("motorcycleModel").value.trim(),
         plate_number: byId("plateNumber").value.trim().toUpperCase(), engine_number: byId("engineNumber").value.trim().toUpperCase(), chassis_number: byId("chassisNumber").value.trim().toUpperCase(),
-        pmbl_certificate_number: byId("pmblNumber").value.trim() || null, current_or_number: byId("orNumber").value.trim() || null,
+        current_or_number: byId("orNumber").value.trim() || null,
         current_or_date: byId("orDate").value,
         current_cr_number: byId("crNumber").value.trim() || null, or_registration_class: byId("orClass").value,
         cr_registration_class: byId("crClass").value, status: "pending_review",
@@ -386,15 +386,14 @@ async function submitRenewal(event) {
         renewal_type: byId("renewalType").value,
         current_expiration_date: byId("currentExpiration").value,
         operator_name: byId("operatorName").value.trim(), operator_address: byId("operatorAddress").value.trim(),
-        operator_contact: byId("operatorContact").value.trim(), voters_certificate_number: byId("votersNumber").value.trim() || null,
+        operator_contact: byId("operatorContact").value.trim(),
         residential_street: byId("residentialStreet").value.trim(), residential_barangay: byId("residentialBarangay").value.trim(),
         applicant_birth_date: byId("applicantBirthDate").value, applicant_birth_place: byId("applicantBirthPlace").value.trim(),
         applicant_civil_status: byId("applicantCivilStatus").value,
-        cedula_number: byId("cedulaNumber").value.trim() || null, barangay_clearance_number: byId("barangayNumber").value.trim() || null,
         driver_id: Number(byId("driverId").value), driver_name: byId("driverName").value, driver_license_number: byId("driverLicense").value,
         motorcycle_make: byId("motorcycleMake").value.trim(), motorcycle_model: byId("motorcycleModel").value.trim(),
         plate_number: byId("plateNumber").value.trim().toUpperCase(), engine_number: byId("engineNumber").value.trim().toUpperCase(),
-        chassis_number: byId("chassisNumber").value.trim().toUpperCase(), pmbl_certificate_number: byId("pmblNumber").value.trim() || null,
+        chassis_number: byId("chassisNumber").value.trim().toUpperCase(),
         current_or_number: byId("orNumber").value.trim() || null, current_or_date: byId("orDate").value,
         current_cr_number: byId("crNumber").value.trim() || null, or_registration_class: byId("orClass").value,
         cr_registration_class: byId("crClass").value,

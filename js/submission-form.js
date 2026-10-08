@@ -245,7 +245,6 @@ export function openRenewalChecklistForm({ renewal, franchise = {}, documents = 
   const uploaded = new Map(documents.map((item) => [item.doc_type, item]));
   const mark = (type) => uploaded.has(type) ? "&#10003;" : "";
   const requirementRows = [
-    ["a", "Receipts of payments from the City Treasurer's Office", "payment_receipt"],
     ["b", "Certificate of payment from LTO for the updated registration of motorcycle for hire. If there is no updated registration of the tricycle, operator shall secure a temporary MTOP valid only for 15 days.", "official_receipt"],
     ["c", "Latest Voter's Certificate of Registration issued by the Commission on Elections, Lucena City.", "voters_certificate"],
     ["d", "Copy of valid common carrier's insurance (third party liability + passenger liability) sufficient to answer for any liability incurred by passengers and third parties in case of accidents. Original must be presented for authentication.", "insurance"],
