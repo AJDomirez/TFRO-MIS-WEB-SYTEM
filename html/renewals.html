@@ -7,7 +7,7 @@
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
   <link rel="stylesheet" href="../css/franchise.css">
   <link rel="stylesheet" href="../css/application.css">
-  <link rel="stylesheet" href="../css/renewal-admin.css?v=20260914-2">
+  <link rel="stylesheet" href="../css/renewal-admin.css?v=20261008-3">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
 </head>
@@ -55,7 +55,7 @@
         <label>Initial Status<select id="manualRenewalStatus"><option value="pending_review">Pending Review</option><option value="awaiting_payment">Awaiting Payment</option><option value="inspection_pending">Inspection Pending</option></select></label>
       </div>
       <div class="staff-field"><label>Remarks / Notes<textarea id="manualRenewalNotes" rows="3"></textarea></label></div>
-      <div class="review-actions"><button class="btn-cancel" type="button" data-close="manualRenewalModal">Cancel</button><button class="btn-accept" type="submit"><i class="ri-save-line"></i> Save Manual Renewal</button></div>
+      <div class="review-actions"><button class="btn-cancel" type="button" data-close="manualRenewalModal">Cancel</button><button class="btn-accept" id="manualRenewalSaveBtn" type="submit"><i class="ri-save-line"></i> Save Manual Renewal</button></div>
     </form>
   </div>
 </div>
@@ -85,7 +85,7 @@
   </div>
 </div>
 
-<script type="module" src="../js/renewals.js?v=20261008-2"></script>
+<script type="module" src="../js/renewals.js?v=20261008-3"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 </body>
 </html>
