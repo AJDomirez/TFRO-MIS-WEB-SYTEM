@@ -6,9 +6,10 @@
   <title>Operator Portal</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
 
-<link rel="stylesheet" href="../css/operatorportal.css?v=20260826-230000">
+<link rel="stylesheet" href="../css/operatorportal.css?v=20260914-2">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-030000">
-  <link rel="stylesheet" href="../css/guided-tour.css?v=20260823-1">
+  <link rel="stylesheet" href="../css/guided-tour.css?v=20260913-1">
+  <link rel="stylesheet" href="../css/guided-tour-bilingual.css?v=20260913-1">
 
   <!-- Remix Icons -->
   <link
@@ -119,18 +120,18 @@
     <!-- APPLICATION ACTIONS -->
     <section class="operator-actions" aria-label="Operator applications">
       <div class="operator-actions-heading">
-        <div><h3>Applications</h3><p>Start or track your TFRO requests.</p></div>
+        <div><span class="operator-actions-eyebrow">Main Operator Actions</span><h3>What would you like to do?</h3><p>Select one of the three buttons below to begin.</p></div>
         <a href="notification.html" class="notification-link"><i class="ri-notification-3-line"></i> View Notifications</a>
       </div>
       <div class="operator-action-grid">
-        <a href="renewal.html" class="operator-action-card">
-          <i class="ri-refresh-line"></i><div><strong>Renew Franchise</strong><span>Three-year franchise and MTOP renewal</span></div><i class="ri-arrow-right-line"></i>
+        <a href="renewal.html" class="operator-action-card action-renew">
+          <i class="ri-refresh-line"></i><div><strong>Renew Franchise</strong><span>Three-year franchise and MTOP renewal</span><b>Start Renewal <i class="ri-arrow-right-line"></i></b></div>
         </a>
-        <a href="#changeMotorCard" class="operator-action-card">
-          <i class="ri-settings-5-line"></i><div><strong>Change Motor</strong><span>Submit engine, chassis, or plate changes</span></div><i class="ri-arrow-right-line"></i>
+        <a href="#changeMotorCard" class="operator-action-card action-motor" data-open-change-motor>
+          <i class="ri-settings-5-line"></i><div><strong>Change Motor</strong><span>Submit engine, chassis, or plate changes</span><b>Open Request <i class="ri-arrow-right-line"></i></b></div>
         </a>
-        <a href="#driverApplicationCard" class="operator-action-card">
-          <i class="ri-user-add-line"></i><div><strong>Add Driver</strong><span>Apply and submit Driver credentials</span></div><i class="ri-arrow-right-line"></i>
+        <a href="#driverApplicationCard" class="operator-action-card action-driver" data-open-driver-form>
+          <i class="ri-user-add-line"></i><div><strong>Add Driver</strong><span>Apply and submit Driver credentials</span><b>Start Application <i class="ri-arrow-right-line"></i></b></div>
         </a>
       </div>
     </section>
@@ -216,22 +217,27 @@
 
       <div class="card-header">
         <h3>Change Motor / MTOP</h3>
-        <span class="badge approved" id="changeMotorBadge">Request</span>
+        <button class="request-toggle-btn" id="changeMotorToggle" type="button" aria-expanded="false" aria-controls="changeMotorWrap"><i class="ri-edit-box-line"></i> Request</button>
       </div>
 
-      <div class="change-motor-form" id="changeMotorWrap">
+      <div class="change-motor-form" id="changeMotorWrap" hidden>
         <p class="change-motor-note">
           Request to update the engine, chassis, or plate number of your registered tricycle.
           Please provide the new details and attach a supporting document (PDF).
         </p>
 
         <div class="cm-grid">
+          <h4 class="cm-section-title">Registered Operator and Franchise</h4>
           <div class="cm-field"><label>Operator</label><input type="text" id="cmOperatorName" readonly></div>
           <div class="cm-field"><label>Franchise Number</label><input type="text" id="cmFranchiseNumber" readonly></div>
+          <div class="cm-field"><label>Assigned Route</label><input type="text" id="cmAssignedRoute" readonly></div>
+          <h4 class="cm-section-title">Current Registered Vehicle Details</h4>
+          <div class="cm-field"><label>Current Motor Brand</label><input type="text" id="cmCurrentBrand" readonly></div>
+          <div class="cm-field"><label>Current Motor Model</label><input type="text" id="cmCurrentModel" readonly></div>
           <div class="cm-field"><label>Current Engine No.</label><input type="text" id="cmCurrentEngine" readonly></div>
           <div class="cm-field"><label>Current Chassis No.</label><input type="text" id="cmCurrentChassis" readonly></div>
           <div class="cm-field"><label>Current Plate No.</label><input type="text" id="cmCurrentPlate" readonly></div>
-          <div class="cm-field"><label>Assigned Route</label><input type="text" id="cmAssignedRoute" readonly></div>
+          <h4 class="cm-section-title">Proposed Replacement Details</h4>
           <div class="cm-field">
             <label>New Engine No.</label>
             <input type="text" id="cmEngine" placeholder="New engine number">
@@ -245,13 +251,14 @@
             <input type="text" id="cmPlate" placeholder="New plate number">
           </div>
           <div class="cm-field">
-            <label>Motor Brand</label>
+            <label>New Motor Brand</label>
             <input type="text" id="cmBrand" placeholder="e.g. Yamaha, Honda">
           </div>
           <div class="cm-field">
-            <label>Motor Serial</label>
+            <label>New Motor Model / Serial</label>
             <input type="text" id="cmSerial" placeholder="Motor serial number">
           </div>
+          <h4 class="cm-section-title">Required Supporting Files</h4>
           <div class="cm-field">
             <label>Supporting Document (PDF)</label>
             <input type="file" id="cmDoc" accept="application/pdf">
@@ -307,14 +314,16 @@
             Drivers do not receive an email or password and cannot sign in.
           </p>
         </div>
-        <span class="badge pending">Operator submission</span>
+        <button class="request-toggle-btn driver-toggle-btn" id="driverFormToggle" type="button" aria-expanded="false" aria-controls="driverApplicationForm"><i class="ri-user-add-line"></i> Add Driver</button>
       </div>
 
-      <form id="driverApplicationForm">
+      <form id="driverApplicationForm" hidden>
         <div class="driver-form-grid">
+          <h4 class="driver-section-title">Operator and Franchise Assignment</h4>
           <div class="driver-field"><label for="driverOperatorName">Operator</label><input id="driverOperatorName" type="text" readonly></div>
           <div class="driver-field"><label for="driverFranchiseNumber">Franchise Number</label><input id="driverFranchiseNumber" type="text" readonly></div>
           <div class="driver-field driver-field-wide"><label for="driverAssignedRoute">Assigned Route</label><input id="driverAssignedRoute" type="text" readonly></div>
+          <h4 class="driver-section-title">Driver Identity and License Details</h4>
           <div class="driver-field">
             <label for="driverFullName">Full Name</label>
             <input id="driverFullName" name="full_name" type="text" required>
@@ -344,6 +353,7 @@
             <label for="driverAddress">Address</label>
             <input id="driverAddress" name="address" type="text" required>
           </div>
+          <h4 class="driver-section-title">Required Driver Picture</h4>
           <div class="driver-field driver-field-wide">
             <label for="driverPicture">Driver 2×2 Picture</label>
             <input id="driverPicture" name="picture" type="file" accept="image/jpeg,image/png" required>
@@ -397,9 +407,8 @@
 
 </div>
 
-<script type="module" src="../js/operatorportal.js?v=20260909-180000"></script>
+<script type="module" src="../js/operatorportal.js?v=20260914-2"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
-<script type="module" src="../js/guided-tour.js?v=20260823-1"></script>
-
+<script type="module" src="../js/guided-tour.js?v=20260913-1"></script>
 </body>
 </html>

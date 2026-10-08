@@ -3,12 +3,12 @@ import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260828-4");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260913-7");
   openRenewalPdfForm(options);
 }
 
 const BASE_DOCUMENTS = [
-  "payment_receipt", "voters_certificate", "cedula", "barangay_clearance", "drivers_license",
+  "voters_certificate", "cedula", "barangay_clearance", "drivers_license",
   "picture_2x2", "pmbl_certification",
 ];
 const UPDATED_DOCUMENTS = ["official_receipt", "insurance"];
@@ -95,8 +95,8 @@ function updateCaseRequirements() {
       ? "TFRO may issue a Temporary MTOP. Renewal remains pending until updated OR, CR, and insurance are submitted and verified."
       : "TFRO may issue a Temporary MTOP. Renewal remains pending until OR and CR are updated to For Hire and valid insurance is submitted.";
   byId("documentNote").textContent = needsAllNow
-    ? "Upload all nine clear PDF or image photocopies."
-    : "Upload the six basic requirements now. Updated For Hire OR, CR, and insurance may follow, but approval remains pending until all are verified.";
+    ? "Upload all eight required clear PDF or image photocopies. The City Treasurer payment receipt may be submitted after renewal."
+    : "Upload the five basic requirements now. Updated For Hire OR, CR, and insurance may follow, but approval remains pending until all required documents are verified.";
 }
 
 async function loadChangeMotorRequests() {
@@ -151,8 +151,13 @@ async function loadFranchise() {
   }
   const today = new Date();
   const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  if (data.expiration_date && data.expiration_date > localToday) {
-    setError(`This franchise is not yet due for renewal. It becomes eligible on ${data.expiration_date}.`);
+  const eligibilityDate = data.expiration_date ? new Date(`${data.expiration_date}T00:00:00`) : null;
+  if (eligibilityDate) eligibilityDate.setMonth(eligibilityDate.getMonth() - 3);
+  const localEligibilityDate = eligibilityDate
+    ? `${eligibilityDate.getFullYear()}-${String(eligibilityDate.getMonth() + 1).padStart(2, "0")}-${String(eligibilityDate.getDate()).padStart(2, "0")}`
+    : null;
+  if (localEligibilityDate && localToday < localEligibilityDate) {
+    setError(`This franchise may be renewed up to three months before expiration. It becomes eligible on ${localEligibilityDate}.`);
     byId("submitRenewalBtn").disabled = true;
   }
   if (data.status === "revoked") {
@@ -193,20 +198,28 @@ async function loadHistory() {
       <td>${escapeHtml(TYPE_LABELS[renewal.renewal_type] || renewal.renewal_type)}</td>
       <td><span class="status-pill ${statusClass(renewal.status)}">${escapeHtml(statusLabel(renewal.status))}</span></td>
       <td>${escapeHtml(renewal.decision_reason || (renewal.status === "approved" ? `MTOP ${renewal.mtop_number || "for issuance"}; expected ${renewal.expected_release_date || "within 1–2 weeks"}` : "Awaiting TFRO processing"))}</td>
+      <td>${escapeHtml(renewal.requirements_submission_date ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Manila" }).format(new Date(`${renewal.requirements_submission_date}T00:00:00+08:00`)) : "Not scheduled")}</td>
+      <td>${renewal.hardcopy_requirements_received ? `<span class="status-pill approved">Received</span><br><small>${escapeHtml(new Date(renewal.hardcopy_received_at).toLocaleString("en-PH"))}</small>` : '<span class="status-pill pending">Pending</span>'}</td>
       <td>${new Date(renewal.created_at).toLocaleDateString()}</td>
       <td><div class="form-buttons"><button type="button" class="page-button page-button-back" data-pmbl-form="${renewal.id}"><i class="ri-file-text-line"></i><span>TFRO-003</span></button>${renewal.temporary_mtop_issued ? `<button type="button" class="page-button page-button-back" data-tfro001-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i><span>TFRO-001</span></button>` : ""}${renewal.status === "approved" ? `<button type="button" class="page-button page-button-back" data-checklist-form="${renewal.id}"><i class="ri-checkbox-multiple-line"></i><span>TFRO-004</span></button><button type="button" class="page-button page-button-back" data-renewal-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i><span>TFRO-005</span></button>` : ""}</div></td>
-    </tr>`).join("") : '<tr><td colspan="6">No renewal requests yet.</td></tr>';
+    </tr>`).join("") : '<tr><td colspan="8">No renewal requests yet.</td></tr>';
 
   if (!currentRenewal) return;
   const banner = byId("renewalStatus");
   banner.hidden = false;
   banner.className = `renewal-alert ${statusClass(currentRenewal.status)}`;
   banner.textContent = `${statusLabel(currentRenewal.status)}: ${currentRenewal.decision_reason || "Your renewal is being processed by TFRO Staff."}`;
+  if (currentRenewal.requirements_submission_date) {
+    const scheduledDate = new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Manila" }).format(new Date(`${currentRenewal.requirements_submission_date}T00:00:00+08:00`));
+    banner.textContent += ` Bring your original requirements to the TFRO office on ${scheduledDate}.`;
+  }
 
-  if (currentRenewal.status === "needs_correction") {
+  if (["pending_review", "needs_correction"].includes(currentRenewal.status)) {
     document.querySelectorAll('#renewalForm input[type="file"]').forEach((input) => { input.required = false; });
-    byId("submitRenewalBtn").innerHTML = '<i class="ri-refresh-line"></i> Resubmit Corrected Documents';
     prefillRenewal(currentRenewal);
+    const nextAttempt = Number(currentRenewal.submission_attempt_count || 1) + 1;
+    byId("submitRenewalBtn").innerHTML = '<i class="ri-refresh-line"></i> Update & Resubmit (Attempt ' + nextAttempt + ')';
+    banner.textContent += ' You may review all four steps and correct the submission before Admin processing continues. Current submission attempt: ' + (currentRenewal.submission_attempt_count || 1) + '.';
   } else {
     byId("renewalFormCard").style.opacity = ".65";
     byId("renewalForm").querySelectorAll("input, select, button").forEach((element) => { element.disabled = true; });
@@ -238,13 +251,13 @@ async function showRenewalSubmission(renewal) {
 }
 
 async function showPmblCertification(renewal) {
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20260828-4");
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20260913-7");
   openPmblPdfForm({ renewal, franchise: currentFranchise || {} });
 }
 
 async function showRenewalChecklist(renewal) {
   const { data: documents } = await supabase.from("renewal_documents").select("doc_type,status,verified").eq("renewal_id", renewal.id);
-  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260828-4");
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260913-7");
   openChecklistPdfForm({ renewal, documents: documents || [] });
 }
 
@@ -258,7 +271,7 @@ async function showTemporaryMtop(renewal) {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260828-4");
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260913-7");
   openTemporaryMtopPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor });
 }
 
@@ -272,9 +285,6 @@ function prefillRenewal(renewal) {
   byId("applicantBirthDate").value = renewal.applicant_birth_date || "";
   byId("applicantBirthPlace").value = renewal.applicant_birth_place || "";
   byId("applicantCivilStatus").value = renewal.applicant_civil_status || "";
-  byId("votersNumber").value = renewal.voters_certificate_number || "";
-  byId("cedulaNumber").value = renewal.cedula_number || "";
-  byId("barangayNumber").value = renewal.barangay_clearance_number || "";
   byId("driverId").value = renewal.driver_id || "";
   byId("driverName").value = renewal.driver_name;
   byId("driverLicense").value = renewal.driver_license_number;
@@ -283,7 +293,6 @@ function prefillRenewal(renewal) {
   byId("plateNumber").value = renewal.plate_number;
   byId("engineNumber").value = renewal.engine_number;
   byId("chassisNumber").value = renewal.chassis_number;
-  byId("pmblNumber").value = renewal.pmbl_certificate_number || "";
   byId("orNumber").value = renewal.current_or_number || "";
   byId("orDate").value = renewal.current_or_date || "";
   byId("crNumber").value = renewal.current_cr_number || "";
@@ -335,11 +344,10 @@ async function submitRenewal(event) {
   event.preventDefault();
   setError("");
   if (!currentFranchise) return setError("A linked franchise is required.");
-  const resubmitting = currentRenewal?.status === "needs_correction";
+  const resubmitting = Boolean(currentRenewal && ["pending_review", "needs_correction"].includes(currentRenewal.status));
   const files = getFiles();
   const fileError = validateFiles(files, resubmitting);
   if (fileError) return setError(fileError);
-  if (resubmitting && !files.length) return setError("Upload at least one corrected or missing document before resubmitting.");
 
   const button = byId("submitRenewalBtn");
   button.disabled = true;
@@ -353,15 +361,14 @@ async function submitRenewal(event) {
         renewal_code: `REN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
         renewal_type: byId("renewalType").value, current_expiration_date: byId("currentExpiration").value,
         operator_name: byId("operatorName").value.trim(), operator_address: byId("operatorAddress").value.trim(),
-        operator_contact: byId("operatorContact").value.trim(), voters_certificate_number: byId("votersNumber").value.trim() || null,
+        operator_contact: byId("operatorContact").value.trim(),
         residential_street: byId("residentialStreet").value.trim(), residential_barangay: byId("residentialBarangay").value.trim(),
         applicant_birth_date: byId("applicantBirthDate").value, applicant_birth_place: byId("applicantBirthPlace").value.trim(),
         applicant_civil_status: byId("applicantCivilStatus").value,
-        cedula_number: byId("cedulaNumber").value.trim() || null, barangay_clearance_number: byId("barangayNumber").value.trim() || null,
         driver_name: byId("driverName").value, driver_license_number: byId("driverLicense").value,
         motorcycle_make: byId("motorcycleMake").value.trim(), motorcycle_model: byId("motorcycleModel").value.trim(),
-        plate_number: byId("plateNumber").value.trim(), engine_number: byId("engineNumber").value.trim(), chassis_number: byId("chassisNumber").value.trim(),
-        pmbl_certificate_number: byId("pmblNumber").value.trim() || null, current_or_number: byId("orNumber").value.trim() || null,
+        plate_number: byId("plateNumber").value.trim().toUpperCase(), engine_number: byId("engineNumber").value.trim().toUpperCase(), chassis_number: byId("chassisNumber").value.trim().toUpperCase(),
+        current_or_number: byId("orNumber").value.trim() || null,
         current_or_date: byId("orDate").value,
         current_cr_number: byId("crNumber").value.trim() || null, or_registration_class: byId("orClass").value,
         cr_registration_class: byId("crClass").value, status: "pending_review",
@@ -376,17 +383,28 @@ async function submitRenewal(event) {
     if (resubmitting) {
       const update = await supabase.from("franchise_renewals").update({
         status: "pending_review",
+        renewal_type: byId("renewalType").value,
+        current_expiration_date: byId("currentExpiration").value,
+        operator_name: byId("operatorName").value.trim(), operator_address: byId("operatorAddress").value.trim(),
+        operator_contact: byId("operatorContact").value.trim(),
         residential_street: byId("residentialStreet").value.trim(), residential_barangay: byId("residentialBarangay").value.trim(),
         applicant_birth_date: byId("applicantBirthDate").value, applicant_birth_place: byId("applicantBirthPlace").value.trim(),
         applicant_civil_status: byId("applicantCivilStatus").value,
+        driver_id: Number(byId("driverId").value), driver_name: byId("driverName").value, driver_license_number: byId("driverLicense").value,
         motorcycle_make: byId("motorcycleMake").value.trim(), motorcycle_model: byId("motorcycleModel").value.trim(),
-        current_or_date: byId("orDate").value,
+        plate_number: byId("plateNumber").value.trim().toUpperCase(), engine_number: byId("engineNumber").value.trim().toUpperCase(),
+        chassis_number: byId("chassisNumber").value.trim().toUpperCase(),
+        current_or_number: byId("orNumber").value.trim() || null, current_or_date: byId("orDate").value,
+        current_cr_number: byId("crNumber").value.trim() || null, or_registration_class: byId("orClass").value,
+        cr_registration_class: byId("crClass").value,
+        change_motor_request_id: byId("renewalType").value === "change_motor" ? Number(byId("changeMotorRequestId").value) : null,
         temporary_mtop_expiration_date: byId("renewalType").value === "regular" ? null : (byId("temporaryUntilDate").value || null),
       }).eq("id", renewalId);
       if (update.error) throw update.error;
     }
-    await logAudit({ action: resubmitting ? "Resubmitted Renewal Requirements" : "Submitted Franchise Renewal", actionType: "create", record: String(renewalId), description: `${resubmitting ? "Resubmitted" : "Submitted"} franchise renewal documents for ${currentFranchise.franchise_number}.` });
-    alert(resubmitting ? "Corrected requirements resubmitted to TFRO Staff." : "Renewal submitted. TFRO Staff will verify the documents and inspect your unit.");
+    const attempt = resubmitting ? Number(currentRenewal.submission_attempt_count || 1) + 1 : 1;
+    await logAudit({ action: resubmitting ? "Revised and Resubmitted Renewal" : "Submitted Franchise Renewal", actionType: "create", record: String(renewalId), description: (resubmitting ? "Submitted renewal attempt " + attempt : "Submitted renewal") + " for " + currentFranchise.franchise_number + "." });
+    alert(resubmitting ? "Renewal corrections submitted as attempt " + attempt + ". Admin will see the updated details." : "Renewal submitted. TFRO Staff will verify the documents and inspect your unit.");
     window.location.reload();
   } catch (error) {
     console.error("Renewal submission error:", error);

@@ -13,7 +13,7 @@ const tours = {
     { selector: ".sidebar-user", title: "Account and logout", text: "Your name and role appear here. Use the logout button when you finish, especially on a shared device." },
   ],
   traffic_enforcer: [
-    { selector: ".sidebar .menu", title: "Traffic Enforcer navigation", text: "This menu returns you to the ticketing and Driver-search workspace. Your Enforcer tools are separated from TFRO Staff and Admin tools." },
+    { selector: ".sidebar .menu", title: "TFRO Enforcer navigation", text: "This menu returns you to the ticketing and Driver-search workspace. Your Enforcer tools are separated from TFRO Staff and Admin tools." },
     { selector: "#enforcerBadge", title: "Verified Enforcer identity", text: "Your administrator-registered Enforcer ID appears here. Only an active ID can search Drivers or submit tickets." },
     { selector: ".driver-search-card", title: "Verify a Driver", text: "Enter the complete Driver's License number and select Verify Driver. The system displays identity, license status, compliance, and previous violations." },
     { selector: "#driverSearchForm button", title: "Verify Driver button", text: "This performs an exact license-number lookup. Confirm the returned Driver before preparing a ticket." },
@@ -22,6 +22,35 @@ const tours = {
     { selector: ".sidebar-user", title: "Account and logout", text: "Check the signed-in Enforcer name here and always log out after duty or when using a shared device." },
   ],
 };
+
+const filipinoGuides = {
+  operator: [
+    ["Pangunahing nabigasyon", "Gamitin ang menu na ito upang bumalik sa My Franchise, magsumite ng renewal, basahin ang mga abiso, at i-update ang iyong profile."],
+    ["Dashboard ng Operator", "Ipinapakita rito kung aling Operator account ang kasalukuyang naka-sign in."],
+    ["Mga shortcut ng aplikasyon", "Ang Renew Franchise ay para sa tatlong-taong renewal. Ang Change Motor ay para sa pagbabago ng motor, chassis, o plate. Ang Add Driver ay direktang magbubukas ng Driver application."],
+    ["Detalye ng prangkisa", "Dito makikita ang franchise number, ruta, petsa ng aplikasyon, expiration, taunang bayarin, at katayuan ng bayad."],
+    ["Mga rekord ng paglabag", "Makikita sa talahanayang ito ang mga paglabag na konektado sa iyong prangkisa, kasama ang petsa, multa, at katayuan ng bayad."],
+    ["Pagpapalit ng Motor / MTOP", "Ilagay lamang ang mga detalyeng nagbago, ilakip ang kinakailangang larawan o PDF, at isumite para sa pagsusuri ng TFRO."],
+    ["Aplikasyon ng Driver", "Irehistro ang Driver, ilagay ang impormasyon ng lisensya, at mag-upload ng malinaw na 2×2 na larawan. Susuriin ng TFRO ang aplikasyon."],
+    ["Subaybayan ang mga aplikasyon ng Driver", "Tingnan ang lahat ng isinumite mong Driver, suriin ang verification status, buksan ang naka-save na form, o i-edit ang hindi pa beripikadong aplikasyon."],
+    ["Account at pag-logout", "Dito makikita ang iyong pangalan at tungkulin. Gamitin ang logout kapag tapos na, lalo na kung pinagsasaluhang device ang gamit."],
+  ],
+  traffic_enforcer: [
+    ["Nabigasyon ng TFRO Enforcer", "Gamitin ang menu upang bumalik sa ticketing at paghahanap ng Driver. Hiwalay ang Enforcer tools sa mga gamit ng TFRO Staff at Admin."],
+    ["Beripikadong pagkakakilanlan ng Enforcer", "Dito makikita ang Enforcer ID na inirehistro ng Administrator. Aktibong ID lamang ang maaaring maghanap ng Driver o magsumite ng ticket."],
+    ["Beripikahin ang Driver", "Ilagay ang kumpletong numero ng lisensya at piliin ang Verify Driver. Ipapakita ng system ang pagkakakilanlan, license status, compliance, at mga dating paglabag."],
+    ["Button na Verify Driver", "Eksaktong numero ng lisensya ang hahanapin nito. Tiyaking tama ang Driver bago gumawa ng ticket."],
+    ["Camera para sa violation ticket", "Piliin ang Allow Camera. Pagkatapos pahintulutan ang browser, ipuwesto nang maayos ang ticket at piliin ang Take Picture. Maaari ring ulitin ang kuha o mag-upload ng larawan."],
+    ["Kasaysayan ng mga isinumiteng ticket", "Kapag beripikado na ang Driver, lalabas ang Record Violation form. Piliin ang paglabag, ilagay ang ticket number, kumuha o mag-upload ng malinaw na larawan, at isumite sa TFRO. Dito rin makikita ang mga natapos na submission."],
+    ["Account at pag-logout", "Tingnan dito ang pangalan ng naka-sign in na Enforcer at laging mag-logout pagkatapos ng duty o kapag pinagsasaluhang device ang gamit."],
+  ],
+};
+
+Object.entries(filipinoGuides).forEach(([guideRole, translations]) => {
+  tours[guideRole].forEach((step, index) => {
+    [step.filipinoTitle, step.filipinoText] = translations[index];
+  });
+});
 
 let steps = [];
 let current = 0;
@@ -57,11 +86,13 @@ function showStep() {
     const pad = 7;
     spotlight.style.cssText += `;top:${Math.max(5,rect.top-pad)}px;left:${Math.max(5,rect.left-pad)}px;width:${Math.min(window.innerWidth-10,rect.width+pad*2)}px;height:${Math.min(window.innerHeight-10,rect.height+pad*2)}px`;
     dialog.querySelector(".tour-step-number").textContent = current + 1;
-    dialog.querySelector(".tour-count").textContent = `${current + 1} of ${steps.length}`;
-    dialog.querySelector("h2").textContent = step.title;
-    dialog.querySelector("p").textContent = step.text;
+    dialog.querySelector(".tour-count").textContent = `${current + 1} of ${steps.length} / ${current + 1} sa ${steps.length}`;
+    dialog.querySelector(".tour-english h2").textContent = step.title;
+    dialog.querySelector(".tour-english p").textContent = step.text;
+    dialog.querySelector(".tour-filipino-title").textContent = step.filipinoTitle;
+    dialog.querySelector(".tour-filipino").textContent = step.filipinoText;
     dialog.querySelector(".tour-back").disabled = current === 0;
-    dialog.querySelector(".tour-next").textContent = current === steps.length - 1 ? "Finish" : "Next";
+    dialog.querySelector(".tour-next").textContent = current === steps.length - 1 ? "Finish / Tapusin" : "Next / Susunod";
     positionDialog(rect);
   }, 280);
 }
@@ -75,8 +106,8 @@ function closeTour(completed = true) {
 function startTour() {
   closeTour(false); current = 0; steps = tours[role] || [];
   spotlight = document.createElement("div"); spotlight.className = "tour-spotlight";
-  dialog = document.createElement("section"); dialog.className = "tour-dialog"; dialog.setAttribute("role", "dialog"); dialog.setAttribute("aria-modal", "true"); dialog.setAttribute("aria-label", "System walkthrough");
-  dialog.innerHTML = '<div class="tour-progress"><span class="tour-step-number">1</span><span class="tour-count"></span></div><h2></h2><p></p><div class="tour-actions"><button class="tour-skip" type="button">Skip guide</button><button class="tour-back" type="button">Back</button><button class="tour-next" type="button">Next</button></div>';
+  dialog = document.createElement("section"); dialog.className = "tour-dialog"; dialog.setAttribute("role", "dialog"); dialog.setAttribute("aria-modal", "true"); dialog.setAttribute("aria-label", "System Guide / Gabay sa System");
+  dialog.innerHTML = '<div class="tour-progress"><span class="tour-step-number">1</span><span class="tour-count"></span></div><div class="tour-english"><span class="tour-language">English</span><h2></h2><p></p></div><div class="tour-filipino-panel"><span class="tour-language">Filipino</span><h3 class="tour-filipino-title"></h3><p class="tour-filipino"></p></div><div class="tour-actions"><button class="tour-skip" type="button">Skip / Laktawan</button><button class="tour-back" type="button">Back / Bumalik</button><button class="tour-next" type="button">Next / Susunod</button></div>';
   document.body.append(spotlight, dialog); document.documentElement.classList.add("tour-open");
   dialog.querySelector(".tour-skip").addEventListener("click", () => closeTour(true));
   dialog.querySelector(".tour-back").addEventListener("click", () => { if (current > 0) { current -= 1; showStep(); } });
@@ -85,7 +116,7 @@ function startTour() {
 }
 
 async function initializeGuide() {
-  const button = document.createElement("button"); button.type = "button"; button.className = "system-guide-btn"; button.innerHTML = '<i class="ri-question-line"></i> System Guide'; button.addEventListener("click", startTour); document.body.append(button);
+  const button = document.createElement("button"); button.type = "button"; button.className = "system-guide-btn"; button.innerHTML = '<i class="ri-question-line"></i> System Guide / Gabay'; button.setAttribute("aria-label", "Open System Guide / Buksan ang Gabay sa System"); button.addEventListener("click", startTour); document.body.append(button);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();

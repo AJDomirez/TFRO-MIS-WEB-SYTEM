@@ -2,11 +2,12 @@ import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
-import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20260831-3";
+import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20260913-7";
 import { sendOperatorForm } from "./form-delivery.js";
 
 let violations = [];
 let catalog = [];
+let enforcers = [];
 let currentUserId = null;
 let editingViolationId = null;
 let toastTimer = null;
@@ -53,6 +54,10 @@ function netAmount(row) {
   return Math.max(Number(row.penalty || 0) - Number(row.discounted || 0), 0);
 }
 
+function assignedEnforcers(row) {
+  return (row.violation_enforcers || []).map((assignment) => assignment.traffic_enforcers).filter(Boolean);
+}
+
 function showToast(message) {
   const toast = document.getElementById("violationToast");
   if (!toast) return;
@@ -89,9 +94,10 @@ function render() {
       <td>${escapeHtml(row.ticket_number || "—")}</td>
       <td>${money.format(Number(payment?.amount ?? netAmount(row)))}</td>
       <td>${escapeHtml(payment?.receipt || "—")}</td>
-      <td>${escapeHtml(row.apprehending_officers || "—")}</td>
+      <td>${payment ? `<strong>${Number(payment.commission_rate || 0.2) * 100}%</strong><br>Total: ${money.format(payment.total_commission || 0)}<br>${Number(payment.enforcer_count || 0)} enforcer(s)<br>Each: ${money.format(payment.individual_commission || 0)}` : "Pending payment"}</td>
+      <td>${escapeHtml(assignedEnforcers(row).map((enforcer) => `${enforcer.full_name} (${enforcer.enforcer_id})`).join(", ") || row.apprehending_officers || "—")}</td>
       <td>${row.ticket_photo_path
-        ? `<button type="button" class="photo-link" data-action="photo" data-id="${row.id}" title="View ticket image submitted by the Traffic Enforcer"><i class="ri-image-line"></i> View Ticket Image</button>`
+        ? `<button type="button" class="photo-link" data-action="photo" data-id="${row.id}" title="View ticket image submitted by the TFRO Enforcer"><i class="ri-image-line"></i> View Ticket Image</button>`
         : '<span class="ticket-image-missing">No image submitted</span>'}</td>
       <td><div class="actions">
         ${canManageViolations ? `<button type="button" data-action="edit" data-id="${row.id}" title="Edit violation" aria-label="Edit violation for ${escapeHtml(row.subject_name || "record")}">
@@ -105,7 +111,7 @@ function render() {
             : ""}
       </div></td>
     </tr>`;
-  }).join("") : '<tr><td colspan="12">No violations found.</td></tr>';
+  }).join("") : '<tr><td colspan="13">No violations found.</td></tr>';
 }
 
 function printNotice(row) {
@@ -157,7 +163,7 @@ async function openTicketPhoto(row) {
   const status = document.getElementById("ticketPhotoStatus");
   const controls = [document.getElementById("saveTicketPhotoBtn"), document.getElementById("printTicketPhotoBtn")];
   document.getElementById("ticketPhotoTitle").textContent = `Ticket ${row.ticket_number || row.id}`;
-  status.textContent = "Loading ticket imageâ€¦";
+  status.textContent = "Loading ticket image…";
   status.hidden = false;
   image.hidden = true;
   controls.forEach((control) => { control.disabled = true; });
@@ -202,7 +208,7 @@ function saveTicketPhoto() {
 async function loadViolations() {
   const { data, error } = await supabase
     .from("violations")
-    .select("*, payments!payments_violation_id_fkey(*)")
+    .select("*, payments!payments_violation_id_fkey(*,payment_enforcer_commissions(commission_amount,enforcer_id,traffic_enforcers(enforcer_id,full_name))), violation_enforcers(enforcer_id,traffic_enforcers(enforcer_id,full_name))")
     .order("occurred_at", { ascending: false })
     .order("paid_at", { referencedTable: "payments", ascending: false });
   if (error) {
@@ -220,6 +226,16 @@ async function loadCatalog() {
   catalog = data || [];
   document.getElementById("violationChecklist").innerHTML = catalog.map((item) => `
     <label class="violation-check-option"><input type="checkbox" name="violation_codes" value="${escapeHtml(item.code)}"><span><strong>${escapeHtml(item.code)}</strong>${escapeHtml(item.violation)}<b>${money.format(Number(item.penalty))}</b></span></label>`
+  ).join("");
+}
+
+async function loadEnforcers() {
+  const { data, error } = await supabase.from("traffic_enforcers")
+    .select("id,enforcer_id,full_name,status").eq("status", "active").order("full_name");
+  if (error) throw error;
+  enforcers = data || [];
+  document.getElementById("violationEnforcers").innerHTML = enforcers.map((enforcer) =>
+    `<option value="${enforcer.id}">${escapeHtml(enforcer.full_name)} (${escapeHtml(enforcer.enforcer_id)})</option>`
   ).join("");
 }
 
@@ -245,7 +261,8 @@ function setFormMode(mode, row = null) {
     form.elements.discounted.value = Number(row.discounted || 0).toFixed(2);
     form.elements.franchise_number.value = row.franchise_number || "";
     form.elements.ticket_number.value = row.ticket_number || "";
-    form.elements.apprehending_officers.value = row.apprehending_officers || "";
+    const selectedIds = new Set((row.violation_enforcers || []).map((assignment) => String(assignment.enforcer_id)));
+    [...form.elements.enforcer_ids.options].forEach((option) => { option.selected = selectedIds.has(option.value); });
     form.elements.penalty.value = Number(row.penalty || 0);
     form.elements.occurred_date.value = dateForInput(row.occurred_at);
     form.elements.status.value = row.status || "pending";
@@ -279,6 +296,8 @@ function readEntries() {
   if (!selected.length) throw new Error("Select at least one official violation.");
   if (editingViolationId && selected.length !== 1) throw new Error("Select exactly one violation when editing.");
   if (!values.occurred_date) throw new Error("Violation date is required.");
+  const selectedEnforcerIds = [...form.elements.enforcer_ids.selectedOptions].map((option) => Number(option.value));
+  if (!selectedEnforcerIds.length) throw new Error("Select at least one apprehending enforcer.");
   if (!Number.isFinite(discounted) || discounted < 0) throw new Error("Discounted amount must be zero or greater.");
   const base = {
     subject_name: values.subject_name.trim(),
@@ -286,15 +305,23 @@ function readEntries() {
     classification: values.classification,
     franchise_number: values.franchise_number?.trim() || null,
     ticket_number: values.ticket_number?.trim() || null,
-    apprehending_officers: values.apprehending_officers?.trim() || null,
+    apprehending_officers: enforcers.filter((enforcer) => selectedEnforcerIds.includes(enforcer.id)).map((enforcer) => enforcer.full_name).join(", "),
     recorded_by: currentUserId,
     description: values.description?.trim() || null,
     status: values.status,
     occurred_at: `${values.occurred_date}T00:00:00+08:00`,
   };
-  return selected.map((item) => ({ ...base, violation_code: item.code,
+  return { entries: selected.map((item) => ({ ...base, violation_code: item.code,
     violation_type: item.violation, penalty: Number(item.penalty || 0),
-    discounted: selected.length === 1 ? discounted : 0 }));
+    discounted: selected.length === 1 ? discounted : 0 })), selectedEnforcerIds };
+}
+
+async function resolveDriverId(subjectName) {
+  const { data, error } = await supabase.from("drivers").select("id,full_name");
+  if (error) throw new Error(`Could not match the Driver record: ${error.message}`);
+  const normalizedName = String(subjectName || "").trim().toLocaleLowerCase();
+  const matches = (data || []).filter((driver) => String(driver.full_name || "").trim().toLocaleLowerCase() === normalizedName);
+  return matches.length === 1 ? matches[0].id : null;
 }
 
 async function saveViolation(event) {
@@ -304,7 +331,11 @@ async function saveViolation(event) {
   const originalLabel = button.textContent;
   const previous = violations.find((row) => String(row.id) === String(editingViolationId));
   try {
-    const entries = readEntries();
+    const { entries, selectedEnforcerIds } = readEntries();
+    if (entries[0]?.subject_type === "driver") {
+      const driverId = await resolveDriverId(entries[0].subject_name);
+      entries.forEach((entry) => { entry.driver_id = driverId; });
+    }
     submitButtons.forEach((submitButton) => { submitButton.disabled = true; });
     button.textContent = "Saving...";
 
@@ -316,13 +347,23 @@ async function saveViolation(event) {
     const saved = savedRows[0];
 
     if (editingViolationId) {
+      const removal = await supabase.from("violation_enforcers").delete().eq("violation_id", editingViolationId);
+      if (removal.error) throw removal.error;
+    }
+    const assignments = savedRows.flatMap((row) => selectedEnforcerIds.map((enforcerId) => ({
+      violation_id: row.id, enforcer_id: enforcerId, assigned_by: currentUserId,
+    })));
+    const assignmentResult = await supabase.from("violation_enforcers").insert(assignments);
+    if (assignmentResult.error) throw assignmentResult.error;
+
+    if (editingViolationId) {
       violations = violations.map((row) => String(row.id) === String(saved.id) ? saved : row);
     } else {
       violations.unshift(...savedRows);
     }
     const wasEditing = Boolean(editingViolationId);
     closeViolationForm();
-    render();
+    await loadViolations();
     showToast(wasEditing
       ? "Violation updated successfully."
       : `${savedRows.length} violation${savedRows.length === 1 ? "" : "s"} recorded separately.`);
@@ -387,13 +428,17 @@ function bindEvents() {
       { header: "Ticket No.", value: (row) => row.ticket_number },
       { header: "Total Amount", value: (row) => paidPayment(row)?.amount ?? netAmount(row) },
       { header: "OR No./Receipt", value: (row) => paidPayment(row)?.receipt || "" },
-      { header: "Apprehender", value: (row) => row.apprehending_officers },
+      { header: "Commission Rate", value: (row) => paidPayment(row)?.commission_rate ?? 0.20 },
+      { header: "Total Commission", value: (row) => paidPayment(row)?.total_commission || 0 },
+      { header: "Number of Enforcers", value: (row) => paidPayment(row)?.enforcer_count || assignedEnforcers(row).length },
+      { header: "Individual Commission", value: (row) => paidPayment(row)?.individual_commission || 0 },
+      { header: "Enforcers", value: (row) => assignedEnforcers(row).map((enforcer) => enforcer.full_name).join(", ") || row.apprehending_officers },
     ],
   });
 }
 
 async function initialize() {
-  const { user, profile } = await requireRole(["admin", "staff"]);
+  const { user, profile } = await requireRole(["admin", "admin_viewer", "staff"]);
   if (user) {
     currentUserId = user.id;
     canManageViolations = ["admin", "staff"].includes(profile?.role);
@@ -408,7 +453,7 @@ async function initialize() {
     document.getElementById("addViolationBtn").hidden = !canManageViolations;
     if (!canManageViolations) formPanel.hidden = true;
     bindEvents();
-    try { await Promise.all([loadCatalog(), loadViolations()]); }
+    try { await Promise.all([loadCatalog(), loadEnforcers(), loadViolations()]); }
     catch (error) { console.error(error); window.alert(`Could not load violation data: ${error.message}`); }
   }
 }

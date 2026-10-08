@@ -1,4 +1,4 @@
-const CACHE_NAME = "tfro-imis-shell-v1";
+const CACHE_NAME = "tfro-imis-shell-v18";
 const CORE_ASSETS = [
   "./",
   "html/application.html", "html/auditlog.html", "html/dashboard.html", "html/driver.html",
@@ -23,13 +23,14 @@ const CORE_ASSETS = [
   "js/renewals.js", "js/report.js", "js/sidebar-user.js", "js/submission-form.js",
   "js/supabase-config.js", "js/supabase.js", "js/trike-drive.js", "js/violation.js",
   "js/vendor/pdf-lib.min.js", "js/vendor/qrcode.min.js",
-  "Logo/BG1.jpg", "Logo/BG2.jpg", "Logo/BG3.png", "Logo/BG4.png", "Logo/BG5.jpg",
+  "Logo/BG2.jpg", "Logo/BG3.png", "Logo/BG4.png", "Logo/picture.jpg",
   "Logo/Lucena City Logo.png", "Logo/PMBL Logo.png", "Logo/TFRO Logo.jpg",
   "Logo/TFRO-005 Footer.png", "Logo/TFRO-005 Header.png",
   "forms/PMBL TFRO-003 Certification.pdf", "forms/TFRO-001 Temporary MTOP.pdf",
   "forms/TFRO-002 Petition for Dropping.pdf", "forms/TFRO-004 Checklist for Renewal.pdf",
   "forms/TFRO-005 Application Form.pdf", "forms/TFRO-007 Certification of Dropping.pdf",
   "forms/TFRO-009 Order of Payment.pdf", "forms/TFRO-010 Unit Releasing Slip.pdf",
+  "forms/public/assets/tfro-official-header.png", "forms/public/assets/tfro-official-footer-v2.png",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/+esm",
   "https://cdn.jsdelivr.net/npm/chart.js",
   "https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"

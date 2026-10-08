@@ -269,7 +269,10 @@ registerForm.addEventListener("submit", async (event) => {
   // Enforcer authority is assigned only after the database trigger matches the
   // submitted ID to the Administrator-managed roster.
   const role = selectedRole();
-  const fullName = document.getElementById("fullName").value.trim();
+  const firstName = document.getElementById("firstName").value.trim();
+  const middleName = document.getElementById("middleName").value.trim();
+  const lastName = document.getElementById("lastName").value.trim();
+  const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
   const email = document.getElementById("email").value.trim();
   const contactNumber = document.getElementById("contactNumber").value.trim();
   const address = document.getElementById("address").value.trim();
@@ -280,8 +283,8 @@ registerForm.addEventListener("submit", async (event) => {
   const profilePicture = document.getElementById("profilePicture").files[0];
 
   /* VALIDATION */
-  if (!fullName || !email || !contactNumber || !address
-      || (role === "operator" && !franchiseNumber)
+  if (!firstName || !lastName || !email || !contactNumber
+      || (role === "operator" && (!address || !franchiseNumber))
       || (role === "traffic_enforcer" && !enforcerId) || !profilePicture) {
     showRegisterWarning("Please fill in all the required fields.");
     return;
@@ -329,6 +332,9 @@ registerForm.addEventListener("submit", async (event) => {
         data: {
           role,
           full_name: fullName,
+          first_name: firstName,
+          middle_name: middleName || null,
+          last_name: lastName,
           contact_number: contactNumber,
           address,
           franchise_number: role === "operator" ? franchiseNumber : null,

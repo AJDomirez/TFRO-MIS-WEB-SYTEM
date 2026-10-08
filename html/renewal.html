@@ -34,7 +34,7 @@
 
   <main class="main-content">
     <header class="topbar">
-      <div><h1>Franchise Renewal</h1><p>Renewal is valid for three years from the current expiration date.</p></div>
+      <div><h1>Franchise Renewal</h1><p>You may renew up to three months before expiration. Renewal remains valid for three years from the current expiration date.</p></div>
       <a class="back-link" href="operatorportal.html"><i class="ri-arrow-left-line"></i> Back to Home</a>
     </header>
 
@@ -85,9 +85,6 @@
           <label>Birth Date<input id="applicantBirthDate" type="date" required></label>
           <label>Place of Birth<input id="applicantBirthPlace" required></label>
           <label>Civil Status<select id="applicantCivilStatus" required><option value="">Select civil status</option><option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option></select></label>
-          <label>Voter's Certificate Number<input id="votersNumber"></label>
-          <label>Community Tax Certificate / Cedula<input id="cedulaNumber"></label>
-          <label>Barangay Clearance Number<input id="barangayNumber"></label>
         </div>
         </div>
 
@@ -103,7 +100,6 @@
           <label>Plate Number<input id="plateNumber" required></label>
           <label>Engine Number<input id="engineNumber" required></label>
           <label>Chassis Number<input id="chassisNumber" required></label>
-          <label>PMBL Certificate Number<input id="pmblNumber"></label>
           <label>Current OR Number<input id="orNumber"></label>
           <label>Date of Current OR<input id="orDate" type="date" required></label>
           <label>Current CR Number<input id="crNumber"></label>
@@ -117,9 +113,8 @@
         </div>
 
         <div class="renewal-page" data-renewal-page="4" hidden>
-        <p class="document-note" id="documentNote">Upload clear PDF or image photocopies. Regular renewal requires all nine documents.</p>
+        <p class="document-note" id="documentNote">Upload clear PDF or image photocopies. The City Treasurer payment receipt may be submitted after renewal.</p>
         <div class="renewal-documents" id="documentList">
-          <label data-doc="payment_receipt"><span><b>a)</b><i class="ri-receipt-line"></i> City Treasurer Payment Receipt *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
           <label class="updated-document" data-doc="official_receipt"><span><b>b)</b><i class="ri-receipt-line"></i> Updated Motorcycle OR — For Hire</span><input type="file" accept="application/pdf,image/jpeg,image/png"></label>
           <label data-doc="voters_certificate"><span><b>c)</b><i class="ri-file-list-3-line"></i> Latest Voter's Certificate *</span><input type="file" accept="application/pdf,image/jpeg,image/png" required></label>
           <label class="updated-document" data-doc="insurance"><span><b>d)</b><i class="ri-shield-check-line"></i> Third-Party &amp; Passenger Liability Insurance</span><input type="file" accept="application/pdf,image/jpeg,image/png"></label>
@@ -144,11 +139,11 @@
 
     <section class="renewal-card">
       <div class="card-title"><div><i class="ri-history-line card-icon"></i><h2>Renewal History</h2></div></div>
-      <div class="table-wrap"><table><thead><tr><th>Request</th><th>Case</th><th>Status</th><th>Reason / Next Step</th><th>Date</th><th>Form</th></tr></thead><tbody id="renewalHistory"><tr><td colspan="6">No renewal requests yet.</td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Request</th><th>Case</th><th>Status</th><th>Reason / Next Step</th><th>Requirements Date</th><th>Hardcopies</th><th>Submitted</th><th>Form</th></tr></thead><tbody id="renewalHistory"><tr><td colspan="8">No renewal requests yet.</td></tr></tbody></table></div>
     </section>
   </main>
 </div>
-<script type="module" src="../js/renewal.js?v=20260828-4"></script>
+<script type="module" src="../js/renewal.js?v=20261008-1"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260817-231500"></script>
 </body>
 </html>

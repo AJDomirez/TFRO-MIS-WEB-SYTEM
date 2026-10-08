@@ -185,7 +185,7 @@
         <label>Discounted Amount (PHP)<input name="discounted" type="number" min="0" step="0.01" value="0" required></label>
         <label>Franchise number<input name="franchise_number" placeholder="Required when applicable"></label>
         <label>Ticket number<input name="ticket_number" required></label>
-        <label>Apprehending officer/s<input name="apprehending_officers" required></label>
+        <label>Apprehending enforcer/s<select name="enforcer_ids" id="violationEnforcers" multiple required size="5"><option disabled>Loading active enforcers…</option></select><small>Hold Ctrl (Windows) or Command (Mac) to select multiple enforcers.</small></label>
         <label>Penalty (PHP)<input name="penalty" type="number" min="0" step="0.01" required readonly></label>
         <label>Date<input name="occurred_date" type="date" required></label>
         <label>Status<select name="status"><option value="pending">Pending payment</option><option value="paid" disabled>Paid (set after Treasurer payment)</option><option value="dismissed">Dismissed</option></select></label>
@@ -213,7 +213,8 @@
             <th>Ticket No.</th>
             <th>Total Amount</th>
             <th>OR No./Receipt</th>
-            <th>Apprehender</th>
+            <th>Commission</th>
+            <th>Enforcers</th>
             <th>Ticket Image</th>
             <th>Actions</th>
           </tr>
@@ -238,7 +239,7 @@
       <button type="button" id="closeTicketPhotoBtn" aria-label="Close ticket image"><i class="ri-close-line"></i></button>
     </header>
     <div class="ticket-photo-body">
-      <p class="ticket-photo-status" id="ticketPhotoStatus">Loading ticket imageâ€¦</p>
+      <p class="ticket-photo-status" id="ticketPhotoStatus">Loading ticket image…</p>
       <img id="ticketPhotoImage" alt="Submitted violation ticket evidence" hidden>
     </div>
     <footer class="ticket-photo-actions">
@@ -249,7 +250,7 @@
   </div>
 </div>
 
-<script type="module" src="../js/violation.js?v=20260911-4"></script>
+<script type="module" src="../js/violation.js?v=20261008-1"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 </body>
 </html>

@@ -6,7 +6,7 @@
   <title>TFRO Register</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
 
-  <link rel="stylesheet" href="../css/style.css?v=20260824-031500">
+  <link rel="stylesheet" href="../css/style.css?v=20260913-2">
 
   <!-- Remix Icons -->
   <link
@@ -59,7 +59,7 @@
 
       <form id="registerForm">
 
-        <!-- Public registration supports Operators and pre-registered Traffic Enforcers. -->
+        <!-- Public registration supports Operators and pre-registered TFRO Enforcers. -->
         <div class="input-group register-full">
           <label>Account Type</label>
 
@@ -77,7 +77,7 @@
               <input type="radio" name="role" value="traffic_enforcer" required />
               <div class="role-card-inner">
                 <i class="ri-shield-user-line"></i>
-                <strong>Traffic Enforcer</strong>
+                <strong>TFRO Enforcer</strong>
                 <span>Issue violation tickets and verify Drivers</span>
               </div>
             </label>
@@ -86,17 +86,27 @@
         </div>
 
         <p class="account-note register-full">
-          Traffic Enforcers need an active ID registered by an Administrator. TFRO Staff and Administrator accounts are created internally.
+          TFRO Enforcers need an active ID registered by an Administrator. TFRO Staff and Administrator accounts are created internally.
         </p>
 
         <div class="input-group">
-          <label>Full Name</label>
+          <label>First Name</label>
           <input
             type="text"
-            id="fullName"
-            placeholder="Juan Dela Cruz"
+            id="firstName"
+            placeholder="Juan"
             required
           />
+        </div>
+
+        <div class="input-group">
+          <label>Middle Name <span class="optional-label">(Optional)</span></label>
+          <input type="text" id="middleName" placeholder="Santos" />
+        </div>
+
+        <div class="input-group register-full">
+          <label>Last Name</label>
+          <input type="text" id="lastName" placeholder="Dela Cruz" required />
         </div>
 
         <div class="input-group">
@@ -149,9 +159,9 @@
         </div>
 
         <div class="input-group register-full" data-enforcer-field hidden>
-          <label>Traffic Enforcer ID Number</label>
+          <label>TFRO Enforcer ID Number</label>
           <input type="text" id="enforcerId" placeholder="TE-2026-0001" autocomplete="off" maxlength="40" />
-          <small class="field-help">This must match an active ID in the TFRO Administrator's Traffic Enforcer registry.</small>
+          <small class="field-help">This must match an active ID in the TFRO Administrator's TFRO Enforcer registry.</small>
         </div>
 
         <div class="input-group">
@@ -319,7 +329,6 @@ Already have an account?
 <!-- Version query ensures browsers fetch the current registration error handling. -->
 <script type="module" src="../js/register.js?v=20260908-210000"></script>
 <script src="../js/trike-drive.js?v=20260908-191500"></script>
-
 </body>
 </html>
 

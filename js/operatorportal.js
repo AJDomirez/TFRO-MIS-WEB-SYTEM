@@ -1,7 +1,7 @@
 import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
-import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20260828-5";
+import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20260913-7";
 
 async function openSavedSubmissionForm(options) {
   const { openSubmissionForm } = await import("./submission-form.js?v=20260909-180000");
@@ -70,9 +70,9 @@ function loadViolations(violations) {
   table.innerHTML = violations.map((violation) => {
     const payment = Array.isArray(violation.payments) ? violation.payments.find((item) => item.status === "paid") : null;
     const amount = Math.max(Number(violation.penalty || 0) - Number(violation.discounted || 0), 0);
-    const orderButton = `<button type="button" class="form-action-btn" data-ticket-order="${violation.id}"><i class="ri-file-pdf-2-line"></i> TFRO-009 Order</button>`;
+    const orderButton = `<span class="recorded-file pending-record"><i class="ri-time-line"></i> TFRO-009 pending payment</span>`;
     const receiptControl = payment
-      ? `<div class="form-buttons"><button type="button" class="form-action-btn" data-payment-form="009" data-payment-id="${payment.id}"><i class="ri-file-pdf-2-line"></i> TFRO-009</button><button type="button" class="form-action-btn" data-payment-form="010" data-payment-id="${payment.id}"><i class="ri-file-pdf-2-line"></i> TFRO-010</button></div>`
+      ? `<div class="recorded-files"><span class="recorded-label"><i class="ri-shield-check-line"></i> RECORDED</span><button type="button" class="recorded-file" data-payment-form="009" data-payment-id="${payment.id}"><i class="ri-eye-line"></i> View TFRO-009</button><button type="button" class="recorded-file" data-payment-form="010" data-payment-id="${payment.id}"><i class="ri-eye-line"></i> View TFRO-010</button><small>View-only TFRO office files</small></div>`
       : violation.treasurer_receipt_path
         ? `<div class="receipt-upload">${orderButton}<span class="badge pending">Receipt submitted — awaiting TFRO Staff</span></div>`
         : `<div class="receipt-upload">${orderButton}<input type="text" data-receipt-number="${violation.id}" placeholder="City Treasurer OR #"><input type="file" data-receipt-file="${violation.id}" accept="image/jpeg,image/png,image/webp,application/pdf"><button type="button" class="form-action-btn" data-submit-receipt="${violation.id}"><i class="ri-upload-2-line"></i> Submit Proof</button></div>`;
@@ -102,7 +102,7 @@ function openOperatorPaymentForm(paymentId, code) {
   const violation = (window.__operatorViolations || []).find((row) => (row.payments || []).some((payment) => String(payment.id) === String(paymentId)));
   const payment = violation?.payments?.find((row) => String(row.id) === String(paymentId));
   if (!payment) return;
-  const options = { payment, violation };
+  const options = { payment, violation, viewOnly: true };
   if (code === "009") void openPaymentOrderPdfForm(options);
   else void openUnitReleasePdfForm(options);
 }
@@ -127,8 +127,6 @@ document.getElementById("violationTable")?.addEventListener("click", (event) => 
   if (receiptButton) void submitTreasurerReceipt(receiptButton.dataset.submitReceipt);
   const formButton = event.target.closest("[data-payment-form]");
   if (formButton) openOperatorPaymentForm(formButton.dataset.paymentId, formButton.dataset.paymentForm);
-  const orderButton = event.target.closest("[data-ticket-order]");
-  if (orderButton) openTicketOrder(orderButton.dataset.ticketOrder);
 });
 
 /* LOAD DATA */
@@ -217,6 +215,8 @@ async function loadPortal() {
       ? String(latestRenewal.payment_status).replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
       : "No payment record");
     setValue("cmFranchiseNumber", franchise.franchise_number);
+    setValue("cmCurrentBrand", franchise.motorcycle_brand);
+    setValue("cmCurrentModel", franchise.motorcycle_year_model);
     setValue("cmCurrentEngine", franchise.engine_number);
     setValue("cmCurrentChassis", franchise.chassis_number);
     setValue("cmCurrentPlate", franchise.plate_number);
@@ -238,6 +238,8 @@ async function loadPortal() {
     setText("annualFee", "—");
     setText("paymentStatus", "—");
     setValue("cmFranchiseNumber", currentOperatorRecord?.franchise_number);
+    setValue("cmCurrentBrand", "");
+    setValue("cmCurrentModel", "");
     setValue("cmCurrentEngine", "");
     setValue("cmCurrentChassis", "");
     setValue("cmCurrentPlate", "");
@@ -358,6 +360,7 @@ document.getElementById("assignedDriversTable")?.addEventListener("click", (even
 });
 
 function beginDriverEdit(driver) {
+  setDriverFormOpen(true, { scroll: true });
   editingDriver = driver;
   setValue("driverFullName", driver.full_name);
   setValue("driverLicenseNumber", driver.license_number);
@@ -369,19 +372,48 @@ function beginDriverEdit(driver) {
   document.getElementById("submitDriverBtn").innerHTML = '<i class="ri-save-line"></i> Save Driver Changes';
   document.getElementById("cancelDriverEditBtn").hidden = false;
   setDriverFormMessage("Editing this pending Driver application. Upload a new picture only if it must be replaced.");
-  document.getElementById("driverApplicationCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function endDriverEdit() {
+function endDriverEdit({ close = false } = {}) {
   editingDriver = null;
   document.getElementById("driverApplicationForm")?.reset();
   document.getElementById("driverPicture").required = true;
   document.getElementById("submitDriverBtn").innerHTML = '<i class="ri-user-add-line"></i> Submit Driver Application';
   document.getElementById("cancelDriverEditBtn").hidden = true;
   setDriverFormMessage("");
+  if (close) setDriverFormOpen(false);
 }
 
-document.getElementById("cancelDriverEditBtn")?.addEventListener("click", endDriverEdit);
+function setDriverFormOpen(open, { scroll = false } = {}) {
+  const form = document.getElementById("driverApplicationForm");
+  const toggle = document.getElementById("driverFormToggle");
+  if (!form || !toggle) return;
+  form.hidden = !open;
+  toggle.setAttribute("aria-expanded", String(open));
+  toggle.innerHTML = open
+    ? '<i class="ri-close-line"></i> Close Form'
+    : '<i class="ri-user-add-line"></i> Add Driver';
+  if (open && scroll) {
+    document.getElementById("driverApplicationCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => document.getElementById("driverFullName")?.focus({ preventScroll: true }), 350);
+  }
+}
+
+document.getElementById("driverFormToggle")?.addEventListener("click", () => {
+  const form = document.getElementById("driverApplicationForm");
+  if (!form?.hidden && editingDriver) endDriverEdit();
+  setDriverFormOpen(Boolean(form?.hidden), { scroll: true });
+});
+
+document.querySelector("[data-open-driver-form]")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  setDriverFormOpen(true, { scroll: true });
+  history.replaceState(null, "", "#driverApplicationCard");
+});
+
+if (window.location.hash === "#driverApplicationCard") setDriverFormOpen(true);
+
+document.getElementById("cancelDriverEditBtn")?.addEventListener("click", () => endDriverEdit({ close: true }));
 
 function setDriverFormMessage(message) {
   const element = document.getElementById("driverFormMessage");
@@ -468,7 +500,7 @@ async function submitDriverApplication(event) {
   if (wasEditing && hasPicture && oldPicturePath && oldPicturePath !== picturePath) {
     await supabase.storage.from("franchise-documents").remove([oldPicturePath]);
   }
-  endDriverEdit();
+  endDriverEdit({ close: true });
   if (savedDriverId) await showGeneratedDriverQr(savedDriverId);
   alert(wasEditing ? "Driver application updated." : "Driver application submitted to TFRO Staff for verification.");
   logAudit({
@@ -508,6 +540,34 @@ function cmShowError(msg) {
   el.textContent = msg;
   el.hidden = !msg;
 }
+
+function setChangeMotorFormOpen(open, { scroll = false } = {}) {
+  const form = document.getElementById("changeMotorWrap");
+  const toggle = document.getElementById("changeMotorToggle");
+  if (!form || !toggle) return;
+  form.hidden = !open;
+  toggle.setAttribute("aria-expanded", String(open));
+  toggle.innerHTML = open
+    ? '<i class="ri-close-line"></i> Close Form'
+    : '<i class="ri-edit-box-line"></i> Request';
+  if (open && scroll) {
+    document.getElementById("changeMotorCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => document.getElementById("cmEngine")?.focus({ preventScroll: true }), 350);
+  }
+}
+
+document.getElementById("changeMotorToggle")?.addEventListener("click", () => {
+  const form = document.getElementById("changeMotorWrap");
+  setChangeMotorFormOpen(Boolean(form?.hidden), { scroll: true });
+});
+
+document.querySelector("[data-open-change-motor]")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  setChangeMotorFormOpen(true, { scroll: true });
+  history.replaceState(null, "", "#changeMotorCard");
+});
+
+if (window.location.hash === "#changeMotorCard") setChangeMotorFormOpen(true);
 
 async function loadChangeMotorHistory(userId) {
   const table = document.getElementById("cmHistoryTable");
@@ -553,7 +613,7 @@ async function loadChangeMotorHistory(userId) {
 
 async function showMotorSubmission(request, formCode) {
   if (request.status !== "approved" || !request.forms_sent_to_operator_at) return alert("These forms have not been sent by TFRO Admin yet.");
-  const module = await import("./pdf-form.js?v=20260828-5");
+  const module = await import("./pdf-form.js?v=20260913-7");
   const options = { request, franchise: window.__currentFranchise || {}, operator: currentOperatorRecord || {} };
   if (formCode === "TFRO-002") module.openDroppingPetitionPdfForm(options);
   else module.openDroppingCertificationPdfForm(options);
@@ -593,9 +653,9 @@ function escapeHTML(v) {
 }
 
 async function submitChangeMotor() {
-  const engine = document.getElementById("cmEngine").value.trim();
-  const chassis = document.getElementById("cmChassis").value.trim();
-  const plate = document.getElementById("cmPlate").value.trim();
+  const engine = document.getElementById("cmEngine").value.trim().toUpperCase();
+  const chassis = document.getElementById("cmChassis").value.trim().toUpperCase();
+  const plate = document.getElementById("cmPlate").value.trim().toUpperCase();
   const brand = document.getElementById("cmBrand").value.trim();
   const serial = document.getElementById("cmSerial").value.trim();
   const fileInput = document.getElementById("cmDoc");
@@ -603,6 +663,10 @@ async function submitChangeMotor() {
 
   if (!engine && !chassis && !plate) {
     cmShowError("Please provide at least one new detail (engine, chassis, or plate).");
+    return;
+  }
+  if ((engine || chassis) && (!brand || !serial)) {
+    cmShowError("Enter the new Motor Brand and Motor Model / Serial when changing the engine or chassis.");
     return;
   }
 
@@ -634,6 +698,16 @@ async function submitChangeMotor() {
     cmShowError("You need an approved franchise to request a change motor.");
     return;
   }
+
+  const submissionSummary = [
+    `Operator: ${document.getElementById("cmOperatorName").value}`,
+    `Franchise: ${franchise.franchise_number}`,
+    `Engine: ${franchise.engine_number || "—"} → ${engine || "UNCHANGED"}`,
+    `Chassis: ${franchise.chassis_number || "—"} → ${chassis || "UNCHANGED"}`,
+    `Plate: ${franchise.plate_number || "—"} → ${plate || "UNCHANGED"}`,
+    `Motor: ${brand || "UNCHANGED"} ${serial || ""}`.trim(),
+  ].join("\n");
+  if (!window.confirm(`Confirm these exact details before submitting for Admin approval:\n\n${submissionSummary}\n\nThe Admin will receive the same submitted values.`)) return;
 
   cmShowError("");
   const btn = document.getElementById("cmSubmitBtn");
@@ -711,6 +785,7 @@ async function submitChangeMotor() {
   fileInput.value = "";
   pictureInput.value = "";
   alert("Change Motor request submitted for review.");
+  setChangeMotorFormOpen(false);
   logAudit({
     action: "Submitted Change Motor Request",
     actionType: "create",

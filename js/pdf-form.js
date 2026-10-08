@@ -75,23 +75,31 @@ function ageFromBirthDate(input) {
   return age >= 0 ? String(age) : "";
 }
 
+function fitTextSize(font, text, preferredSize, maxWidth, minimumSize = 6.5) {
+  const content = value(text);
+  let fittedSize = Math.max(Number(preferredSize) || 12, minimumSize);
+  while (fittedSize > minimumSize && font.widthOfTextAtSize(content, fittedSize) > maxWidth) {
+    fittedSize = Math.max(minimumSize, fittedSize - 0.25);
+  }
+  return fittedSize;
+}
+
+function alignedTextX(font, text, size, x, maxWidth, align = "left") {
+  const textWidth = font.widthOfTextAtSize(value(text), size);
+  if (align === "center") return x + Math.max(0, (maxWidth - textWidth) / 2);
+  if (align === "right") return x + Math.max(0, maxWidth - textWidth);
+  return x;
+}
+
 function drawScaled(page, font, text, x, y, size = 12, options = {}) {
   if (!value(text)) return;
   const sx = page.getWidth() / (options.baseWidth || 612);
   const sy = page.getHeight() / (options.baseHeight || 936);
   const content = value(text);
   const maxWidth = options.maxWidth || 500;
-  const minimumSize = options.minSize || 12;
-  let fittedSize = Math.max(size, minimumSize);
-  while (fittedSize > minimumSize && font.widthOfTextAtSize(content, fittedSize) > maxWidth) {
-    fittedSize = Math.max(minimumSize, fittedSize - 0.25);
-  }
-  const textWidth = font.widthOfTextAtSize(content, fittedSize);
-  const alignedX = options.align === "center"
-    ? x + Math.max(0, (maxWidth - textWidth) / 2)
-    : options.align === "right"
-      ? x + Math.max(0, maxWidth - textWidth)
-      : x;
+  const minimumSize = options.minSize ?? 6.5;
+  const fittedSize = fitTextSize(font, content, size, maxWidth, minimumSize);
+  const alignedX = alignedTextX(font, content, fittedSize, x, maxWidth, options.align);
   page.drawText(content, {
     x: alignedX * sx,
     y: y * sy,
@@ -219,12 +227,33 @@ async function createCroppedOfficialForm(PDFDocument, templateUrl, sourcePageInd
   return { pdfDoc, page };
 }
 
-async function showPdf(popup, bytes, filename) {
+async function showPdf(popup, bytes, filename, { viewOnly = false } = {}) {
   const blob = new Blob([bytes], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
-  popup.location.replace(url);
-  popup.document.title = filename;
+  if (viewOnly) {
+    popup.document.open();
+    popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Recorded TFRO File</title><style>*{box-sizing:border-box}body{margin:0;overflow:hidden;background:#1f2933;font:14px Arial,sans-serif}.record-banner{height:48px;display:flex;align-items:center;justify-content:center;gap:9px;background:#123f73;color:#fff;border-bottom:4px solid #f4c430;font-weight:800;letter-spacing:.04em}.record-banner small{font-weight:500;opacity:.85}iframe{display:block;width:100%;height:calc(100vh - 48px);border:0}</style></head><body><div class="record-banner">RECORDED TFRO FILE <small>View only — official office copy</small></div><iframe src="${url}#toolbar=0&navpanes=0&scrollbar=1" title="View-only ${filename}"></iframe><script>document.addEventListener("contextmenu",e=>e.preventDefault());document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&["s","p"].includes(e.key.toLowerCase()))e.preventDefault()});<\/script></body></html>`);
+    popup.document.close();
+  } else {
+    popup.location.replace(url);
+    popup.document.title = filename;
+  }
   setTimeout(() => URL.revokeObjectURL(url), 300000);
+}
+
+function drawRecordedWatermark(page, font, color, degrees) {
+  const text = "RECORDED — VIEW ONLY";
+  const size = Math.min(42, page.getWidth() / 12);
+  const width = font.widthOfTextAtSize(text, size);
+  page.drawText(text, {
+    x: Math.max(35, (page.getWidth() - width * .72) / 2),
+    y: page.getHeight() * .43,
+    size,
+    font,
+    color,
+    opacity: .14,
+    rotate: degrees(32),
+  });
 }
 
 async function embedPicture(pdfDoc, page, pictureUrl) {
@@ -249,13 +278,12 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
   if (!editable && !popup) return;
   try {
     const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
-    const templateUrl = new URL("../forms/TFRO-001 Temporary MTOP.pdf?v=20260826-200000", import.meta.url);
-    const templateBytes = await fetch(templateUrl).then((response) => response.arrayBuffer());
-    const pdfDoc = await PDFDocument.load(templateBytes);
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([612, 936]);
     const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const bold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+    const italic = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
     const ink = rgb(0, 0, 0);
-    const pages = pdfDoc.getPages();
     let details = {
       name: value(renewal.operator_name || franchise.operator_name),
       franchise: value(franchise.franchise_number),
@@ -285,28 +313,82 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     if (!details) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-001 Temporary MTOP");
     if (!popup) return;
-    const fit = (page, text, x, y, maxWidth, size = 12, useBold = false, align = "left") => {
+    const fit = (targetPage, text, x, y, maxWidth, size = 12, useBold = false, align = "left") => {
       if (!text) return;
       const selectedFont = useBold ? bold : font;
-      let fitted = Math.max(size, 12);
-      const textWidth = selectedFont.widthOfTextAtSize(text, fitted);
-      const drawX = align === "center" ? x + Math.max(0, (maxWidth - textWidth) / 2) : x;
-      page.drawText(text, { x: drawX, y, maxWidth, size: fitted, font: selectedFont, color: ink });
+      const fitted = fitTextSize(selectedFont, text, size, maxWidth, 7);
+      const drawX = alignedTextX(selectedFont, text, fitted, x, maxWidth, align);
+      targetPage.drawText(text, { x: drawX, y, maxWidth, size: fitted, font: selectedFont, color: ink });
     };
-    const row = (page, y, columns) => columns.forEach(([text, x, width]) => fit(page, text, x, y, width, 12, true, "center"));
+    const headerUrl = new URL("../forms/public/assets/tfro-official-header.png?v=20260913-1", import.meta.url);
+    const footerUrl = new URL("../forms/public/assets/tfro-official-footer-v2.png?v=20260913-1", import.meta.url);
+    const [headerBytes, footerBytes] = await Promise.all([
+      fetch(headerUrl).then((response) => {
+        if (!response.ok) throw new Error(`Official TFRO header could not be loaded (${response.status}).`);
+        return response.arrayBuffer();
+      }),
+      fetch(footerUrl).then((response) => {
+        if (!response.ok) throw new Error(`Official TFRO footer could not be loaded (${response.status}).`);
+        return response.arrayBuffer();
+      }),
+    ]);
+    const [header, footer] = await Promise.all([pdfDoc.embedPng(headerBytes), pdfDoc.embedPng(footerBytes)]);
+    page.drawImage(header, { x: 18, y: 852, width: 576, height: 63 });
+    page.drawImage(footer, { x: 18, y: 14, width: 576, height: 56 });
+    page.drawRectangle({ x: 475, y: 828, width: 91, height: 22, color: rgb(.34, .56, .78) });
+    fit(page, "TFRO - 001", 475, 835, 91, 10, true, "center");
 
-    if (pages[1]) {
-      fit(pages[1], details.name, 112, 845, 240, 12, true);
-      fit(pages[1], details.franchise, 498, 845, 70, 12, true);
-      fit(pages[1], details.address, 112, 829, 265, 12, true);
-      pages[1].drawRectangle({ x: 150, y: 760, width: 315, height: 18, color: rgb(1, 1, 1) });
-      fit(pages[1], details.route, 18, 763, 576, 12, true, "center");
-      row(pages[1], 699, [[details.make, 51, 68], [details.model, 128, 72], [details.motor, 209, 135], [details.chassis, 353, 127], [details.plate, 489, 81]]);
-      if (details.expiration) {
-        pages[1].drawRectangle({ x: 145, y: 329, width: 260, height: 27, color: rgb(1, 1, 1) });
-        fit(pages[1], `GOOD UNTIL ${details.expiration}`, 145, 336, 260, 18, true, "center");
-      }
-    }
+    fit(page, "TEMPORARY MOTORIZED TRICYCLE OPERATOR'S PERMIT", 55, 798, 502, 15, true, "center");
+    page.drawLine({ start: { x: 108, y: 794 }, end: { x: 504, y: 794 }, thickness: .8, color: ink });
+    fit(page, "Applicant is hereby authorized to operate a motorized tricycle service for hire on the route", 60, 777, 492, 9, false, "center");
+    fit(page, details.route || "LUCENA CITY PROPER", 60, 761, 492, 11, true, "center");
+    page.drawLine({ start: { x: 62, y: 756 }, end: { x: 550, y: 756 }, thickness: 1, color: ink });
+
+    fit(page, "Name:", 66, 729, 42, 9, true);
+    fit(page, details.name, 108, 729, 230, 9, true);
+    fit(page, "Franchise No.:", 390, 729, 78, 9, true);
+    fit(page, details.franchise, 468, 729, 92, 9, true);
+    fit(page, "Address:", 66, 714, 42, 9, true);
+    fit(page, details.address, 108, 714, 315, 9, true);
+    fit(page, "O.R. No.:", 426, 714, 48, 9, true);
+    fit(page, details.orNumber, 474, 714, 86, 9, true);
+
+    const columns = [
+      ["MAKE", details.make, 55, 91],
+      ["MODEL", details.model, 146, 91],
+      ["MOTOR NO.", details.motor, 237, 121],
+      ["CHASSIS NO.", details.chassis, 358, 121],
+      ["PLATE NO.", details.plate, 479, 78],
+    ];
+    columns.forEach(([label, fieldValue, x, width]) => {
+      page.drawRectangle({ x, y: 665, width, height: 36, borderColor: rgb(.45, .45, .45), borderWidth: .6 });
+      page.drawLine({ start: { x, y: 683 }, end: { x: x + width, y: 683 }, thickness: .6, color: rgb(.45, .45, .45) });
+      fit(page, label, x + 2, 688, width - 4, 8, false, "center");
+      fit(page, fieldValue, x + 3, 671, width - 6, 8, true, "center");
+    });
+
+    const intro = "Applicant / Operator shall comply with rules and regulations prescribed by the TFRC. Failure to comply therewith and in any of the conditions herein set forth shall be sufficient cause for the suspension or cancellation of the authority herein granted.";
+    page.drawText(intro, { x: 58, y: 628, maxWidth: 496, size: 8, lineHeight: 10, font, color: ink, wordBreaks: [" "] });
+    const conditions = [
+      "1. The unit shall be registered as FOR HIRE with the Land Transportation Office in LUCENA CITY in accordance with its prescribed rules and regulations;",
+      "2. Within the authorized route, applicant shall charge fare rates as provided by existing City Ordinance;",
+      "3. This MTOP shall be valid from the date hereof indicated below and shall constitute a franchise certificate giving the operator the privilege to operate the unit herein described as for hire and/or compensation;",
+      "4. Without authority from within TFRC, the operator shall not transfer, increase, drop and/or substitute unit, as well as suspend or abandon the service herein authorized, otherwise franchise herein granted shall be declared forfeited, revoked or cancelled;",
+      "5. Applicant/Operator shall pay the TFRC Mayor's Permit Fee and Supervision Fee upon approval of this authority and every anniversary date thereafter, subject to penalty and surcharge in case of late payment;",
+      "6. Applicant shall not operate outside authorized route and/or along national highways, unless there is no alternative path;",
+      "7. Protect this document. Its loss or destruction may affect your legal rights to operate the service. Any addition, alteration or deletion not otherwise authorized will invalidate this document.",
+    ];
+    page.drawText(conditions.join("\n"), { x: 55, y: 575, maxWidth: 502, size: 7.35, lineHeight: 10.2, font, color: ink, wordBreaks: [" "] });
+
+    fit(page, "SO ORDERED", 63, 258, 90, 10, true);
+    page.drawRectangle({ x: 155, y: 238, width: 305, height: 45, borderColor: ink, borderWidth: 1.2 });
+    fit(page, "GRANTED", 155, 263, 305, 14, true, "center");
+    fit(page, details.expiration ? `GOOD UNTIL ${details.expiration}` : "TEMPORARY AUTHORITY", 155, 246, 305, 13, true, "center");
+    fit(page, "NOTE: This Temporary Motorized Tricycle Operator's Permit is valid for 15 days only, intended for reclassification purposes. Once the requirements are met, please return it to the Tricycle Franchising and Regulatory Office.", 62, 213, 488, 6.5, false);
+    fit(page, "CRISELDA C. DAVID, DPPA", 350, 125, 190, 9, true, "center");
+    fit(page, "TFRO HEAD", 350, 110, 190, 8, true, "center");
+    fit(page, "REMINDER: ERASURES AND/OR ALTERATION WILL INVALIDATE THIS PERMIT.", 62, 102, 285, 6, true);
+    fit(page, "THIS MTOP IS A PRIVILEGE AND NOT A RIGHT.", 62, 92, 285, 6, true);
 
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-001-${value(renewal.renewal_code || renewal.id)}.pdf`);
@@ -337,8 +419,8 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
       barangay: value(renewal.residential_barangay || fallbackAddress.barangay),
     };
     const ink = rgb(0, 0, 0);
-    const write = (text, x, y, size = 12, maxWidth = 500, useBold = true) =>
-      drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 11), { maxWidth, minSize: 11, color: ink });
+    const write = (text, x, y, size = 12, maxWidth = 500, useBold = false) =>
+      drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, minSize: 7, color: ink });
 
     const fullRenewalFranchiseNumber = value(franchise.franchise_number);
     const birthDate = renewal.applicant_birth_date || franchise.birth_date;
@@ -415,7 +497,7 @@ export async function openPmblPdfForm({ renewal, franchise = {}, editable = fals
       if (!value(text)) return;
       const selectedFont = useBold ? bold : font;
       const content = value(text);
-      const fittedSize = Math.max(size, 13);
+      const fittedSize = fitTextSize(selectedFont, content, size, maxWidth, 8);
       page.drawText(content, { x: x * sx, y: y * sy, size: fittedSize * Math.min(sx, sy), maxWidth: maxWidth * sx, font: selectedFont, color: black });
     };
     const issued = new Date();
@@ -569,10 +651,9 @@ export async function openDroppingPetitionPdfForm({ request, franchise = {}, ope
     const write = (text, x, y, maxWidth, size = 11, centered = false, useBold = false, wrapAtHyphens = false) => {
       if (!text) return;
       const selected = useBold ? bold : font;
-      const fitted = Math.max(size, 11);
-      const width = selected.widthOfTextAtSize(text, fitted);
+      const fitted = fitTextSize(selected, text, size, maxWidth, 7);
       const textOptions = {
-        x: centered ? x + Math.max(0, (maxWidth - width) / 2) : x,
+        x: centered ? alignedTextX(selected, text, fitted, x, maxWidth, "center") : x,
         y, maxWidth, size: fitted, lineHeight: 11, font: selected, color: ink,
       };
       if (wrapAtHyphens) textOptions.wordBreaks = ["-", " "];
@@ -583,11 +664,21 @@ export async function openDroppingPetitionPdfForm({ request, franchise = {}, ope
     write(data.toda, 493, 774, 66, 11, true, true);
     write(data.contact, 487, 748, 75, 11, true, true);
     write(data.address, 72, 647, 467, 11, true, true);
-    write(data.make, 83, 604, 92, 11, true, true);
-    write(data.model, 181, 604, 95, 11, true, true);
-    write(data.motor, 348, 604, 92, 11, true, true, true);
-    write(data.chassis, 454, 604, 100, 11, true, true, true);
-    write(data.plate, 276, 601, 86, 11, true, true);
+    // Rebuild the vehicle row so every heading and value uses the same baseline.
+    // The source form places PLATE on a lower line, which caused long values to
+    // overlap the Motor and Chassis fields.
+    page.drawRectangle({ x: 45, y: 595, width: 520, height: 34, color: rgb(1, 1, 1) });
+    const vehicleColumns = [
+      ["MAKE", data.make, 48, 92],
+      ["MODEL", data.model, 145, 92],
+      ["MOTOR No.", data.motor, 242, 112],
+      ["CHASSIS No.", data.chassis, 359, 118],
+      ["PLATE", data.plate, 482, 80],
+    ];
+    vehicleColumns.forEach(([label, fieldValue, x, columnWidth]) => {
+      write(label, x, 617, columnWidth, 10, true, true);
+      write(fieldValue, x, 601, columnWidth, 10, true, true, true);
+    });
     write(data.route, 181, 572, 210, 11, true, true);
     write(data.franchise, 183, 557, 200, 11, true, true);
     write(data.operator, 112, 397, 143, 11, true, true);
@@ -605,18 +696,22 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
   if (!editable && !popup) return;
   try {
     const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
-    const templateUrl = new URL("../forms/TFRO-007 Certification of Dropping.pdf?v=20260826-224000", import.meta.url);
-    const pdfDoc = await PDFDocument.load(await fetch(templateUrl).then((response) => response.arrayBuffer()));
-    const page = pdfDoc.getPage(0);
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([595.28, 841.89]);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const italic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
     const ink = rgb(0, 0, 0);
-    page.drawRectangle({ x: 465, y: 735, width: 115, height: 48, color: rgb(1, 1, 1) });
-    page.drawRectangle({ x: 475, y: 754, width: 96, height: 22, color: rgb(0.34, 0.56, 0.78) });
-    const formCode = "TFRO - 007";
-    const formCodeSize = 10;
-    const formCodeWidth = bold.widthOfTextAtSize(formCode, formCodeSize);
-    page.drawText(formCode, { x: 475 + (96 - formCodeWidth) / 2, y: 761, size: formCodeSize, font: bold, color: ink });
+    const headerUrl = new URL("../forms/public/assets/tfro-official-header.png?v=20260913-1", import.meta.url);
+    const headerBytes = await fetch(headerUrl).then((response) => {
+      if (!response.ok) throw new Error(`Official TFRO header could not be loaded (${response.status}).`);
+      return response.arrayBuffer();
+    });
+    const header = await pdfDoc.embedPng(headerBytes);
+    page.drawImage(header, { x: 18, y: 760, width: 559, height: 61.15 });
+    page.drawRectangle({ x: 452, y: 738, width: 96, height: 22, color: rgb(0.34, 0.56, 0.78) });
+    page.drawText("TFRO - 007", { x: 469, y: 745, size: 10, font: bold, color: ink });
+    page.drawRectangle({ x: 558, y: 736, width: 6, height: 23, color: rgb(0.34, 0.56, 0.78) });
     const issued = request.admin_reviewed_at ? new Date(request.admin_reviewed_at) : new Date();
     const issuedDefault = issued.toLocaleDateString("en-PH", { month: "long", day: "2-digit", year: "numeric" }).toUpperCase();
     const data = await editFields("TFRO-007 Certification of Dropping", [
@@ -626,21 +721,42 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
     if (!data) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-007 Certification of Dropping");
     if (!popup) return;
-    const write = (text, x, y, maxWidth, size = 11, useBold = false) => {
+    const write = (text, x, y, maxWidth, size = 11, useBold = false, align = "left") => {
       if (!text) return;
       const selected = useBold ? bold : font;
-      const fitted = Math.max(size, 11);
-      page.drawText(text, { x, y, maxWidth, size: fitted, lineHeight: 13, font: selected, color: ink });
+      const fitted = fitTextSize(selected, text, size, maxWidth, 7);
+      const drawX = alignedTextX(selected, text, fitted, x, maxWidth, align);
+      page.drawText(text, { x: drawX, y, maxWidth, size: fitted, lineHeight: 13, font: selected, color: ink });
     };
-    write(`This is to certify that the tricycle franchise Number. ${data.franchise}`, 80, 592, 445, 11);
-    write("has been cancelled/dropped due to privatization of tricycle described hereunder;", 80, 576, 445, 11);
-    write(data.operator, 241, 497, 246, 9, true);
-    write([data.make, data.model].filter(Boolean).join(" "), 241, 481, 246, 9);
-    write(data.motor, 241, 465, 246, 9);
-    write(data.chassis, 241, 449, 246, 9);
-    write(data.plate, 241, 433, 246, 9);
-    const issuedText = `Issued this ${data.issued}.`;
-    write(issuedText, 70, 320, 250, 9, true);
+
+    write("C E R T I F I C A T I O N", 80, 665, 435, 22, false, "center");
+    const subtitle = "of Dropping";
+    const subtitleSize = 12;
+    page.drawText(subtitle, {
+      x: alignedTextX(italic, subtitle, subtitleSize, 80, 435, "center"),
+      y: 634, size: subtitleSize, font: italic, color: rgb(.32, .32, .32),
+    });
+
+    write(`This is to certify that the tricycle franchise Number. ${data.franchise}`, 80, 584, 435, 10);
+    write("has been cancelled/dropped due to privatization of tricycle described hereunder;", 80, 568, 435, 10);
+
+    const detailRows = [
+      ["Owner", data.operator],
+      ["Make", data.make],
+      ["Motor No.", data.motor],
+      ["Chassis No.", data.chassis],
+      ["Plate No.", data.plate],
+    ];
+    detailRows.forEach(([label, fieldValue], index) => {
+      const y = 488 - (index * 17);
+      write(label, 115, y, 90, 9, true);
+      write(":", 208, y, 10, 9, true);
+      write(fieldValue, 228, y, 250, 9, true);
+    });
+
+    write(`Issued this ${data.issued}.`, 70, 330, 260, 9, true);
+    write("CRISELDA C. DAVID, DPPA", 330, 195, 205, 9, true, "center");
+    write("TFRO HEAD", 330, 176, 205, 9, true, "center");
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-007-${value(request.request_code || request.id)}.pdf`);
   } catch (error) {
@@ -650,11 +766,11 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
   }
 }
 
-export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, editable = false, onSend = null }) {
+export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, editable = false, onSend = null, viewOnly = false }) {
   let popup = editable ? null : openPdfWindow("TFRO-009 Order of Payment");
   if (!editable && !popup) return;
   try {
-    const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
+    const { PDFDocument, StandardFonts, rgb, degrees } = await loadPdfLib();
     const templateUrl = new URL("../forms/TFRO-009 Order of Payment.pdf", import.meta.url);
     const { pdfDoc, page } = await createCroppedOfficialForm(PDFDocument, templateUrl, 1, 468, 468);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -663,8 +779,8 @@ export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, ed
     page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: 92, color: rgb(1, 1, 1) });
     const snapshot = payment.receipt_snapshot || {};
     const amount = snapshot.amount_paid ?? payment.amount ?? violation.penalty ?? 0;
-    const write = (text, x, y, maxWidth, size = 11, align = "left", useBold = true) =>
-      drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 11), { maxWidth, minSize: 11, align, color: ink, baseHeight: 468 });
+    const write = (text, x, y, maxWidth, size = 11, align = "left", useBold = false) =>
+      drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, minSize: 6.5, align, color: ink, baseHeight: 468 });
 
     const manual = await editFields("TFRO-009 Order of Payment", [
       { key: "payer", label: "Payor", value: snapshot.payer || payment.payer || payment.unit_owner_name },
@@ -681,15 +797,28 @@ export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, ed
     if (!manual) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-009 Order of Payment");
     if (!popup) return;
-    write(manual.payer, 108, 346, 190, 9.5); write(manual.officers, 420, 346, 112, 8.5, "center");
-    write(manual.address, 116, 334, 184, 8.5); write(manual.ticket, 420, 334, 112, 8.5, "center");
+    page.drawRectangle({ x: 46, y: 326, width: 506, height: 38, color: rgb(1, 1, 1) });
+    write("Payor:", 50, 348, 45, 9, "left", true); write(manual.payer, 96, 348, 192, 9);
+    page.drawLine({ start:{x:96,y:345}, end:{x:292,y:345}, thickness:.55, color:ink });
+    write("Apprehending Officer/s:", 309, 348, 112, 9, "left", true); write(manual.officers, 421, 348, 129, 8.5, "center");
+    page.drawLine({ start:{x:421,y:345}, end:{x:550,y:345}, thickness:.55, color:ink });
+    write("Address:", 50, 333, 45, 9, "left", true); write(manual.address, 96, 333, 192, 8.5);
+    page.drawLine({ start:{x:96,y:330}, end:{x:292,y:330}, thickness:.55, color:ink });
+    write("Ticket No.:", 309, 333, 68, 9, "left", true); write(manual.ticket, 421, 333, 129, 8.5, "center");
+    page.drawLine({ start:{x:421,y:330}, end:{x:550,y:330}, thickness:.55, color:ink });
     write(manual.code, 75, 286, 112, 9, "center"); write(manual.violation, 193, 286, 205, 9, "center");
     write(manual.amount, 405, 286, 126, 9, "center"); write(manual.amount, 405, 193, 126, 9.5, "center");
-    write(manual.receipt, 74, 130, 92, 8.5); write(manual.amount, 74, 116, 92, 8.5);
-    write(manual.assessedBy, 235, 109, 112, 8, "center"); write(manual.datePaid, 74, 102, 92, 8.5);
+    page.drawRectangle({ x: 48, y: 92, width: 310, height: 52, color: rgb(1, 1, 1) });
+    write("O.R. No.:", 50, 130, 55, 8.5, "left", true); write(manual.receipt, 105, 130, 95, 8.5);
+    write("Amount:", 50, 116, 55, 8.5, "left", true); write(manual.amount, 105, 116, 95, 8.5);
+    write("Date Paid:", 50, 102, 55, 8.5, "left", true); write(manual.datePaid, 105, 102, 95, 8.5);
+    write("Assessed by:", 230, 130, 120, 9, "center", true);
+    page.drawLine({ start:{x:230,y:111}, end:{x:350,y:111}, thickness:.55, color:ink });
+    write(manual.assessedBy || "TFRO STAFF", 230, 100, 120, 8, "center", true);
 
+    if (viewOnly) drawRecordedWatermark(page, bold, rgb(.08, .29, .48), degrees);
     const bytes = await pdfDoc.save();
-    await showPdf(popup, bytes, `TFRO-009-${value(payment.receipt || violation.ticket_number || payment.id)}.pdf`);
+    await showPdf(popup, bytes, `TFRO-009-${value(payment.receipt || violation.ticket_number || payment.id)}.pdf`, { viewOnly });
   } catch (error) {
     popup?.close();
     console.error(error);
@@ -697,19 +826,19 @@ export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, ed
   }
 }
 
-export async function openUnitReleasePdfForm({ payment = {}, violation = {}, editable = false, onSend = null }) {
+export async function openUnitReleasePdfForm({ payment = {}, violation = {}, editable = false, onSend = null, viewOnly = false }) {
   let popup = editable ? null : openPdfWindow("TFRO-010 Vehicle/Unit Releasing Slip");
   if (!editable && !popup) return;
   try {
-    const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
+    const { PDFDocument, StandardFonts, rgb, degrees } = await loadPdfLib();
     const templateUrl = new URL("../forms/TFRO-010 Unit Releasing Slip.pdf", import.meta.url);
     const { pdfDoc, page } = await createCroppedOfficialForm(PDFDocument, templateUrl, 0, 468, 468);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const ink = rgb(0, 0, 0);
     page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: 92, color: rgb(1, 1, 1) });
-    const write = (text, x, y, maxWidth, size = 8.5, align = "left", useBold = true) =>
-      drawScaled(page, useBold ? bold : font, text, x, y, Math.max(size, 12), { maxWidth, minSize: 12, align, color: ink, baseHeight: 468 });
+    const write = (text, x, y, maxWidth, size = 8.5, align = "left", useBold = false) =>
+      drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, minSize: 6.5, align, color: ink, baseHeight: 468 });
 
     const manual = await editFields("TFRO-010 Vehicle/Unit Releasing Slip", [
       { key: "owner", label: "Unit owner", value: payment.unit_owner_name || payment.payer },
@@ -726,16 +855,39 @@ export async function openUnitReleasePdfForm({ payment = {}, violation = {}, edi
     if (!manual) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-010 Vehicle/Unit Releasing Slip");
     if (!popup) return;
-    write(manual.owner, 187, 342, 215, 9); write(manual.releaseDate, 444, 342, 88, 8.5, "center");
-    write(manual.ownerAddress, 116, 328, 214, 8.25); write(manual.ownerContact, 427, 328, 105, 8.25, "center");
-    write(manual.driver, 166, 314, 225, 8.75); write(manual.driverAddress, 159, 300, 210, 8.25); write(manual.driverContact, 438, 286, 94, 8.25, "center");
-    write(manual.engine, 139, 245, 150, 8.75); write(manual.chassis, 139, 231, 150, 8.75); write(manual.receipt, 116, 204, 175, 8.75);
-    write(manual.amount, 136, 190, 155, 8.75); write(manual.datePaid, 127, 176, 164, 8.75); write(manual.recordedBy, 72, 121, 140, 8.25, "center");
-    write(manual.releasedBy, 344, 178, 138, 8.25, "center"); write(manual.witness, 389, 156, 93, 8.25, "center");
-    write(manual.releaseTime, 379, 134, 52, 8.25, "center"); write(manual.releaseDate, 450, 134, 72, 8.25, "center");
+    page.drawRectangle({ x: 60, y: 274, width: 472, height: 83, color: rgb(1, 1, 1) });
+    const detailLine = (label, fieldValue, labelX, valueX, y, valueWidth) => {
+      write(label, labelX, y, valueX - labelX - 4, 8.5, "left", true);
+      write(fieldValue, valueX, y, valueWidth, 8.25);
+      page.drawLine({ start:{x:valueX,y:y-3}, end:{x:valueX+valueWidth,y:y-3}, thickness:.5, color:ink });
+    };
+    detailLine("Name of Unit Owner:", manual.owner, 72, 177, 342, 220);
+    detailLine("Date:", manual.releaseDate, 410, 445, 342, 87);
+    detailLine("Address:", manual.ownerAddress, 72, 128, 326, 230);
+    detailLine("Contact Number:", manual.ownerContact, 366, 445, 326, 87);
+    detailLine("Name of Driver:", manual.driver, 72, 158, 310, 239);
+    detailLine("Address:", manual.driverAddress, 72, 128, 294, 230);
+    detailLine("Contact Number:", manual.driverContact, 366, 445, 294, 87);
+    page.drawRectangle({ x: 62, y: 168, width: 240, height: 92, color: rgb(1, 1, 1) });
+    write("Impoundment Information:", 72, 248, 210, 9.5, "left", true);
+    detailLine("Engine No.:", manual.engine, 72, 132, 230, 158);
+    detailLine("Chassis No.:", manual.chassis, 72, 132, 214, 158);
+    detailLine("O.R. No.:", manual.receipt, 72, 132, 194, 158);
+    detailLine("Amount Paid:", manual.amount, 72, 132, 178, 158);
+    detailLine("Date Paid:", manual.datePaid, 72, 132, 162, 158);
+    page.drawRectangle({ x: 62, y: 104, width: 170, height: 49, color: rgb(1, 1, 1) });
+    write("Recorded by:", 72, 142, 150, 9, "left", true);
+    page.drawLine({ start:{x:72,y:119}, end:{x:222,y:119}, thickness:.55, color:ink });
+    write(manual.recordedBy, 72, 108, 150, 8, "center", true);
+    page.drawRectangle({ x: 328, y: 121, width: 205, height: 75, color: rgb(1, 1, 1) });
+    detailLine("Released by:", manual.releasedBy, 334, 390, 178, 135);
+    detailLine("Witness:", manual.witness, 334, 390, 158, 135);
+    detailLine("Time:", manual.releaseTime, 334, 365, 138, 63);
+    detailLine("Date:", manual.releaseDate, 438, 467, 138, 58);
 
+    if (viewOnly) drawRecordedWatermark(page, bold, rgb(.08, .29, .48), degrees);
     const bytes = await pdfDoc.save();
-    await showPdf(popup, bytes, `TFRO-010-${value(payment.receipt || payment.id)}.pdf`);
+    await showPdf(popup, bytes, `TFRO-010-${value(payment.receipt || payment.id)}.pdf`, { viewOnly });
   } catch (error) {
     popup?.close();
     console.error(error);

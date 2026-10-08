@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TFRO IMIS — System Workflow and User Guide</title>
+  <style>
+    :root{--blue:#1239b8;--navy:#071b66;--sky:#eaf4ff;--yellow:#ffe600;--ink:#10265f;--muted:#526687;--line:#adc5e8;--green:#087f5b;--red:#b42318;--orange:#b85c00}
+    *{box-sizing:border-box}html{font-family:Arial,"Segoe UI",sans-serif;color:var(--ink);background:#dce9f8}body{margin:0}button{font:inherit}
+    .toolbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 24px;background:var(--navy);color:#fff;box-shadow:0 5px 18px #071b6640}.toolbar strong{font-size:14px}.toolbar span{font-size:12px;opacity:.82}.toolbar button{padding:9px 15px;border:0;border-radius:8px;background:var(--yellow);color:var(--navy);font-weight:800;cursor:pointer}
+    .document{width:min(1120px,calc(100% - 28px));margin:24px auto}.page{min-height:185mm;margin:0 0 20px;padding:14mm;background:#fff;box-shadow:0 10px 35px #071b6626;break-after:page;page-break-after:always}.page:last-child{break-after:auto;page-break-after:auto}
+    .cover{display:grid;place-items:center;text-align:center;background:linear-gradient(145deg,var(--navy),var(--blue));color:#fff}.cover-inner{max-width:800px}.seals{display:flex;justify-content:center;gap:16px;margin-bottom:28px}.seals img{width:84px;height:84px;object-fit:contain;border-radius:50%;background:#fff;padding:5px;border:4px solid var(--yellow)}.cover .kicker,.page-kicker{font-weight:900;letter-spacing:.15em;text-transform:uppercase;color:var(--yellow)}.cover h1{margin:12px 0;font-size:40px;line-height:1.05}.cover h2{margin:0;font-size:22px;font-weight:500}.cover p{max-width:680px;margin:24px auto 0;color:#e2edff;line-height:1.65}.cover .meta{margin-top:42px;padding-top:20px;border-top:1px solid #ffffff42;font-size:13px}
+    .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:20px;padding-bottom:12px;border-bottom:4px solid var(--yellow)}.page-head h1{margin:4px 0 0;font-size:26px;color:var(--navy)}.page-head .page-no{min-width:42px;padding:8px;border-radius:8px;background:var(--blue);color:#fff;text-align:center;font-weight:900}.page-kicker{color:var(--blue);font-size:10px}
+    .lead{margin:0 0 18px;color:var(--muted);font-size:14px;line-height:1.55}.flow{display:flex;align-items:stretch;justify-content:center;gap:8px;margin:18px 0;flex-wrap:wrap}.node{display:flex;flex:1 1 135px;min-width:125px;max-width:190px;min-height:86px;flex-direction:column;justify-content:center;padding:12px;border:2px solid var(--line);border-radius:13px;background:#fff;text-align:center}.node b{font-size:13px;color:var(--navy)}.node span{margin-top:5px;color:var(--muted);font-size:10px;line-height:1.35}.node.start{background:var(--sky);border-color:var(--blue)}.node.action{border-top:6px solid var(--blue)}.node.decision{background:#fffde0;border-color:#ddc900}.node.success{background:#eafaf4;border-color:#31a77b}.node.stop{background:#fff1f0;border-color:#e2766e}.arrow{align-self:center;color:var(--blue);font-size:25px;font-weight:900}.branch{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}.branch>div{padding:12px;border-radius:12px}.yes{background:#eafaf4;border-left:5px solid var(--green)}.no{background:#fff1f0;border-left:5px solid var(--red)}.branch b{display:block;margin-bottom:5px;font-size:12px}.branch p{margin:0;color:var(--muted);font-size:11px;line-height:1.45}
+    .lanes{display:grid;grid-template-columns:130px 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden}.lane-label{display:flex;align-items:center;padding:14px;background:var(--navy);color:#fff;font-size:12px;font-weight:800;border-bottom:1px solid #ffffff24}.lane-flow{display:flex;align-items:center;gap:7px;padding:12px;background:#f9fbff;border-bottom:1px solid var(--line);flex-wrap:wrap}.lane-flow .node{min-height:68px;max-width:170px}.lanes>:nth-last-child(-n+2){border-bottom:0}
+    .notes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}.note{padding:13px;border-radius:12px;background:var(--sky);border:1px solid #c8dcf6}.note h3{margin:0 0 6px;font-size:13px;color:var(--blue)}.note p,.note li{margin:0;color:var(--muted);font-size:11px;line-height:1.5}.note ul{margin:4px 0 0;padding-left:17px}.warning{background:#fff9cf;border-color:#ead342}.role-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.role{padding:16px;border:1px solid var(--line);border-top:6px solid var(--blue);border-radius:13px;background:#fbfdff}.role h2{margin:0 0 7px;font-size:17px;color:var(--navy)}.role p{margin:0 0 8px;color:var(--muted);font-size:11px}.role ul{margin:0;padding-left:18px;font-size:11px;line-height:1.55}.role.staff{border-top-color:#e1bd00}.role.operator{border-top-color:#087f5b}.role.enforcer{border-top-color:#b85c00}
+    .steps{counter-reset:step;display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.step{position:relative;padding:13px 13px 13px 48px;border:1px solid var(--line);border-radius:11px;background:#fbfdff}.step:before{counter-increment:step;content:counter(step);position:absolute;left:12px;top:12px;display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:900}.step b{display:block;font-size:12px}.step span{display:block;margin-top:4px;color:var(--muted);font-size:10px;line-height:1.4}.legend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 18px;font-size:10px;color:var(--muted)}.legend i{display:inline-block;width:12px;height:12px;margin-right:5px;border-radius:3px;vertical-align:-2px}.guide-table{width:100%;border-collapse:collapse;font-size:10px;line-height:1.35}.guide-table th{padding:8px;background:var(--navy);color:#fff;text-align:left}.guide-table td{padding:8px;border:1px solid var(--line);vertical-align:top}.guide-table tr:nth-child(even) td{background:#f4f8ff}.callout{margin:12px 0;padding:11px 14px;border-left:6px solid var(--yellow);background:#fff9cf;font-size:11px;line-height:1.5}.footer{margin-top:18px;padding-top:9px;border-top:1px solid var(--line);color:#7283a0;font-size:9px;text-align:center}
+    @media(max-width:760px){.page{padding:22px 16px}.notes,.role-grid,.steps,.branch{grid-template-columns:1fr}.lanes{grid-template-columns:1fr}.lane-label{border-bottom:0}.flow{flex-direction:column}.arrow{transform:rotate(90deg)}.node{width:100%;max-width:none}.toolbar span{display:none}}
+    @media print{@page{size:A4 landscape;margin:8mm}html,body{background:#fff}.toolbar{display:none}.document{width:auto;margin:0}.page{width:auto;min-height:0;margin:0;padding:7mm;box-shadow:none}.cover{height:190mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}.node,.role,.note,.step{break-inside:avoid}.footer{position:relative}}
+  </style>
+</head>
+<body>
+  <div class="toolbar"><div><strong>TFRO IMIS System Workflow</strong><br><span>A4 landscape · enable background graphics for best output</span></div><button onclick="window.print()">Print / Save as PDF</button></div>
+  <main class="document">
+    <section class="page cover">
+      <div class="cover-inner">
+        <div class="seals"><img src="../Logo/Lucena City Logo.png" alt="Lucena City seal"><img src="../Logo/TFRO Logo.jpg" alt="TFRO seal"></div>
+        <div class="kicker">Tricycle Franchising and Regulatory Office</div>
+        <h1>TFRO Integrated Management Information System</h1>
+        <h2>System Workflow and User Guide</h2>
+        <p>A printable overview of how users enter the system, how records move between roles, and how franchise, renewal, change-motor, violation, payment, and administrative processes are completed.</p>
+        <div class="meta">City Government of Lucena · Workflow reference prepared from the implemented TFRO IMIS</div>
+      </div>
+    </section>
+
+    <section class="page">
+      <header class="page-head"><div><span class="page-kicker">Whole-system overview</span><h1>1. From Access to Completed Service</h1></div><span class="page-no">01</span></header>
+      <p class="lead">Every transaction begins with authenticated access. The database profile determines the portal and permissions; records then move through submission, review, decision, notification, and audit.</p>
+      <div class="flow">
+        <div class="node start"><b>Open TFRO IMIS</b><span>Landing page and public information</span></div><div class="arrow">→</div>
+        <div class="node action"><b>Register or Sign In</b><span>Credentials verified by Supabase Auth</span></div><div class="arrow">→</div>
+        <div class="node decision"><b>Resolve Role</b><span>Server-controlled profile role</span></div><div class="arrow">→</div>
+        <div class="node action"><b>Open Role Portal</b><span>Only authorized pages and records</span></div><div class="arrow">→</div>
+        <div class="node action"><b>Process Transaction</b><span>Submit, review, verify, approve, or record</span></div><div class="arrow">→</div>
+        <div class="node success"><b>Update & Notify</b><span>Records synchronized and action logged</span></div>
+      </div>
+      <div class="lanes">
+        <div class="lane-label">Public / Applicant</div><div class="lane-flow"><div class="node">View landing page</div><span class="arrow">→</span><div class="node">Register account</div><span class="arrow">→</span><div class="node">Confirm email</div></div>
+        <div class="lane-label">Operator</div><div class="lane-flow"><div class="node">Submit applications</div><span class="arrow">→</span><div class="node">Upload requirements</div><span class="arrow">→</span><div class="node">Track status</div></div>
+        <div class="lane-label">Admin / Staff</div><div class="lane-flow"><div class="node">Review records</div><span class="arrow">→</span><div class="node">Verify evidence</div><span class="arrow">→</span><div class="node">Approve or return</div></div>
+        <div class="lane-label">System</div><div class="lane-flow"><div class="node">Enforce permissions</div><span class="arrow">→</span><div class="node">Synchronize data</div><span class="arrow">→</span><div class="node">Notify + audit</div></div>
+      </div>
+      <div class="notes"><article class="note"><h3>Authentication</h3><p>A valid session identifies the user. Page guards redirect anyone without the required role.</p></article><article class="note"><h3>Authorization</h3><p>Database Row Level Security limits which records each role can read or change.</p></article><article class="note"><h3>Accountability</h3><p>Important actions are written to the audit log with user, role, action, and record context.</p></article></div>
+      <div class="footer">TFRO IMIS · System Workflow and User Guide</div>
+    </section>
+
+    <section class="page">
+      <header class="page-head"><div><span class="page-kicker">Access control</span><h1>2. Login, Registration, and Role Routing</h1></div><span class="page-no">02</span></header>
+      <div class="flow"><div class="node start"><b>Enter Credentials</b><span>Email or assigned internal username</span></div><div class="arrow">→</div><div class="node decision"><b>Credentials Valid?</b></div><div class="arrow">→</div><div class="node decision"><b>Profile Active?</b></div><div class="arrow">→</div><div class="node action"><b>Read Profile Role</b></div><div class="arrow">→</div><div class="node success"><b>Route to Portal</b></div></div>
+      <div class="branch"><div class="yes"><b>YES — access granted</b><p>Admin → Dashboard · Staff → Violations · Operator → Operator Portal · Traffic Enforcer → Enforcer Portal.</p></div><div class="no"><b>NO — access denied</b><p>Show a safe error, clear invalid session state, and return the user to the login page.</p></div></div>
+      <div class="role-grid">
+        <article class="role"><h2>Head Administrator</h2><p>Full system supervision.</p><ul><li>Dashboard, records, approvals, reports, notifications, and audit log</li><li>Create/delete restricted Administrators and TFRO Staff accounts</li><li>Manage system settings and destructive actions</li></ul></article>
+        <article class="role"><h2>Restricted Administrator</h2><p>Operational administration without destructive authority.</p><ul><li>View, add, edit, save, verify, and approve operational records</li><li>Cannot delete/archive records</li><li>Cannot manage accounts or system settings</li></ul></article>
+        <article class="role staff"><h2>TFRO Staff</h2><p>Violation and payment processing.</p><ul><li>Encode and update violation records</li><li>Verify payment evidence and record settlement/release</li><li>Print official notices and payment-related forms</li></ul></article>
+        <article class="role operator"><h2>Operator</h2><p>Self-service regulatory portal.</p><ul><li>Apply for a franchise and manage driver submissions</li><li>Submit renewals and change-motor requests</li><li>Upload requirements/receipts and receive notifications</li></ul></article>
+        <article class="role enforcer"><h2>Traffic Enforcer</h2><p>Field enforcement portal.</p><ul><li>Search/verify drivers using QR information</li><li>Create violation tickets and upload ticket photos</li><li>Cannot record payments or access administration</li></ul></article>
+      </div>
+      <div class="callout"><b>Who can create an account:</b> Operators register publicly. Traffic Enforcers may register only when their Enforcer ID matches an active roster entry created by an Administrator. Head Admin creates Restricted Administrator and TFRO Staff credentials in <b>Admin Users</b>. Drivers are managed records submitted by Operators; drivers do not have a login portal.</div>
+      <div class="footer">Roles come from the protected profile record—not browser storage or editable user metadata.</div>
+    </section>
+
+    <section class="page">
+      <header class="page-head"><div><span class="page-kicker">Core regulatory service</span><h1>3. New Franchise Application Workflow</h1></div><span class="page-no">03</span></header>
+      <div class="lanes">
+        <div class="lane-label">Operator</div><div class="lane-flow"><div class="node">Open Apply for Franchise</div><span class="arrow">→</span><div class="node">Complete details</div><span class="arrow">→</span><div class="node">Upload six required PDFs</div><span class="arrow">→</span><div class="node">Submit</div></div>
+        <div class="lane-label">System</div><div class="lane-flow"><div class="node">Validate fields/files</div><span class="arrow">→</span><div class="node">Create pending_review application</div><span class="arrow">→</span><div class="node">Store documents securely</div></div>
+        <div class="lane-label">Administrator</div><div class="lane-flow"><div class="node">Open application</div><span class="arrow">→</span><div class="node">Verify each document</div><span class="arrow">→</span><div class="node decision">Complete and valid?</div></div>
+        <div class="lane-label">Decision</div><div class="lane-flow"><div class="node success">Approve</div><span class="arrow">→</span><div class="node">Create franchise + tricycle records</div><span class="arrow">→</span><div class="node">Notify operator</div></div>
+      </div>
+      <div class="branch"><div class="yes"><b>APPROVED</b><p>The application is linked to a new franchise record, the tricycle record is created, and administrator/date information is stored.</p></div><div class="no"><b>REJECTED / NEEDS CORRECTION</b><p>The reviewer records a reason. The operator is notified and can correct the requirements according to the displayed status.</p></div></div>
+      <div class="notes"><article class="note"><h3>Required evidence</h3><p>Voter’s certificate, barangay clearance, cedula, OHCR, insurance, and PMBL certification.</p></article><article class="note"><h3>Important rule</h3><p>Submitting an application does not create an approved franchise. Creation happens only through the approval workflow.</p></article><article class="note"><h3>Driver records</h3><p>Operators submit driver details and pictures; authorized administrators review, assign, and verify compliance.</p></article></div>
+      <div class="footer">The application, documents, franchise, tricycle, operator, and notifications remain linked through database identifiers.</div>
+    </section>
+
+    <section class="page">
+      <header class="page-head"><div><span class="page-kicker">Continuing authority</span><h1>4. Franchise Renewal Workflow</h1></div><span class="page-no">04</span></header>
+      <div class="flow"><div class="node start"><b>Eligible Franchise</b><span>Operator may apply up to three months before expiration</span></div><div class="arrow">→</div><div class="node action"><b>Complete Renewal</b><span>Form answers and eight requirements</span></div><div class="arrow">→</div><div class="node action"><b>Submit for Review</b></div><div class="arrow">→</div><div class="node decision"><b>Admin Verification</b><span>Documents, inspection, and assessment</span></div><div class="arrow">→</div><div class="node success"><b>Approve & Update MTOP</b></div></div>
+      <div class="steps">
+        <div class="step"><b>Operator checks eligibility</b><span>The selected franchise must be linked to the signed-in operator. Renewal may be requested up to three months before expiration; the franchise does not need to be expired.</span></div>
+        <div class="step"><b>Operator uploads requirements</b><span>Required documents and the 2×2 picture are validated by type and completeness.</span></div>
+        <div class="step"><b>Administrator reviews documents</b><span>Each requirement is marked verified, rejected, or requiring correction.</span></div>
+        <div class="step"><b>Administrator records assessment</b><span>Inspection results, fees, and hard-copy requirements are recorded. Payment may be completed after renewal approval.</span></div>
+        <div class="step"><b>Administrator approves</b><span>Approval is allowed only when the required review conditions are satisfied.</span></div>
+        <div class="step"><b>System synchronizes franchise</b><span>The new expiration date is applied and the previous MTOP expiration is preserved.</span></div>
+      </div>
+      <div class="branch"><div class="yes"><b>COMPLETE</b><p>Renewal becomes approved, printable forms become available, franchise expiry is updated, and the operator receives a notification.</p></div><div class="no"><b>INCOMPLETE</b><p>The request stays pending/reviewing or is returned with remarks until the operator supplies acceptable requirements.</p></div></div>
+      <div class="notes"><article class="note warning"><h3>Control point</h3><p>Approval should never bypass required documents, inspection results, or assessment. City Treasurer payment is tracked separately and may follow renewal approval.</p></article><article class="note"><h3>Printable output</h3><p>The system can prepare renewal checklist and related official forms using the saved record.</p></article><article class="note"><h3>Traceability</h3><p>Submission attempts, reviewers, dates, verification results, and approval activity are retained.</p></article></div>
+      <div class="footer">Renewal processing preserves the former expiration value for historical comparison.</div>
+    </section>
+
+    <section class="page">
+      <header class="page-head"><div><span class="page-kicker">Vehicle record change</span><h1>5. Change Motor / MTOP Workflow</h1></div><span class="page-no">05</span></header>
+      <div class="lanes">
+        <div class="lane-label">Operator</div><div class="lane-flow"><div class="node">Choose linked franchise</div><span class="arrow">→</span><div class="node">Enter new motor details</div><span class="arrow">→</span><div class="node">Attach pictures/PDF evidence</div><span class="arrow">→</span><div class="node">Submit request</div></div>
+        <div class="lane-label">System</div><div class="lane-flow"><div class="node">Save pending request</div><span class="arrow">→</span><div class="node">Keep current vehicle unchanged</div><span class="arrow">→</span><div class="node">Expose to Admin review</div></div>
+        <div class="lane-label">Administrator</div><div class="lane-flow"><div class="node">Compare old/new details</div><span class="arrow">→</span><div class="node">Review supporting evidence</div><span class="arrow">→</span><div class="node decision">Approve or reject?</div></div>
+        <div class="lane-label">System result</div><div class="lane-flow"><div class="node">Preserve old details in history</div><span class="arrow">→</span><div class="node success">Update franchise/tricycle</div><span class="arrow">→</span><div class="node">Notify operator</div></div>
+      </div>
+      <div class="branch"><div class="yes"><b>APPROVE</b><p>Engine, chassis, plate, make/model, and related fields are updated. Previous values are copied to change-motor history before replacement.</p></div><div class="no"><b>REJECT</b><p>The current franchise and tricycle details remain unchanged. A rejection reason is stored and sent to the operator.</p></div></div>
+      <div class="notes"><article class="note"><h3>Why history matters</h3><p>Old vehicle identifiers remain available for audit, investigation, and regulatory reference.</p></article><article class="note"><h3>Operator visibility</h3><p>The operator can track request status and receive the generated forms when the workflow allows them.</p></article><article class="note warning"><h3>Do not edit directly</h3><p>Vehicle replacement should pass through the request and approval flow so history is not lost.</p></article></div>
+      <div class="footer">Change Motor connects the operator request, franchise, tricycle, reviewer, history, forms, and notification.</div>
+    </section>
+
+    <section class="page">
+      <header class="page-head"><div><span class="page-kicker">Enforcement to settlement</span><h1>6. Violation, Payment, and Vehicle Release</h1></div><span class="page-no">06</span></header>
+      <div class="flow"><div class="node start"><b>Driver / Unit Checked</b><span>Search records or verify QR</span></div><div class="arrow">→</div><div class="node action"><b>Issue Ticket</b><span>Select official violation and upload photo</span></div><div class="arrow">→</div><div class="node action"><b>Violation Pending</b></div><div class="arrow">→</div><div class="node action"><b>Submit Treasurer Receipt</b></div><div class="arrow">→</div><div class="node decision"><b>Staff Verifies Payment</b></div><div class="arrow">→</div><div class="node success"><b>Paid / Released</b></div></div>
+      <div class="lanes">
+        <div class="lane-label">Traffic Enforcer</div><div class="lane-flow"><div class="node">Identify driver/unit</div><span class="arrow">→</span><div class="node">Encode ticket and select one or more enforcers</div><span class="arrow">→</span><div class="node">Attach ticket image</div></div>
+        <div class="lane-label">Operator</div><div class="lane-flow"><div class="node">View violation</div><span class="arrow">→</span><div class="node">Pay at authorized office</div><span class="arrow">→</span><div class="node">Upload receipt once</div></div>
+        <div class="lane-label">TFRO Staff</div><div class="lane-flow"><div class="node">Inspect paper/uploaded receipt</div><span class="arrow">→</span><div class="node">Record receipt and amount</div><span class="arrow">→</span><div class="node">Enter release details</div></div>
+        <div class="lane-label">System</div><div class="lane-flow"><div class="node">Link OR and total payment to violation</div><span class="arrow">→</span><div class="node">Calculate 20% commission and divide it equally</div><span class="arrow">→</span><div class="node">Update status and enable printouts</div></div>
+      </div>
+      <div class="notes"><article class="note"><h3>Commission record</h3><p>Each paid violation shows its OR number, total payment, configured commission rate, total commission, enforcer count, individual allocation, assigned enforcers, and violation/payment dates. The default rate is 20% and only an authorized Head Administrator may change it.</p></article><article class="note"><h3>Separation of duties</h3><p>Traffic Enforcers record tickets; TFRO Staff verify payment and release. Enforcers cannot create payment records.</p></article><article class="note warning"><h3>Receipt control</h3><p>Receipt submission is restricted and attributable to prevent replacement or duplicate payment evidence.</p></article></div>
+      <div class="footer">A violation is not considered settled until authorized TFRO Staff records and verifies its payment.</div>
+    </section>
+
+    <section class="page">
+      <header class="page-head"><div><span class="page-kicker">Operations and governance</span><h1>7. Administration, Notifications, Reports, and Audit</h1></div><span class="page-no">07</span></header>
+      <div class="flow"><div class="node start"><b>Operational Action</b><span>Create, update, verify, approve, reject, delete</span></div><div class="arrow">→</div><div class="node action"><b>Database Change</b></div><div class="arrow">→</div><div class="node action"><b>Audit Entry</b><span>User ID, role, action, target, time</span></div><div class="arrow">→</div><div class="node action"><b>Dashboard / Report</b></div><div class="arrow">→</div><div class="node success"><b>Management Review</b></div></div>
+      <div class="flow"><div class="node start"><b>Head Admin Opens Profile</b><span>System Settings → Account Credentials</span></div><div class="arrow">→</div><div class="node action"><b>Select an Account</b><span>Administrator, Staff, Operator, or Enforcer</span></div><div class="arrow">→</div><div class="node action"><b>Filter by User ID</b><span>Protected audit records only</span></div><div class="arrow">→</div><div class="node success"><b>View Account History</b><span>Newest 200 attributable actions</span></div></div>
+      <div class="role-grid">
+        <article class="role"><h2>Account Management</h2><ul><li>Head Admin creates restricted Admin and TFRO Staff credentials</li><li>Head Admin can reset supported portal passwords</li><li>Clicking an account opens its attributable activity history</li><li>Deleting access preserves operational history where required</li></ul></article>
+        <article class="role staff"><h2>Notifications</h2><ul><li>Approval, rejection, correction, expiry, and workflow messages</li><li>Personal notifications are visible only to the intended account</li><li>Read/unread state helps users track action items</li></ul></article>
+        <article class="role operator"><h2>Reports and Exports</h2><ul><li>Filter operational records and review summaries</li><li>Generate CSV exports and print official forms</li><li>Dashboard totals summarize current database records</li></ul></article>
+        <article class="role enforcer"><h2>Audit and Security</h2><ul><li>History shows date, action type, action, description, and affected record</li><li>Account history is matched by protected user ID—not by display name</li><li>Row Level Security protects records by role and ownership</li><li>Service-role credentials remain inside server-side functions</li></ul></article>
+      </div>
+      <h2 style="margin:22px 0 10px;font-size:18px">Recommended daily operating sequence</h2>
+      <div class="steps"><div class="step"><b>Sign in with your own account</b><span>Never share credentials or leave a logged-in workstation unattended.</span></div><div class="step"><b>Review notifications and pending counts</b><span>Use the dashboard and portal notices to prioritize transactions.</span></div><div class="step"><b>Open the correct workflow page</b><span>Avoid direct database edits; use the UI process that preserves validation and history.</span></div><div class="step"><b>Verify evidence before deciding</b><span>Check uploaded documents, identities, receipts, and linked records.</span></div><div class="step"><b>Record clear remarks</b><span>Rejection, correction, inspection, and release notes should be specific.</span></div><div class="step"><b>Confirm the result and sign out</b><span>Check the updated status/notification, then securely end the session.</span></div></div>
+      <div class="footer">Use this guide with current TFRO policies and authorized office procedures. System permissions do not replace administrative review.</div>
+    </section>
+
+    <section class="page">
+      <header class="page-head"><div><span class="page-kicker">First-time use</span><h1>8. Account Setup and First Login</h1></div><span class="page-no">08</span></header>
+      <p class="lead">Use the route that matches the person’s real role. Do not create a substitute role simply to give access; every page and database action is role-controlled.</p>
+      <table class="guide-table">
+        <thead><tr><th>User</th><th>How the account is created</th><th>Information to prepare</th><th>First page after login</th></tr></thead>
+        <tbody>
+          <tr><td><b>Operator</b></td><td>Open <b>Register</b>, select Operator, accept the Terms and Privacy Notice, submit, then confirm the email address. The system matches both normalized full name and franchise number before linking an existing record; unmatched accounts are held for staff verification.</td><td>First/last name, email, contact number, address, franchise number, password, and profile picture.</td><td>Operator Portal</td></tr>
+          <tr><td><b>Traffic Enforcer</b></td><td>An Administrator first adds the officer to the active Enforcer roster. The officer registers using the same Enforcer ID and confirms the email.</td><td>Name, email, contact number, active Enforcer ID, password, and profile picture.</td><td>Enforcer Portal</td></tr>
+          <tr><td><b>Restricted Admin / TFRO Staff</b></td><td>Head Admin opens <b>Admin Users</b>, chooses the role, assigns credentials, and gives them securely to the employee.</td><td>Employee identity, authorized role, unique username, and temporary password.</td><td>Admin → Dashboard; Staff → Violations</td></tr>
+          <tr><td><b>Driver</b></td><td>No account is created. An Operator submits the driver record; an Administrator verifies it.</td><td>Driver identity, licence information, contact/address details, and 2×2 picture.</td><td>No login; verification is through the driver record/QR.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout"><b>Manual service for senior operators:</b> Authorized staff may select an existing franchise and encode a manual renewal on the operator’s behalf. The request is marked <b>Staff Manual</b>, records the encoder, enters the same review workflow as an online request, and does not create a duplicate franchise.</div>
+      <div class="steps" style="margin-top:14px">
+        <div class="step"><b>Open the correct registration or login page</b><span>Use personal credentials only. Internal usernames are issued by the Head Admin.</span></div>
+        <div class="step"><b>Complete required identity fields</b><span>Names, IDs, franchise references, and contact information must match official records.</span></div>
+        <div class="step"><b>Confirm email when required</b><span>Public Operator and Enforcer accounts may not sign in until email confirmation succeeds.</span></div>
+        <div class="step"><b>Check your landing page and role</b><span>If the wrong portal opens or access is denied, stop and contact the Head Admin; do not register a second account.</span></div>
+      </div>
+      <div class="notes"><article class="note"><h3>Forgotten password</h3><p>Use the supported password-recovery option or ask the Head Admin to perform an authorized reset. Never share passwords in chat or public notes.</p></article><article class="note warning"><h3>Enforcer registration fails</h3><p>Ask an Administrator to check that the Enforcer ID exists, is active, and exactly matches the value entered.</p></article><article class="note"><h3>After every session</h3><p>Confirm the saved status, close sensitive previews, sign out, and do not leave the workstation unattended.</p></article></div>
+      <div class="footer">Account type determines both the visible menu and the records the database permits the user to access.</div>
+    </section>
+
+    <section class="page">
+      <header class="page-head"><div><span class="page-kicker">Operator procedure</span><h1>9. How an Operator Uses the System</h1></div><span class="page-no">09</span></header>
+      <div class="steps">
+        <div class="step"><b>Review the Operator Portal</b><span>Check franchise status, pending services, driver submissions, violations, notifications, and available forms.</span></div>
+        <div class="step"><b>Apply for a new franchise, if none is approved</b><span>Enter franchise/previous registration, operator and address details, registration date, engine, chassis, plate, contact, and route.</span></div>
+        <div class="step"><b>Upload all six application PDFs</b><span>Voter’s certificate, barangay clearance, cedula, OHCR, insurance, and PMBL certification; each file must be PDF and no more than 5 MB.</span></div>
+        <div class="step"><b>Track the application</b><span><b>pending_review</b> means wait for Admin review. If returned, read the reason, correct the record/documents, and resubmit as allowed.</span></div>
+        <div class="step"><b>Add a driver after franchise setup</b><span>Open Add Driver, complete licence and identity details, upload the required 2×2 JPG/PNG (maximum 5 MB), and submit. Duplicate licence numbers are not allowed.</span></div>
+        <div class="step"><b>Wait for driver verification</b><span>The Administrator reviews and assigns the driver to the Operator/franchise. Pending submissions may be edited or deleted by the Operator.</span></div>
+        <div class="step"><b>Use renewal or change-motor when applicable</b><span>Select only a franchise linked to your account. Renewal may be filed up to three months before expiration, and Change Motor may be requested while the franchise is still active. Submit through the dedicated workflow so previous values and review history are preserved.</span></div>
+        <div class="step"><b>Respond to violations and messages</b><span>Review the violation, pay through the authorized office procedure, upload the Treasurer receipt once when offered, and wait for TFRO Staff verification.</span></div>
+      </div>
+      <div class="callout"><b>Franchise approval result:</b> the system creates the franchise and tricycle records only after Administrator approval. A submitted application by itself is not an active franchise.</div>
+      <table class="guide-table">
+        <thead><tr><th>Operator sees</th><th>Meaning</th><th>What to do</th></tr></thead>
+        <tbody><tr><td>Pending / Pending review</td><td>The submission is saved and awaiting office action.</td><td>Do not submit a duplicate; monitor Notifications.</td></tr><tr><td>Needs correction / Rejected</td><td>The reviewer found missing, incorrect, or unacceptable information.</td><td>Read the remarks, correct only the identified submission, then resubmit if enabled.</td></tr><tr><td>Approved / Verified</td><td>The authorized review has been completed.</td><td>Confirm updated details and download/print only the forms made available.</td></tr><tr><td>Paid / Released</td><td>Staff recorded settlement and, where applicable, release information.</td><td>Keep the official receipt and generated form for reference.</td></tr></tbody>
+      </table>
+      <div class="footer">An Operator can see and act only on records linked to the signed-in account.</div>
+    </section>
+
+    <section class="page">
+      <header class="page-head"><div><span class="page-kicker">Detailed service rules</span><h1>10. Renewal and Change-Motor Checklists</h1></div><span class="page-no">10</span></header>
+      <h2 style="margin:0 0 8px;font-size:17px">Franchise Renewal</h2>
+      <div class="flow"><div class="node start"><b>Select Franchise</b></div><div class="arrow">→</div><div class="node action"><b>Choose Renewal Type</b></div><div class="arrow">→</div><div class="node action"><b>Complete 4 Steps</b><span>Details; Operator; Vehicle/Driver; Documents</span></div><div class="arrow">→</div><div class="node decision"><b>Admin Review</b></div><div class="arrow">→</div><div class="node success"><b>Approve & Update Expiry</b></div></div>
+      <table class="guide-table">
+        <thead><tr><th>Renewal type</th><th>Operator requirement</th><th>Office result</th></tr></thead>
+        <tbody>
+          <tr><td><b>Regular</b></td><td>Submit the eight configured requirements: voter’s certificate, cedula, barangay clearance, driver’s licence, 2×2 picture, PMBL certification, official receipt/registration evidence, and insurance. The City Treasurer payment receipt is not required for the renewal request.</td><td>Admin verifies documents, hard copies, inspection, and assessment before approval. Payment may be completed afterward.</td></tr>
+          <tr><td><b>Expired OR</b></td><td>Submit the available base requirements, then provide the updated vehicle registration/official receipt evidence and insurance requested by the office.</td><td>A temporary MTOP may be issued; the renewal remains pending until required updated evidence is verified.</td></tr>
+          <tr><td><b>Change Motor</b></td><td>Select the approved Change Motor request associated with the franchise and submit the renewal requirements shown by the form.</td><td>A temporary MTOP may be issued; final approval waits for the required updated vehicle and insurance evidence.</td></tr>
+        </tbody>
+      </table>
+      <h2 style="margin:16px 0 8px;font-size:17px">Change Motor</h2>
+      <div class="steps">
+        <div class="step"><b>Select an approved franchise</b><span>The request cannot be used for an unrelated Operator or unapproved franchise. It may be submitted before the franchise expires.</span></div>
+        <div class="step"><b>Enter changed identifiers</b><span>At least one new engine, chassis, or plate value is required. If engine/chassis changes, new motor brand and model/serial are required.</span></div>
+        <div class="step"><b>Attach evidence</b><span>A new motor picture in JPG/PNG is required (maximum 5 MB). The supporting PDF is optional unless office policy requires it.</span></div>
+        <div class="step"><b>Confirm before submission</b><span>The current vehicle remains unchanged while the request is pending. Admin compares old and new details.</span></div>
+        <div class="step"><b>Wait for decision</b><span>Approval copies previous identifiers to history before updating the live franchise/tricycle record; rejection keeps current details.</span></div>
+        <div class="step"><b>Receive forms</b><span>TFRO-002 and TFRO-007 appear to the Operator only after approval and authorized delivery by the Administrator.</span></div>
+      </div>
+      <div class="footer">Never bypass these workflows by directly replacing active vehicle or expiry values.</div>
+    </section>
+
+    <section class="page">
+      <header class="page-head"><div><span class="page-kicker">Office procedure</span><h1>11. How Enforcers, Staff, and Administrators Use It</h1></div><span class="page-no">11</span></header>
+      <table class="guide-table">
+        <thead><tr><th>Role</th><th>Start here</th><th>Normal operating sequence</th><th>Must not do</th></tr></thead>
+        <tbody>
+          <tr><td><b>Traffic Enforcer</b></td><td>Ticketing & Driver Search</td><td>Search/scan driver → confirm the displayed driver/unit → select official violation(s) → complete ticket details → attach ticket photo → submit → confirm it appears in activity.</td><td>Do not record payment, approve records, or use another officer’s account.</td></tr>
+          <tr><td><b>TFRO Staff</b></td><td>Violations</td><td>Find/encode the case → issue or print notice as needed → open Payments → inspect receipt → enter official receipt, amount, date, and release details → save → confirm Paid/Released status and print outputs.</td><td>Do not mark a case paid before receipt verification or alter administrative approvals.</td></tr>
+          <tr><td><b>Restricted Admin</b></td><td>Dashboard</td><td>Review pending totals → open Applications/Renewals/Motor Requests/Drivers → compare record and evidence → verify each requirement → approve, reject, or request correction → confirm notification and audit entry.</td><td>Cannot manage accounts/settings or perform Head-Admin-only delete/archive actions.</td></tr>
+          <tr><td><b>Head Admin</b></td><td>Dashboard</td><td>Perform all Admin reviews → manage Admin/Staff accounts → maintain Enforcer roster → inspect reports/audit → open Profile › Account Credentials and select a user to review attributable actions.</td><td>Do not share the Head Admin account or delete access without confirming the correct person and operational impact.</td></tr>
+        </tbody>
+      </table>
+      <div class="flow"><div class="node start"><b>Head Admin</b><span>Profile → System Settings</span></div><div class="arrow">→</div><div class="node action"><b>Account Credentials</b></div><div class="arrow">→</div><div class="node action"><b>Click Account Name</b></div><div class="arrow">→</div><div class="node decision"><b>Match Protected User ID</b></div><div class="arrow">→</div><div class="node success"><b>View Latest 200 Actions</b><span>Date, type, action, description, record</span></div></div>
+      <div class="notes"><article class="note"><h3>Administrative decision</h3><p>Verify the linked person, franchise, files, dates, and required checkpoints. Use specific correction/rejection remarks so the Operator knows what to fix.</p></article><article class="note"><h3>Official outputs</h3><p>Print from the completed saved record. Available outputs include notices, payment/release forms, renewal forms, and change-motor forms.</p></article><article class="note warning"><h3>Audit limitation</h3><p>Account History shows actions actually written to the audit log. Absence of an entry is not proof that no offline or unlogged event occurred.</p></article></div>
+      <div class="footer">Head Admin account history is filtered by protected user ID, so users with similar names are not mixed.</div>
+    </section>
+
+    <section class="page">
+      <header class="page-head"><div><span class="page-kicker">Quick reference</span><h1>12. Where to Go in the System</h1></div><span class="page-no">12</span></header>
+      <div class="role-grid">
+        <article class="role"><h2>Administrator Pages</h2><ul><li><b>Dashboard:</b> operational overview and pending totals</li><li><b>Applications:</b> review new franchise applications</li><li><b>Franchise / Operators / Drivers:</b> master records and assignments</li><li><b>Renewals / Motor Requests:</b> assess and decide requests</li><li><b>Violations / Payments:</b> monitoring and authorized operations</li><li><b>Reports / Audit Log:</b> oversight, export, and complete traceability</li><li><b>Profile → Account Credentials:</b> click an account to inspect its action history</li><li><b>Admin Users:</b> create/delete restricted Admin and TFRO Staff accounts</li></ul></article>
+        <article class="role operator"><h2>Operator Pages</h2><ul><li><b>Operator Portal:</b> franchise summary and service status</li><li><b>Apply for Franchise:</b> new application and document upload</li><li><b>Driver Submission:</b> add/update pending driver information</li><li><b>Renewal:</b> submit requirements and track review</li><li><b>Change Motor:</b> request replacement of vehicle details</li><li><b>Notifications / Profile:</b> messages and account information</li></ul></article>
+        <article class="role staff"><h2>TFRO Staff Pages</h2><ul><li><b>Violations:</b> encode and monitor cases</li><li><b>Payments:</b> verify receipt, record settlement, release unit</li><li><b>Profile:</b> personal account details and password</li><li>Other pages appear only when the role is authorized by system policy.</li></ul></article>
+        <article class="role enforcer"><h2>Traffic Enforcer Pages</h2><ul><li><b>Enforcer Portal:</b> field ticket activity</li><li><b>Driver Verification:</b> scan QR or enter verification token</li><li><b>Violation Submission:</b> ticket data and supporting photo</li><li><b>Profile:</b> personal account details</li></ul></article>
+      </div>
+      <div class="notes"><article class="note"><h3>Status meanings</h3><p><b>Pending:</b> waiting for action. <b>Reviewing:</b> assessment underway. <b>Approved/Paid:</b> required decision completed. <b>Rejected/Correction:</b> user action is required.</p></article><article class="note warning"><h3>If something fails</h3><p>Read the displayed message, verify your internet connection and role, refresh once, then report the record number and exact error to the Head Administrator.</p></article><article class="note"><h3>Printing this guide</h3><p>Choose A4, Landscape, Default margins, 100% scale, and enable Background graphics. Use “Save as PDF” to distribute electronically.</p></article></div>
+      <div class="footer">End of TFRO IMIS System Workflow and User Guide</div>
+    </section>
+  </main>
+</body>
+</html>
