@@ -93,16 +93,37 @@ function renderTable() {
 }
 
 async function openManualRenewal() {
+  const modal = byId("manualRenewalModal");
+  const trigger = byId("manualRenewalBtn");
+  const franchiseSelect = byId("manualFranchiseId");
+  const saveButton = byId("manualRenewalSaveBtn");
+
+  byId("manualRequestDate").value = new Date().toISOString().slice(0, 10);
+  franchiseSelect.innerHTML = '<option value="">Loading franchise records…</option>';
+  franchiseSelect.disabled = true;
+  saveButton.disabled = true;
+  trigger.disabled = true;
+  trigger.setAttribute("aria-busy", "true");
+  modal.hidden = false;
+
   const { data, error } = await supabase.from("franchises")
     .select("id,franchise_number,operator_name,contact_number,expiration_date,status")
     .neq("status", "revoked").order("operator_name");
-  if (error) return alert(`Could not load franchise records: ${error.message}`);
+
+  trigger.disabled = false;
+  trigger.removeAttribute("aria-busy");
+  if (error) {
+    franchiseSelect.innerHTML = '<option value="">Franchise records could not be loaded</option>';
+    alert(`Could not load franchise records: ${error.message}`);
+    return;
+  }
+
   manualFranchises = data || [];
-  byId("manualFranchiseId").innerHTML = '<option value="">Select an existing franchise</option>' + manualFranchises.map((franchise) =>
+  franchiseSelect.innerHTML = '<option value="">Select an existing franchise</option>' + manualFranchises.map((franchise) =>
     `<option value="${franchise.id}">${escapeHtml(franchise.franchise_number)} — ${escapeHtml(franchise.operator_name)}</option>`
   ).join("");
-  byId("manualRequestDate").value = new Date().toISOString().slice(0, 10);
-  byId("manualRenewalModal").hidden = false;
+  franchiseSelect.disabled = false;
+  saveButton.disabled = false;
 }
 
 function fillManualFranchise() {
