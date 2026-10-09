@@ -1714,3 +1714,50 @@ html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) table tb
 html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) table tbody tr:hover{
   background:#eef4f8 !important;
 }
+
+/* Renewal and Change Motor toolbars use one themed surface. Keep the date
+   controls consistent even while an older cached page still renders them as
+   a standalone row. */
+body.admin-sidebar .main-content > .records-toolbar,
+body.admin-sidebar .main-content > .renewal-export-controls{
+  border:1px solid var(--tfro-border) !important;
+  background:var(--tfro-surface) !important;
+  box-shadow:0 6px 18px rgba(11,47,85,.06) !important;
+}
+body.admin-sidebar .main-content > .records-toolbar > .date-export-controls{
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+body.admin-sidebar :is(#manualRenewalBtn,#manualMotorBtn){
+  min-height:44px;
+  border:1px solid #145187 !important;
+  border-bottom:3px solid #f4c430 !important;
+  background:linear-gradient(135deg,#124b7a,#17649e) !important;
+  color:#fff !important;
+  box-shadow:0 5px 14px rgba(18,75,122,.2) !important;
+}
+body.admin-sidebar :is(#manualRenewalBtn,#manualMotorBtn):hover{
+  background:linear-gradient(135deg,#0d3d66,#145187) !important;
+  transform:translateY(-1px);
+}
+
+html[data-theme="dark"] body.admin-sidebar .main-content > :is(.records-toolbar,.renewal-export-controls){
+  border-color:#28445f !important;
+  background:#0c2136 !important;
+  box-shadow:none !important;
+}
+html[data-theme="dark"] body.admin-sidebar .main-content > .records-toolbar > .date-export-controls{
+  border:0 !important;
+  background:transparent !important;
+}
+html[data-theme="dark"] body.admin-sidebar :is(#manualRenewalBtn,#manualMotorBtn){
+  border-color:#5f91ba !important;
+  border-bottom-color:#f4c430 !important;
+  background:linear-gradient(135deg,#174f7b,#1f6c9f) !important;
+  color:#f5f9ff !important;
+  box-shadow:0 5px 16px rgba(0,0,0,.24) !important;
+}
+html[data-theme="dark"] body.admin-sidebar :is(#manualRenewalBtn,#manualMotorBtn):hover{
+  background:linear-gradient(135deg,#1c5f91,#287cad) !important;
+}
