@@ -8,6 +8,7 @@
 
   <link rel="stylesheet" href="../css/franchise.css?v=20260826-220000">
   <link rel="stylesheet" href="../css/application.css">
+  <link rel="stylesheet" href="../css/motor-admin.css?v=20261008-1">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
 
   <!-- Remix Icons -->
@@ -75,6 +76,7 @@
         <option value="approved">Approved</option>
         <option value="rejected">Rejected</option>
       </select>
+      <button class="btn-accept" id="manualMotorBtn" type="button"><i class="ri-tools-line"></i> Encode Manual Change Motor</button>
       <div class="date-export-controls">
         <label>Start Date<input type="date" id="startDate"></label>
         <label>End Date<input type="date" id="endDate"></label>
@@ -88,6 +90,7 @@
         <thead>
           <tr>
             <th>Request #</th>
+            <th>Source</th>
             <th>Operator</th>
             <th>Current Engine</th>
             <th>New Engine</th>
@@ -101,6 +104,37 @@
       </table>
     </div>
   </main>
+</div>
+
+<!-- MANUAL CHANGE MOTOR MODAL -->
+<div class="modal" id="manualMotorModal" hidden>
+  <div class="modal-box modal-large manual-motor-modal">
+    <div class="modal-head">
+      <div><h3>Encode Manual Change Motor Request</h3><p>For operators assisted by TFRO personnel</p></div>
+      <button class="modal-close" type="button" data-close="manualMotorModal"><i class="ri-close-line"></i></button>
+    </div>
+    <form class="modal-body" id="manualMotorForm">
+      <div class="manual-notice"><i class="ri-information-line"></i><span>Select an existing franchise. The official vehicle record changes only after this request is reviewed and approved.</span></div>
+      <div class="manual-motor-grid">
+        <label class="field-wide">Existing Franchise / Operator<select id="manualMotorFranchiseId" required><option value="">Select an existing franchise</option></select></label>
+        <label>Operator Full Name<input id="manualMotorOperatorName" readonly></label>
+        <label>Franchise Number<input id="manualMotorFranchiseNumber" readonly></label>
+        <label>Current Engine<input id="manualMotorOldEngine" readonly></label>
+        <label>Current Chassis<input id="manualMotorOldChassis" readonly></label>
+        <label>Current Plate<input id="manualMotorOldPlate" readonly></label>
+        <label>Current Motor Make / Model<input id="manualMotorOldModel" readonly></label>
+        <label>New Engine Number<input id="manualMotorNewEngine"></label>
+        <label>New Chassis Number<input id="manualMotorNewChassis"></label>
+        <label>New Plate Number<input id="manualMotorNewPlate"></label>
+        <label>New Motor Brand<input id="manualMotorNewBrand"></label>
+        <label>New Motor Model / Serial<input id="manualMotorNewSerial"></label>
+        <label>Request Date<input id="manualMotorRequestDate" type="date" required></label>
+        <label>Initial Status<select id="manualMotorStatus"><option value="pending_review">Pending Review</option><option value="reviewing">Reviewing</option></select></label>
+        <label class="field-wide">Remarks / Notes<textarea id="manualMotorNotes" rows="3" placeholder="Reason for the change or staff notes..."></textarea></label>
+      </div>
+      <div class="review-actions"><button class="btn-cancel" type="button" data-close="manualMotorModal">Cancel</button><button class="btn-accept" id="manualMotorSaveBtn" type="submit"><i class="ri-save-line"></i> Save Manual Change Motor</button></div>
+    </form>
+  </div>
 </div>
 
 <!-- REVIEW MODAL -->
@@ -132,7 +166,7 @@
   </div>
 </div>
 
-<script type="module" src="../js/motorequests.js?v=20260913-7"></script>
+<script type="module" src="../js/motorequests.js?v=20261008-1"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 </body>
 </html>
