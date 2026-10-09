@@ -6,6 +6,7 @@ import { openSubmissionForm } from "./submission-form.js?v=20260909-180000";
 
 let requests = [];
 let currentReq = null;
+let manualFranchises = [];
 
 function operatorName(request) {
   return request.operator_name || request.operator_profile?.full_name || "Operator";
@@ -41,7 +42,7 @@ async function verifyAccess() {
 async function loadRequests() {
   var res = await supabase
     .from("change_motor_requests")
-    .select("*, operator_profile:profiles!change_motor_requests_operator_id_fkey(full_name,contact_number), franchise:franchises!change_motor_requests_franchise_id_fkey(franchise_number,operator_name,address,contact_number,toda_name,route,motorcycle_brand,motorcycle_year_model)")
+    .select("*, operator_profile:profiles!change_motor_requests_operator_id_fkey(full_name,contact_number), encoder_profile:profiles!change_motor_requests_encoded_by_fkey(full_name), franchise:franchises!change_motor_requests_franchise_id_fkey(franchise_number,operator_name,address,contact_number,toda_name,route,motorcycle_brand,motorcycle_year_model)")
     .order("created_at", { ascending: false });
   if (res.error) { console.error(res.error); return alert("Could not load requests: " + res.error.message); }
   requests = res.data || [];
@@ -69,6 +70,7 @@ function renderTable() {
     ? rows.map(function (r) {
         return "<tr>" +
           "<td>" + escapeHTML(r.request_code || r.id) + "</td>" +
+          '<td><span class="source-badge ' + (r.submission_source === "staff_manual" ? "staff" : "online") + '">' + (r.submission_source === "staff_manual" ? "Staff Manual" : "Operator Online") + "</span></td>" +
           "<td>" + escapeHTML(operatorName(r)) + "</td>" +
           "<td>" + escapeHTML(r.old_engine_number) + "</td>" +
           "<td>" + escapeHTML(r.new_engine_number) + "</td>" +
@@ -80,7 +82,82 @@ function renderTable() {
           "</div></td>" +
         "</tr>";
       }).join("")
-    : '<tr><td colspan="8">No change motor requests found.</td></tr>';
+    : '<tr><td colspan="9">No change motor requests found.</td></tr>';
+}
+
+async function openManualMotor() {
+  var modal = el("manualMotorModal");
+  var trigger = el("manualMotorBtn");
+  var select = el("manualMotorFranchiseId");
+  var save = el("manualMotorSaveBtn");
+  el("manualMotorRequestDate").value = new Date().toISOString().slice(0, 10);
+  select.innerHTML = '<option value="">Loading franchise records…</option>';
+  select.disabled = true;
+  save.disabled = true;
+  trigger.disabled = true;
+  trigger.setAttribute("aria-busy", "true");
+  modal.hidden = false;
+
+  var result = await supabase.from("franchises")
+    .select("id,franchise_number,operator_name,engine_number,chassis_number,plate_number,motorcycle_brand,motorcycle_year_model,status")
+    .neq("status", "revoked").order("operator_name");
+  trigger.disabled = false;
+  trigger.removeAttribute("aria-busy");
+  if (result.error) {
+    select.innerHTML = '<option value="">Franchise records could not be loaded</option>';
+    alert("Could not load franchise records: " + result.error.message);
+    return;
+  }
+
+  manualFranchises = result.data || [];
+  select.innerHTML = '<option value="">Select an existing franchise</option>' + manualFranchises.map(function (franchise) {
+    return '<option value="' + franchise.id + '">' + escapeHTML(franchise.franchise_number) + " — " + escapeHTML(franchise.operator_name) + "</option>";
+  }).join("");
+  select.disabled = false;
+  save.disabled = false;
+}
+
+function fillManualMotorFranchise() {
+  var franchise = manualFranchises.find(function (row) { return String(row.id) === el("manualMotorFranchiseId").value; });
+  el("manualMotorOperatorName").value = franchise?.operator_name || "";
+  el("manualMotorFranchiseNumber").value = franchise?.franchise_number || "";
+  el("manualMotorOldEngine").value = franchise?.engine_number || "";
+  el("manualMotorOldChassis").value = franchise?.chassis_number || "";
+  el("manualMotorOldPlate").value = franchise?.plate_number || "";
+  el("manualMotorOldModel").value = [franchise?.motorcycle_brand, franchise?.motorcycle_year_model].filter(Boolean).join(" / ");
+}
+
+async function saveManualMotor(event) {
+  event.preventDefault();
+  var changedValues = ["manualMotorNewEngine", "manualMotorNewChassis", "manualMotorNewPlate", "manualMotorNewBrand", "manualMotorNewSerial"]
+    .map(function (id) { return el(id).value.trim(); });
+  if (!changedValues.some(Boolean)) {
+    alert("Enter at least one new engine, chassis, plate, motor brand, or model/serial value.");
+    return;
+  }
+
+  var submit = event.submitter || el("manualMotorSaveBtn");
+  submit.disabled = true;
+  var result = await supabase.rpc("create_manual_change_motor_request", {
+    p_franchise_id: Number(el("manualMotorFranchiseId").value),
+    p_request_date: el("manualMotorRequestDate").value,
+    p_new_engine_number: changedValues[0] || null,
+    p_new_chassis_number: changedValues[1] || null,
+    p_new_plate_number: changedValues[2] || null,
+    p_new_motor_brand: changedValues[3] || null,
+    p_new_motor_serial: changedValues[4] || null,
+    p_status: el("manualMotorStatus").value,
+    p_notes: el("manualMotorNotes").value.trim() || null,
+  });
+  submit.disabled = false;
+  if (result.error) {
+    alert("Could not create manual Change Motor request: " + result.error.message);
+    return;
+  }
+  el("manualMotorForm").reset();
+  el("manualMotorModal").hidden = true;
+  await loadRequests();
+  alert("Manual Change Motor request saved and added to the standard review workflow.");
 }
 
 async function openReview(id) {
@@ -103,9 +180,13 @@ async function openReview(id) {
   el("reviewBody").innerHTML =
     '<div class="review-info-grid">' +
       safeDetail("Request #", currentReq.request_code || currentReq.id) +
+      safeDetail("Submission Source", currentReq.submission_source === "staff_manual" ? "Staff Manual" : "Operator Online") +
+      safeDetail("Encoded By", currentReq.encoder_profile?.full_name) +
       safeDetail("Operator", resolvedOperatorName) +
       safeDetail("Status", statusBadge(currentReq.status), true) +
       detail("Date Submitted", currentReq.created_at ? new Date(currentReq.created_at).toLocaleString() : "—") +
+      safeDetail("Request Date", currentReq.request_date) +
+      safeDetail("Staff Notes", currentReq.staff_notes) +
       safeDetail("Current Engine", currentReq.old_engine_number) +
       safeDetail("Current Chassis", currentReq.old_chassis_number) +
       safeDetail("Current Plate", currentReq.old_plate_number) +
@@ -286,6 +367,8 @@ function bindEvents() {
     filename: "tfro_change_motor_requests",
     columns: [
       { header: "Request Number", value: (row) => row.request_code || row.id },
+      { header: "Submission Source", value: (row) => row.submission_source === "staff_manual" ? "Staff Manual" : "Operator Online" },
+      { header: "Encoded By", value: (row) => row.encoder_profile?.full_name },
       { header: "Operator", value: operatorName },
       { header: "Old Engine Number", value: (row) => row.old_engine_number },
       { header: "Old Chassis Number", value: (row) => row.old_chassis_number },
@@ -308,6 +391,9 @@ function bindEvents() {
     if (!btn) return;
     if (btn.dataset.action === "review") openReview(btn.dataset.id);
   });
+  el("manualMotorBtn").addEventListener("click", openManualMotor);
+  el("manualMotorFranchiseId").addEventListener("change", fillManualMotorFranchise);
+  el("manualMotorForm").addEventListener("submit", saveManualMotor);
   el("confirmRejectBtn").addEventListener("click", rejectRequest);
   document.querySelectorAll("[data-close]").forEach(function (btn) {
     btn.addEventListener("click", function () { el(btn.dataset.close).hidden = true; });
