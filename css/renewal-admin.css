@@ -16,10 +16,21 @@
 .renewal-review-modal{max-width:1050px;}
 #manualRenewalModal .renewal-review-modal{max-width:820px;border-top:4px solid #145187;}
 #manualRenewalModal .modal-head{background:linear-gradient(135deg,#f8fbff,#eef5fb);}
+#manualRenewalModal .modal-head p{margin-top:3px;color:#64748b;font-size:.8rem;}
 #manualRenewalModal .modal-body>p{margin:0 0 16px;padding:12px 14px;border-left:4px solid #f4c430;border-radius:8px;background:#fff8dc;color:#624f10;font-size:.86rem;line-height:1.5;}
 #manualRenewalModal .staff-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
 #manualRenewalModal input[readonly]{background:#eef3f7;color:#526477;cursor:not-allowed;}
 #manualRenewalModal .review-actions{position:static;margin-top:18px;background:transparent;}
+.manual-section-title{display:flex;align-items:center;gap:8px;margin:20px 0 12px;padding-bottom:8px;border-bottom:1px solid #dbe5ee;color:#145187;font-size:.95rem;}
+.manual-section-title:first-of-type{margin-top:4px;}
+.manual-section-title i{color:#b38b08;font-size:18px;}
+#manualRenewalModal .manual-field-wide{grid-column:1/-1;}
+#manualRenewalModal textarea{display:block;width:100%;margin-top:6px;padding:10px 11px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#17324d;font:inherit;resize:vertical;}
+#manualRenewalModal .checkbox-field{margin-top:0;min-height:44px;}
+.manual-approval-note{display:flex;align-items:flex-start;gap:8px;margin-top:16px;padding:11px 13px;border:1px solid #b8d4ed;border-radius:9px;background:#eef6fd;color:#174f86;font-size:.8rem;line-height:1.45;}
+.manual-approval-note i{margin-top:1px;font-size:17px;}
+.manual-renewal-actions{display:grid!important;grid-template-columns:auto minmax(150px,1fr) minmax(170px,1fr)!important;align-items:stretch!important;}
+.manual-renewal-actions button{justify-content:center;min-height:44px;}
 .review-section{border:1px solid #e2e8f0;border-radius:13px;padding:17px;margin-top:16px;background:#fbfdfc;}
 .review-section-title{display:flex;align-items:center;gap:10px;margin-bottom:15px;}
 .review-section-title>span{width:30px;height:30px;border-radius:50%;background:#123f73;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;}
@@ -54,5 +65,5 @@
 .status-badge{display:inline-flex;padding:5px 10px;border-radius:99px;font-size:.74rem;font-weight:700;text-transform:capitalize;}
 .status-badge.approved{background:#e2e8f0;color:#163d6b;}.status-badge.rejected{background:#fee2e2;color:#b91c1c;}.status-badge.pending{background:#fef3c7;color:#92400e;}
 @media(max-width:1180px){.renewal-export-controls{justify-content:flex-start}.renewal-export-controls label{flex:1}.renewal-export-controls input[type="date"]{width:100%}}
-@media(max-width:800px){.staff-grid,.inspection-grid{grid-template-columns:1fr 1fr}.renewal-doc-row{grid-template-columns:1fr}.renewal-actions{position:static;flex-direction:column}.renewal-actions button{width:100%;justify-content:center}.main-content>.toolbar .search-box,.main-content>.toolbar #statusFilter,.main-content>.toolbar #manualRenewalBtn{width:100%;max-width:none}.renewal-export-controls{align-items:stretch}.renewal-export-controls label{flex:1 1 140px}.renewal-export-controls .csv-btn{flex:1 1 100%}}
-@media(max-width:520px){.staff-grid,.inspection-grid,#manualRenewalModal .staff-grid{grid-template-columns:1fr}}
+@media(max-width:800px){.staff-grid,.inspection-grid{grid-template-columns:1fr 1fr}.renewal-doc-row{grid-template-columns:1fr}.renewal-actions{position:static;flex-direction:column}.renewal-actions button{width:100%;justify-content:center}.main-content>.toolbar .search-box,.main-content>.toolbar #statusFilter,.main-content>.toolbar #manualRenewalBtn{width:100%;max-width:none}.renewal-export-controls{align-items:stretch}.renewal-export-controls label{flex:1 1 140px}.renewal-export-controls .csv-btn{flex:1 1 100%}.manual-renewal-actions{grid-template-columns:1fr 1fr!important}.manual-renewal-actions .btn-cancel:first-child{grid-column:1/-1}}
+@media(max-width:520px){.staff-grid,.inspection-grid,#manualRenewalModal .staff-grid{grid-template-columns:1fr}#manualRenewalModal .manual-field-wide{grid-column:auto}.manual-renewal-actions{grid-template-columns:1fr!important}.manual-renewal-actions .btn-cancel:first-child{grid-column:auto}}
