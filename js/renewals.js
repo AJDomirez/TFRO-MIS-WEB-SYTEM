@@ -43,6 +43,8 @@ let currentRenewal = null;
 let currentDocuments = [];
 let currentProfile = null;
 let manualFranchises = [];
+let manualDrivers = [];
+let manualChangeMotors = [];
 const byId = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" })[char]);
 
@@ -97,17 +99,24 @@ async function openManualRenewal() {
   const trigger = byId("manualRenewalBtn");
   const franchiseSelect = byId("manualFranchiseId");
   const saveButton = byId("manualRenewalSaveBtn");
+  const approveButton = byId("manualRenewalApproveBtn");
 
-  byId("manualRequestDate").value = new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  byId("manualRequestDate").value = today;
+  byId("manualAssessmentDate").value = today;
+  byId("manualExpectedRelease").value = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+  byId("manualRenewalType").value = "regular";
+  renderManualChangeMotorOptions();
   franchiseSelect.innerHTML = '<option value="">Loading franchise records…</option>';
   franchiseSelect.disabled = true;
   saveButton.disabled = true;
+  approveButton.disabled = true;
   trigger.disabled = true;
   trigger.setAttribute("aria-busy", "true");
   modal.hidden = false;
 
   const { data, error } = await supabase.from("franchises")
-    .select("id,franchise_number,operator_name,contact_number,expiration_date,status")
+    .select("id,franchise_number,operator_name,contact_number,address,expiration_date,status,plate_number,engine_number,chassis_number,motorcycle_brand,motorcycle_year_model,official_receipt_number,chassis_cr_number,birth_date,birth_place,civil_status")
     .neq("status", "revoked").order("operator_name");
 
   trigger.disabled = false;
@@ -119,40 +128,129 @@ async function openManualRenewal() {
   }
 
   manualFranchises = data || [];
+  const franchiseIds = manualFranchises.map((franchise) => franchise.id);
+  const [driversResult, motorsResult] = await Promise.all([
+    franchiseIds.length ? supabase.from("drivers").select("id,franchise_id,full_name,license_number").in("franchise_id", franchiseIds).order("id") : Promise.resolve({ data: [], error: null }),
+    franchiseIds.length ? supabase.from("change_motor_requests").select("id,franchise_id,request_code,new_engine_number,new_chassis_number,new_plate_number").in("franchise_id", franchiseIds).eq("status", "approved").order("created_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (driversResult.error || motorsResult.error) alert(`Some linked details could not be loaded: ${(driversResult.error || motorsResult.error).message}`);
+  manualDrivers = driversResult.data || [];
+  manualChangeMotors = motorsResult.data || [];
   franchiseSelect.innerHTML = '<option value="">Select an existing franchise</option>' + manualFranchises.map((franchise) =>
     `<option value="${franchise.id}">${escapeHtml(franchise.franchise_number)} — ${escapeHtml(franchise.operator_name)}</option>`
   ).join("");
   franchiseSelect.disabled = false;
   saveButton.disabled = false;
+  approveButton.disabled = false;
 }
 
 function fillManualFranchise() {
   const franchise = manualFranchises.find((row) => String(row.id) === byId("manualFranchiseId").value);
+  const driver = manualDrivers.find((row) => String(row.franchise_id) === String(franchise?.id));
   byId("manualOperatorName").value = franchise?.operator_name || "";
   byId("manualFranchiseNumber").value = franchise?.franchise_number || "";
   byId("manualContact").value = franchise?.contact_number || "";
+  byId("manualOperatorAddress").value = franchise?.address || "";
+  byId("manualBirthDate").value = franchise?.birth_date || "";
+  byId("manualBirthPlace").value = franchise?.birth_place || "";
+  byId("manualCivilStatus").value = franchise?.civil_status || "";
+  byId("manualDriverName").value = driver?.full_name || "";
+  byId("manualDriverLicense").value = driver?.license_number || "";
+  byId("manualPlateNumber").value = franchise?.plate_number || "";
+  byId("manualEngineNumber").value = franchise?.engine_number || "";
+  byId("manualChassisNumber").value = franchise?.chassis_number || "";
+  byId("manualMotorcycleMake").value = franchise?.motorcycle_brand || "";
+  byId("manualMotorcycleModel").value = franchise?.motorcycle_year_model || "";
+  byId("manualCurrentOrNumber").value = franchise?.official_receipt_number || "";
+  byId("manualCurrentCrNumber").value = franchise?.chassis_cr_number || "";
+  byId("manualFranchiseCheck").value = franchise?.expiration_date && franchise.expiration_date < new Date().toISOString().slice(0, 10) ? "expired" : "up_to_date";
+  renderManualChangeMotorOptions();
+}
+
+function renderManualChangeMotorOptions() {
+  const isChangeMotor = byId("manualRenewalType").value === "change_motor";
+  const franchiseId = byId("manualFranchiseId").value;
+  const field = byId("manualChangeMotorField");
+  const select = byId("manualChangeMotorRequest");
+  field.hidden = !isChangeMotor;
+  select.required = isChangeMotor;
+  select.disabled = !isChangeMotor;
+  const matching = manualChangeMotors.filter((row) => String(row.franchise_id) === franchiseId);
+  select.innerHTML = '<option value="">Select an approved request</option>' + matching.map((row) =>
+    `<option value="${row.id}">${escapeHtml(row.request_code || `Request ${row.id}`)} — ${escapeHtml(row.new_engine_number || row.new_chassis_number || row.new_plate_number || "Approved")}</option>`
+  ).join("");
 }
 
 async function saveManualRenewal(event) {
   event.preventDefault();
   const submit = event.submitter;
+  const directApprove = submit?.dataset.directApprove === "true";
+  if (directApprove) {
+    const requiredChecks = byId("manualLtoVerified").checked && byId("manualRequirementsVerified").checked && byId("manualInspectionPassed").checked;
+    if (!requiredChecks) return alert("Confirm LTO verification, received hardcopies, and passed vehicle inspection before direct approval.");
+    if (!byId("manualAssessmentNumber").value.trim() || byId("manualAssessedAmount").value === "") return alert("Enter the assessment number and assessed amount.");
+    if (!byId("manualMtopNumber").value.trim() || !byId("manualExpectedRelease").value) return alert("Enter the MTOP number and expected release date.");
+    if (byId("manualOrClass").value !== "for_hire" || byId("manualCrClass").value !== "for_hire") return alert("OR and CR must both be verified as For Hire for direct approval.");
+    if (!confirm("Save and immediately approve this manual renewal? This will extend the official franchise expiration by three years.")) return;
+  }
+  if (byId("manualPaymentStatus").value === "paid" && !byId("manualPaymentOrNumber").value.trim()) return alert("Enter the Payment OR Number or set Payment Status to Pending — Pay Later.");
+
+  const details = {
+    request_date: byId("manualRequestDate").value,
+    renewal_type: byId("manualRenewalType").value,
+    change_motor_request_id: byId("manualChangeMotorRequest").value || null,
+    operator_contact: byId("manualContact").value.trim() || null,
+    operator_address: byId("manualOperatorAddress").value.trim() || null,
+    residential_street: byId("manualResidentialStreet").value.trim() || null,
+    residential_barangay: byId("manualResidentialBarangay").value.trim() || null,
+    applicant_birth_date: byId("manualBirthDate").value || null,
+    applicant_birth_place: byId("manualBirthPlace").value.trim() || null,
+    applicant_civil_status: byId("manualCivilStatus").value.trim() || null,
+    driver_name: byId("manualDriverName").value.trim() || null,
+    driver_license_number: byId("manualDriverLicense").value.trim() || null,
+    plate_number: byId("manualPlateNumber").value.trim() || null,
+    engine_number: byId("manualEngineNumber").value.trim() || null,
+    chassis_number: byId("manualChassisNumber").value.trim() || null,
+    motorcycle_make: byId("manualMotorcycleMake").value.trim() || null,
+    motorcycle_model: byId("manualMotorcycleModel").value.trim() || null,
+    current_or_number: byId("manualCurrentOrNumber").value.trim() || null,
+    current_or_date: byId("manualCurrentOrDate").value || null,
+    current_cr_number: byId("manualCurrentCrNumber").value.trim() || null,
+    pmbl_certificate_number: byId("manualPmblNumber").value.trim() || null,
+    franchise_check_status: byId("manualFranchiseCheck").value,
+    or_registration_class: byId("manualOrClass").value,
+    cr_registration_class: byId("manualCrClass").value,
+    lto_verified: byId("manualLtoVerified").checked,
+    requirements_verified: byId("manualRequirementsVerified").checked,
+    inspection_passed: byId("manualInspectionPassed").checked,
+    inspection_remarks: byId("manualInspectionRemarks").value.trim() || null,
+    hardcopy_notes: byId("manualHardcopyNotes").value.trim() || null,
+    assessment_number: byId("manualAssessmentNumber").value.trim() || null,
+    assessment_date: byId("manualAssessmentDate").value || null,
+    assessed_amount: byId("manualAssessedAmount").value === "" ? null : Number(byId("manualAssessedAmount").value),
+    payment_or_number: byId("manualPaymentStatus").value === "paid" ? byId("manualPaymentOrNumber").value.trim() : null,
+    mtop_number: byId("manualMtopNumber").value.trim() || null,
+    expected_release_date: byId("manualExpectedRelease").value || null,
+    staff_notes: byId("manualRenewalNotes").value.trim() || null,
+  };
   submit.disabled = true;
-  const { data, error } = await supabase.rpc("create_manual_franchise_renewal", {
+  const { data, error } = await supabase.rpc("create_complete_manual_franchise_renewal", {
     p_franchise_id: Number(byId("manualFranchiseId").value),
-    p_request_date: byId("manualRequestDate").value,
-    p_renewal_type: byId("manualRenewalType").value,
-    p_contact: byId("manualContact").value.trim() || null,
-    p_assessed_amount: byId("manualAssessedAmount").value === "" ? null : Number(byId("manualAssessedAmount").value),
-    p_payment_or_number: byId("manualPaymentOrNumber").value.trim() || null,
-    p_status: byId("manualRenewalStatus").value,
-    p_notes: byId("manualRenewalNotes").value.trim() || null,
+    p_details: details,
+    p_approve: directApprove,
   });
   submit.disabled = false;
   if (error) return alert(`Could not create manual renewal: ${error.message}`);
+  if (directApprove) {
+    const emailDelivery = await supabase.functions.invoke("send-renewal-approval", { body: { renewal_id: data.id } });
+    if (emailDelivery.error) console.warn("Approval email remains queued:", emailDelivery.error);
+  }
   byId("manualRenewalForm").reset();
   byId("manualRenewalModal").hidden = true;
   await loadRenewals();
-  alert("Manual renewal request saved and added to the standard review workflow.");
+  alert(directApprove
+    ? `Manual renewal ${data.renewal_code} approved. New franchise expiration: ${data.new_expiration_date}.`
+    : `Manual renewal ${data.renewal_code} saved as Pending Review.`);
 }
 
 async function signedUrl(path) {
@@ -354,7 +452,8 @@ async function saveDocumentReviews() {
 
 async function saveProgress(forcedStatus = null) {
   if (!currentRenewal) return;
-  const documentsComplete = await saveDocumentReviews();
+  const digitalDocumentsComplete = await saveDocumentReviews();
+  const documentsComplete = digitalDocumentsComplete || (currentRenewal.submission_source === "staff_manual" && currentRenewal.hardcopy_requirements_received);
   const inspections = inspectionResults();
   const inspectionPassed = INSPECTION_KEYS.every((key) => inspections[key]);
   const temporaryMtopIssued = !byId("temporaryMtop").disabled && byId("temporaryMtop").checked;
@@ -456,10 +555,11 @@ async function approveRenewal() {
   if (!byId("mtopNumber").value.trim()) return alert("Enter the MTOP number.");
   if (!byId("expectedRelease").value) return alert("Enter the expected MTOP release date.");
   try {
-    const documentsComplete = await saveDocumentReviews();
+    const digitalDocumentsComplete = await saveDocumentReviews();
+    const documentsComplete = digitalDocumentsComplete || (currentRenewal.submission_source === "staff_manual" && currentRenewal.hardcopy_requirements_received);
     const inspections = inspectionResults();
     const inspectionPassed = INSPECTION_KEYS.every((key) => inspections[key]);
-    if (!documentsComplete) return alert("All eight required documents must be verified before approval.");
+    if (!documentsComplete) return alert("Verify all required digital documents or confirm receipt of all original hardcopies before approval.");
     if (!inspectionPassed) return alert("All vehicle inspection items must pass before approval.");
     if (!byId("assessmentNumber").value.trim() || byId("assessedAmount").value === "") return alert("Enter the TFRO assessment number and assessed amount.");
     if (byId("franchiseCheck").value === "revoked") return alert("A revoked franchise cannot be renewed.");
@@ -526,6 +626,7 @@ bindDateCsvExport({
 byId("renewalsTable").addEventListener("click", (event) => { const button = event.target.closest("[data-review-id]"); if (button) openReview(button.dataset.reviewId); });
 byId("manualRenewalBtn").addEventListener("click", openManualRenewal);
 byId("manualFranchiseId").addEventListener("change", fillManualFranchise);
+byId("manualRenewalType").addEventListener("change", renderManualChangeMotorOptions);
 byId("manualRenewalForm").addEventListener("submit", saveManualRenewal);
 document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => { byId(button.dataset.close).hidden = true; }));
 byId("saveProgressBtn").addEventListener("click", handleSaveProgress);
