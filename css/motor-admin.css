@@ -1,7 +1,10 @@
 .main-content>.toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;}
+.main-content>.records-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) minmax(180px,220px) auto auto;align-items:end;width:100%;overflow:visible;}
 .main-content>.toolbar .search-box{flex:1 1 270px;}
 #manualMotorBtn{min-height:42px;white-space:nowrap;}
-.main-content>.toolbar .date-export-controls{flex:1 1 100%;justify-content:flex-end;margin:0;padding-top:2px;}
+.main-content>.toolbar .date-export-controls{justify-content:flex-end;margin:0;padding:0;flex-wrap:nowrap;}
+.motor-requests-table .actions button{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid #bfd0df;border-radius:9px;background:#eef5fb;color:#145187;font-size:18px;cursor:pointer;box-shadow:none;}
+.motor-requests-table .actions button:hover{border-color:#145187;background:#145187;color:#fff;}
 .manual-motor-modal{max-width:900px;border-top:4px solid #145187;}
 .manual-motor-modal .modal-head{background:linear-gradient(135deg,#f8fbff,#eef5fb);}
 .manual-motor-modal .modal-head p{margin-top:3px;color:#64748b;font-size:.8rem;}
@@ -16,4 +19,5 @@
 .source-badge{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:.73rem;font-weight:800;white-space:nowrap;}
 .source-badge.staff{background:#fff1bf;color:#765d08;}
 .source-badge.online{background:#dcecff;color:#145187;}
-@media(max-width:760px){#manualMotorBtn,.main-content>.toolbar #statusFilter{width:100%;}.main-content>.toolbar .date-export-controls{justify-content:stretch}.manual-motor-grid{grid-template-columns:1fr}.manual-motor-grid .field-wide{grid-column:auto}}
+@media(max-width:1380px){.main-content>.records-toolbar{grid-template-columns:minmax(240px,1fr) minmax(180px,220px) auto}.main-content>.records-toolbar .date-export-controls{grid-column:1/-1;justify-content:flex-end}.main-content>.records-toolbar .date-export-controls label{flex:0 1 180px}.main-content>.records-toolbar .date-export-controls input{width:100%}}
+@media(max-width:760px){.main-content>.records-toolbar{display:grid;grid-template-columns:1fr}#manualMotorBtn,.main-content>.toolbar #statusFilter{width:100%;}.main-content>.records-toolbar .date-export-controls{grid-column:auto;display:grid;grid-template-columns:1fr 1fr;justify-content:stretch;width:100%}.main-content>.records-toolbar .date-export-controls label{min-width:0}.main-content>.records-toolbar .date-export-controls .csv-btn{grid-column:1/-1;width:100%}.manual-motor-grid{grid-template-columns:1fr}.manual-motor-grid .field-wide{grid-column:auto}}
