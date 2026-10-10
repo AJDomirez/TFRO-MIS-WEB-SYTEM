@@ -6,8 +6,8 @@
   <title>TFRO Violations</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
 
-<link rel="stylesheet" href="../css/violation.css?v=20261010-1">
-  <link rel="stylesheet" href="../css/tfro-theme.css?v=20261010-1">
+<link rel="stylesheet" href="../css/violation.css?v=20261010-2">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20261010-2">
 
   <!-- Remix Icons -->
   <link
@@ -186,7 +186,7 @@
         <label>Discounted Amount (PHP)<input name="discounted" type="number" min="0" step="0.01" value="0" required></label>
         <label>Franchise number<input name="franchise_number" placeholder="Required when applicable"></label>
         <label>Ticket number<input name="ticket_number" required></label>
-        <label>Apprehending enforcer/s<select name="enforcer_ids" id="violationEnforcers" multiple required size="5"><option disabled>Loading active enforcers…</option></select><small>Hold Ctrl (Windows) or Command (Mac) to select multiple enforcers.</small><span class="enforcer-commission-preview" id="enforcerCommissionPreview">Select enforcers to preview their 20% commission share.</span></label>
+        <div class="enforcer-picker-field"><span class="enforcer-picker-title">Apprehending enforcer/s <small>Select every enforcer involved</small></span><div class="enforcer-checkbox-list" id="violationEnforcers" role="group" aria-label="Apprehending enforcers"><p>Loading active enforcers…</p></div><span class="enforcer-selection-help"><i class="ri-checkbox-multiple-line"></i> You can check multiple enforcers. No Ctrl or Command key is required.</span><span class="enforcer-commission-preview" id="enforcerCommissionPreview">Select enforcers to preview their 20% commission share.</span></div>
         <label>Penalty (PHP)<input name="penalty" type="number" min="0" step="0.01" required readonly></label>
         <label>Date<input name="occurred_date" type="date" required></label>
         <label>Status<select name="status"><option value="pending">Pending payment</option><option value="paid" disabled>Paid (set after Treasurer payment)</option><option value="dismissed">Dismissed</option></select></label>
@@ -253,7 +253,7 @@
   </div>
 </div>
 
-<script type="module" src="../js/violation.js?v=20261010-1"></script>
+<script type="module" src="../js/violation.js?v=20261010-2"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 </body>
 </html>
