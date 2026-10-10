@@ -50,6 +50,10 @@ function paidPayment(row) {
   return related.find((payment) => payment.status === "paid") || null;
 }
 
+function cityTreasurerOrNumber(row) {
+  return row.treasurer_receipt_number || paidPayment(row)?.receipt || "";
+}
+
 function netAmount(row) {
   return Math.max(Number(row.penalty || 0) - Number(row.discounted || 0), 0);
 }
@@ -92,7 +96,7 @@ function filteredViolations() {
   const status = document.getElementById("statusFilter").value;
   return violations.filter((row) => isWithinDateRange(row.occurred_at)
     && (status === "all" || row.status === status)
-    && [row.subject_name || "", row.violation_code || "", row.ticket_number || "", row.violation_type || "", row.description || "", row.apprehending_officers || "", ...(row.payments || []).map((payment) => payment.receipt || "")]
+    && [row.subject_name || "", row.violation_code || "", row.ticket_number || "", row.violation_type || "", row.description || "", row.apprehending_officers || "", cityTreasurerOrNumber(row), ...(row.payments || []).map((payment) => payment.receipt || "")]
       .some((value) => value.toLowerCase().includes(term)));
 }
 
@@ -118,7 +122,7 @@ function render() {
       <td>${formatDate(payment?.paid_at)}</td>
       <td>${escapeHtml(row.ticket_number || "—")}</td>
       <td>${payment ? money.format(Number(payment.amount || 0)) : '<span class="commission-pending">Pending</span>'}</td>
-      <td>${escapeHtml(payment?.receipt || "—")}</td>
+      <td>${escapeHtml(cityTreasurerOrNumber(row) || "—")}</td>
       <td><span class="commission-rate-badge">${payment ? `${(Number(payment.commission_rate || 0.2) * 100).toFixed(0)}%` : "20%"}</span></td>
       <td class="commission-total-cell">${payment ? `<strong>${money.format(Number(payment.total_commission || 0))}</strong><small>${Number(payment.enforcer_count || 0)} enforcer(s)</small>` : '<span class="commission-pending">Pending payment</span>'}</td>
       <td><div class="enforcer-commission-list">${renderEnforcerCommissions(row, payment)}</div></td>
@@ -474,7 +478,7 @@ function bindEvents() {
       { header: "Date Paid", value: (row) => paidPayment(row)?.paid_at || "" },
       { header: "Ticket No.", value: (row) => row.ticket_number },
       { header: "Total Payment", value: (row) => paidPayment(row)?.amount || 0 },
-      { header: "OR No./Receipt", value: (row) => paidPayment(row)?.receipt || "" },
+      { header: "City Treasurer OR No.", value: (row) => cityTreasurerOrNumber(row) },
       { header: "Commission Rate", value: (row) => paidPayment(row)?.commission_rate ?? 0.20 },
       { header: "Total Commission", value: (row) => paidPayment(row)?.total_commission || 0 },
       { header: "Number of Enforcers", value: (row) => paidPayment(row)?.enforcer_count || assignedEnforcers(row).length },
