@@ -58,6 +58,26 @@ function assignedEnforcers(row) {
   return (row.violation_enforcers || []).map((assignment) => assignment.traffic_enforcers).filter(Boolean);
 }
 
+function enforcerColorIndex(value) {
+  return [...String(value ?? "")].reduce((total, character) => total + character.charCodeAt(0), 0) % 6;
+}
+
+function paidCommissionShares(row) {
+  return paidPayment(row)?.payment_enforcer_commissions || [];
+}
+
+function renderEnforcerCommissions(row, payment) {
+  const shares = paidCommissionShares(row);
+  if (shares.length) return shares.map((share) => {
+    const enforcer = share.traffic_enforcers || {};
+    return `<span class="enforcer-commission-chip enforcer-color-${enforcerColorIndex(share.enforcer_id)}"><b>${escapeHtml(enforcer.full_name || enforcer.enforcer_id || "Enforcer")}</b><em>${money.format(Number(share.commission_amount || 0))}</em></span>`;
+  }).join("");
+  const assigned = assignedEnforcers(row);
+  if (assigned.length) return assigned.map((enforcer) => `<span class="enforcer-commission-chip enforcer-color-${enforcerColorIndex(enforcer.enforcer_id)}"><b>${escapeHtml(enforcer.full_name)} <small>${escapeHtml(enforcer.enforcer_id)}</small></b><em>${payment ? money.format(Number(payment.individual_commission || 0)) : "Pending"}</em></span>`).join("");
+  if (row.apprehending_officers) return `<span class="enforcer-commission-chip commission-unassigned"><b>${escapeHtml(row.apprehending_officers)}<small>Legacy name — link to roster</small></b><em>${payment ? `Unassigned ${money.format(Number(payment.total_commission || 0))}` : "Pending"}</em></span>`;
+  return "—";
+}
+
 function showToast(message) {
   const toast = document.getElementById("violationToast");
   if (!toast) return;
@@ -78,10 +98,15 @@ function filteredViolations() {
 
 function render() {
   const rows = filteredViolations();
+  const filteredPaymentTotal = rows.reduce((sum, row) => sum + Number(paidPayment(row)?.amount || 0), 0);
+  const filteredCommissionTotal = rows.reduce((sum, row) => sum + Number(paidPayment(row)?.total_commission || 0), 0);
   document.getElementById("violationTotal").textContent = violations.length;
   document.getElementById("violationPending").textContent = violations.filter((row) => row.status === "pending").length;
   document.getElementById("violationPaid").textContent = violations.filter((row) => row.status === "paid").length;
   document.getElementById("violationAmount").textContent = money.format(violations.reduce((sum, row) => sum + netAmount(row), 0));
+  document.getElementById("violationCommissionTotal").textContent = money.format(violations.reduce((sum, row) => sum + Number(paidPayment(row)?.total_commission || 0), 0));
+  document.getElementById("violationsPaymentTotal").textContent = money.format(filteredPaymentTotal);
+  document.getElementById("violationsCommissionTotal").textContent = money.format(filteredCommissionTotal);
   table.innerHTML = rows.length ? rows.map((row) => {
     const payment = paidPayment(row);
     return `<tr>
@@ -92,10 +117,11 @@ function render() {
       <td><strong>${escapeHtml(row.violation_code || "—")}</strong><br>${escapeHtml(row.violation_type)}</td>
       <td>${formatDate(payment?.paid_at)}</td>
       <td>${escapeHtml(row.ticket_number || "—")}</td>
-      <td>${money.format(Number(payment?.amount ?? netAmount(row)))}</td>
+      <td>${payment ? money.format(Number(payment.amount || 0)) : '<span class="commission-pending">Pending</span>'}</td>
       <td>${escapeHtml(payment?.receipt || "—")}</td>
-      <td>${payment ? `<strong>${Number(payment.commission_rate || 0.2) * 100}%</strong><br>Total: ${money.format(payment.total_commission || 0)}<br>${Number(payment.enforcer_count || 0)} enforcer(s)<br>Each: ${money.format(payment.individual_commission || 0)}` : "Pending payment"}</td>
-      <td>${escapeHtml(assignedEnforcers(row).map((enforcer) => `${enforcer.full_name} (${enforcer.enforcer_id})`).join(", ") || row.apprehending_officers || "—")}</td>
+      <td><span class="commission-rate-badge">${payment ? `${(Number(payment.commission_rate || 0.2) * 100).toFixed(0)}%` : "20%"}</span></td>
+      <td class="commission-total-cell">${payment ? `<strong>${money.format(Number(payment.total_commission || 0))}</strong><small>${Number(payment.enforcer_count || 0)} enforcer(s)</small>` : '<span class="commission-pending">Pending payment</span>'}</td>
+      <td><div class="enforcer-commission-list">${renderEnforcerCommissions(row, payment)}</div></td>
       <td>${row.ticket_photo_path
         ? `<button type="button" class="photo-link" data-action="photo" data-id="${row.id}" title="View ticket image submitted by the TFRO Enforcer"><i class="ri-image-line"></i> View Ticket Image</button>`
         : '<span class="ticket-image-missing">No image submitted</span>'}</td>
@@ -111,7 +137,7 @@ function render() {
             : ""}
       </div></td>
     </tr>`;
-  }).join("") : '<tr><td colspan="13">No violations found.</td></tr>';
+  }).join("") : '<tr><td colspan="14">No violations found.</td></tr>';
 }
 
 function printNotice(row) {
@@ -243,6 +269,24 @@ function applyCatalogSelection() {
   const selected = [...form.querySelectorAll('input[name="violation_codes"]:checked')]
     .map((input) => catalog.find((entry) => entry.code === input.value)).filter(Boolean);
   form.elements.penalty.value = selected.length ? selected.reduce((sum, item) => sum + Number(item.penalty || 0), 0).toFixed(2) : "";
+  updateEnforcerCommissionPreview();
+}
+
+function updateEnforcerCommissionPreview() {
+  const selectedIds = [...form.elements.enforcer_ids.selectedOptions].map((option) => Number(option.value));
+  const paymentAmount = Math.max(Number(form.elements.penalty.value || 0) - Number(form.elements.discounted.value || 0), 0);
+  const totalCommission = Math.round(paymentAmount * 0.20 * 100) / 100;
+  const preview = document.getElementById("enforcerCommissionPreview");
+  if (!selectedIds.length) {
+    preview.innerHTML = "Select enforcers to preview their 20% commission share.";
+    return;
+  }
+  const totalCents = Math.round(totalCommission * 100);
+  const sortedIds = [...selectedIds].sort((left, right) => left - right);
+  const baseCents = Math.floor(totalCents / sortedIds.length);
+  const remainderCents = totalCents % sortedIds.length;
+  const shares = new Map(sortedIds.map((id, index) => [id, (baseCents + (index < remainderCents ? 1 : 0)) / 100]));
+  preview.innerHTML = `<b>Estimated after payment: ${money.format(totalCommission)} total</b><span>${enforcers.filter((enforcer) => selectedIds.includes(enforcer.id)).map((enforcer) => `<i class="enforcer-commission-chip enforcer-color-${enforcerColorIndex(enforcer.enforcer_id)}"><b>${escapeHtml(enforcer.full_name)}</b><em>${money.format(shares.get(enforcer.id) || 0)}</em></i>`).join("")}</span>`;
 }
 
 function setFormMode(mode, row = null) {
@@ -273,6 +317,7 @@ function setFormMode(mode, row = null) {
     form.elements.penalty.value = "";
     form.elements.status.value = "pending";
   }
+  updateEnforcerCommissionPreview();
 
   formPanel.removeAttribute("hidden");
   document.getElementById("addViolationBtn").setAttribute("aria-expanded", "true");
@@ -390,6 +435,8 @@ function bindEvents() {
     document.getElementById("cancelViolationBtn").addEventListener("click", closeViolationForm);
     form.addEventListener("submit", saveViolation);
     document.getElementById("violationChecklist").addEventListener("change", applyCatalogSelection);
+    document.getElementById("violationEnforcers").addEventListener("change", updateEnforcerCommissionPreview);
+    form.elements.discounted.addEventListener("input", updateEnforcerCommissionPreview);
   }
   document.getElementById("searchInput").addEventListener("input", render);
   document.getElementById("statusFilter").addEventListener("change", render);
@@ -426,12 +473,13 @@ function bindEvents() {
       { header: "Violation", value: (row) => `${row.violation_code || ""} ${row.violation_type || ""}`.trim() },
       { header: "Date Paid", value: (row) => paidPayment(row)?.paid_at || "" },
       { header: "Ticket No.", value: (row) => row.ticket_number },
-      { header: "Total Amount", value: (row) => paidPayment(row)?.amount ?? netAmount(row) },
+      { header: "Total Payment", value: (row) => paidPayment(row)?.amount || 0 },
       { header: "OR No./Receipt", value: (row) => paidPayment(row)?.receipt || "" },
       { header: "Commission Rate", value: (row) => paidPayment(row)?.commission_rate ?? 0.20 },
       { header: "Total Commission", value: (row) => paidPayment(row)?.total_commission || 0 },
       { header: "Number of Enforcers", value: (row) => paidPayment(row)?.enforcer_count || assignedEnforcers(row).length },
       { header: "Individual Commission", value: (row) => paidPayment(row)?.individual_commission || 0 },
+      { header: "Enforcer Commission Shares", value: (row) => paidCommissionShares(row).map((share) => `${share.traffic_enforcers?.full_name || share.enforcer_id}: ${Number(share.commission_amount || 0).toFixed(2)}`).join("; ") },
       { header: "Enforcers", value: (row) => assignedEnforcers(row).map((enforcer) => enforcer.full_name).join(", ") || row.apprehending_officers },
     ],
   });

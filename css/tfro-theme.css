@@ -1761,3 +1761,24 @@ html[data-theme="dark"] body.admin-sidebar :is(#manualRenewalBtn,#manualMotorBtn
 html[data-theme="dark"] body.admin-sidebar :is(#manualRenewalBtn,#manualMotorBtn):hover{
   background:linear-gradient(135deg,#1c5f91,#287cad) !important;
 }
+
+/* Stable enforcer identity colors used in the violation ledger and registry. */
+.enforcer-color-0{--enforcer-bg:#dbeafe;--enforcer-border:#60a5fa;--enforcer-text:#1e3a8a}
+.enforcer-color-1{--enforcer-bg:#dcfce7;--enforcer-border:#4ade80;--enforcer-text:#166534}
+.enforcer-color-2{--enforcer-bg:#fef3c7;--enforcer-border:#fbbf24;--enforcer-text:#854d0e}
+.enforcer-color-3{--enforcer-bg:#f3e8ff;--enforcer-border:#c084fc;--enforcer-text:#6b21a8}
+.enforcer-color-4{--enforcer-bg:#ffe4e6;--enforcer-border:#fb7185;--enforcer-text:#9f1239}
+.enforcer-color-5{--enforcer-bg:#cffafe;--enforcer-border:#22d3ee;--enforcer-text:#155e75}
+html[data-theme="dark"] .enforcer-color-0{--enforcer-bg:#183b62;--enforcer-border:#60a5fa;--enforcer-text:#dbeafe}
+html[data-theme="dark"] .enforcer-color-1{--enforcer-bg:#17452d;--enforcer-border:#4ade80;--enforcer-text:#dcfce7}
+html[data-theme="dark"] .enforcer-color-2{--enforcer-bg:#4c3913;--enforcer-border:#fbbf24;--enforcer-text:#fef3c7}
+html[data-theme="dark"] .enforcer-color-3{--enforcer-bg:#40205f;--enforcer-border:#c084fc;--enforcer-text:#f3e8ff}
+html[data-theme="dark"] .enforcer-color-4{--enforcer-bg:#562432;--enforcer-border:#fb7185;--enforcer-text:#ffe4e6}
+html[data-theme="dark"] .enforcer-color-5{--enforcer-bg:#164653;--enforcer-border:#22d3ee;--enforcer-text:#cffafe}
+html[data-theme="dark"] body.admin-sidebar .enforcer-commission-preview{background:#102d48!important;border-color:#35536f!important;color:#dbeafe!important}
+html[data-theme="dark"] body.admin-sidebar .commission-rate-badge{background:#183b62!important;border-color:#60a5fa!important;color:#dbeafe!important}
+html[data-theme="dark"] body.admin-sidebar .commission-total-cell small{color:#b8c9db!important}
+html[data-theme="dark"] body.admin-sidebar .commission-pending{color:#ffe59a!important}
+html[data-theme="dark"] body.admin-sidebar :is(.violation-totals-row th,tfoot th){background:#102d48!important;border-top-color:#60a5fa!important;color:#edf5ff!important}
+html[data-theme="dark"] body.admin-sidebar .enforcer-total-commission{background:#17452d!important;color:#dcfce7!important}
+html[data-theme="dark"] body.admin-sidebar .commission-unassigned{--enforcer-bg:#562432;--enforcer-border:#fb7185;--enforcer-text:#ffe4e6}

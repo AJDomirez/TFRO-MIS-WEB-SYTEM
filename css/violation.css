@@ -321,6 +321,19 @@ th{
 }
 .actions .payment-action,.actions .release-action{width:auto;min-height:34px;padding:6px 9px;gap:5px;color:#fff;font-weight:800;white-space:nowrap}.actions .payment-action{border-bottom:3px solid #f4c430;background:#123f73}.actions .release-action{border-bottom:3px solid #77c69c;background:#17613d}.actions .payment-action:hover{background:#0d4778}.actions .release-action:hover{background:#124f32}.workflow-waiting{display:inline-flex;align-items:center;gap:5px;padding:7px 9px;border-radius:8px;background:#fff5d9;color:#805f08;font-size:11px;font-weight:800;white-space:nowrap}
 
+.staff-summary{grid-template-columns:repeat(5,minmax(0,1fr));}
+.enforcer-commission-preview{display:grid;gap:8px;margin-top:8px;padding:10px;border:1px solid #cbd5e1;border-radius:9px;background:#f8fafc;color:#334155;font-size:12px;line-height:1.4;}
+.enforcer-commission-preview>span,.enforcer-commission-list{display:flex;flex-wrap:wrap;gap:6px;}
+.enforcer-commission-chip{display:inline-flex;align-items:center;justify-content:space-between;gap:9px;min-width:150px;padding:7px 9px;border:1px solid var(--enforcer-border);border-radius:8px;background:var(--enforcer-bg);color:var(--enforcer-text);font-style:normal;white-space:nowrap;}
+.enforcer-commission-chip b{font-size:11px;}.enforcer-commission-chip b small{display:block;color:inherit;font-size:9px;font-weight:600;opacity:.78}.enforcer-commission-chip em{font-size:11px;font-style:normal;font-weight:900;}
+.commission-rate-badge{display:inline-flex;padding:6px 9px;border:1px solid #93c5fd;border-radius:999px;background:#dbeafe;color:#1e3a8a;font-weight:900;}
+.commission-unassigned{--enforcer-bg:#fff1f2;--enforcer-border:#fb7185;--enforcer-text:#9f1239;white-space:normal}.commission-unassigned em{max-width:110px;white-space:normal;text-align:right}
+.commission-total-cell strong,.commission-total-cell small{display:block;white-space:nowrap}.commission-total-cell small{margin-top:4px;color:#64748b;font-size:10px}.commission-pending{color:#8a6a09;font-size:11px;font-weight:800;white-space:nowrap;}
+.violation-totals-row th{position:sticky;bottom:0;background:#eaf1f7!important;color:#0d4778!important;border-top:2px solid #145187!important;font-weight:900!important;white-space:nowrap;}
+.violation-totals-row th:first-child{text-align:right;}
+@media(max-width:1200px){.staff-summary{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(max-width:700px){.staff-summary{grid-template-columns:1fr 1fr}.enforcer-commission-chip{min-width:0;width:100%}}
+
 .actions button[data-action="edit"]{
   color:#124b7a;
   border:1px solid #e2e8f0;
