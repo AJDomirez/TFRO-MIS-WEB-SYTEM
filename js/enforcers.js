@@ -4,10 +4,13 @@ import { logAudit } from "./audit-helper.js";
 
 let enforcers = [];
 let ticketCounts = new Map();
+let commissionTotals = new Map();
 let profilePictures = new Map();
 let registryChanges = null;
+const money = new Intl.NumberFormat("en-PH", { style:"currency", currency:"PHP" });
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" }[character]));
 const normalize = (value) => String(value || "").toLowerCase().trim();
+const enforcerColorIndex = (value) => [...String(value ?? "")].reduce((total, character) => total + character.charCodeAt(0), 0) % 6;
 function showMessage(text, error = false) { const element = document.getElementById("enforcerFormMessage"); element.textContent = text; element.hidden = !text; element.classList.toggle("error", error); }
 
 function renderEnforcers() {
@@ -17,21 +20,29 @@ function renderEnforcers() {
   document.getElementById("activeEnforcers").textContent = enforcers.filter((row) => row.status === "active").length;
   document.getElementById("linkedEnforcers").textContent = enforcers.filter((row) => row.user_id).length;
   document.getElementById("submittedTickets").textContent = [...ticketCounts.values()].reduce((sum, count) => sum + count, 0);
-  document.getElementById("enforcerTable").innerHTML = rows.length ? rows.map((row) => `<tr><td><strong>${escapeHtml(row.enforcer_id)}</strong></td><td>${escapeHtml(row.full_name)}<br><small>${escapeHtml(row.email || "")}</small></td><td>${escapeHtml(row.contact_number || "—")}</td><td>${escapeHtml(row.unit_assignment || "—")}</td><td><span class="${row.user_id ? "account-linked" : "account-waiting"}">${row.user_id ? "Linked" : "Awaiting signup"}</span></td><td><select class="status-select" data-status-id="${row.id}" aria-label="Status for ${escapeHtml(row.full_name)}"><option value="active"${row.status === "active" ? " selected" : ""}>Active</option><option value="suspended"${row.status === "suspended" ? " selected" : ""}>Suspended</option><option value="inactive"${row.status === "inactive" ? " selected" : ""}>Inactive</option></select></td><td>${ticketCounts.get(row.user_id) || 0}</td><td><div class="registry-actions"><button class="row-action" data-view-id="${row.id}">View Form</button><button class="row-action" data-save-id="${row.id}">Save</button></div></td></tr>`).join("") : '<tr><td class="empty-row" colspan="8">No TFRO Enforcers found.</td></tr>';
+  const allCommissionTotal = [...commissionTotals.values()].reduce((sum, amount) => sum + amount, 0);
+  document.getElementById("totalEnforcerCommissions").textContent = money.format(allCommissionTotal);
+  document.getElementById("enforcerTicketTotal").textContent = rows.reduce((sum, row) => sum + (ticketCounts.get(row.id) || 0), 0);
+  document.getElementById("enforcerCommissionFooter").textContent = money.format(rows.reduce((sum, row) => sum + (commissionTotals.get(row.id) || 0), 0));
+  document.getElementById("enforcerTable").innerHTML = rows.length ? rows.map((row) => `<tr class="enforcer-registry-row enforcer-color-${enforcerColorIndex(row.enforcer_id)}"><td><strong>${escapeHtml(row.enforcer_id)}</strong></td><td><span class="enforcer-name-chip enforcer-color-${enforcerColorIndex(row.enforcer_id)}"><i class="ri-shield-user-line"></i>${escapeHtml(row.full_name)}</span><br><small>${escapeHtml(row.email || "")}</small></td><td>${escapeHtml(row.contact_number || "—")}</td><td>${escapeHtml(row.unit_assignment || "—")}</td><td><span class="${row.user_id ? "account-linked" : "account-waiting"}">${row.user_id ? "Linked" : "Awaiting signup"}</span></td><td><select class="status-select" data-status-id="${row.id}" aria-label="Status for ${escapeHtml(row.full_name)}"><option value="active"${row.status === "active" ? " selected" : ""}>Active</option><option value="suspended"${row.status === "suspended" ? " selected" : ""}>Suspended</option><option value="inactive"${row.status === "inactive" ? " selected" : ""}>Inactive</option></select></td><td><strong>${ticketCounts.get(row.id) || 0}</strong></td><td><span class="enforcer-total-commission">${money.format(commissionTotals.get(row.id) || 0)}</span></td><td><div class="registry-actions"><button class="row-action" data-view-id="${row.id}">View Form</button><button class="row-action" data-save-id="${row.id}">Save</button></div></td></tr>`).join("") : '<tr><td class="empty-row" colspan="9">No TFRO Enforcers found.</td></tr>';
 }
 
 async function loadData() {
-  const [enforcerResult, ticketResult, profileResult] = await Promise.all([
+  const [enforcerResult, ticketResult, commissionResult, profileResult] = await Promise.all([
     supabase.from("traffic_enforcers").select("*").order("created_at", { ascending:false }),
-    supabase.from("violations").select("recorded_by"),
+    supabase.from("violation_enforcers").select("enforcer_id"),
+    supabase.from("payment_enforcer_commissions").select("enforcer_id,commission_amount"),
     supabase.from("profiles").select("id,profile_picture_path"),
   ]);
   if (enforcerResult.error) throw enforcerResult.error;
   if (ticketResult.error) throw ticketResult.error;
+  if (commissionResult.error) throw commissionResult.error;
   enforcers = enforcerResult.data || [];
   profilePictures = new Map((profileResult.data || []).map((profile) => [profile.id,profile.profile_picture_path]));
   ticketCounts = new Map();
-  (ticketResult.data || []).forEach((row) => { if (row.recorded_by) ticketCounts.set(row.recorded_by, (ticketCounts.get(row.recorded_by) || 0) + 1); });
+  (ticketResult.data || []).forEach((row) => { if (row.enforcer_id) ticketCounts.set(row.enforcer_id, (ticketCounts.get(row.enforcer_id) || 0) + 1); });
+  commissionTotals = new Map();
+  (commissionResult.data || []).forEach((row) => { if (row.enforcer_id) commissionTotals.set(row.enforcer_id, (commissionTotals.get(row.enforcer_id) || 0) + Number(row.commission_amount || 0)); });
   renderEnforcers();
 }
 
@@ -45,7 +56,7 @@ function watchRegistryChanges() {
 }
 
 const detail = (label,value) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value || "—")}</strong></div>`;
-async function viewProfile(id) { const row=enforcers.find((item)=>String(item.id)===String(id)); if(!row)return; document.getElementById("enforcerProfileDetails").innerHTML=[detail("Full Name",row.full_name),detail("Enforcer ID",row.enforcer_id),detail("Email",row.email),detail("Contact Number",row.contact_number),detail("Unit / Assignment",row.unit_assignment),detail("Account",row.user_id?"Linked":"Awaiting signup"),detail("Status",row.status),detail("Tickets Submitted",ticketCounts.get(row.user_id)||0),detail("Registered",row.created_at?new Date(row.created_at).toLocaleString("en-PH"):"—")].join(""); const image=document.getElementById("enforcerFormalPhoto"),missing=document.getElementById("enforcerPhotoMissing"); image.hidden=true; image.removeAttribute("src"); missing.hidden=false; const path=profilePictures.get(row.user_id); if(path){const {data}=await supabase.storage.from("account-profile-pictures").createSignedUrl(path,600);if(data?.signedUrl){image.src=data.signedUrl;image.hidden=false;missing.hidden=true;}} document.getElementById("enforcerProfileModal").hidden=false;}
+async function viewProfile(id) { const row=enforcers.find((item)=>String(item.id)===String(id)); if(!row)return; document.getElementById("enforcerProfileDetails").innerHTML=[detail("Full Name",row.full_name),detail("Enforcer ID",row.enforcer_id),detail("Email",row.email),detail("Contact Number",row.contact_number),detail("Unit / Assignment",row.unit_assignment),detail("Account",row.user_id?"Linked":"Awaiting signup"),detail("Status",row.status),detail("Assigned Tickets",ticketCounts.get(row.id)||0),detail("Total Commission",money.format(commissionTotals.get(row.id)||0)),detail("Registered",row.created_at?new Date(row.created_at).toLocaleString("en-PH"):"—")].join(""); const image=document.getElementById("enforcerFormalPhoto"),missing=document.getElementById("enforcerPhotoMissing"); image.hidden=true; image.removeAttribute("src"); missing.hidden=false; const path=profilePictures.get(row.user_id); if(path){const {data}=await supabase.storage.from("account-profile-pictures").createSignedUrl(path,600);if(data?.signedUrl){image.src=data.signedUrl;image.hidden=false;missing.hidden=true;}} document.getElementById("enforcerProfileModal").hidden=false;}
 
 async function createEnforcer(event) {
   event.preventDefault(); const form = event.currentTarget, values = Object.fromEntries(new FormData(form));

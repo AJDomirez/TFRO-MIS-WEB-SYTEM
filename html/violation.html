@@ -6,8 +6,8 @@
   <title>TFRO Violations</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
 
-<link rel="stylesheet" href="../css/violation.css?v=20260911-2">
-  <link rel="stylesheet" href="../css/tfro-theme.css?v=20260818-013000">
+<link rel="stylesheet" href="../css/violation.css?v=20261010-1">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20261010-1">
 
   <!-- Remix Icons -->
   <link
@@ -133,6 +133,7 @@
       <article><i class="ri-time-line"></i><div><strong id="violationPending">0</strong><span>Pending payment</span></div></article>
       <article><i class="ri-checkbox-circle-line"></i><div><strong id="violationPaid">0</strong><span>Paid tickets</span></div></article>
       <article><i class="ri-money-peso-circle-line"></i><div><strong id="violationAmount">₱0.00</strong><span>Total assessed</span></div></article>
+      <article><i class="ri-hand-coin-line"></i><div><strong id="violationCommissionTotal">₱0.00</strong><span>Paid commissions</span></div></article>
     </section>
 
     <!-- TOOLBAR -->
@@ -185,7 +186,7 @@
         <label>Discounted Amount (PHP)<input name="discounted" type="number" min="0" step="0.01" value="0" required></label>
         <label>Franchise number<input name="franchise_number" placeholder="Required when applicable"></label>
         <label>Ticket number<input name="ticket_number" required></label>
-        <label>Apprehending enforcer/s<select name="enforcer_ids" id="violationEnforcers" multiple required size="5"><option disabled>Loading active enforcers…</option></select><small>Hold Ctrl (Windows) or Command (Mac) to select multiple enforcers.</small></label>
+        <label>Apprehending enforcer/s<select name="enforcer_ids" id="violationEnforcers" multiple required size="5"><option disabled>Loading active enforcers…</option></select><small>Hold Ctrl (Windows) or Command (Mac) to select multiple enforcers.</small><span class="enforcer-commission-preview" id="enforcerCommissionPreview">Select enforcers to preview their 20% commission share.</span></label>
         <label>Penalty (PHP)<input name="penalty" type="number" min="0" step="0.01" required readonly></label>
         <label>Date<input name="occurred_date" type="date" required></label>
         <label>Status<select name="status"><option value="pending">Pending payment</option><option value="paid" disabled>Paid (set after Treasurer payment)</option><option value="dismissed">Dismissed</option></select></label>
@@ -211,16 +212,18 @@
             <th>Violation</th>
             <th>Date Paid</th>
             <th>Ticket No.</th>
-            <th>Total Amount</th>
+            <th>Total Payment</th>
             <th>OR No./Receipt</th>
-            <th>Commission</th>
-            <th>Enforcers</th>
+            <th>Rate</th>
+            <th>Total Commission</th>
+            <th>Enforcers &amp; Individual Commission</th>
             <th>Ticket Image</th>
             <th>Actions</th>
           </tr>
         </thead>
 
         <tbody id="violationsTable"></tbody>
+        <tfoot><tr class="violation-totals-row"><th colspan="7">Filtered totals</th><th id="violationsPaymentTotal">₱0.00</th><th>—</th><th>20%</th><th id="violationsCommissionTotal">₱0.00</th><th colspan="3">—</th></tr></tfoot>
 
       </table>
 
@@ -250,7 +253,7 @@
   </div>
 </div>
 
-<script type="module" src="../js/violation.js?v=20261008-1"></script>
+<script type="module" src="../js/violation.js?v=20261010-1"></script>
 <script type="module" src="../js/sidebar-user.js?v=20260819-180000"></script>
 </body>
 </html>
