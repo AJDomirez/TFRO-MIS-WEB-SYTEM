@@ -261,8 +261,8 @@ async function loadEnforcers() {
   if (error) throw error;
   enforcers = data || [];
   document.getElementById("violationEnforcers").innerHTML = enforcers.map((enforcer) =>
-    `<option value="${enforcer.id}">${escapeHtml(enforcer.full_name)} (${escapeHtml(enforcer.enforcer_id)})</option>`
-  ).join("");
+    `<label class="enforcer-checkbox-option enforcer-color-${enforcerColorIndex(enforcer.enforcer_id)}"><input type="checkbox" name="enforcer_ids" value="${enforcer.id}"><span><b>${escapeHtml(enforcer.full_name)}</b><small>${escapeHtml(enforcer.enforcer_id)}</small></span><i class="ri-check-line" aria-hidden="true"></i></label>`
+  ).join("") || "<p>No active enforcers are available.</p>";
 }
 
 function applyCatalogSelection() {
@@ -273,7 +273,7 @@ function applyCatalogSelection() {
 }
 
 function updateEnforcerCommissionPreview() {
-  const selectedIds = [...form.elements.enforcer_ids.selectedOptions].map((option) => Number(option.value));
+  const selectedIds = [...form.querySelectorAll('input[name="enforcer_ids"]:checked')].map((input) => Number(input.value));
   const paymentAmount = Math.max(Number(form.elements.penalty.value || 0) - Number(form.elements.discounted.value || 0), 0);
   const totalCommission = Math.round(paymentAmount * 0.20 * 100) / 100;
   const preview = document.getElementById("enforcerCommissionPreview");
@@ -306,7 +306,7 @@ function setFormMode(mode, row = null) {
     form.elements.franchise_number.value = row.franchise_number || "";
     form.elements.ticket_number.value = row.ticket_number || "";
     const selectedIds = new Set((row.violation_enforcers || []).map((assignment) => String(assignment.enforcer_id)));
-    [...form.elements.enforcer_ids.options].forEach((option) => { option.selected = selectedIds.has(option.value); });
+    form.querySelectorAll('input[name="enforcer_ids"]').forEach((input) => { input.checked = selectedIds.has(input.value); });
     form.elements.penalty.value = Number(row.penalty || 0);
     form.elements.occurred_date.value = dateForInput(row.occurred_at);
     form.elements.status.value = row.status || "pending";
@@ -341,7 +341,7 @@ function readEntries() {
   if (!selected.length) throw new Error("Select at least one official violation.");
   if (editingViolationId && selected.length !== 1) throw new Error("Select exactly one violation when editing.");
   if (!values.occurred_date) throw new Error("Violation date is required.");
-  const selectedEnforcerIds = [...form.elements.enforcer_ids.selectedOptions].map((option) => Number(option.value));
+  const selectedEnforcerIds = [...form.querySelectorAll('input[name="enforcer_ids"]:checked')].map((input) => Number(input.value));
   if (!selectedEnforcerIds.length) throw new Error("Select at least one apprehending enforcer.");
   if (!Number.isFinite(discounted) || discounted < 0) throw new Error("Discounted amount must be zero or greater.");
   const base = {
