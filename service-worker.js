@@ -1,4 +1,4 @@
-const CACHE_NAME = "tfro-imis-shell-v24";
+const CACHE_NAME = "tfro-imis-shell-v25";
 const CORE_ASSETS = [
   "./",
   "html/application.html", "html/auditlog.html", "html/dashboard.html", "html/driver.html",
@@ -60,7 +60,10 @@ self.addEventListener("fetch", (event) => {
   event.respondWith((async () => {
     const cached = await caches.match(event.request);
     try {
-      const response = await fetch(event.request);
+      const networkRequest = event.request.mode === "navigate"
+        ? new Request(event.request, { cache: "reload" })
+        : event.request;
+      const response = await fetch(networkRequest);
       if (response.ok || response.type === "opaque") {
         const cache = await caches.open(CACHE_NAME);
         await cache.put(event.request, response.clone());
