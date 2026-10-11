@@ -1781,3 +1781,89 @@ html[data-theme="dark"] body.admin-sidebar .commission-pending{color:#ffe59a!imp
 html[data-theme="dark"] body.admin-sidebar :is(.violation-totals-row th,tfoot th){background:#102d48!important;border-top-color:#60a5fa!important;color:#edf5ff!important}
 html[data-theme="dark"] body.admin-sidebar .enforcer-total-commission{background:var(--enforcer-bg)!important;border-color:var(--enforcer-border)!important;color:var(--enforcer-text)!important}
 html[data-theme="dark"] body.admin-sidebar .commission-unassigned{--enforcer-bg:#102d48;--enforcer-border:#64748b;--enforcer-text:#dbeafe}
+
+/* Violation form theme: keep the offence picker readable in both modes. */
+body.admin-sidebar .topbar>.topbar-actions{
+  display:flex;
+  flex:0 0 auto;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  margin-left:auto;
+}
+body.admin-sidebar .topbar>.topbar-actions .tfro-theme-toggle{
+  min-width:126px;
+  white-space:nowrap;
+}
+html[data-theme="dark"] body.admin-sidebar .topbar>.topbar-actions .qr-verify-btn{
+  background:#102d48 !important;
+  border-color:#436483 !important;
+  color:#f5f9ff !important;
+  box-shadow:none !important;
+}
+html[data-theme="dark"] body.admin-sidebar .topbar>.topbar-actions .qr-verify-btn:hover{
+  background:#163b5c !important;
+  border-color:#6f9bc3 !important;
+}
+html[data-theme="dark"] body.admin-sidebar .violation-checklist-field{
+  background:#0c2136 !important;
+  border-color:#436483 !important;
+  color:#edf5ff !important;
+}
+html[data-theme="dark"] body.admin-sidebar .violation-checklist-field legend{
+  color:#f3f7fc !important;
+}
+html[data-theme="dark"] body.admin-sidebar .violation-checklist-field legend small,
+html[data-theme="dark"] body.admin-sidebar .violation-checklist p{
+  color:#a9bed2 !important;
+}
+html[data-theme="dark"] body.admin-sidebar .violation-checklist{
+  scrollbar-color:#64748b #0a1c2d;
+}
+html[data-theme="dark"] body.admin-sidebar #violationForm .violation-check-option{
+  background:#102d48 !important;
+  border-color:#35536f !important;
+  color:#edf5ff !important;
+}
+html[data-theme="dark"] body.admin-sidebar #violationForm .violation-check-option:hover{
+  background:#163b5c !important;
+  border-color:#5f91ba !important;
+}
+html[data-theme="dark"] body.admin-sidebar #violationForm .violation-check-option:has(input:checked){
+  background:#183b62 !important;
+  border-color:#60a5fa !important;
+  box-shadow:inset 4px 0 #f4c430 !important;
+}
+html[data-theme="dark"] body.admin-sidebar #violationForm .violation-check-option input[type="checkbox"]{
+  accent-color:#60a5fa;
+}
+html[data-theme="dark"] body.admin-sidebar #violationForm .violation-check-option span,
+html[data-theme="dark"] body.admin-sidebar #violationForm .violation-check-option strong{
+  color:#edf5ff !important;
+}
+html[data-theme="dark"] body.admin-sidebar #violationForm .violation-check-option b{
+  color:#b9dcfb !important;
+}
+html[data-theme="dark"] body.admin-sidebar #violationForm .violation-form-actions button[type="button"]{
+  background:#102d48 !important;
+  border-color:#5f7892 !important;
+  color:#f5f9ff !important;
+  box-shadow:none !important;
+}
+html[data-theme="dark"] body.admin-sidebar #violationForm .violation-form-actions button[type="button"]:hover{
+  background:#163b5c !important;
+  border-color:#79a5cb !important;
+}
+html[data-theme="dark"] body.admin-sidebar #violationForm .violation-form-actions button[type="button"]:focus-visible{
+  outline:3px solid rgba(96,165,250,.38);
+  outline-offset:2px;
+}
+
+@media(max-width:600px){
+  body.admin-sidebar .topbar>.topbar-actions{
+    width:100%;
+    justify-content:flex-start;
+    margin-left:0;
+    flex-wrap:wrap;
+  }
+}

@@ -7,6 +7,12 @@ function preferredTheme() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+function themeButtonMarkup(theme) {
+  return theme === "dark"
+    ? '<i class="ri-sun-line" aria-hidden="true"></i><span>Light mode</span>'
+    : '<i class="ri-moon-clear-line" aria-hidden="true"></i><span>Dark mode</span>';
+}
+
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
@@ -14,9 +20,7 @@ function applyTheme(theme) {
     const dark = theme === "dark";
     button.setAttribute("aria-pressed", String(dark));
     button.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
-    button.innerHTML = dark
-      ? '<i class="ri-sun-line" aria-hidden="true"></i><span>Light mode</span>'
-      : '<i class="ri-moon-clear-line" aria-hidden="true"></i><span>Dark mode</span>';
+    button.innerHTML = themeButtonMarkup(theme);
   });
   window.dispatchEvent(new CustomEvent("tfrothemechange", { detail: { theme } }));
 }
@@ -29,6 +33,10 @@ function addThemeButton() {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "tfro-theme-toggle";
+  const initialTheme = document.documentElement.dataset.theme || preferredTheme();
+  button.setAttribute("aria-pressed", String(initialTheme === "dark"));
+  button.setAttribute("aria-label", initialTheme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+  button.innerHTML = themeButtonMarkup(initialTheme);
   button.addEventListener("click", () => {
     const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
     localStorage.setItem(STORAGE_KEY, next);
