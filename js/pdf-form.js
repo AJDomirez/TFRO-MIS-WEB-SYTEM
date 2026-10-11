@@ -30,6 +30,14 @@ function value(value) {
   return String(value ?? "").trim();
 }
 
+function firstValue(...candidates) {
+  for (const candidate of candidates) {
+    const resolved = value(candidate);
+    if (resolved && !["null", "undefined", "—", "-"].includes(resolved.toLowerCase())) return resolved;
+  }
+  return "";
+}
+
 function formatDate(input) {
   if (!input) return "";
   const date = new Date(`${String(input).slice(0, 10)}T00:00:00`);
@@ -75,7 +83,7 @@ function ageFromBirthDate(input) {
   return age >= 0 ? String(age) : "";
 }
 
-function fitTextSize(font, text, preferredSize, maxWidth, minimumSize = 6.5) {
+function fitTextSize(font, text, preferredSize, maxWidth, minimumSize = 5.5) {
   const content = value(text);
   let fittedSize = Math.max(Number(preferredSize) || 12, minimumSize);
   while (fittedSize > minimumSize && font.widthOfTextAtSize(content, fittedSize) > maxWidth) {
@@ -97,7 +105,7 @@ function drawScaled(page, font, text, x, y, size = 12, options = {}) {
   const sy = page.getHeight() / (options.baseHeight || 936);
   const content = value(text);
   const maxWidth = options.maxWidth || 500;
-  const minimumSize = options.minSize ?? 6.5;
+  const minimumSize = options.minSize ?? 5.5;
   const fittedSize = fitTextSize(font, content, size, maxWidth, minimumSize);
   const alignedX = alignedTextX(font, content, fittedSize, x, maxWidth, options.align);
   page.drawText(content, {
@@ -105,8 +113,6 @@ function drawScaled(page, font, text, x, y, size = 12, options = {}) {
     y: y * sy,
     size: fittedSize * Math.min(sx, sy),
     font,
-    maxWidth: maxWidth * sx,
-    lineHeight: (options.lineHeight || fittedSize * 1.15) * sy,
     color: options.color,
   });
 }
@@ -285,16 +291,16 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     const italic = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
     const ink = rgb(0, 0, 0);
     let details = {
-      name: value(renewal.operator_name || franchise.operator_name),
-      franchise: value(franchise.franchise_number),
-      address: value(renewal.operator_address || franchise.address),
-      orNumber: value(renewal.current_or_number || renewal.payment_or_number),
-      make: value(changeMotor.new_motor_brand || franchise.motorcycle_brand),
-      model: value(changeMotor.new_motor_serial || franchise.motorcycle_year_model),
-      motor: value(changeMotor.new_engine_number || renewal.engine_number || franchise.engine_number || franchise.motorcycle_engine_number),
-      chassis: value(changeMotor.new_chassis_number || renewal.chassis_number || franchise.chassis_number || franchise.motorcycle_chassis_number),
-      plate: value(changeMotor.new_plate_number || renewal.plate_number || franchise.plate_number),
-      route: value(franchise.route || "LUCENA CITY PROPER"),
+      name: firstValue(renewal.operator_name, franchise.operator_name),
+      franchise: firstValue(franchise.franchise_number, renewal.franchise_number),
+      address: firstValue(renewal.operator_address, franchise.address),
+      orNumber: firstValue(renewal.current_or_number, renewal.payment_or_number, franchise.official_receipt_number),
+      make: firstValue(changeMotor.new_motor_brand, renewal.motorcycle_make, franchise.motorcycle_brand),
+      model: firstValue(changeMotor.new_motor_serial, renewal.motorcycle_model, franchise.motorcycle_year_model),
+      motor: firstValue(changeMotor.new_engine_number, renewal.engine_number, franchise.engine_number),
+      chassis: firstValue(changeMotor.new_chassis_number, renewal.chassis_number, franchise.chassis_number),
+      plate: firstValue(changeMotor.new_plate_number, renewal.plate_number, franchise.plate_number),
+      route: firstValue(franchise.route, renewal.route, "LUCENA CITY PROPER"),
       expiration: formatDate(renewal.temporary_mtop_expiration_date),
     };
     details = await editFields("TFRO-001 Temporary MTOP", [
@@ -412,40 +418,42 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
     pdfDoc.addPage(page);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const names = splitName(renewal.operator_name);
-    const fallbackAddress = splitResidentialAddress(renewal.operator_address);
+    const operatorName = firstValue(renewal.operator_name, franchise.operator_name);
+    const operatorAddress = firstValue(renewal.operator_address, franchise.address);
+    const names = splitName(operatorName);
+    const fallbackAddress = splitResidentialAddress(operatorAddress);
     const address = {
-      street: value(renewal.residential_street || fallbackAddress.street),
-      barangay: value(renewal.residential_barangay || fallbackAddress.barangay),
+      street: firstValue(renewal.residential_street, fallbackAddress.street),
+      barangay: firstValue(renewal.residential_barangay, fallbackAddress.barangay),
     };
     const ink = rgb(0, 0, 0);
     const write = (text, x, y, size = 12, maxWidth = 500, useBold = false) =>
-      drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, minSize: 7, color: ink });
+      drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, minSize: 5.5, color: ink });
 
-    const fullRenewalFranchiseNumber = value(franchise.franchise_number);
-    const birthDate = renewal.applicant_birth_date || franchise.birth_date;
+    const fullRenewalFranchiseNumber = firstValue(franchise.franchise_number, renewal.franchise_number);
+    const birthDate = firstValue(renewal.applicant_birth_date, franchise.birth_date);
     let manual = await editFields("TFRO-005 Application", [
-      { key: "date", label: "Application date", value: formatDate(renewal.created_at) },
+      { key: "date", label: "Application date", value: formatDate(firstValue(renewal.request_date, renewal.created_at)) },
       { key: "franchise", label: "Franchise number", value: fullRenewalFranchiseNumber.replace(/^FR-/i, "") },
       { key: "last", label: "Last name", value: names.last },
       { key: "first", label: "First name", value: names.first },
       { key: "middle", label: "Middle name", value: names.middle },
-      { key: "contact", label: "Contact number", value: renewal.operator_contact },
+      { key: "contact", label: "Contact number", value: firstValue(renewal.operator_contact, franchise.contact_number) },
       { key: "street", label: "Home number and street", value: address.street },
       { key: "barangay", label: "Barangay", value: address.barangay },
       { key: "birthDate", label: "Birthdate", value: formatDate(birthDate) },
-      { key: "birthPlace", label: "Place of birth", value: renewal.applicant_birth_place || franchise.birth_place },
+      { key: "birthPlace", label: "Place of birth", value: firstValue(renewal.applicant_birth_place, franchise.birth_place) },
       { key: "age", label: "Age", value: ageFromBirthDate(birthDate) },
-      { key: "civilStatus", label: "Civil status", value: renewal.applicant_civil_status || franchise.civil_status },
-      { key: "make", label: "Vehicle make", value: changeMotor.new_motor_brand || renewal.motorcycle_make || franchise.motorcycle_brand },
-      { key: "plate", label: "Plate number", value: changeMotor.new_plate_number || renewal.plate_number || franchise.plate_number },
-      { key: "model", label: "Vehicle model", value: changeMotor.new_motor_serial || renewal.motorcycle_model || franchise.motorcycle_year_model },
-      { key: "orNumber", label: "O.R. number", value: renewal.current_or_number },
-      { key: "engine", label: "Motor / engine number", value: changeMotor.new_engine_number || renewal.engine_number || franchise.motorcycle_engine_number },
+      { key: "civilStatus", label: "Civil status", value: firstValue(renewal.applicant_civil_status, franchise.civil_status) },
+      { key: "make", label: "Vehicle make", value: firstValue(changeMotor.new_motor_brand, renewal.motorcycle_make, franchise.motorcycle_brand) },
+      { key: "plate", label: "Plate number", value: firstValue(changeMotor.new_plate_number, renewal.plate_number, franchise.plate_number) },
+      { key: "model", label: "Vehicle model", value: firstValue(changeMotor.new_motor_serial, renewal.motorcycle_model, franchise.motorcycle_year_model) },
+      { key: "orNumber", label: "O.R. number", value: firstValue(renewal.current_or_number, renewal.payment_or_number, franchise.official_receipt_number) },
+      { key: "engine", label: "Motor / engine number", value: firstValue(changeMotor.new_engine_number, renewal.engine_number, franchise.engine_number) },
       { key: "orDate", label: "O.R. date", value: formatDate(renewal.current_or_date) },
-      { key: "chassis", label: "Chassis number", value: changeMotor.new_chassis_number || renewal.chassis_number || franchise.motorcycle_chassis_number },
-      { key: "crNumber", label: "C.R. number", value: renewal.current_cr_number || franchise.chassis_cr_number },
-      { key: "route", label: "Authorized route", value: franchise.route || "LUCENA PROPER" },
+      { key: "chassis", label: "Chassis number", value: firstValue(changeMotor.new_chassis_number, renewal.chassis_number, franchise.chassis_number) },
+      { key: "crNumber", label: "C.R. number", value: firstValue(renewal.current_cr_number, franchise.chassis_cr_number, franchise.engine_cr_number) },
+      { key: "route", label: "Authorized route", value: firstValue(franchise.route, renewal.route, "LUCENA PROPER") },
       { key: "remarks", label: "Inspection remarks", value: renewal.inspection_remarks },
     ], editable, onSend);
     if (!manual) { popup?.close(); return; }
@@ -456,16 +464,13 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
     const renewalFranchiseSize = 11;
     const renewalFranchiseWidth = bold.widthOfTextAtSize(renewalFranchiseNumber, renewalFranchiseSize);
     page.drawText(renewalFranchiseNumber, { x: 568 - renewalFranchiseWidth, y: 806.5, size: renewalFranchiseSize, font: bold, color: ink });
-    write(manual.last, 48, 778, 10, 165); write(manual.first, 225, 778, 10, 145); write(manual.middle, 335, 778, 10, 110);
+    write(manual.last, 48, 778, 10, 165); write(manual.first, 225, 778, 10, 100); write(manual.middle, 335, 778, 10, 110);
     write(manual.contact, 458, 778, 10, 105); write(manual.street, 40, 718, 9.5, 275); write(manual.barangay, 326, 718, 9.5, 240);
     write(manual.birthDate, 40, 668, 9, 150); write(manual.birthPlace, 207, 668, 9, 150); write(manual.age, 377, 668, 9, 60); write(manual.civilStatus, 457, 668, 9, 110);
     write(manual.make, 90, 627, 9.5, 210); write(manual.plate, 385, 627, 9.5, 180); write(manual.model, 90, 606, 9.5, 210); write(manual.orNumber, 375, 606, 9.5, 190);
     write(manual.engine, 110, 585, 9.5, 190); write(manual.orDate, 395, 585, 9.5, 170); write(manual.chassis, 115, 563, 9.5, 185); write(manual.crNumber, 370, 563, 9.5, 195);
-    const route = value(manual.route);
     page.drawRectangle({ x: 468, y: 517, width: 103, height: 40, color: rgb(1, 1, 1) });
-    const routeSize = 12;
-    const routeWidth = bold.widthOfTextAtSize(route, routeSize);
-    page.drawText(route, { x: 468 + Math.max(2, (103 - routeWidth) / 2), y: 534, size: routeSize, font: bold, color: ink, maxWidth: 99 });
+    drawScaled(page, bold, manual.route, 470, 534, 12, { maxWidth: 99, minSize: 5.5, align: "center", color: ink });
     write(manual.remarks, 278, 136, 8, 135);
     await embedPicture(pdfDoc, page, pictureUrl);
     const bytes = await pdfDoc.save();
@@ -497,15 +502,16 @@ export async function openPmblPdfForm({ renewal, franchise = {}, editable = fals
       if (!value(text)) return;
       const selectedFont = useBold ? bold : font;
       const content = value(text);
-      const fittedSize = fitTextSize(selectedFont, content, size, maxWidth, 8);
-      page.drawText(content, { x: x * sx, y: y * sy, size: fittedSize * Math.min(sx, sy), maxWidth: maxWidth * sx, font: selectedFont, color: black });
+      const fittedSize = fitTextSize(selectedFont, content, size, maxWidth, 5.5);
+      page.drawText(content, { x: x * sx, y: y * sy, size: fittedSize * Math.min(sx, sy), font: selectedFont, color: black });
     };
-    const issued = new Date();
-    const pmblFranchiseNumber = value(franchise.franchise_number);
+    const issuedInput = firstValue(renewal.admin_reviewed_at, renewal.reviewed_at, renewal.updated_at, renewal.request_date, renewal.created_at);
+    const issued = issuedInput ? new Date(issuedInput) : new Date();
+    const pmblFranchiseNumber = firstValue(franchise.franchise_number, renewal.franchise_number);
     const manual = await editFields("PMBL TFRO-003 Certification", [
-      { key: "name", label: "Member name", value: renewal.operator_name },
+      { key: "name", label: "Member name", value: firstValue(renewal.operator_name, franchise.operator_name) },
       { key: "franchise", label: "Franchise number", value: pmblFranchiseNumber },
-      { key: "address", label: "Residential address", value: renewal.operator_address },
+      { key: "address", label: "Residential address", value: firstValue(renewal.operator_address, franchise.address) },
       { key: "toda", label: "TODA", value: franchise.toda_name },
       { key: "driver", label: "Driver", value: false, type: "checkbox" },
       { key: "operator", label: "Operator", value: true, type: "checkbox" },
@@ -577,7 +583,7 @@ export async function openChecklistPdfForm({ renewal, documents = [], editable =
       ["clean_windshield", 109],
     ];
     const manual = await editFields("TFRO-004 Renewal Checklist", [
-      { key: "date", label: "Checklist date", value: formatDate(renewal.created_at) },
+      { key: "date", label: "Checklist date", value: formatDate(firstValue(renewal.request_date, renewal.created_at)) },
       ...documentRows.map(([type]) => ({ key: type, label: type.replaceAll("_", " "), value: uploaded.has(type), type: "checkbox" })),
       ...physicalRows.flatMap(([key]) => [
         { key: `${key}_pass`, label: `${key.replaceAll("_", " ")} — PASS`, value: inspection[key] === true, type: "checkbox" },
@@ -610,17 +616,17 @@ export async function openChecklistPdfForm({ renewal, documents = [], editable =
 
 function droppingDetails(request = {}, franchise = {}, operator = {}) {
   return {
-    operator: value(operator.full_name || franchise.operator_name),
-    address: value(operator.address || franchise.address),
-    contact: value(operator.contact_number || franchise.contact_number),
-    franchise: value(franchise.franchise_number),
-    toda: value(franchise.toda_name),
-    route: value(franchise.route || "LUCENA CITY PROPER"),
-    make: value(request.old_motor_brand || franchise.motorcycle_brand),
-    model: value(request.old_motor_model || franchise.motorcycle_year_model),
-    motor: value(request.old_engine_number),
-    chassis: value(request.old_chassis_number),
-    plate: value(request.old_plate_number),
+    operator: firstValue(operator.full_name, request.operator_name, franchise.operator_name),
+    address: firstValue(operator.address, request.operator_address, franchise.address),
+    contact: firstValue(operator.contact_number, request.operator_contact, franchise.contact_number),
+    franchise: firstValue(franchise.franchise_number, request.franchise_number),
+    toda: firstValue(franchise.toda_name, request.toda_name),
+    route: firstValue(franchise.route, request.route, "LUCENA CITY PROPER"),
+    make: firstValue(request.old_motor_brand, franchise.motorcycle_brand),
+    model: firstValue(request.old_motor_model, franchise.motorcycle_year_model),
+    motor: firstValue(request.old_engine_number, franchise.engine_number),
+    chassis: firstValue(request.old_chassis_number, franchise.chassis_number),
+    plate: firstValue(request.old_plate_number, franchise.plate_number),
   };
 }
 
@@ -654,9 +660,8 @@ export async function openDroppingPetitionPdfForm({ request, franchise = {}, ope
       const fitted = fitTextSize(selected, text, size, maxWidth, 7);
       const textOptions = {
         x: centered ? alignedTextX(selected, text, fitted, x, maxWidth, "center") : x,
-        y, maxWidth, size: fitted, lineHeight: 11, font: selected, color: ink,
+        y, size: fitted, font: selected, color: ink,
       };
-      if (wrapAtHyphens) textOptions.wordBreaks = ["-", " "];
       page.drawText(text, textOptions);
     };
     write(data.operator, 72, 801, 180, 11, true, true);
@@ -726,7 +731,7 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
       const selected = useBold ? bold : font;
       const fitted = fitTextSize(selected, text, size, maxWidth, 7);
       const drawX = alignedTextX(selected, text, fitted, x, maxWidth, align);
-      page.drawText(text, { x: drawX, y, maxWidth, size: fitted, lineHeight: 13, font: selected, color: ink });
+      page.drawText(text, { x: drawX, y, size: fitted, font: selected, color: ink });
     };
 
     write("C E R T I F I C A T I O N", 80, 665, 435, 22, false, "center");
@@ -778,21 +783,24 @@ export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, ed
     const ink = rgb(0, 0, 0);
     page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: 92, color: rgb(1, 1, 1) });
     const snapshot = payment.receipt_snapshot || {};
+    const driver = violation.drivers || {};
+    const linkedFranchise = driver.franchises || {};
+    const recordedProfile = payment.recorded_profile || {};
     const amount = snapshot.amount_paid ?? payment.amount ?? violation.penalty ?? 0;
     const write = (text, x, y, maxWidth, size = 11, align = "left", useBold = false) =>
       drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, minSize: 6.5, align, color: ink, baseHeight: 468 });
 
     const manual = await editFields("TFRO-009 Order of Payment", [
-      { key: "payer", label: "Payor", value: snapshot.payer || payment.payer || payment.unit_owner_name },
-      { key: "officers", label: "Apprehending officer/s", value: snapshot.apprehending_officers || violation.apprehending_officers },
-      { key: "address", label: "Address", value: snapshot.address || payment.unit_owner_address },
-      { key: "ticket", label: "Ticket number", value: snapshot.ticket_number || violation.ticket_number },
-      { key: "code", label: "Violation code", value: snapshot.code || violation.violation_code },
-      { key: "violation", label: "Violation", value: snapshot.violation || violation.violation_type },
+      { key: "payer", label: "Payor", value: firstValue(snapshot.payer, payment.payer, payment.unit_owner_name, violation.subject_name, driver.full_name, linkedFranchise.operator_name) },
+      { key: "officers", label: "Apprehending officer/s", value: firstValue(snapshot.apprehending_officers, violation.apprehending_officers) },
+      { key: "address", label: "Address", value: firstValue(snapshot.address, payment.unit_owner_address, driver.address, linkedFranchise.address) },
+      { key: "ticket", label: "Ticket number", value: firstValue(snapshot.ticket_number, violation.ticket_number) },
+      { key: "code", label: "Violation code", value: firstValue(snapshot.code, violation.violation_code) },
+      { key: "violation", label: "Violation", value: firstValue(snapshot.violation, violation.violation_type) },
       { key: "amount", label: "Amount due / paid", value: money(amount) },
-      { key: "receipt", label: "Official receipt number", value: payment.receipt },
-      { key: "assessedBy", label: "Assessed by", value: snapshot.assessed_by || payment.recorded_by_name || "" },
-      { key: "datePaid", label: "Date paid", value: formatDate(payment.date || payment.paid_at) },
+      { key: "receipt", label: "Official receipt number", value: firstValue(payment.receipt, violation.treasurer_receipt_number) },
+      { key: "assessedBy", label: "Assessed by", value: firstValue(snapshot.assessed_by, recordedProfile.full_name, "TFRO STAFF") },
+      { key: "datePaid", label: "Date paid", value: formatDate(firstValue(payment.date, payment.paid_at)) },
     ], editable, onSend);
     if (!manual) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-009 Order of Payment");
@@ -808,13 +816,13 @@ export async function openPaymentOrderPdfForm({ payment = {}, violation = {}, ed
     page.drawLine({ start:{x:421,y:330}, end:{x:550,y:330}, thickness:.55, color:ink });
     write(manual.code, 75, 286, 112, 9, "center"); write(manual.violation, 193, 286, 205, 9, "center");
     write(manual.amount, 405, 286, 126, 9, "center"); write(manual.amount, 405, 193, 126, 9.5, "center");
-    page.drawRectangle({ x: 48, y: 92, width: 310, height: 52, color: rgb(1, 1, 1) });
+    page.drawRectangle({ x: 48, y: 92, width: 310, height: 84, color: rgb(1, 1, 1) });
     write("O.R. No.:", 50, 130, 55, 8.5, "left", true); write(manual.receipt, 105, 130, 95, 8.5);
     write("Amount:", 50, 116, 55, 8.5, "left", true); write(manual.amount, 105, 116, 95, 8.5);
     write("Date Paid:", 50, 102, 55, 8.5, "left", true); write(manual.datePaid, 105, 102, 95, 8.5);
     write("Assessed by:", 230, 130, 120, 9, "center", true);
-    page.drawLine({ start:{x:230,y:111}, end:{x:350,y:111}, thickness:.55, color:ink });
-    write(manual.assessedBy || "TFRO STAFF", 230, 100, 120, 8, "center", true);
+    write(manual.assessedBy || "TFRO STAFF", 230, 114, 120, 8, "center", true);
+    page.drawLine({ start:{x:230,y:110}, end:{x:350,y:110}, thickness:.55, color:ink });
 
     if (viewOnly) drawRecordedWatermark(page, bold, rgb(.08, .29, .48), degrees);
     const bytes = await pdfDoc.save();
@@ -837,19 +845,22 @@ export async function openUnitReleasePdfForm({ payment = {}, violation = {}, edi
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const ink = rgb(0, 0, 0);
     page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: 92, color: rgb(1, 1, 1) });
+    const driver = violation.drivers || {};
+    const linkedFranchise = driver.franchises || {};
+    const recordedProfile = payment.recorded_profile || {};
     const write = (text, x, y, maxWidth, size = 8.5, align = "left", useBold = false) =>
       drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, minSize: 6.5, align, color: ink, baseHeight: 468 });
 
     const manual = await editFields("TFRO-010 Vehicle/Unit Releasing Slip", [
-      { key: "owner", label: "Unit owner", value: payment.unit_owner_name || payment.payer },
-      { key: "releaseDate", label: "Release date", value: formatDate(payment.release_date || payment.date || payment.paid_at) },
-      { key: "ownerAddress", label: "Owner address", value: payment.unit_owner_address }, { key: "ownerContact", label: "Owner contact", value: payment.unit_owner_contact },
-      { key: "driver", label: "Driver name", value: payment.driver_name || payment.payer }, { key: "driverAddress", label: "Driver address", value: payment.driver_address },
-      { key: "driverContact", label: "Driver contact", value: payment.driver_contact }, { key: "engine", label: "Engine number", value: payment.engine_number },
-      { key: "chassis", label: "Chassis number", value: payment.chassis_number }, { key: "receipt", label: "Official receipt number", value: payment.receipt },
-      { key: "amount", label: "Amount paid", value: money(payment.amount) }, { key: "datePaid", label: "Date paid", value: formatDate(payment.date || payment.paid_at) },
-      { key: "recordedBy", label: "Recorded by", value: payment.receipt_snapshot?.assessed_by || payment.recorded_by_name || "TFRO Staff" },
-      { key: "releasedBy", label: "Released by", value: payment.released_by || violation.apprehending_officers }, { key: "witness", label: "Witness", value: payment.release_witness },
+      { key: "owner", label: "Unit owner", value: firstValue(payment.unit_owner_name, payment.payer, linkedFranchise.operator_name, violation.subject_name) },
+      { key: "releaseDate", label: "Release date", value: formatDate(firstValue(payment.release_date, payment.date, payment.paid_at)) },
+      { key: "ownerAddress", label: "Owner address", value: firstValue(payment.unit_owner_address, linkedFranchise.address, driver.address) }, { key: "ownerContact", label: "Owner contact", value: firstValue(payment.unit_owner_contact, linkedFranchise.contact_number) },
+      { key: "driver", label: "Driver name", value: firstValue(payment.driver_name, driver.full_name, payment.payer) }, { key: "driverAddress", label: "Driver address", value: firstValue(payment.driver_address, driver.address) },
+      { key: "driverContact", label: "Driver contact", value: firstValue(payment.driver_contact, driver.contact_number) }, { key: "engine", label: "Engine number", value: firstValue(payment.engine_number, linkedFranchise.engine_number) },
+      { key: "chassis", label: "Chassis number", value: firstValue(payment.chassis_number, linkedFranchise.chassis_number) }, { key: "receipt", label: "Official receipt number", value: firstValue(payment.receipt, violation.treasurer_receipt_number) },
+      { key: "amount", label: "Amount paid", value: money(payment.amount ?? payment.receipt_snapshot?.amount_paid ?? violation.penalty) }, { key: "datePaid", label: "Date paid", value: formatDate(firstValue(payment.date, payment.paid_at)) },
+      { key: "recordedBy", label: "Recorded by", value: firstValue(payment.receipt_snapshot?.assessed_by, recordedProfile.full_name, "TFRO Staff") },
+      { key: "releasedBy", label: "Released by", value: firstValue(payment.released_by, violation.apprehending_officers) }, { key: "witness", label: "Witness", value: payment.release_witness },
       { key: "releaseTime", label: "Release time", value: payment.release_time },
     ], editable, onSend);
     if (!manual) { popup?.close(); return; }

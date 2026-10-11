@@ -1,7 +1,7 @@
 import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
-import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20260913-7";
+import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20261011-8";
 
 async function openSavedSubmissionForm(options) {
   const { openSubmissionForm } = await import("./submission-form.js?v=20260909-180000");
@@ -260,7 +260,7 @@ async function loadPortal() {
   /* Violations */
   const { data: violations, error: violationError } = await supabase
     .from("violations")
-    .select("id,violation_type,occurred_at,penalty,discounted,status,ticket_number,apprehending_officers,treasurer_receipt_path,treasurer_receipt_number,payments(id,receipt,amount,status,paid_at,receipt_snapshot,unit_owner_name,unit_owner_address,unit_owner_contact,driver_name,driver_address,driver_contact,engine_number,chassis_number,release_date,release_time,released_by,release_witness)")
+    .select("id,subject_name,violation_code,violation_type,occurred_at,penalty,discounted,status,ticket_number,franchise_number,apprehending_officers,treasurer_receipt_path,treasurer_receipt_number,drivers(full_name,address,contact_number,franchises(operator_name,address,contact_number,engine_number,chassis_number,plate_number)),payments(id,receipt,amount,status,paid_at,receipt_snapshot,unit_owner_name,unit_owner_address,unit_owner_contact,driver_name,driver_address,driver_contact,engine_number,chassis_number,release_date,release_time,released_by,release_witness,recorded_profile:profiles!payments_recorded_by_fkey(full_name)))")
     .order("occurred_at", { ascending: false });
   if (violationError) console.error("Could not load connected violation records:", violationError);
   loadViolations(violations || []);
@@ -613,7 +613,7 @@ async function loadChangeMotorHistory(userId) {
 
 async function showMotorSubmission(request, formCode) {
   if (request.status !== "approved" || !request.forms_sent_to_operator_at) return alert("These forms have not been sent by TFRO Admin yet.");
-  const module = await import("./pdf-form.js?v=20260913-7");
+  const module = await import("./pdf-form.js?v=20261011-8");
   const options = { request, franchise: window.__currentFranchise || {}, operator: currentOperatorRecord || {} };
   if (formCode === "TFRO-002") module.openDroppingPetitionPdfForm(options);
   else module.openDroppingCertificationPdfForm(options);

@@ -10,7 +10,7 @@ const renewalFormSender = (formCode, renewal) => () => sendOperatorForm({
 });
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20260913-7");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261011-8");
   openRenewalPdfForm({ ...options, editable: true, onSend: renewalFormSender("TFRO-005", options.renewal) });
 }
 
@@ -67,7 +67,7 @@ function formatPhilippineDate(value) {
 }
 
 async function loadRenewals() {
-  const { data, error } = await supabase.from("franchise_renewals").select("*, franchises(franchise_number, status, birth_date, birth_place, civil_status, motorcycle_brand, motorcycle_year_model, chassis_cr_number, route)").order("created_at", { ascending: false });
+  const { data, error } = await supabase.from("franchise_renewals").select("*, franchises!franchise_renewals_franchise_id_fkey(franchise_number,status,operator_name,address,contact_number,birth_date,birth_place,civil_status,motorcycle_brand,motorcycle_year_model,engine_number,chassis_number,plate_number,engine_cr_number,chassis_cr_number,official_receipt_number,toda_name,route,driver_name,driver_contact_number)").order("created_at", { ascending: false });
   if (error) return alert(`Could not load renewals: ${error.message}`);
   renewals = data || [];
   renderTable();
@@ -116,7 +116,7 @@ async function openManualRenewal() {
   modal.hidden = false;
 
   const { data, error } = await supabase.from("franchises")
-    .select("id,franchise_number,operator_name,contact_number,address,expiration_date,status,plate_number,engine_number,chassis_number,motorcycle_brand,motorcycle_year_model,official_receipt_number,chassis_cr_number,birth_date,birth_place,civil_status")
+    .select("id,franchise_number,operator_name,contact_number,address,expiration_date,status,plate_number,engine_number,chassis_number,motorcycle_brand,motorcycle_year_model,official_receipt_number,engine_cr_number,chassis_cr_number,birth_date,birth_place,civil_status,toda_name,route,driver_name,driver_contact_number")
     .neq("status", "revoked").order("operator_name");
 
   trigger.disabled = false;
@@ -373,7 +373,7 @@ async function printCurrentTemporaryMtop() {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20260913-7");
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261011-8");
   openTemporaryMtopPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, changeMotor, editable: true, onSend: renewalFormSender("TFRO-001", currentRenewal) });
 }
 
@@ -413,13 +413,13 @@ async function sendCurrentTemporaryMtop() {
 
 async function printCurrentPmblCertification() {
   if (!currentRenewal) return;
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20260913-7");
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261011-8");
   openPmblPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, editable: true, onSend: renewalFormSender("TFRO-003", currentRenewal) });
 }
 
 async function printCurrentChecklist() {
   if (!currentRenewal) return;
-  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20260913-7");
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261011-8");
   openChecklistPdfForm({ renewal: currentRenewal, documents: currentDocuments, editable: true, onSend: renewalFormSender("TFRO-004", currentRenewal) });
 }
 

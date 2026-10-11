@@ -2,7 +2,7 @@ import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
-import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20260913-7";
+import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20261011-8";
 import { sendOperatorForm } from "./form-delivery.js";
 
 let violations = [];
@@ -250,7 +250,7 @@ function saveTicketPhoto() {
 async function loadViolations() {
   const { data, error } = await supabase
     .from("violations")
-    .select("*, payments!payments_violation_id_fkey(*,payment_enforcer_commissions(commission_amount,enforcer_id,traffic_enforcers(enforcer_id,full_name))), violation_enforcers(enforcer_id,traffic_enforcers(enforcer_id,full_name))")
+    .select("*, drivers(full_name,address,contact_number,franchises(operator_name,address,contact_number,engine_number,chassis_number,plate_number)), payments!payments_violation_id_fkey(*,recorded_profile:profiles!payments_recorded_by_fkey(full_name),payment_enforcer_commissions(commission_amount,enforcer_id,traffic_enforcers(enforcer_id,full_name))), violation_enforcers(enforcer_id,traffic_enforcers(enforcer_id,full_name))")
     .order("occurred_at", { ascending: false })
     .order("paid_at", { referencedTable: "payments", ascending: false });
   if (error) {

@@ -1,7 +1,7 @@
 import { supabase } from "./supabase.js";
 import { requireRole } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
-import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20260913-7";
+import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20261011-8";
 import { sendOperatorForm } from "./form-delivery.js";
 
 let payments = [], pendingViolations = [], currentUserId = null, currentRole = null, editingPaymentId = null;
@@ -35,8 +35,8 @@ function applyFilters() { const term=document.getElementById("searchInput").valu
 function updateTotals() { const collected=payments.filter((p)=>p.status==="paid").reduce((sum,p)=>sum+Number(p.amount),0); document.getElementById("totalCollected").textContent=peso(collected); document.getElementById("apprehenderShare").textContent=peso(collected*.2); document.getElementById("pendingCount").textContent=pendingViolations.length; document.getElementById("overdueCount").textContent=payments.filter((p)=>p.status==="overdue").length; }
 
 async function loadPayments() {
-  const paymentFields="id,receipt,payer,payment_type,amount,status,paid_at,violation_id,receipt_snapshot,commission_rate,total_commission,enforcer_count,individual_commission,unit_owner_name,unit_owner_address,unit_owner_contact,driver_name,driver_address,driver_contact,engine_number,chassis_number,release_date,release_time,released_by,release_witness,payment_enforcer_commissions(commission_amount,enforcer_id,traffic_enforcers(enforcer_id,full_name)),violations(violation_code,violation_type,ticket_number,classification,discounted,franchise_number,apprehending_officers,treasurer_receipt_path,treasurer_receipt_number)";
-  const violationFields="id,subject_name,violation_code,violation_type,ticket_number,penalty,classification,discounted,franchise_number,apprehending_officers,treasurer_receipt_path,treasurer_receipt_number,drivers(full_name,address,contact_number,franchises(operator_name,address,contact_number,engine_number,chassis_number))";
+  const paymentFields="id,receipt,payer,payment_type,amount,status,paid_at,violation_id,receipt_snapshot,recorded_by,recorded_profile:profiles!payments_recorded_by_fkey(full_name),commission_rate,total_commission,enforcer_count,individual_commission,unit_owner_name,unit_owner_address,unit_owner_contact,driver_name,driver_address,driver_contact,engine_number,chassis_number,release_date,release_time,released_by,release_witness,payment_enforcer_commissions(commission_amount,enforcer_id,traffic_enforcers(enforcer_id,full_name)),violations(subject_name,violation_code,violation_type,ticket_number,penalty,classification,discounted,franchise_number,apprehending_officers,treasurer_receipt_path,treasurer_receipt_number,drivers(full_name,address,contact_number,franchises(operator_name,address,contact_number,engine_number,chassis_number,plate_number)))";
+  const violationFields="id,subject_name,violation_code,violation_type,ticket_number,penalty,classification,discounted,franchise_number,apprehending_officers,treasurer_receipt_path,treasurer_receipt_number,drivers(full_name,address,contact_number,franchises(operator_name,address,contact_number,engine_number,chassis_number,plate_number))";
   const [paymentResult,violationResult]=await Promise.all([supabase.from("payments").select(paymentFields).order("paid_at",{ascending:false}),supabase.from("violations").select(violationFields).eq("status","pending").order("occurred_at",{ascending:false})]);
   if(paymentResult.error)return alert(`Could not load payments: ${paymentResult.error.message}`); if(violationResult.error)return alert(`Could not load tickets ready for payment: ${violationResult.error.message}`);
   payments=(paymentResult.data||[]).map(normalize); pendingViolations=violationResult.data||[];

@@ -42,7 +42,7 @@ async function verifyAccess() {
 async function loadRequests() {
   var res = await supabase
     .from("change_motor_requests")
-    .select("*, operator_profile:profiles!change_motor_requests_operator_id_fkey(full_name,contact_number), encoder_profile:profiles!change_motor_requests_encoded_by_fkey(full_name), franchise:franchises!change_motor_requests_franchise_id_fkey(franchise_number,operator_name,address,contact_number,toda_name,route,motorcycle_brand,motorcycle_year_model)")
+    .select("*, operator_profile:profiles!change_motor_requests_operator_id_fkey(full_name,contact_number), encoder_profile:profiles!change_motor_requests_encoded_by_fkey(full_name), franchise:franchises!change_motor_requests_franchise_id_fkey(franchise_number,operator_name,address,contact_number,toda_name,route,motorcycle_brand,motorcycle_year_model,engine_number,chassis_number,plate_number,official_receipt_number)")
     .order("created_at", { ascending: false });
   if (res.error) { console.error(res.error); return alert("Could not load requests: " + res.error.message); }
   requests = res.data || [];
@@ -325,7 +325,7 @@ alert("Request rejected. The operator has been notified.");
 
 async function openChangeMotorPdf(formCode) {
   if (!currentReq) return;
-  const module = await import("./pdf-form.js?v=20260913-7");
+  const module = await import("./pdf-form.js?v=20261011-8");
   const options = {
     request: currentReq,
     franchise: currentReq.franchise || {},
