@@ -335,6 +335,8 @@ th{
 @media(max-width:1200px){.staff-summary{grid-template-columns:repeat(3,minmax(0,1fr));}}
 @media(max-width:700px){.staff-summary{grid-template-columns:1fr 1fr}.enforcer-commission-chip{min-width:0;width:100%}.enforcer-checkbox-list{grid-template-columns:1fr}}
 
+#violationForm .enforcer-checkbox-option,.enforcer-commission-chip{--enforcer-bg:#f8fafc;--enforcer-border:#cbd5e1;--enforcer-text:#334155}.commission-unassigned{--enforcer-bg:#f8fafc;--enforcer-border:#94a3b8;--enforcer-text:#475569}
+
 .actions button[data-action="edit"]{
   color:#124b7a;
   border:1px solid #e2e8f0;

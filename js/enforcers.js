@@ -5,12 +5,22 @@ import { logAudit } from "./audit-helper.js";
 let enforcers = [];
 let ticketCounts = new Map();
 let commissionTotals = new Map();
+let commissionRanks = new Map();
 let profilePictures = new Map();
 let registryChanges = null;
 const money = new Intl.NumberFormat("en-PH", { style:"currency", currency:"PHP" });
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" }[character]));
 const normalize = (value) => String(value || "").toLowerCase().trim();
-const enforcerColorIndex = (value) => [...String(value ?? "")].reduce((total, character) => total + character.charCodeAt(0), 0) % 6;
+const rankClass = (id) => `enforcer-rank-${commissionRanks.get(String(id)) || "neutral"}`;
+const rankLabel = (id) => ({ 1:"#1 Highest commission", 2:"#2 Second highest", 3:"#3 Third highest" }[commissionRanks.get(String(id))] || "Not in top 3");
+function updateCommissionRanks() {
+  const ranked = enforcers
+    .map((row) => ({ id:String(row.id), enforcerId:String(row.enforcer_id || ""), total:Number(commissionTotals.get(row.id) || 0) }))
+    .filter((row) => row.total > 0)
+    .sort((left, right) => right.total - left.total || left.enforcerId.localeCompare(right.enforcerId))
+    .slice(0, 3);
+  commissionRanks = new Map(ranked.map((row, index) => [row.id, index + 1]));
+}
 function showMessage(text, error = false) { const element = document.getElementById("enforcerFormMessage"); element.textContent = text; element.hidden = !text; element.classList.toggle("error", error); }
 
 function renderEnforcers() {
@@ -24,7 +34,10 @@ function renderEnforcers() {
   document.getElementById("totalEnforcerCommissions").textContent = money.format(allCommissionTotal);
   document.getElementById("enforcerTicketTotal").textContent = rows.reduce((sum, row) => sum + (ticketCounts.get(row.id) || 0), 0);
   document.getElementById("enforcerCommissionFooter").textContent = money.format(rows.reduce((sum, row) => sum + (commissionTotals.get(row.id) || 0), 0));
-  document.getElementById("enforcerTable").innerHTML = rows.length ? rows.map((row) => `<tr class="enforcer-registry-row enforcer-color-${enforcerColorIndex(row.enforcer_id)}"><td><strong>${escapeHtml(row.enforcer_id)}</strong></td><td><span class="enforcer-name-chip enforcer-color-${enforcerColorIndex(row.enforcer_id)}"><i class="ri-shield-user-line"></i>${escapeHtml(row.full_name)}</span><br><small>${escapeHtml(row.email || "")}</small></td><td>${escapeHtml(row.contact_number || "—")}</td><td>${escapeHtml(row.unit_assignment || "—")}</td><td><span class="${row.user_id ? "account-linked" : "account-waiting"}">${row.user_id ? "Linked" : "Awaiting signup"}</span></td><td><select class="status-select" data-status-id="${row.id}" aria-label="Status for ${escapeHtml(row.full_name)}"><option value="active"${row.status === "active" ? " selected" : ""}>Active</option><option value="suspended"${row.status === "suspended" ? " selected" : ""}>Suspended</option><option value="inactive"${row.status === "inactive" ? " selected" : ""}>Inactive</option></select></td><td><strong>${ticketCounts.get(row.id) || 0}</strong></td><td><span class="enforcer-total-commission"><small>Accumulated share</small><strong>${money.format(commissionTotals.get(row.id) || 0)}</strong></span></td><td><div class="registry-actions"><button class="row-action" data-view-id="${row.id}">View Form</button><button class="row-action" data-save-id="${row.id}">Save</button></div></td></tr>`).join("") : '<tr><td class="empty-row" colspan="9">No TFRO Enforcers found.</td></tr>';
+  document.getElementById("enforcerTable").innerHTML = rows.length ? rows.map((row) => {
+    const colorClass = rankClass(row.id);
+    return `<tr class="enforcer-registry-row ${colorClass}"><td><strong>${escapeHtml(row.enforcer_id)}</strong></td><td><span class="enforcer-name-chip ${colorClass}"><i class="ri-shield-user-line"></i>${escapeHtml(row.full_name)}</span><br><small>${escapeHtml(row.email || "")}</small></td><td>${escapeHtml(row.contact_number || "—")}</td><td>${escapeHtml(row.unit_assignment || "—")}</td><td><span class="${row.user_id ? "account-linked" : "account-waiting"}">${row.user_id ? "Linked" : "Awaiting signup"}</span></td><td><select class="status-select" data-status-id="${row.id}" aria-label="Status for ${escapeHtml(row.full_name)}"><option value="active"${row.status === "active" ? " selected" : ""}>Active</option><option value="suspended"${row.status === "suspended" ? " selected" : ""}>Suspended</option><option value="inactive"${row.status === "inactive" ? " selected" : ""}>Inactive</option></select></td><td><strong>${ticketCounts.get(row.id) || 0}</strong></td><td><span class="enforcer-total-commission ${colorClass}"><small>${rankLabel(row.id)}</small><strong>${money.format(commissionTotals.get(row.id) || 0)}</strong></span></td><td><div class="registry-actions"><button class="row-action" data-view-id="${row.id}">View Form</button><button class="row-action" data-save-id="${row.id}">Save</button></div></td></tr>`;
+  }).join("") : '<tr><td class="empty-row" colspan="9">No TFRO Enforcers found.</td></tr>';
 }
 
 async function loadData() {
@@ -43,6 +56,7 @@ async function loadData() {
   (ticketResult.data || []).forEach((row) => { if (row.enforcer_id) ticketCounts.set(row.enforcer_id, (ticketCounts.get(row.enforcer_id) || 0) + 1); });
   commissionTotals = new Map();
   (commissionResult.data || []).forEach((row) => { if (row.enforcer_id) commissionTotals.set(row.enforcer_id, (commissionTotals.get(row.enforcer_id) || 0) + Number(row.commission_amount || 0)); });
+  updateCommissionRanks();
   renderEnforcers();
 }
 
@@ -51,6 +65,7 @@ function watchRegistryChanges() {
   registryChanges = supabase.channel("admin-enforcer-ticket-counts")
     .on("postgres_changes", { event:"*", schema:"public", table:"violations" }, () => void loadData())
     .on("postgres_changes", { event:"*", schema:"public", table:"traffic_enforcers" }, () => void loadData())
+    .on("postgres_changes", { event:"*", schema:"public", table:"payment_enforcer_commissions" }, () => void loadData())
     .subscribe();
   window.addEventListener("focus", () => void loadData());
 }

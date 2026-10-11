@@ -8,6 +8,9 @@ import { sendOperatorForm } from "./form-delivery.js";
 let violations = [];
 let catalog = [];
 let enforcers = [];
+let commissionRankingRoster = [];
+let enforcerCommissionTotals = new Map();
+let enforcerCommissionRanks = new Map();
 let currentUserId = null;
 let editingViolationId = null;
 let toastTimer = null;
@@ -62,8 +65,17 @@ function assignedEnforcers(row) {
   return (row.violation_enforcers || []).map((assignment) => assignment.traffic_enforcers).filter(Boolean);
 }
 
-function enforcerColorIndex(value) {
-  return [...String(value ?? "")].reduce((total, character) => total + character.charCodeAt(0), 0) % 6;
+function enforcerRankClass(id) {
+  return `enforcer-rank-${enforcerCommissionRanks.get(String(id)) || "neutral"}`;
+}
+
+function updateEnforcerCommissionRanks() {
+  const ranked = commissionRankingRoster
+    .map((enforcer) => ({ id:String(enforcer.id), enforcerId:String(enforcer.enforcer_id || ""), total:Number(enforcerCommissionTotals.get(enforcer.id) || 0) }))
+    .filter((enforcer) => enforcer.total > 0)
+    .sort((left, right) => right.total - left.total || left.enforcerId.localeCompare(right.enforcerId))
+    .slice(0, 3);
+  enforcerCommissionRanks = new Map(ranked.map((enforcer, index) => [enforcer.id, index + 1]));
 }
 
 function paidCommissionShares(row) {
@@ -74,10 +86,10 @@ function renderEnforcerCommissions(row, payment) {
   const shares = paidCommissionShares(row);
   if (shares.length) return shares.map((share) => {
     const enforcer = share.traffic_enforcers || {};
-    return `<span class="enforcer-commission-chip enforcer-color-${enforcerColorIndex(share.enforcer_id)}"><b>${escapeHtml(enforcer.full_name || enforcer.enforcer_id || "Enforcer")}</b><em>${money.format(Number(share.commission_amount || 0))}</em></span>`;
+    return `<span class="enforcer-commission-chip ${enforcerRankClass(share.enforcer_id)}"><b>${escapeHtml(enforcer.full_name || enforcer.enforcer_id || "Enforcer")}</b><em>${money.format(Number(share.commission_amount || 0))}</em></span>`;
   }).join("");
   const assigned = assignedEnforcers(row);
-  if (assigned.length) return assigned.map((enforcer) => `<span class="enforcer-commission-chip enforcer-color-${enforcerColorIndex(enforcer.enforcer_id)}"><b>${escapeHtml(enforcer.full_name)} <small>${escapeHtml(enforcer.enforcer_id)}</small></b><em>${payment ? money.format(Number(payment.individual_commission || 0)) : "Pending"}</em></span>`).join("");
+  if (assigned.length) return assigned.map((enforcer) => `<span class="enforcer-commission-chip ${enforcerRankClass(enforcer.id)}"><b>${escapeHtml(enforcer.full_name)} <small>${escapeHtml(enforcer.enforcer_id)}</small></b><em>${payment ? money.format(Number(payment.individual_commission || 0)) : "Pending"}</em></span>`).join("");
   if (row.apprehending_officers) return `<span class="enforcer-commission-chip commission-unassigned"><b>${escapeHtml(row.apprehending_officers)}<small>Legacy name — link to roster</small></b><em>${payment ? `Unassigned ${money.format(Number(payment.total_commission || 0))}` : "Pending"}</em></span>`;
   return "—";
 }
@@ -260,12 +272,21 @@ async function loadCatalog() {
 }
 
 async function loadEnforcers() {
-  const { data, error } = await supabase.from("traffic_enforcers")
-    .select("id,enforcer_id,full_name,status").eq("status", "active").order("full_name");
-  if (error) throw error;
-  enforcers = data || [];
+  const [enforcerResult, commissionResult] = await Promise.all([
+    supabase.from("traffic_enforcers").select("id,enforcer_id,full_name,status").order("full_name"),
+    supabase.from("payment_enforcer_commissions").select("enforcer_id,commission_amount"),
+  ]);
+  if (enforcerResult.error) throw enforcerResult.error;
+  if (commissionResult.error) throw commissionResult.error;
+  commissionRankingRoster = enforcerResult.data || [];
+  enforcers = commissionRankingRoster.filter((enforcer) => enforcer.status === "active");
+  enforcerCommissionTotals = new Map();
+  (commissionResult.data || []).forEach((row) => {
+    if (row.enforcer_id) enforcerCommissionTotals.set(row.enforcer_id, (enforcerCommissionTotals.get(row.enforcer_id) || 0) + Number(row.commission_amount || 0));
+  });
+  updateEnforcerCommissionRanks();
   document.getElementById("violationEnforcers").innerHTML = enforcers.map((enforcer) =>
-    `<label class="enforcer-checkbox-option enforcer-color-${enforcerColorIndex(enforcer.enforcer_id)}"><input type="checkbox" name="enforcer_ids" value="${enforcer.id}"><span><b>${escapeHtml(enforcer.full_name)}</b><small>${escapeHtml(enforcer.enforcer_id)}</small></span><i class="ri-check-line" aria-hidden="true"></i></label>`
+    `<label class="enforcer-checkbox-option ${enforcerRankClass(enforcer.id)}"><input type="checkbox" name="enforcer_ids" value="${enforcer.id}"><span><b>${escapeHtml(enforcer.full_name)}</b><small>${escapeHtml(enforcer.enforcer_id)}</small></span><i class="ri-check-line" aria-hidden="true"></i></label>`
   ).join("") || "<p>No active enforcers are available.</p>";
 }
 
@@ -290,7 +311,7 @@ function updateEnforcerCommissionPreview() {
   const baseCents = Math.floor(totalCents / sortedIds.length);
   const remainderCents = totalCents % sortedIds.length;
   const shares = new Map(sortedIds.map((id, index) => [id, (baseCents + (index < remainderCents ? 1 : 0)) / 100]));
-  preview.innerHTML = `<b>Estimated after payment: ${money.format(totalCommission)} total</b><span>${enforcers.filter((enforcer) => selectedIds.includes(enforcer.id)).map((enforcer) => `<i class="enforcer-commission-chip enforcer-color-${enforcerColorIndex(enforcer.enforcer_id)}"><b>${escapeHtml(enforcer.full_name)}</b><em>${money.format(shares.get(enforcer.id) || 0)}</em></i>`).join("")}</span>`;
+  preview.innerHTML = `<b>Estimated after payment: ${money.format(totalCommission)} total</b><span>${enforcers.filter((enforcer) => selectedIds.includes(enforcer.id)).map((enforcer) => `<i class="enforcer-commission-chip ${enforcerRankClass(enforcer.id)}"><b>${escapeHtml(enforcer.full_name)}</b><em>${money.format(shares.get(enforcer.id) || 0)}</em></i>`).join("")}</span>`;
 }
 
 function setFormMode(mode, row = null) {
@@ -505,7 +526,7 @@ async function initialize() {
     document.getElementById("addViolationBtn").hidden = !canManageViolations;
     if (!canManageViolations) formPanel.hidden = true;
     bindEvents();
-    try { await Promise.all([loadCatalog(), loadEnforcers(), loadViolations()]); }
+    try { await Promise.all([loadCatalog(), loadEnforcers(), loadViolations()]); render(); }
     catch (error) { console.error(error); window.alert(`Could not load violation data: ${error.message}`); }
   }
 }
