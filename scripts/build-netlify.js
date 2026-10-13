@@ -34,7 +34,7 @@ for (const file of publicRootFiles) {
 }
 
 // Publish the landing page at the canonical root URL. Keep html/index.html as
-// the editable source; Netlify permanently redirects that legacy URL to `/`.
+// the editable source for both Netlify and the GitHub Pages deployment.
 const landingSource = fs.readFileSync(path.join(root, "html", "index.html"), "utf8");
 const rootLandingPage = landingSource
   // Relative URLs work at both a domain root (Netlify) and a repository
