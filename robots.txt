@@ -29,4 +29,4 @@ Disallow: /html/report.html
 Disallow: /html/violation.html
 Disallow: /forms/
 
-Sitemap: https://visionary-crisp-f6c6cb.netlify.app/sitemap.xml
+Sitemap: https://ajdomirez.github.io/TFRO-MIS-WEB-SYTEM/sitemap.xml

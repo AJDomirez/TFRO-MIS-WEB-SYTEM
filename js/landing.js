@@ -78,7 +78,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("../service-worker.js").catch((error) =>
+  const landingScript = document.currentScript
+    || document.querySelector('script[src*="landing.js"]');
+  const workerUrl = landingScript?.src
+    ? new URL("../service-worker.js", landingScript.src).href
+    : new URL("./service-worker.js", window.location.href).href;
+  navigator.serviceWorker.register(workerUrl).catch((error) =>
     console.warn("Offline application worker could not be registered:", error)
   );
 }
