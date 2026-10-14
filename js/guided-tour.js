@@ -116,7 +116,7 @@ function startTour() {
 }
 
 async function initializeGuide() {
-  const button = document.createElement("button"); button.type = "button"; button.className = "system-guide-btn"; button.innerHTML = '<i class="ri-question-line"></i> System Guide / Gabay'; button.setAttribute("aria-label", "Open System Guide / Buksan ang Gabay sa System"); button.addEventListener("click", startTour); document.body.append(button);
+  const button = document.createElement("button"); button.type = "button"; button.className = "system-guide-btn"; button.innerHTML = '<i class="ri-question-line"></i><span>System Guide / Gabay</span>'; button.setAttribute("aria-label", "Open System Guide / Buksan ang Gabay sa System"); button.addEventListener("click", startTour); document.body.append(button);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();

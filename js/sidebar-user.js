@@ -309,10 +309,38 @@ function setupSharedTableSearch() {
   });
 }
 
+function labelMobileTableCells(table) {
+  if (!(table instanceof HTMLTableElement) || table.closest(".tfro-system-loader, .report-modal-body")) return;
+
+  table.classList.add("tfro-mobile-stack-table");
+  const headerRow = table.querySelector("thead tr:last-child");
+  const headers = headerRow
+    ? [...headerRow.cells].map((cell, index) => cell.textContent.trim() || `Column ${index + 1}`)
+    : [];
+
+  table.querySelectorAll("tbody tr, tfoot tr").forEach((row) => {
+    const cells = [...row.cells];
+    const isMessageRow = cells.length === 1 && cells[0].colSpan > 1;
+    row.classList.toggle("tfro-mobile-message-row", isMessageRow);
+
+    cells.forEach((cell, index) => {
+      const isSpanningCell = isMessageRow || cell.colSpan > 1;
+      cell.classList.toggle("tfro-mobile-message-cell", isSpanningCell);
+      if (isSpanningCell) {
+        delete cell.dataset.mobileLabel;
+        return;
+      }
+      cell.dataset.mobileLabel = headers[index] || `Field ${index + 1}`;
+    });
+  });
+}
+
 function enhanceScrollableTable(table) {
   /* Report previews already provide their own horizontal scrolling. Wrapping a
      dynamically inserted report table creates competing intrinsic widths. */
-  if (table.dataset.scrollControlsReady || table.closest(".tfro-system-loader, .report-modal-body")) return;
+  if (table.closest(".tfro-system-loader, .report-modal-body")) return;
+  labelMobileTableCells(table);
+  if (table.dataset.scrollControlsReady) return;
   table.dataset.scrollControlsReady = "true";
 
   const originalParent = table.parentElement;
@@ -338,13 +366,16 @@ function enhanceScrollableTable(table) {
   const leftButton = controls.querySelector('[data-table-scroll="left"]');
   const rightButton = controls.querySelector('[data-table-scroll="right"]');
   const update = () => {
+    const isMobileStack = window.matchMedia("(max-width: 768px)").matches
+      && document.body.classList.contains("operator-sidebar")
+      && table.classList.contains("tfro-mobile-stack-table");
     const max = Math.max(0, scrollArea.scrollWidth - scrollArea.clientWidth);
-    controls.classList.toggle("is-needed", max > 2);
+    controls.classList.toggle("is-needed", !isMobileStack && max > 2);
     leftButton.disabled = scrollArea.scrollLeft <= 2;
     rightButton.disabled = scrollArea.scrollLeft >= max - 2;
     scrollArea.classList.toggle("at-left", scrollArea.scrollLeft <= 2);
     scrollArea.classList.toggle("at-right", scrollArea.scrollLeft >= max - 2);
-    if (max <= 2 && activeTableScrollControls === controls) activateTableScrollControls(null);
+    if ((isMobileStack || max <= 2) && activeTableScrollControls === controls) activateTableScrollControls(null);
     else refreshVisibleTableControls();
   };
   const move = (direction) => scrollArea.scrollBy({
@@ -364,6 +395,7 @@ function enhanceScrollableTable(table) {
   }, { passive: false });
   new ResizeObserver(update).observe(scrollArea);
   new ResizeObserver(update).observe(table);
+  window.addEventListener("resize", update, { passive: true });
   window.setTimeout(update, 0);
 }
 
@@ -377,6 +409,8 @@ function setupTableScrollControls() {
       if (!(node instanceof Element)) return;
       if (node.matches("table")) enhanceScrollableTable(node);
       node.querySelectorAll?.("table").forEach(enhanceScrollableTable);
+      const parentTable = node.closest("table");
+      if (parentTable) labelMobileTableCells(parentTable);
     }));
   }).observe(main, { childList: true, subtree: true });
   let scheduled = false;
