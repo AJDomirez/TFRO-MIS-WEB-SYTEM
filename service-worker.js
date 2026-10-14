@@ -1,4 +1,4 @@
-const CACHE_NAME = "tfro-imis-shell-v31";
+const CACHE_NAME = "tfro-imis-shell-v32";
 const CORE_ASSETS = [
   "./",
   "html/application.html", "html/auditlog.html", "html/dashboard.html", "html/driver.html",
@@ -11,7 +11,7 @@ const CORE_ASSETS = [
   "css/driververify.css", "css/enforcer-admin.css", "css/enforcer.css", "css/franchise.css", "css/motor-admin.css",
   "css/guided-tour.css", "css/landing.css", "css/notification.css", "css/operator.css",
   "css/operatorportal.css", "css/operatorprofile.css", "css/payment.css", "css/profile.css",
-  "css/profilephoto.css", "css/renewal-admin.css", "css/renewal.css", "css/report.css",
+  "css/profilephoto.css", "css/renewal-admin.css", "css/renewal.css", "css/report.css", "css/mobile-portals.css",
   "css/style.css", "css/tfro-theme.css", "css/ticket-camera.css", "css/violation.css",
   "js/application.js", "js/audit-helper.js", "js/auditlog.js", "js/auth-guard.js",
   "js/csv-export.js", "js/dashboard.js", "js/driver.js", "js/driververify.js",

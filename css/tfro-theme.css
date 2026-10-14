@@ -1867,3 +1867,214 @@ html[data-theme="dark"] body.admin-sidebar #violationForm .violation-form-action
     flex-wrap:wrap;
   }
 }
+
+/* Operator and traffic-enforcer phone layout.
+   Data rows become labeled cards so phone users only scroll vertically. */
+@media(max-width:768px){
+  html,
+  body.operator-sidebar{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden !important;
+  }
+  body.operator-sidebar .sidebar{
+    height:58px !important;
+    min-height:58px !important;
+    padding:7px 10px !important;
+  }
+  body.operator-sidebar .sidebar-logo{
+    width:36px;
+    height:36px;
+  }
+  body.operator-sidebar .logo h2{font-size:13px !important;}
+  body.operator-sidebar .logo p{font-size:9px !important;}
+  body.operator-sidebar .logout-btn{
+    width:38px !important;
+    height:38px !important;
+    min-height:38px !important;
+    padding:0 !important;
+    font-size:18px !important;
+  }
+  body.operator-sidebar .menu{
+    height:62px !important;
+    padding:4px max(5px,env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left)) !important;
+  }
+  body.operator-sidebar .menu li a{
+    height:52px !important;
+    min-height:52px !important;
+    padding:4px 2px !important;
+    gap:2px !important;
+    border-radius:8px !important;
+    font-size:9px !important;
+  }
+  body.operator-sidebar .menu li a i{font-size:18px !important;}
+  body.operator-sidebar .layout > .main-content,
+  body.operator-sidebar .dashboard-container > .main-content{
+    padding:72px 10px calc(78px + env(safe-area-inset-bottom)) !important;
+  }
+  body.operator-sidebar .topbar{
+    gap:8px;
+    margin-bottom:10px !important;
+    padding:0 0 10px !important;
+  }
+  body.operator-sidebar .topbar h1{
+    margin:0;
+    font-size:20px !important;
+    line-height:1.2 !important;
+  }
+  body.operator-sidebar .topbar p{
+    margin-top:4px;
+    font-size:12px !important;
+    line-height:1.4 !important;
+  }
+  body.operator-sidebar :is(.info-card,.table-card,.form-card,.welcome-card,.portal-card){
+    margin-bottom:12px !important;
+    padding:13px !important;
+    border-radius:12px !important;
+  }
+  body.operator-sidebar :is(input,select,textarea){
+    min-width:0;
+    max-width:100%;
+    font-size:16px !important;
+  }
+  body.operator-sidebar button:not(.logout-btn),
+  body.operator-sidebar :is(.request-toggle-btn,.add-btn,.qr-verify-btn,.camera-btn,.photo-link){
+    min-height:38px;
+    max-width:100%;
+    padding:8px 11px !important;
+    font-size:13px !important;
+    line-height:1.15 !important;
+  }
+  body.operator-sidebar .tfro-table-scroll-controls{display:none !important;}
+  body.operator-sidebar :is(.table-card,.table-wrap,.table-responsive,.tfro-table-scroll){
+    width:100% !important;
+    max-width:100% !important;
+    overflow-x:visible !important;
+    scrollbar-width:none;
+  }
+  body.operator-sidebar .tfro-table-scroll{
+    padding:0;
+    outline:0;
+  }
+  body.operator-sidebar .tfro-table-scroll > table.tfro-mobile-stack-table,
+  body.operator-sidebar table.tfro-mobile-stack-table{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    border:0 !important;
+    background:transparent !important;
+    table-layout:fixed !important;
+    white-space:normal !important;
+  }
+  body.operator-sidebar table.tfro-mobile-stack-table thead{
+    position:absolute !important;
+    width:1px !important;
+    height:1px !important;
+    padding:0 !important;
+    margin:-1px !important;
+    overflow:hidden !important;
+    clip:rect(0,0,0,0) !important;
+    white-space:nowrap !important;
+    border:0 !important;
+  }
+  body.operator-sidebar table.tfro-mobile-stack-table :is(tbody,tfoot){
+    display:grid !important;
+    width:100% !important;
+    gap:10px;
+  }
+  body.operator-sidebar table.tfro-mobile-stack-table tfoot{margin-top:10px;}
+  body.operator-sidebar table.tfro-mobile-stack-table tr{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    overflow:hidden;
+    border:1px solid var(--tfro-border,#cbd5e1) !important;
+    border-left:4px solid var(--tfro-blue-700,#145187) !important;
+    border-radius:10px;
+    background:var(--tfro-surface,#fff) !important;
+    box-shadow:0 3px 10px rgba(15,23,42,.06);
+  }
+  body.operator-sidebar table.tfro-mobile-stack-table tr[hidden]{display:none !important;}
+  body.operator-sidebar table.tfro-mobile-stack-table td{
+    display:grid !important;
+    grid-template-columns:minmax(82px,35%) minmax(0,1fr);
+    align-items:start !important;
+    gap:9px;
+    width:100% !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    padding:8px 10px !important;
+    border:0 !important;
+    border-bottom:1px solid var(--tfro-border,#e2e8f0) !important;
+    background:transparent !important;
+    color:var(--tfro-ink,#17324d) !important;
+    font-size:12px !important;
+    line-height:1.4 !important;
+    text-align:left !important;
+    white-space:normal !important;
+    overflow-wrap:anywhere !important;
+    word-break:normal !important;
+  }
+  body.operator-sidebar table.tfro-mobile-stack-table td:last-child{border-bottom:0 !important;}
+  body.operator-sidebar table.tfro-mobile-stack-table td[data-mobile-label]::before{
+    content:attr(data-mobile-label);
+    color:var(--tfro-blue-700,#145187);
+    font-size:10px;
+    font-weight:900;
+    line-height:1.35;
+    letter-spacing:.035em;
+    text-transform:uppercase;
+  }
+  body.operator-sidebar table.tfro-mobile-stack-table :is(.tfro-mobile-message-cell,td[colspan]){
+    display:block !important;
+    padding:12px !important;
+    text-align:center !important;
+  }
+  body.operator-sidebar table.tfro-mobile-stack-table :is(.tfro-mobile-message-cell,td[colspan])::before{display:none !important;}
+  body.operator-sidebar table.tfro-mobile-stack-table td :is(button,a,.badge,.status-pill){
+    max-width:100%;
+    white-space:normal !important;
+  }
+  body.operator-sidebar table.tfro-mobile-stack-table td button{
+    width:auto !important;
+    min-width:0 !important;
+    justify-self:start;
+    padding:7px 9px !important;
+  }
+  body.operator-sidebar .system-guide-btn{
+    right:8px !important;
+    bottom:calc(68px + env(safe-area-inset-bottom)) !important;
+    gap:5px !important;
+    min-height:34px !important;
+    padding:7px 9px !important;
+    font-size:10px !important;
+    box-shadow:0 5px 14px rgba(11,47,85,.22) !important;
+  }
+}
+
+@media(max-width:390px){
+  body.operator-sidebar .system-guide-btn{
+    width:36px !important;
+    max-width:36px !important;
+    height:36px !important;
+    padding:0 !important;
+    justify-content:center;
+    font-size:0 !important;
+  }
+  body.operator-sidebar .system-guide-btn i{font-size:17px !important;}
+  body.operator-sidebar .system-guide-btn span{display:none !important;}
+}
+
+html[data-theme="dark"] body.operator-sidebar table.tfro-mobile-stack-table tr{
+  border-color:#35536f !important;
+  border-left-color:#60a5fa !important;
+  background:#0c2136 !important;
+  box-shadow:none;
+}
+html[data-theme="dark"] body.operator-sidebar table.tfro-mobile-stack-table td{
+  border-bottom-color:#28445f !important;
+  background:transparent !important;
+  color:#edf5ff !important;
+}
+html[data-theme="dark"] body.operator-sidebar table.tfro-mobile-stack-table td[data-mobile-label]::before{color:#9ecbf1;}
