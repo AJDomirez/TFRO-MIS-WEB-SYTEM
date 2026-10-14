@@ -1,4 +1,88 @@
 /* Compact, readable layouts for Operator and Traffic Enforcer phones. */
+body.operator-sidebar .topbar {
+  display: flex !important;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+body.operator-sidebar .topbar > div:first-child {
+  flex: 1 1 230px;
+  min-width: 0;
+}
+
+body.operator-sidebar .portal-topbar-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+body.operator-sidebar .tfro-theme-toggle {
+  min-width: 118px;
+  white-space: nowrap;
+}
+
+html[data-theme="dark"] body.operator-sidebar :is(
+  [class*="-card"],
+  .operator-actions,
+  .operator-action-card,
+  .process-summary > div,
+  .renewal-documents > label,
+  .doc-item,
+  .tabs,
+  .driver-result,
+  .camera-evidence,
+  .enforcer-badge
+) {
+  border-color: #35536f !important;
+  background: #0c2136 !important;
+  color: #edf5ff !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body.operator-sidebar :is(
+  .operator-action-card strong,
+  .operator-actions-heading h3,
+  .renewal-grid label,
+  .renewal-documents label,
+  .doc-label,
+  .driver-result strong,
+  .camera-evidence legend
+) { color: #edf5ff !important; }
+
+html[data-theme="dark"] body.operator-sidebar :is(
+  .operator-action-card span,
+  .operator-actions-heading p,
+  .change-motor-note,
+  .document-note,
+  .form-hint,
+  .driver-result span,
+  .camera-evidence > small
+) { color: #b8c9db !important; }
+
+html[data-theme="dark"] body.operator-sidebar .operator-action-card b {
+  width: max-content;
+  overflow: visible;
+  color: #fff !important;
+}
+
+html[data-theme="dark"] body.operator-sidebar :is(.notification-link,.back-link,.page-button-back,.camera-btn.secondary,.photo-link) {
+  border-color: #436483 !important;
+  background: #102d48 !important;
+  color: #dbeafe !important;
+}
+
+html[data-theme="dark"] body.operator-sidebar :is(.cm-section-title,.driver-section-title,.section-divider,.case-guidance) {
+  border-color: #5f91ba !important;
+  background: #102d48 !important;
+  color: #dbeafe !important;
+}
+
 @media (max-width: 768px) {
   body.operator-sidebar .welcome-card {
     min-height: 0;
@@ -148,6 +232,18 @@
     overflow-wrap: anywhere;
   }
 
+  body.operator-sidebar .portal-topbar-actions {
+    gap: 6px;
+    margin-left: 0;
+  }
+
+  body.operator-sidebar .tfro-theme-toggle {
+    min-width: 104px;
+    min-height: 36px !important;
+    padding: 7px 9px !important;
+    font-size: 11px !important;
+  }
+
   body.operator-sidebar :is(.cm-grid, .driver-form-grid, .ticket-form) {
     grid-template-columns: 1fr !important;
   }
@@ -168,5 +264,12 @@
 @media (max-width: 390px) {
   body.operator-sidebar .camera-actions { grid-template-columns: 1fr; }
   body.operator-sidebar .operator-actions-heading { flex-direction: column; }
+  body.operator-sidebar .tfro-theme-toggle {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    padding: 0 !important;
+  }
+  body.operator-sidebar .tfro-theme-toggle span { display: none; }
 }
 

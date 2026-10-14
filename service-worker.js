@@ -1,4 +1,4 @@
-const CACHE_NAME = "tfro-imis-shell-v33";
+const CACHE_NAME = "tfro-imis-shell-v35";
 const CORE_ASSETS = [
   "./",
   "html/application.html", "html/auditlog.html", "html/dashboard.html", "html/driver.html",
@@ -18,7 +18,7 @@ const CORE_ASSETS = [
   "js/enforcerportal.js", "js/enforcers.js", "js/form-delivery.js", "js/franchise.js",
   "js/guided-tour.js", "js/landing.js", "js/login.js", "js/mobile-portal-tables.js", "js/motorequests.js",
   "js/notification.js", "js/offline-status.js", "js/offline-sync.js", "js/operator.js",
-  "js/operatorapplication.js", "js/operatorportal.js", "js/operatorprofile.js", "js/payment.js",
+  "js/operatorapplication.js", "js/operatorportal.js", "js/operatorprofile.js", "js/payment.js", "js/portal-theme-toggle.js",
   "js/pdf-form.js", "js/profile.js", "js/profilephoto.js", "js/register.js", "js/renewal.js",
   "js/renewals.js", "js/report.js", "js/sidebar-user.js", "js/submission-form.js",
   "js/supabase-config.js", "js/supabase.js", "js/trike-drive.js", "js/violation.js",
@@ -31,6 +31,7 @@ const CORE_ASSETS = [
   "forms/TFRO-005 Application Form.pdf", "forms/TFRO-007 Certification of Dropping.pdf",
   "forms/TFRO-009 Order of Payment.pdf", "forms/TFRO-010 Unit Releasing Slip.pdf",
   "forms/public/assets/tfro-official-header.png", "forms/public/assets/tfro-official-footer-v2.png",
+  "forms/public/assets/tfro-001-permit-front.jpg", "forms/public/assets/tfro-001-conditions-back.jpg",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/+esm",
   "https://cdn.jsdelivr.net/npm/chart.js",
   "https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
