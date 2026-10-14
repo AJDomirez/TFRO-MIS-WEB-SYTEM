@@ -38,6 +38,34 @@ function firstValue(...candidates) {
   return "";
 }
 
+function renewalDocumentDetails(renewal = {}, franchise = {}, changeMotor = {}) {
+  const residentialAddress = [renewal.residential_street, renewal.residential_barangay]
+    .map(value).filter(Boolean).join(", ");
+  return {
+    operatorName: firstValue(renewal.operator_name, renewal.full_name, franchise.operator_name),
+    operatorAddress: firstValue(renewal.operator_address, residentialAddress, franchise.address),
+    contact: firstValue(renewal.operator_contact, renewal.contact_number, franchise.contact_number),
+    franchiseNumber: firstValue(renewal.franchise_number, franchise.franchise_number),
+    street: firstValue(renewal.residential_street),
+    barangay: firstValue(renewal.residential_barangay),
+    birthDate: firstValue(renewal.applicant_birth_date, renewal.birth_date, franchise.birth_date),
+    birthPlace: firstValue(renewal.applicant_birth_place, renewal.birth_place, franchise.birth_place),
+    civilStatus: firstValue(renewal.applicant_civil_status, renewal.civil_status, franchise.civil_status),
+    driverName: firstValue(renewal.driver_name, franchise.driver_name),
+    driverLicense: firstValue(renewal.driver_license_number, renewal.license_number),
+    make: firstValue(changeMotor.new_motor_brand, renewal.motorcycle_make, renewal.motorcycle_brand, franchise.motorcycle_brand),
+    model: firstValue(changeMotor.new_motor_serial, renewal.motorcycle_model, renewal.motorcycle_year_model, franchise.motorcycle_year_model),
+    engine: firstValue(changeMotor.new_engine_number, renewal.engine_number, renewal.motor_number, franchise.engine_number),
+    chassis: firstValue(changeMotor.new_chassis_number, renewal.chassis_number, franchise.chassis_number),
+    plate: firstValue(changeMotor.new_plate_number, renewal.plate_number, franchise.plate_number),
+    orNumber: firstValue(renewal.current_or_number, renewal.payment_or_number, renewal.official_receipt_number, franchise.official_receipt_number),
+    orDate: firstValue(renewal.current_or_date, renewal.payment_date),
+    crNumber: firstValue(renewal.current_cr_number, renewal.cr_number, franchise.chassis_cr_number, franchise.engine_cr_number),
+    route: firstValue(renewal.route, renewal.assigned_route, franchise.route, "LUCENA PROPER"),
+    toda: firstValue(renewal.toda_name, franchise.toda_name),
+  };
+}
+
 function formatDate(input) {
   if (!input) return "";
   const date = new Date(`${String(input).slice(0, 10)}T00:00:00`);
@@ -298,15 +326,16 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     const page = pdfDoc.addPage([pageWidth, pageHeight]);
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const ink = rgb(0, 0, 0);
+    const answers = renewalDocumentDetails(renewal, franchise, changeMotor);
     let details = {
-      name: firstValue(renewal.operator_name, franchise.operator_name),
-      franchise: firstValue(franchise.franchise_number, renewal.franchise_number),
-      address: firstValue(renewal.operator_address, franchise.address),
-      make: firstValue(changeMotor.new_motor_brand, renewal.motorcycle_make, franchise.motorcycle_brand),
-      model: firstValue(changeMotor.new_motor_serial, renewal.motorcycle_model, franchise.motorcycle_year_model),
-      motor: firstValue(changeMotor.new_engine_number, renewal.engine_number, franchise.engine_number),
-      chassis: firstValue(changeMotor.new_chassis_number, renewal.chassis_number, franchise.chassis_number),
-      plate: firstValue(changeMotor.new_plate_number, renewal.plate_number, franchise.plate_number),
+      name: answers.operatorName,
+      franchise: answers.franchiseNumber,
+      address: answers.operatorAddress,
+      make: answers.make,
+      model: answers.model,
+      motor: answers.engine,
+      chassis: answers.chassis,
+      plate: answers.plate,
       expiration: formatPermitDate(renewal.temporary_mtop_expiration_date),
     };
     details = await editFields("TFRO-001 Temporary MTOP", [
@@ -391,42 +420,43 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
     pdfDoc.addPage(page);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const operatorName = firstValue(renewal.operator_name, franchise.operator_name);
-    const operatorAddress = firstValue(renewal.operator_address, franchise.address);
+    const answers = renewalDocumentDetails(renewal, franchise, changeMotor);
+    const operatorName = answers.operatorName;
+    const operatorAddress = answers.operatorAddress;
     const names = splitName(operatorName);
     const fallbackAddress = splitResidentialAddress(operatorAddress);
     const address = {
-      street: firstValue(renewal.residential_street, fallbackAddress.street),
-      barangay: firstValue(renewal.residential_barangay, fallbackAddress.barangay),
+      street: firstValue(answers.street, fallbackAddress.street),
+      barangay: firstValue(answers.barangay, fallbackAddress.barangay),
     };
     const ink = rgb(0, 0, 0);
     const write = (text, x, y, size = 12, maxWidth = 500, useBold = false) =>
       drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, minSize: 5.5, color: ink });
 
-    const fullRenewalFranchiseNumber = firstValue(franchise.franchise_number, renewal.franchise_number);
-    const birthDate = firstValue(renewal.applicant_birth_date, franchise.birth_date);
+    const fullRenewalFranchiseNumber = answers.franchiseNumber;
+    const birthDate = answers.birthDate;
     let manual = await editFields("TFRO-005 Application", [
       { key: "date", label: "Application date", value: formatDate(firstValue(renewal.request_date, renewal.created_at)) },
       { key: "franchise", label: "Franchise number", value: fullRenewalFranchiseNumber.replace(/^FR-/i, "") },
       { key: "last", label: "Last name", value: names.last },
       { key: "first", label: "First name", value: names.first },
       { key: "middle", label: "Middle name", value: names.middle },
-      { key: "contact", label: "Contact number", value: firstValue(renewal.operator_contact, franchise.contact_number) },
+      { key: "contact", label: "Contact number", value: answers.contact },
       { key: "street", label: "Home number and street", value: address.street },
       { key: "barangay", label: "Barangay", value: address.barangay },
       { key: "birthDate", label: "Birthdate", value: formatDate(birthDate) },
-      { key: "birthPlace", label: "Place of birth", value: firstValue(renewal.applicant_birth_place, franchise.birth_place) },
+      { key: "birthPlace", label: "Place of birth", value: answers.birthPlace },
       { key: "age", label: "Age", value: ageFromBirthDate(birthDate) },
-      { key: "civilStatus", label: "Civil status", value: firstValue(renewal.applicant_civil_status, franchise.civil_status) },
-      { key: "make", label: "Vehicle make", value: firstValue(changeMotor.new_motor_brand, renewal.motorcycle_make, franchise.motorcycle_brand) },
-      { key: "plate", label: "Plate number", value: firstValue(changeMotor.new_plate_number, renewal.plate_number, franchise.plate_number) },
-      { key: "model", label: "Vehicle model", value: firstValue(changeMotor.new_motor_serial, renewal.motorcycle_model, franchise.motorcycle_year_model) },
-      { key: "orNumber", label: "O.R. number", value: firstValue(renewal.current_or_number, renewal.payment_or_number, franchise.official_receipt_number) },
-      { key: "engine", label: "Motor / engine number", value: firstValue(changeMotor.new_engine_number, renewal.engine_number, franchise.engine_number) },
-      { key: "orDate", label: "O.R. date", value: formatDate(renewal.current_or_date) },
-      { key: "chassis", label: "Chassis number", value: firstValue(changeMotor.new_chassis_number, renewal.chassis_number, franchise.chassis_number) },
-      { key: "crNumber", label: "C.R. number", value: firstValue(renewal.current_cr_number, franchise.chassis_cr_number, franchise.engine_cr_number) },
-      { key: "route", label: "Authorized route", value: firstValue(franchise.route, renewal.route, "LUCENA PROPER") },
+      { key: "civilStatus", label: "Civil status", value: answers.civilStatus },
+      { key: "make", label: "Vehicle make", value: answers.make },
+      { key: "plate", label: "Plate number", value: answers.plate },
+      { key: "model", label: "Vehicle model", value: answers.model },
+      { key: "orNumber", label: "O.R. number", value: answers.orNumber },
+      { key: "engine", label: "Motor / engine number", value: answers.engine },
+      { key: "orDate", label: "O.R. date", value: formatDate(answers.orDate) },
+      { key: "chassis", label: "Chassis number", value: answers.chassis },
+      { key: "crNumber", label: "C.R. number", value: answers.crNumber },
+      { key: "route", label: "Authorized route", value: answers.route },
       { key: "remarks", label: "Inspection remarks", value: renewal.inspection_remarks },
     ], editable, onSend);
     if (!manual) { popup?.close(); return; }
@@ -480,12 +510,13 @@ export async function openPmblPdfForm({ renewal, franchise = {}, editable = fals
     };
     const issuedInput = firstValue(renewal.admin_reviewed_at, renewal.reviewed_at, renewal.updated_at, renewal.request_date, renewal.created_at);
     const issued = issuedInput ? new Date(issuedInput) : new Date();
-    const pmblFranchiseNumber = firstValue(franchise.franchise_number, renewal.franchise_number);
+    const answers = renewalDocumentDetails(renewal, franchise);
+    const pmblFranchiseNumber = answers.franchiseNumber;
     const manual = await editFields("PMBL TFRO-003 Certification", [
-      { key: "name", label: "Member name", value: firstValue(renewal.operator_name, franchise.operator_name) },
+      { key: "name", label: "Member name", value: answers.operatorName },
       { key: "franchise", label: "Franchise number", value: pmblFranchiseNumber },
-      { key: "address", label: "Residential address", value: firstValue(renewal.operator_address, franchise.address) },
-      { key: "toda", label: "TODA", value: franchise.toda_name },
+      { key: "address", label: "Residential address", value: answers.operatorAddress },
+      { key: "toda", label: "TODA", value: answers.toda },
       { key: "driver", label: "Driver", value: false, type: "checkbox" },
       { key: "operator", label: "Operator", value: true, type: "checkbox" },
       { key: "both", label: "Both", value: false, type: "checkbox" },
