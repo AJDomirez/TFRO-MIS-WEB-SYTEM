@@ -315,8 +315,8 @@ async function embedPicture(pdfDoc, page, pictureUrl) {
   }
 }
 
-export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, changeMotor = {}, editable = false, onSend = null, finalPermit = false }) {
-  const documentTitle = finalPermit ? "Motorized Tricycle Operator's Permit" : "TFRO-001 Temporary MTOP";
+export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, changeMotor = {}, editable = false, onSend = null }) {
+  const documentTitle = "TFRO-001 Temporary MTOP";
   let popup = editable ? null : openPdfWindow(documentTitle);
   if (!editable && !popup) return;
   try {
@@ -337,9 +337,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
       motor: answers.engine,
       chassis: answers.chassis,
       plate: answers.plate,
-      expiration: formatPermitDate(finalPermit
-        ? firstValue(renewal.new_expiration_date, franchise.expiration_date)
-        : renewal.temporary_mtop_expiration_date),
+      expiration: formatPermitDate(renewal.temporary_mtop_expiration_date),
     };
     details = await editFields(documentTitle, [
       { key: "name", label: "Applicant / Operator", value: details.name },
@@ -402,8 +400,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     conditionsPage.drawImage(conditionsBack, { x: 0, y: 0, width: pageWidth, height: pageHeight });
 
     const bytes = await pdfDoc.save();
-    const fileCode = finalPermit ? "MTOP-PERMIT" : "TFRO-001";
-    await showPdf(popup, bytes, `${fileCode}-${value(renewal.renewal_code || renewal.id)}.pdf`);
+    await showPdf(popup, bytes, `TFRO-001-${value(renewal.renewal_code || renewal.id)}.pdf`);
   } catch (error) {
     popup?.close();
     console.error(error);
@@ -411,8 +408,88 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
   }
 }
 
-export function openFinalMtopPermitPdfForm(options) {
-  return openTemporaryMtopPdfForm({ ...options, finalPermit: true });
+export async function openFinalMtopPermitPdfForm({ renewal, franchise = {}, changeMotor = {}, editable = false }) {
+  const documentTitle = "Motorized Tricycle Operator's Permit";
+  let popup = editable ? null : openPdfWindow(documentTitle);
+  if (!editable && !popup) return;
+  try {
+    const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
+    const templateUrl = new URL("../forms/MTOP Final Permit Template.pdf?v=20261015-1", import.meta.url);
+    const templateBytes = await fetch(templateUrl).then((response) => {
+      if (!response.ok) throw new Error(`MTOP Permit template could not be loaded (${response.status}).`);
+      return response.arrayBuffer();
+    });
+    const source = await PDFDocument.load(templateBytes);
+    const pdfDoc = await PDFDocument.create();
+    const [page] = await pdfDoc.copyPages(source, [0]);
+    pdfDoc.addPage(page);
+    const bold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+    const boldItalic = await pdfDoc.embedFont(StandardFonts.TimesRomanBoldItalic);
+    const ink = rgb(0, 0, 0);
+    const white = rgb(1, 1, 1);
+    const answers = renewalDocumentDetails(renewal, franchise, changeMotor);
+    let details = {
+      name: answers.operatorName.toUpperCase(),
+      franchise: answers.franchiseNumber.toUpperCase(),
+      address: answers.operatorAddress.toUpperCase(),
+      make: answers.make.toUpperCase(),
+      model: answers.model.toUpperCase(),
+      motor: answers.engine.toUpperCase(),
+      chassis: answers.chassis.toUpperCase(),
+      plate: answers.plate.toUpperCase(),
+      expiration: formatPermitDate(firstValue(renewal.new_expiration_date, franchise.expiration_date)),
+    };
+    details = await editFields(documentTitle, [
+      { key: "name", label: "Operator name", value: details.name },
+      { key: "franchise", label: "Franchise number", value: details.franchise },
+      { key: "address", label: "Address", value: details.address },
+      { key: "make", label: "Vehicle make", value: details.make },
+      { key: "model", label: "Vehicle model", value: details.model },
+      { key: "motor", label: "Motor / engine number", value: details.motor },
+      { key: "chassis", label: "Chassis number", value: details.chassis },
+      { key: "plate", label: "Plate number", value: details.plate },
+      { key: "expiration", label: "Good Until", value: details.expiration },
+    ], editable);
+    if (!details) { popup?.close(); return; }
+    popup ||= openPdfWindow(documentTitle);
+    if (!popup) return;
+
+    const cover = (x, y, width, height) => page.drawRectangle({ x, y, width, height, color: white });
+    const fittedText = (text, x, y, width, size = 9, align = "left", font = bold) => {
+      if (!value(text)) return;
+      const fitted = fitTextSize(font, value(text), size, width, 5.5);
+      page.drawText(value(text), { x: alignedTextX(font, value(text), fitted, x, width, align), y, size: fitted, font, color: ink });
+    };
+
+    // Remove the example record from the supplied official template, then place approved system data.
+    cover(120, 786, 266, 13);
+    cover(414, 786, 151, 13);
+    cover(120, 768, 266, 14);
+    fittedText(details.name, 124, 789, 255, 9);
+    fittedText(`Franchise No. ${details.franchise}`, 418, 789, 143, 8, "right", boldItalic);
+    fittedText(details.address, 124, 771, 255, 8);
+    page.drawLine({ start: { x: 124, y: 787 }, end: { x: 379, y: 787 }, thickness: .6, color: ink });
+    page.drawLine({ start: { x: 124, y: 769 }, end: { x: 379, y: 769 }, thickness: .6, color: ink });
+
+    const vehicleCells = [
+      [details.make, 46, 84], [details.model, 131, 69], [details.motor, 202, 144],
+      [details.chassis, 348, 146], [details.plate, 496, 67],
+    ];
+    vehicleCells.forEach(([text, x, width]) => {
+      cover(x, 631, width, 17);
+      fittedText(text, x + 2, 636, width - 4, 8, "center");
+    });
+
+    cover(170, 260, 389, 24);
+    fittedText(`GOOD UNTIL: ${details.expiration}`, 174, 266, 381, 14, "center");
+
+    const bytes = await pdfDoc.save();
+    await showPdf(popup, bytes, `MTOP-PERMIT-${value(renewal.renewal_code || renewal.id)}.pdf`);
+  } catch (error) {
+    popup?.close();
+    console.error(error);
+    alert(`Unable to generate the ${documentTitle} PDF: ${error.message}`);
+  }
 }
 
 export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor = {}, pictureUrl = "", editable = false, onSend = null }) {

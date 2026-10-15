@@ -3,7 +3,7 @@ import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261015-2");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261015-3");
   openRenewalPdfForm(options);
 }
 
@@ -251,13 +251,13 @@ async function showRenewalSubmission(renewal) {
 }
 
 async function showPmblCertification(renewal) {
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261015-2");
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261015-3");
   openPmblPdfForm({ renewal, franchise: currentFranchise || {} });
 }
 
 async function showRenewalChecklist(renewal) {
   const { data: documents } = await supabase.from("renewal_documents").select("doc_type,status,verified").eq("renewal_id", renewal.id);
-  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261015-2");
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261015-3");
   openChecklistPdfForm({ renewal, documents: documents || [] });
 }
 
@@ -271,7 +271,7 @@ async function showTemporaryMtop(renewal) {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261015-2");
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261015-3");
   openTemporaryMtopPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor });
 }
 
@@ -285,7 +285,7 @@ async function showFinalMtopPermit(renewal) {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openFinalMtopPermitPdfForm } = await import("./pdf-form.js?v=20261015-2");
+  const { openFinalMtopPermitPdfForm } = await import("./pdf-form.js?v=20261015-3");
   openFinalMtopPermitPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor });
 }
 
