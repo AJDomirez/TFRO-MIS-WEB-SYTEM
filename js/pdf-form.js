@@ -315,8 +315,9 @@ async function embedPicture(pdfDoc, page, pictureUrl) {
   }
 }
 
-export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, changeMotor = {}, editable = false, onSend = null }) {
-  let popup = editable ? null : openPdfWindow("TFRO-001 Temporary MTOP");
+export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, changeMotor = {}, editable = false, onSend = null, finalPermit = false }) {
+  const documentTitle = finalPermit ? "Motorized Tricycle Operator's Permit" : "TFRO-001 Temporary MTOP";
+  let popup = editable ? null : openPdfWindow(documentTitle);
   if (!editable && !popup) return;
   try {
     const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
@@ -336,9 +337,11 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
       motor: answers.engine,
       chassis: answers.chassis,
       plate: answers.plate,
-      expiration: formatPermitDate(renewal.temporary_mtop_expiration_date),
+      expiration: formatPermitDate(finalPermit
+        ? firstValue(renewal.new_expiration_date, franchise.expiration_date)
+        : renewal.temporary_mtop_expiration_date),
     };
-    details = await editFields("TFRO-001 Temporary MTOP", [
+    details = await editFields(documentTitle, [
       { key: "name", label: "Applicant / Operator", value: details.name },
       { key: "franchise", label: "Franchise number", value: details.franchise },
       { key: "address", label: "Address", value: details.address },
@@ -350,7 +353,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
       { key: "expiration", label: "Expiration date", value: details.expiration },
     ], editable, onSend);
     if (!details) { popup?.close(); return; }
-    popup ||= openPdfWindow("TFRO-001 Temporary MTOP");
+    popup ||= openPdfWindow(documentTitle);
     if (!popup) return;
     const permitFrontUrl = new URL("../forms/public/assets/tfro-001-permit-front.jpg?v=20261014-1", import.meta.url);
     const conditionsBackUrl = new URL("../forms/public/assets/tfro-001-conditions-back.jpg?v=20261014-1", import.meta.url);
@@ -399,12 +402,17 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     conditionsPage.drawImage(conditionsBack, { x: 0, y: 0, width: pageWidth, height: pageHeight });
 
     const bytes = await pdfDoc.save();
-    await showPdf(popup, bytes, `TFRO-001-${value(renewal.renewal_code || renewal.id)}.pdf`);
+    const fileCode = finalPermit ? "MTOP-PERMIT" : "TFRO-001";
+    await showPdf(popup, bytes, `${fileCode}-${value(renewal.renewal_code || renewal.id)}.pdf`);
   } catch (error) {
     popup?.close();
     console.error(error);
-    alert(`Unable to generate the TFRO-001 PDF: ${error.message}`);
+    alert(`Unable to generate the ${documentTitle} PDF: ${error.message}`);
   }
+}
+
+export function openFinalMtopPermitPdfForm(options) {
+  return openTemporaryMtopPdfForm({ ...options, finalPermit: true });
 }
 
 export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor = {}, pictureUrl = "", editable = false, onSend = null }) {

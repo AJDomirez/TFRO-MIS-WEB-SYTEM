@@ -10,7 +10,7 @@ const renewalFormSender = (formCode, renewal) => () => sendOperatorForm({
 });
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261014-2");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261015-2");
   openRenewalPdfForm({ ...options, editable: true, onSend: renewalFormSender("TFRO-005", options.renewal) });
 }
 
@@ -373,8 +373,23 @@ async function printCurrentTemporaryMtop() {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261014-2");
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261015-2");
   openTemporaryMtopPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, changeMotor, editable: true, onSend: renewalFormSender("TFRO-001", currentRenewal) });
+}
+
+async function printCurrentFinalMtopPermit() {
+  if (!currentRenewal) return;
+  if (currentRenewal.status !== "approved") return alert("Approve the renewal before generating the final MTOP Permit.");
+  let changeMotor = {};
+  if (currentRenewal.change_motor_request_id) {
+    const { data, error } = await supabase.from("change_motor_requests")
+      .select("new_motor_brand,new_motor_serial,new_engine_number,new_chassis_number,new_plate_number")
+      .eq("id", currentRenewal.change_motor_request_id).maybeSingle();
+    if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
+    changeMotor = data || {};
+  }
+  const { openFinalMtopPermitPdfForm } = await import("./pdf-form.js?v=20261015-2");
+  openFinalMtopPermitPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, changeMotor, editable: true });
 }
 
 async function sendCurrentTemporaryMtop() {
@@ -413,13 +428,13 @@ async function sendCurrentTemporaryMtop() {
 
 async function printCurrentPmblCertification() {
   if (!currentRenewal) return;
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261014-2");
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261015-2");
   openPmblPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, editable: true, onSend: renewalFormSender("TFRO-003", currentRenewal) });
 }
 
 async function printCurrentChecklist() {
   if (!currentRenewal) return;
-  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261014-2");
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261015-2");
   openChecklistPdfForm({ renewal: currentRenewal, documents: currentDocuments, editable: true, onSend: renewalFormSender("TFRO-004", currentRenewal) });
 }
 
@@ -636,9 +651,11 @@ byId("incompleteBtn").addEventListener("click", markIncomplete);
 byId("approveRenewalBtn").addEventListener("click", approveRenewal);
 byId("printPmblBtn").insertAdjacentHTML("beforebegin", '<button class="btn-cancel form-action-button" id="printTemporaryMtopBtn"><i class="ri-file-pdf-2-line"></i><span>TFRO-001</span></button>');
 byId("printTemporaryMtopBtn").insertAdjacentHTML("afterend", '<button class="btn-accept" id="sendTemporaryMtopBtn"><i class="ri-send-plane-line"></i> Send TFRO-001</button>');
+byId("sendTemporaryMtopBtn").insertAdjacentHTML("afterend", '<button class="btn-cancel form-action-button" id="printFinalMtopPermitBtn"><i class="ri-file-shield-2-line"></i><span>MTOP Permit</span></button>');
 document.querySelector("#reviewModal .renewal-actions").style.setProperty("display", "grid", "important");
 byId("printTemporaryMtopBtn").addEventListener("click", printCurrentTemporaryMtop);
 byId("sendTemporaryMtopBtn").addEventListener("click", sendCurrentTemporaryMtop);
+byId("printFinalMtopPermitBtn").addEventListener("click", printCurrentFinalMtopPermit);
 byId("printRenewalBtn").addEventListener("click", printCurrentRenewal);
 byId("printChecklistBtn").addEventListener("click", printCurrentChecklist);
 byId("printPmblBtn").addEventListener("click", printCurrentPmblCertification);
