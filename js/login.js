@@ -287,11 +287,7 @@ async function routeUser(user, suppliedFranchiseNumber = "") {
     .then(() => {})
     .catch((err) => console.error("Audit log insert failed:", err));
 
-  if (["operator", "traffic_enforcer"].includes(role) && !profile?.profile_picture_path) {
-    window.location.replace("profilephoto.html");
-  } else {
-    window.location.replace(destinationForRole(role));
-  }
+  window.location.replace(destinationForRole(role));
   return true;
 }
 

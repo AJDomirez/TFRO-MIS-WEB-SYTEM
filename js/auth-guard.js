@@ -75,7 +75,7 @@ export function destinationForRole(role) {
 export async function loadUserProfile(userId) {
   return supabase
     .from("profiles")
-    .select("id, role, full_name, contact_number, profile_picture_path")
+    .select("id, role, full_name, contact_number")
     .eq("id", userId)
     .maybeSingle();
 }

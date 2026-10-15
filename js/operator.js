@@ -15,15 +15,13 @@ function render() {
 }
 
 async function loadOperators() {
-  const [operatorResult, driverResult, profileResult] = await Promise.all([
+  const [operatorResult, driverResult] = await Promise.all([
     supabase.from("operators").select("id,user_id,full_name,email,address,contact_number,franchise_number,status,verified,created_at").order("full_name"),
     supabase.from("drivers").select("id,full_name,license_number,operator_name,contact_number,violation_count,compliance,created_at,franchise_id,operator_id,address,license_type,license_expiration,license_status,license_verified_at,picture_storage_path").order("full_name"),
-    supabase.from("profiles").select("id,profile_picture_path"),
   ]);
   if (operatorResult.error) { table.innerHTML = `<tr><td colspan="8" class="table-error">Could not load Operator accounts: ${escapeHtml(operatorResult.error.message)}</td></tr>`; return; }
   if (driverResult.error) console.error("Could not preload Operator Drivers:", driverResult.error);
-  const pictures = new Map((profileResult.data || []).map((profile) => [profile.id, profile.profile_picture_path]));
-  operators = (operatorResult.data || []).map((operator) => ({ ...operator, profile_picture_path:pictures.get(operator.user_id) || null })); operatorDrivers = driverResult.data || []; render();
+  operators = operatorResult.data || []; operatorDrivers = driverResult.data || []; render();
 }
 
 function profileField(label, value) { const shown = value === null || value === undefined || value === "" ? "—" : value; return `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(shown)}</strong></div>`; }
@@ -40,8 +38,6 @@ async function openOperatorRecord(operatorId) {
     return `<article class="operator-driver-card"><div class="driver-card-summary"><div class="driver-card-avatar"><i class="ri-steering-2-line"></i></div><div><h4>${escapeHtml(driver.full_name)}</h4><p>${escapeHtml(driver.license_number)} · ${escapeHtml(driver.license_type || "License type not entered")}</p></div><span class="license-verification ${verified ? "verified" : "unverified"}"><i class="${verified ? "ri-checkbox-circle-fill" : "ri-error-warning-fill"}"></i>${verified ? "Verified License" : expired ? "Expired License" : "Not Verified"}</span></div><details><summary><i class="ri-file-text-line"></i> View Driver Profile & Submitted Form <i class="ri-arrow-down-s-line"></i></summary><div class="driver-form-record"><img data-driver-picture="${driver.id}" alt="Submitted Driver picture" hidden><div class="record-profile-grid">${fields}</div></div></details></article>`;
   }).join("") : '<div class="empty-driver-record"><i class="ri-user-unfollow-line"></i><h4>No Drivers assigned</h4><p>No submitted Driver profiles are currently linked to this Operator.</p></div>';
   document.getElementById("operatorRecordModal").hidden = false;
-  const formalPhoto = document.getElementById("operatorFormalPhoto"), missingPhoto = document.getElementById("operatorPhotoMissing"); formalPhoto.hidden = true; formalPhoto.removeAttribute("src"); missingPhoto.hidden = false;
-  if (operator.profile_picture_path) { const { data } = await supabase.storage.from("account-profile-pictures").createSignedUrl(operator.profile_picture_path,600); if (data?.signedUrl) { formalPhoto.src=data.signedUrl; formalPhoto.hidden=false; missingPhoto.hidden=true; } }
   await Promise.all(drivers.filter((d) => d.picture_storage_path).map(async (driver) => { const { data } = await supabase.storage.from("franchise-documents").createSignedUrl(driver.picture_storage_path,600); const image = document.querySelector(`[data-driver-picture="${driver.id}"]`); if (data?.signedUrl && image) { image.src = data.signedUrl; image.hidden = false; } }));
 }
 const closeOperatorRecord = () => { document.getElementById("operatorRecordModal").hidden = true; };
