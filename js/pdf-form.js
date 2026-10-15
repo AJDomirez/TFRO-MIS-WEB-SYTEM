@@ -38,9 +38,36 @@ function firstValue(...candidates) {
   return "";
 }
 
+function normalizeVehicleMakeModel(make, model) {
+  const normalizedMake = value(make);
+  const normalizedModel = value(model);
+  const isYear = (candidate) => {
+    if (!/^\d{4}$/.test(candidate)) return false;
+    const year = Number(candidate);
+    return year >= 1900 && year <= 2100;
+  };
+  return isYear(normalizedMake) && normalizedModel && !isYear(normalizedModel)
+    ? { make: normalizedModel, model: normalizedMake }
+    : { make: normalizedMake, model: normalizedModel };
+}
+
+function dateInputValue(input) {
+  const raw = value(input);
+  if (!raw || /^\d{4}$/.test(raw)) return "";
+  const candidate = raw.slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(candidate)) return candidate;
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
+}
+
 function renewalDocumentDetails(renewal = {}, franchise = {}, changeMotor = {}) {
   const residentialAddress = [renewal.residential_street, renewal.residential_barangay]
     .map(value).filter(Boolean).join(", ");
+  const vehicle = normalizeVehicleMakeModel(
+    firstValue(changeMotor.new_motor_brand, renewal.motorcycle_make, renewal.motorcycle_brand, franchise.motorcycle_brand),
+    firstValue(changeMotor.new_motor_serial, renewal.motorcycle_model, renewal.motorcycle_year_model, franchise.motorcycle_year_model),
+  );
   return {
     operatorName: firstValue(renewal.operator_name, renewal.full_name, franchise.operator_name),
     operatorAddress: firstValue(renewal.operator_address, residentialAddress, franchise.address),
@@ -53,8 +80,8 @@ function renewalDocumentDetails(renewal = {}, franchise = {}, changeMotor = {}) 
     civilStatus: firstValue(renewal.applicant_civil_status, renewal.civil_status, franchise.civil_status),
     driverName: firstValue(renewal.driver_name, franchise.driver_name),
     driverLicense: firstValue(renewal.driver_license_number, renewal.license_number),
-    make: firstValue(changeMotor.new_motor_brand, renewal.motorcycle_make, renewal.motorcycle_brand, franchise.motorcycle_brand),
-    model: firstValue(changeMotor.new_motor_serial, renewal.motorcycle_model, renewal.motorcycle_year_model, franchise.motorcycle_year_model),
+    make: vehicle.make,
+    model: vehicle.model,
     engine: firstValue(changeMotor.new_engine_number, renewal.engine_number, renewal.motor_number, franchise.engine_number),
     chassis: firstValue(changeMotor.new_chassis_number, renewal.chassis_number, franchise.chassis_number),
     plate: firstValue(changeMotor.new_plate_number, renewal.plate_number, franchise.plate_number),
@@ -222,9 +249,11 @@ function editFields(title, fields, editable, onSend = null) {
     const heading = document.createElement("h2");
     heading.textContent = `Review ${title}`;
     heading.style.cssText = "margin:0 0 5px;font-size:20px";
+    heading.style.setProperty("color", "#fff", "important");
     const note = document.createElement("p");
     note.textContent = "Administrator only: values are auto-filled. Edit only what must change for this generated copy.";
     note.style.cssText = "margin:0;font-size:12px;opacity:.9";
+    note.style.setProperty("color", "#fff", "important");
     header.append(heading, note);
     const form = document.createElement("form");
     form.method = "dialog";
@@ -234,12 +263,22 @@ function editFields(title, fields, editable, onSend = null) {
     for (const field of fields) {
       const label = document.createElement("label");
       label.style.cssText = "display:grid;gap:6px;font-size:12px;font-weight:700";
-      label.append(document.createTextNode(field.label));
+      label.append(document.createTextNode(`${field.label}${field.required ? " *" : ""}`));
       const input = document.createElement("input");
       input.name = field.key;
       input.type = field.type || "text";
+      input.required = Boolean(field.required);
       if (input.type === "checkbox") input.checked = Boolean(field.value);
       else input.value = value(field.value);
+      if (field.exclusiveGroup) {
+        input.dataset.exclusiveGroup = field.exclusiveGroup;
+        input.addEventListener("change", () => {
+          if (!input.checked) return;
+          grid.querySelectorAll("input[data-exclusive-group]").forEach((candidate) => {
+            if (candidate !== input && candidate.dataset.exclusiveGroup === field.exclusiveGroup) candidate.checked = false;
+          });
+        });
+      }
       input.style.cssText = input.type === "checkbox"
         ? "width:20px;height:20px;accent-color:#123f73"
         : "width:100%;min-height:40px;padding:8px 10px;border:1px solid #aebbb5;border-radius:7px;font:14px Arial";
@@ -280,6 +319,7 @@ function editFields(title, fields, editable, onSend = null) {
       return result;
     };
     if (onSend) send.addEventListener("click", async () => {
+      if (!form.reportValidity()) return;
       send.disabled = true;
       generate.disabled = true;
       const originalText = send.textContent;
@@ -406,6 +446,8 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
       { key: "expiration", label: "Expiration date", value: details.expiration },
     ], editable, onSend);
     if (!details) { popup?.close(); return; }
+    const reviewedVehicle = normalizeVehicleMakeModel(details.make, details.model);
+    details = { ...details, make: reviewedVehicle.make, model: reviewedVehicle.model };
     popup ||= openPdfWindow(documentTitle);
     if (!popup) return;
     const permitFrontUrl = new URL("../forms/public/assets/tfro-001-permit-front.jpg?v=20261014-1", import.meta.url);
@@ -444,11 +486,11 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     drawArtworkValue(details.name, 154, 414, 450, 10.5);
     drawArtworkValue(details.address, 204, 462, 535, 9.5);
     drawArtworkValue(details.franchise, 936, 482, 349, 12, "center", rgb(.02, .16, .35));
-    drawArtworkValue(details.make, 61, 830, 181, 10.5, "center", rgb(.02, .16, .35));
-    drawArtworkValue(details.model, 252, 830, 174, 10.5, "center", rgb(.02, .16, .35));
-    drawArtworkValue(details.motor, 442, 830, 278, 10.5, "center", rgb(.02, .16, .35));
-    drawArtworkValue(details.chassis, 741, 830, 285, 10.5, "center", rgb(.02, .16, .35));
-    drawArtworkValue(details.plate, 1045, 830, 208, 10.5, "center", rgb(.02, .16, .35));
+    drawArtworkValue(details.make, 61, 811, 181, 10.5, "center", rgb(.02, .16, .35));
+    drawArtworkValue(details.model, 252, 811, 174, 10.5, "center", rgb(.02, .16, .35));
+    drawArtworkValue(details.motor, 442, 811, 278, 10.5, "center", rgb(.02, .16, .35));
+    drawArtworkValue(details.chassis, 741, 811, 285, 10.5, "center", rgb(.02, .16, .35));
+    drawArtworkValue(details.plate, 1045, 811, 208, 10.5, "center", rgb(.02, .16, .35));
     drawArtworkValue(details.expiration, 890, 1721, 331, 12, "center", rgb(.72, .05, .07));
 
     const conditionsPage = pdfDoc.addPage([pageWidth, pageHeight]);
@@ -508,6 +550,8 @@ export async function openFinalMtopPermitPdfForm({ renewal, franchise = {}, chan
       { key: "expiration", label: "Good Until", value: details.expiration },
     ], editable);
     if (!details) { popup?.close(); return; }
+    const reviewedVehicle = normalizeVehicleMakeModel(details.make, details.model);
+    details = { ...details, make: reviewedVehicle.make, model: reviewedVehicle.model };
     popup ||= openPdfWindow(documentTitle);
     if (!popup) return;
 
@@ -539,8 +583,11 @@ export async function openFinalMtopPermitPdfForm({ renewal, franchise = {}, chan
       fittedText(text, x + 1.5, 631, width - 3, 17, 8, "center");
     });
 
-    cover(170, 260, 389, 24, 1.5);
-    fittedText(`GOOD UNTIL: ${details.expiration}`, 174, 260, 381, 24, 14, "center");
+    // Clear the full interior of the supplied sample's GRANTED box. Covering only
+    // the date line leaves the example expiration visible underneath the real one.
+    cover(159, 238, 405, 55, 1.7);
+    fittedText("GRANTED", 165, 269, 393, 20, 17, "center");
+    fittedText(`GOOD UNTIL: ${details.expiration}`, 165, 245, 393, 24, 14, "center");
 
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `MTOP-PERMIT-${value(renewal.renewal_code || renewal.id)}.pdf`);
@@ -583,7 +630,7 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
     const fullRenewalFranchiseNumber = answers.franchiseNumber;
     const birthDate = answers.birthDate;
     let manual = await editFields("TFRO-005 Application", [
-      { key: "date", label: "Application date", value: formatDate(firstValue(renewal.request_date, renewal.created_at)) },
+      { key: "date", label: "Application date", value: dateInputValue(firstValue(renewal.request_date, renewal.created_at)), type: "date", required: true },
       { key: "franchise", label: "Franchise number", value: fullRenewalFranchiseNumber.replace(/^FR-/i, "") },
       { key: "last", label: "Last name", value: names.last },
       { key: "first", label: "First name", value: names.first },
@@ -591,25 +638,34 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
       { key: "contact", label: "Contact number", value: answers.contact },
       { key: "street", label: "Home number and street", value: address.street },
       { key: "barangay", label: "Barangay", value: address.barangay },
-      { key: "birthDate", label: "Birthdate", value: formatDate(birthDate) },
+      { key: "birthDate", label: "Birthdate", value: dateInputValue(birthDate), type: "date", required: true },
       { key: "birthPlace", label: "Place of birth", value: answers.birthPlace },
       { key: "age", label: "Age", value: ageFromBirthDate(birthDate) },
       { key: "civilStatus", label: "Civil status", value: answers.civilStatus },
-      { key: "make", label: "Vehicle make", value: answers.make },
+      { key: "make", label: "Vehicle make", value: answers.make, required: true },
       { key: "plate", label: "Plate number", value: answers.plate },
-      { key: "model", label: "Vehicle model", value: answers.model },
+      { key: "model", label: "Vehicle model", value: answers.model, required: true },
       { key: "orNumber", label: "O.R. number", value: answers.orNumber },
       { key: "engine", label: "Motor / engine number", value: answers.engine },
-      { key: "orDate", label: "O.R. date", value: formatDate(answers.orDate) },
+      { key: "orDate", label: "O.R. date", value: dateInputValue(answers.orDate), type: "date" },
       { key: "chassis", label: "Chassis number", value: answers.chassis },
       { key: "crNumber", label: "C.R. number", value: answers.crNumber },
       { key: "route", label: "Authorized route", value: answers.route },
     ], editable, onSend);
     if (!manual) { popup?.close(); return; }
+    const reviewedVehicle = normalizeVehicleMakeModel(manual.make, manual.model);
+    manual = {
+      ...manual,
+      date: formatDate(manual.date),
+      birthDate: formatDate(manual.birthDate),
+      orDate: formatDate(manual.orDate),
+      make: reviewedVehicle.make,
+      model: reviewedVehicle.model,
+    };
     popup ||= openPdfWindow("TFRO-005 Renewal Application");
     if (!popup) return;
     field(manual.date, 505, 819, 65, 23, 10, "center");
-    field(manual.franchise, 515, 798, 55, 19, 10, "right", true);
+    field(manual.franchise, 528, 798, 42, 19, 9, "right", true);
     field(manual.last, 40, 766, 177, 24, 10); field(manual.first, 218, 766, 109, 24, 10); field(manual.middle, 328, 766, 120, 24, 10);
     field(manual.contact, 451, 766, 120, 24, 10); field(manual.street, 40, 708, 278, 25, 9.5, "left"); field(manual.barangay, 323, 708, 248, 25, 9.5, "left");
     field(manual.birthDate, 40, 657, 160, 24, 9); field(manual.birthPlace, 203, 657, 163, 24, 9); field(manual.age, 370, 657, 70, 24, 9); field(manual.civilStatus, 450, 657, 121, 24, 9);
@@ -652,26 +708,31 @@ export async function openPmblPdfForm({ renewal, franchise = {}, editable = fals
     const issued = issuedInput ? new Date(issuedInput) : new Date();
     const answers = renewalDocumentDetails(renewal, franchise);
     const pmblFranchiseNumber = answers.franchiseNumber;
-    const manual = await editFields("PMBL TFRO-003 Certification", [
+    let manual = await editFields("PMBL TFRO-003 Certification", [
       { key: "name", label: "Member name", value: answers.operatorName },
       { key: "franchise", label: "Franchise number", value: pmblFranchiseNumber },
       { key: "address", label: "Residential address", value: answers.operatorAddress },
       { key: "toda", label: "TODA", value: answers.toda },
-      { key: "driver", label: "Driver", value: false, type: "checkbox" },
-      { key: "operator", label: "Operator", value: true, type: "checkbox" },
-      { key: "both", label: "Both", value: false, type: "checkbox" },
+      { key: "driver", label: "Driver", value: false, type: "checkbox", exclusiveGroup: "pmbl-role" },
+      { key: "operator", label: "Operator", value: true, type: "checkbox", exclusiveGroup: "pmbl-role" },
+      { key: "both", label: "Both", value: false, type: "checkbox", exclusiveGroup: "pmbl-role" },
       { key: "day", label: "Issued day", value: String(issued.getDate()) },
       { key: "month", label: "Issued month", value: issued.toLocaleDateString("en-PH", { month: "long" }) },
       { key: "year", label: "Issued year (last two digits)", value: String(issued.getFullYear()).slice(-2) },
     ], editable, onSend);
     if (!manual) { popup?.close(); return; }
+    if (manual.both || (manual.driver && manual.operator)) {
+      manual = { ...manual, driver: false, operator: false, both: true };
+    } else if (!manual.driver && !manual.operator) {
+      manual = { ...manual, operator: true, both: false };
+    }
     popup ||= openPdfWindow("PMBL TFRO-003 Certification");
     if (!popup) return;
-    field(manual.name, 300, 358, 338, 18, 13, true); field(manual.franchise, 72, 339, 136, 18, 13, true);
-    field(manual.address, 395, 339, 306, 18, 13, true); field(manual.toda, 145, 318, 230, 18, 13, true);
+    field(manual.name, 300, 360, 338, 18, 13, true); field(manual.franchise, 72, 341, 136, 18, 13, true);
+    field(manual.address, 395, 341, 306, 18, 13, true); field(manual.toda, 145, 320, 230, 18, 13, true);
     const drawTick = (x) => {
-      page.drawLine({ start: { x: x * sx, y: 328.2 * sy }, end: { x: (x + 2.9) * sx, y: 325.0 * sy }, thickness: 1.45 * Math.min(sx, sy), color: black });
-      page.drawLine({ start: { x: (x + 2.9) * sx, y: 325.0 * sy }, end: { x: (x + 8.6) * sx, y: 332.0 * sy }, thickness: 1.45 * Math.min(sx, sy), color: black });
+      page.drawLine({ start: { x: (x + 1) * sx, y: 328.2 * sy }, end: { x: (x + 2.8) * sx, y: 326.2 * sy }, thickness: 1.05 * Math.min(sx, sy), color: black });
+      page.drawLine({ start: { x: (x + 2.8) * sx, y: 326.2 * sy }, end: { x: (x + 6.7) * sx, y: 331.1 * sy }, thickness: 1.05 * Math.min(sx, sy), color: black });
     };
     if (manual.driver) drawTick(508.5);
     if (manual.operator) drawTick(577.4);
@@ -700,12 +761,11 @@ export async function openChecklistPdfForm({ renewal, documents = [], editable =
     const uploaded = new Set(documents.map((item) => item.doc_type));
     const inspection = renewal.inspection_results || {};
     const drawMark = (x, y) => {
-      page.drawLine({ start: { x: x + 0.8, y: y + 2.8 }, end: { x: x + 2.3, y: y + 1.3 }, thickness: 1, color: ink });
-      page.drawLine({ start: { x: x + 2.3, y: y + 1.3 }, end: { x: x + 5.3, y: y + 5 }, thickness: 1, color: ink });
+      page.drawLine({ start: { x: x + 1.2, y: y + 2.9 }, end: { x: x + 2.6, y: y + 1.6 }, thickness: .72, color: ink });
+      page.drawLine({ start: { x: x + 2.6, y: y + 1.6 }, end: { x: x + 5.0, y: y + 4.7 }, thickness: .72, color: ink });
     };
 
     const documentRows = [
-      ["payment_receipt", 456, 121.5],
       ["official_receipt", 447, 121.5],
       ["voters_certificate", 421, 121.5],
       ["insurance", 405, 121.5],
