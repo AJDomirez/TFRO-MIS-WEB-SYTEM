@@ -3,7 +3,7 @@ import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261014-2");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261015-2");
   openRenewalPdfForm(options);
 }
 
@@ -201,7 +201,7 @@ async function loadHistory() {
       <td>${escapeHtml(renewal.requirements_submission_date ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Manila" }).format(new Date(`${renewal.requirements_submission_date}T00:00:00+08:00`)) : "Not scheduled")}</td>
       <td>${renewal.hardcopy_requirements_received ? `<span class="status-pill approved">Received</span><br><small>${escapeHtml(new Date(renewal.hardcopy_received_at).toLocaleString("en-PH"))}</small>` : '<span class="status-pill pending">Pending</span>'}</td>
       <td>${new Date(renewal.created_at).toLocaleDateString()}</td>
-      <td><div class="form-buttons"><button type="button" class="page-button page-button-back" data-pmbl-form="${renewal.id}"><i class="ri-file-text-line"></i><span>TFRO-003</span></button>${renewal.temporary_mtop_issued ? `<button type="button" class="page-button page-button-back" data-tfro001-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i><span>TFRO-001</span></button>` : ""}${renewal.status === "approved" ? `<button type="button" class="page-button page-button-back" data-checklist-form="${renewal.id}"><i class="ri-checkbox-multiple-line"></i><span>TFRO-004</span></button><button type="button" class="page-button page-button-back" data-renewal-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i><span>TFRO-005</span></button>` : ""}</div></td>
+      <td><div class="form-buttons"><button type="button" class="page-button page-button-back" data-pmbl-form="${renewal.id}"><i class="ri-file-text-line"></i><span>TFRO-003</span></button>${renewal.temporary_mtop_issued ? `<button type="button" class="page-button page-button-back" data-tfro001-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i><span>TFRO-001</span></button>` : ""}${renewal.status === "approved" ? `<button type="button" class="page-button page-button-back" data-final-mtop-form="${renewal.id}"><i class="ri-file-shield-2-line"></i><span>MTOP Permit</span></button><button type="button" class="page-button page-button-back" data-checklist-form="${renewal.id}"><i class="ri-checkbox-multiple-line"></i><span>TFRO-004</span></button><button type="button" class="page-button page-button-back" data-renewal-form="${renewal.id}"><i class="ri-file-pdf-2-line"></i><span>TFRO-005</span></button>` : ""}</div></td>
     </tr>`).join("") : '<tr><td colspan="8">No renewal requests yet.</td></tr>';
 
   if (!currentRenewal) return;
@@ -251,13 +251,13 @@ async function showRenewalSubmission(renewal) {
 }
 
 async function showPmblCertification(renewal) {
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261014-2");
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261015-2");
   openPmblPdfForm({ renewal, franchise: currentFranchise || {} });
 }
 
 async function showRenewalChecklist(renewal) {
   const { data: documents } = await supabase.from("renewal_documents").select("doc_type,status,verified").eq("renewal_id", renewal.id);
-  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261014-2");
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261015-2");
   openChecklistPdfForm({ renewal, documents: documents || [] });
 }
 
@@ -271,8 +271,22 @@ async function showTemporaryMtop(renewal) {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261014-2");
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261015-2");
   openTemporaryMtopPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor });
+}
+
+async function showFinalMtopPermit(renewal) {
+  if (renewal.status !== "approved") return alert("The final MTOP Permit is available after renewal approval.");
+  let changeMotor = {};
+  if (renewal.change_motor_request_id) {
+    const { data, error } = await supabase.from("change_motor_requests")
+      .select("new_motor_brand,new_motor_serial,new_engine_number,new_chassis_number,new_plate_number")
+      .eq("id", renewal.change_motor_request_id).maybeSingle();
+    if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
+    changeMotor = data || {};
+  }
+  const { openFinalMtopPermitPdfForm } = await import("./pdf-form.js?v=20261015-2");
+  openFinalMtopPermitPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor });
 }
 
 function prefillRenewal(renewal) {
@@ -445,6 +459,12 @@ byId("renewalNextBtn").addEventListener("click", () => {
 });
 byId("renewalForm").addEventListener("submit", submitRenewal);
 byId("renewalHistory").addEventListener("click", (event) => {
+  const finalPermitButton = event.target.closest("[data-final-mtop-form]");
+  if (finalPermitButton) {
+    const renewal = renewalHistoryRows.find((row) => String(row.id) === finalPermitButton.dataset.finalMtopForm);
+    if (renewal) showFinalMtopPermit(renewal);
+    return;
+  }
   const temporaryButton = event.target.closest("[data-tfro001-form]");
   if (temporaryButton) {
     const renewal = renewalHistoryRows.find((row) => String(row.id) === temporaryButton.dataset.tfro001Form);
