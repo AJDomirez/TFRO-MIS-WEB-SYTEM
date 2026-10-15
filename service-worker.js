@@ -1,4 +1,4 @@
-const CACHE_NAME = "tfro-imis-shell-v38";
+const CACHE_NAME = "tfro-imis-shell-v39";
 const CORE_ASSETS = [
   "./",
   "html/application.html", "html/auditlog.html", "html/dashboard.html", "html/driver.html",
@@ -29,6 +29,7 @@ const CORE_ASSETS = [
   "forms/PMBL TFRO-003 Certification.pdf", "forms/TFRO-001 Temporary MTOP.pdf",
   "forms/TFRO-002 Petition for Dropping.pdf", "forms/TFRO-004 Checklist for Renewal.pdf",
   "forms/TFRO-005 Application Form.pdf", "forms/TFRO-007 Certification of Dropping.pdf",
+  "forms/MTOP Final Permit Template.pdf",
   "forms/TFRO-009 Order of Payment.pdf", "forms/TFRO-010 Unit Releasing Slip.pdf",
   "forms/public/assets/tfro-official-header.png", "forms/public/assets/tfro-official-footer-v2.png",
   "forms/public/assets/tfro-001-permit-front.jpg", "forms/public/assets/tfro-001-conditions-back.jpg",
