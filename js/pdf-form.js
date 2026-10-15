@@ -83,7 +83,17 @@ function formatPermitDate(input) {
 }
 
 function splitName(fullName) {
-  const parts = value(fullName).split(/\s+/).filter(Boolean);
+  const normalized = value(fullName).replace(/\s+/g, " ");
+  if (normalized.includes(",")) {
+    const [lastName, ...remaining] = normalized.split(",");
+    const givenNames = remaining.join(" ").trim().split(/\s+/).filter(Boolean);
+    return {
+      first: givenNames.shift() || "",
+      last: lastName.trim(),
+      middle: givenNames.join(" "),
+    };
+  }
+  const parts = normalized.split(/\s+/).filter(Boolean);
   return {
     first: parts.shift() || "",
     last: parts.pop() || "",
@@ -150,6 +160,50 @@ function drawScaled(page, font, text, x, y, size = 12, options = {}) {
     size: fittedSize * Math.min(sx, sy),
     font,
     color: options.color,
+  });
+}
+
+function drawTextInBox(page, font, text, options = {}) {
+  const content = value(text);
+  if (!content) return;
+  const {
+    x, y, width, height = 16, size = 10, minSize = 4.75,
+    align = "center", verticalAlign = "middle", paddingX = 2,
+    paddingY = 1, baseWidth = page.getWidth(), baseHeight = page.getHeight(),
+    color,
+  } = options;
+  const sx = page.getWidth() / baseWidth;
+  const sy = page.getHeight() / baseHeight;
+  const availableWidth = Math.max(1, width - (paddingX * 2));
+  const fittedSize = fitTextSize(font, content, size, availableWidth, minSize);
+  const fieldX = x + paddingX;
+  const textX = alignedTextX(font, content, fittedSize, fieldX, availableWidth, align);
+  const textHeight = font.heightAtSize(fittedSize, { descender: false });
+  let textY = y + paddingY;
+  if (verticalAlign === "middle") textY = y + Math.max(paddingY, (height - textHeight) / 2);
+  if (verticalAlign === "top") textY = y + height - textHeight - paddingY;
+  page.drawText(content, {
+    x: textX * sx,
+    y: textY * sy,
+    size: fittedSize * Math.min(sx, sy),
+    font,
+    color,
+  });
+}
+
+function coverBoxInterior(page, color, options = {}) {
+  const {
+    x, y, width, height, inset = 1.2,
+    baseWidth = page.getWidth(), baseHeight = page.getHeight(),
+  } = options;
+  const sx = page.getWidth() / baseWidth;
+  const sy = page.getHeight() / baseHeight;
+  page.drawRectangle({
+    x: (x + inset) * sx,
+    y: (y + inset) * sy,
+    width: Math.max(0, width - (inset * 2)) * sx,
+    height: Math.max(0, height - (inset * 2)) * sy,
+    color,
   });
 }
 
@@ -309,7 +363,8 @@ async function embedPicture(pdfDoc, page, pictureUrl) {
       : await pdfDoc.embedJpg(bytes);
     const sx = page.getWidth() / 612;
     const sy = page.getHeight() / 936;
-    page.drawImage(image, { x: 468 * sx, y: 301 * sy, width: 104 * sx, height: 103 * sy });
+    // Keep the photograph inside the printed 2x2 frame so its original border remains visible.
+    page.drawImage(image, { x: 469.5 * sx, y: 302.5 * sy, width: 101 * sx, height: 100 * sy });
   } catch (error) {
     console.warn("The 2x2 picture could not be embedded in the PDF.", error);
   }
@@ -437,6 +492,7 @@ export async function openFinalMtopPermitPdfForm({ renewal, franchise = {}, chan
       motor: answers.engine.toUpperCase(),
       chassis: answers.chassis.toUpperCase(),
       plate: answers.plate.toUpperCase(),
+      route: answers.route.toUpperCase(),
       expiration: formatPermitDate(firstValue(renewal.new_expiration_date, franchise.expiration_date)),
     };
     details = await editFields(documentTitle, [
@@ -448,40 +504,43 @@ export async function openFinalMtopPermitPdfForm({ renewal, franchise = {}, chan
       { key: "motor", label: "Motor / engine number", value: details.motor },
       { key: "chassis", label: "Chassis number", value: details.chassis },
       { key: "plate", label: "Plate number", value: details.plate },
+      { key: "route", label: "Authorized route", value: details.route },
       { key: "expiration", label: "Good Until", value: details.expiration },
     ], editable);
     if (!details) { popup?.close(); return; }
     popup ||= openPdfWindow(documentTitle);
     if (!popup) return;
 
-    const cover = (x, y, width, height) => page.drawRectangle({ x, y, width, height, color: white });
-    const fittedText = (text, x, y, width, size = 9, align = "left", font = bold) => {
-      if (!value(text)) return;
-      const fitted = fitTextSize(font, value(text), size, width, 5.5);
-      page.drawText(value(text), { x: alignedTextX(font, value(text), fitted, x, width, align), y, size: fitted, font, color: ink });
-    };
+    const cover = (x, y, width, height, inset = .8) =>
+      coverBoxInterior(page, white, { x, y, width, height, inset });
+    const fittedText = (text, x, y, width, height, size = 9, align = "center", font = bold) =>
+      drawTextInBox(page, font, text, { x, y, width, height, size, minSize: 4.75, align, color: ink });
 
     // Remove the example record from the supplied official template, then place approved system data.
     cover(120, 786, 266, 13);
     cover(414, 786, 151, 13);
     cover(120, 768, 266, 14);
-    fittedText(details.name, 124, 789, 255, 9);
-    fittedText(`Franchise No. ${details.franchise}`, 418, 789, 143, 8, "right", boldItalic);
-    fittedText(details.address, 124, 771, 255, 8);
+    fittedText(details.name, 124, 786, 255, 13, 9, "center");
+    fittedText(`Franchise No. ${details.franchise}`, 418, 786, 143, 13, 8, "center", boldItalic);
+    fittedText(details.address, 124, 768, 255, 14, 8, "center");
     page.drawLine({ start: { x: 124, y: 787 }, end: { x: 379, y: 787 }, thickness: .6, color: ink });
     page.drawLine({ start: { x: 124, y: 769 }, end: { x: 379, y: 769 }, thickness: .6, color: ink });
+
+    cover(55, 716, 516, 22, 1.2);
+    fittedText(details.route, 59, 716, 508, 22, 13, "center");
+    page.drawLine({ start: { x: 55, y: 716 }, end: { x: 571, y: 716 }, thickness: 1.15, color: ink });
 
     const vehicleCells = [
       [details.make, 46, 84], [details.model, 131, 69], [details.motor, 202, 144],
       [details.chassis, 348, 146], [details.plate, 496, 67],
     ];
     vehicleCells.forEach(([text, x, width]) => {
-      cover(x, 631, width, 17);
-      fittedText(text, x + 2, 636, width - 4, 8, "center");
+      cover(x, 631, width, 17, 1.2);
+      fittedText(text, x + 1.5, 631, width - 3, 17, 8, "center");
     });
 
-    cover(170, 260, 389, 24);
-    fittedText(`GOOD UNTIL: ${details.expiration}`, 174, 266, 381, 14, "center");
+    cover(170, 260, 389, 24, 1.5);
+    fittedText(`GOOD UNTIL: ${details.expiration}`, 174, 260, 381, 24, 14, "center");
 
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `MTOP-PERMIT-${value(renewal.renewal_code || renewal.id)}.pdf`);
@@ -515,8 +574,11 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
       barangay: firstValue(answers.barangay, fallbackAddress.barangay),
     };
     const ink = rgb(0, 0, 0);
-    const write = (text, x, y, size = 12, maxWidth = 500, useBold = false) =>
-      drawScaled(page, useBold ? bold : font, text, x, y, size, { maxWidth, minSize: 5.5, color: ink });
+    const field = (text, x, y, width, height = 18, size = 10, align = "center", useBold = false) =>
+      drawTextInBox(page, useBold ? bold : font, text, {
+        x, y, width, height, size, minSize: 4.75, align,
+        baseWidth: 612, baseHeight: 936, color: ink,
+      });
 
     const fullRenewalFranchiseNumber = answers.franchiseNumber;
     const birthDate = answers.birthDate;
@@ -542,24 +604,19 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
       { key: "chassis", label: "Chassis number", value: answers.chassis },
       { key: "crNumber", label: "C.R. number", value: answers.crNumber },
       { key: "route", label: "Authorized route", value: answers.route },
-      { key: "remarks", label: "Inspection remarks", value: renewal.inspection_remarks },
     ], editable, onSend);
     if (!manual) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-005 Renewal Application");
     if (!popup) return;
-    write(manual.date, 508, 827, 11, 60, false);
-    const renewalFranchiseNumber = manual.franchise;
-    const renewalFranchiseSize = 11;
-    const renewalFranchiseWidth = bold.widthOfTextAtSize(renewalFranchiseNumber, renewalFranchiseSize);
-    page.drawText(renewalFranchiseNumber, { x: 568 - renewalFranchiseWidth, y: 806.5, size: renewalFranchiseSize, font: bold, color: ink });
-    write(manual.last, 48, 778, 10, 165); write(manual.first, 225, 778, 10, 100); write(manual.middle, 335, 778, 10, 110);
-    write(manual.contact, 458, 778, 10, 105); write(manual.street, 40, 718, 9.5, 275); write(manual.barangay, 326, 718, 9.5, 240);
-    write(manual.birthDate, 40, 668, 9, 150); write(manual.birthPlace, 207, 668, 9, 150); write(manual.age, 377, 668, 9, 60); write(manual.civilStatus, 457, 668, 9, 110);
-    write(manual.make, 90, 627, 9.5, 210); write(manual.plate, 385, 627, 9.5, 180); write(manual.model, 90, 606, 9.5, 210); write(manual.orNumber, 375, 606, 9.5, 190);
-    write(manual.engine, 110, 585, 9.5, 190); write(manual.orDate, 395, 585, 9.5, 170); write(manual.chassis, 115, 563, 9.5, 185); write(manual.crNumber, 370, 563, 9.5, 195);
-    page.drawRectangle({ x: 468, y: 517, width: 103, height: 40, color: rgb(1, 1, 1) });
-    drawScaled(page, bold, manual.route, 470, 534, 12, { maxWidth: 99, minSize: 5.5, align: "center", color: ink });
-    write(manual.remarks, 278, 136, 8, 135);
+    field(manual.date, 505, 819, 65, 23, 10, "center");
+    field(manual.franchise, 515, 798, 55, 19, 10, "right", true);
+    field(manual.last, 40, 766, 177, 24, 10); field(manual.first, 218, 766, 109, 24, 10); field(manual.middle, 328, 766, 120, 24, 10);
+    field(manual.contact, 451, 766, 120, 24, 10); field(manual.street, 40, 708, 278, 25, 9.5, "left"); field(manual.barangay, 323, 708, 248, 25, 9.5, "left");
+    field(manual.birthDate, 40, 657, 160, 24, 9); field(manual.birthPlace, 203, 657, 163, 24, 9); field(manual.age, 370, 657, 70, 24, 9); field(manual.civilStatus, 450, 657, 121, 24, 9);
+    field(manual.make, 88, 618, 213, 19, 9.5, "left"); field(manual.plate, 382, 618, 189, 19, 9.5, "left"); field(manual.model, 88, 597, 213, 19, 9.5, "left"); field(manual.orNumber, 372, 597, 199, 19, 9.5, "left");
+    field(manual.engine, 108, 576, 193, 19, 9.5, "left"); field(manual.orDate, 392, 576, 179, 19, 9.5, "left"); field(manual.chassis, 112, 554, 189, 19, 9.5, "left"); field(manual.crNumber, 367, 554, 204, 19, 9.5, "left");
+    coverBoxInterior(page, rgb(1, 1, 1), { x: 468, y: 517, width: 103, height: 40, inset: 1.2, baseWidth: 612, baseHeight: 936 });
+    field(manual.route, 469, 518, 101, 38, 11, "center", true);
     await embedPicture(pdfDoc, page, pictureUrl);
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-005-${value(renewal.renewal_code || renewal.id)}.pdf`);
@@ -586,13 +643,11 @@ export async function openPmblPdfForm({ renewal, franchise = {}, editable = fals
     const sx = width / 841.8898;
     const sy = height / 595.2756;
     const black = rgb(0, 0, 0);
-    const write = (text, x, y, size = 10, maxWidth = 180, useBold = false) => {
-      if (!value(text)) return;
-      const selectedFont = useBold ? bold : font;
-      const content = value(text);
-      const fittedSize = fitTextSize(selectedFont, content, size, maxWidth, 5.5);
-      page.drawText(content, { x: x * sx, y: y * sy, size: fittedSize * Math.min(sx, sy), font: selectedFont, color: black });
-    };
+    const field = (text, x, y, fieldWidth, fieldHeight = 16, size = 10, useBold = false) =>
+      drawTextInBox(page, useBold ? bold : font, text, {
+        x, y, width: fieldWidth, height: fieldHeight, size, minSize: 4.75,
+        align: "center", baseWidth: 841.8898, baseHeight: 595.2756, color: black,
+      });
     const issuedInput = firstValue(renewal.admin_reviewed_at, renewal.reviewed_at, renewal.updated_at, renewal.request_date, renewal.created_at);
     const issued = issuedInput ? new Date(issuedInput) : new Date();
     const answers = renewalDocumentDetails(renewal, franchise);
@@ -612,8 +667,8 @@ export async function openPmblPdfForm({ renewal, franchise = {}, editable = fals
     if (!manual) { popup?.close(); return; }
     popup ||= openPdfWindow("PMBL TFRO-003 Certification");
     if (!popup) return;
-    write(manual.name, 315, 364, 13, 320, true); write(manual.franchise, 76, 345, 13, 125, true);
-    write(manual.address, 401, 345, 13, 295, true); write(manual.toda, 151, 324, 13, 220, true);
+    field(manual.name, 300, 358, 338, 18, 13, true); field(manual.franchise, 72, 339, 136, 18, 13, true);
+    field(manual.address, 395, 339, 306, 18, 13, true); field(manual.toda, 145, 318, 230, 18, 13, true);
     const drawTick = (x) => {
       page.drawLine({ start: { x: x * sx, y: 328.2 * sy }, end: { x: (x + 2.9) * sx, y: 325.0 * sy }, thickness: 1.45 * Math.min(sx, sy), color: black });
       page.drawLine({ start: { x: (x + 2.9) * sx, y: 325.0 * sy }, end: { x: (x + 8.6) * sx, y: 332.0 * sy }, thickness: 1.45 * Math.min(sx, sy), color: black });
@@ -621,7 +676,7 @@ export async function openPmblPdfForm({ renewal, franchise = {}, editable = fals
     if (manual.driver) drawTick(508.5);
     if (manual.operator) drawTick(577.4);
     if (manual.both) drawTick(666.0);
-    write(manual.day, 174, 171, 13, 30, true); write(manual.month, 257, 171, 13, 170, true); write(manual.year, 456, 171, 13, 30, true);
+    field(manual.day, 166, 165, 40, 18, 13, true); field(manual.month, 250, 165, 178, 18, 13, true); field(manual.year, 450, 165, 40, 18, 13, true);
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `PMBL-TFRO-003-${value(renewal.renewal_code || renewal.id)}.pdf`);
   } catch (error) {
@@ -682,7 +737,10 @@ export async function openChecklistPdfForm({ renewal, documents = [], editable =
     if (!manual) { popup?.close(); return; }
     popup ||= openPdfWindow("TFRO-004 Checklist for Renewal");
     if (!popup) return;
-    page.drawText(manual.date, { x: 315, y: 521, size: 12, font, color: ink });
+    drawTextInBox(page, font, manual.date, {
+      x: 294, y: 515, width: 68, height: 16, size: 9, minSize: 6,
+      align: "center", color: ink,
+    });
     for (const [type, y, x] of documentRows) {
       if (manual[type]) drawMark(x, y);
     }

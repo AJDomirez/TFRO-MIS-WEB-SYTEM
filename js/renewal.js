@@ -3,7 +3,7 @@ import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261015-3");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261015-4");
   openRenewalPdfForm(options);
 }
 
@@ -71,6 +71,32 @@ function statusLabel(status) {
 
 function statusClass(status) {
   return status === "approved" ? "approved" : ["needs_correction", "rejected"].includes(status) ? "rejected" : "pending";
+}
+
+function renderApprovedDocumentCenter(renewals) {
+  const center = byId("approvedDocumentCenter");
+  const approved = renewals.find((renewal) => renewal.status === "approved");
+  if (!approved) {
+    center.hidden = true;
+    byId("approvedDocumentActions").innerHTML = "";
+    return;
+  }
+
+  const documentCount = approved.temporary_mtop_issued ? 5 : 4;
+  const releaseDate = approved.expected_release_date
+    ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Manila" })
+      .format(new Date(`${approved.expected_release_date}T00:00:00+08:00`))
+    : "the release date advised by TFRO";
+  byId("approvedDocumentSummary").textContent =
+    `${approved.renewal_code}: ${documentCount} auto-filled document${documentCount === 1 ? " is" : "s are"} available. ` +
+    `Your recorded MTOP release date is ${releaseDate}.`;
+  byId("approvedDocumentActions").innerHTML = `
+    <button type="button" class="approved-document-button primary" data-final-mtop-form="${approved.id}"><i class="ri-file-shield-2-line"></i><span><strong>Final MTOP Permit</strong><small>Approved permit</small></span></button>
+    <button type="button" class="approved-document-button" data-renewal-form="${approved.id}"><i class="ri-file-pdf-2-line"></i><span><strong>TFRO-005</strong><small>Renewal application</small></span></button>
+    <button type="button" class="approved-document-button" data-checklist-form="${approved.id}"><i class="ri-checkbox-multiple-line"></i><span><strong>TFRO-004</strong><small>Renewal checklist</small></span></button>
+    <button type="button" class="approved-document-button" data-pmbl-form="${approved.id}"><i class="ri-file-text-line"></i><span><strong>TFRO-003</strong><small>PMBL certification</small></span></button>
+    ${approved.temporary_mtop_issued ? `<button type="button" class="approved-document-button" data-tfro001-form="${approved.id}"><i class="ri-file-pdf-2-line"></i><span><strong>TFRO-001</strong><small>Temporary MTOP copy</small></span></button>` : ""}`;
+  center.hidden = false;
 }
 
 function updateCaseRequirements() {
@@ -190,6 +216,7 @@ async function loadHistory() {
   }
   const renewals = data || [];
   renewalHistoryRows = renewals;
+  renderApprovedDocumentCenter(renewals);
   currentRenewal = renewals.find((renewal) => !["approved", "rejected"].includes(renewal.status)) || null;
   const table = byId("renewalHistory");
   table.innerHTML = renewals.length ? renewals.map((renewal) => `
@@ -251,13 +278,13 @@ async function showRenewalSubmission(renewal) {
 }
 
 async function showPmblCertification(renewal) {
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261015-3");
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261015-4");
   openPmblPdfForm({ renewal, franchise: currentFranchise || {} });
 }
 
 async function showRenewalChecklist(renewal) {
   const { data: documents } = await supabase.from("renewal_documents").select("doc_type,status,verified").eq("renewal_id", renewal.id);
-  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261015-3");
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261015-4");
   openChecklistPdfForm({ renewal, documents: documents || [] });
 }
 
@@ -271,7 +298,7 @@ async function showTemporaryMtop(renewal) {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261015-3");
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261015-4");
   openTemporaryMtopPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor });
 }
 
@@ -285,7 +312,7 @@ async function showFinalMtopPermit(renewal) {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openFinalMtopPermitPdfForm } = await import("./pdf-form.js?v=20261015-3");
+  const { openFinalMtopPermitPdfForm } = await import("./pdf-form.js?v=20261015-4");
   openFinalMtopPermitPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor });
 }
 
@@ -458,7 +485,7 @@ byId("renewalNextBtn").addEventListener("click", () => {
   if (pageIsValid()) showRenewalPage(renewalPage + 1);
 });
 byId("renewalForm").addEventListener("submit", submitRenewal);
-byId("renewalHistory").addEventListener("click", (event) => {
+function handleRenewalDocumentClick(event) {
   const finalPermitButton = event.target.closest("[data-final-mtop-form]");
   if (finalPermitButton) {
     const renewal = renewalHistoryRows.find((row) => String(row.id) === finalPermitButton.dataset.finalMtopForm);
@@ -477,17 +504,20 @@ byId("renewalHistory").addEventListener("click", (event) => {
     if (renewal?.status === "approved") showRenewalChecklist(renewal);
     return;
   }
-  const button = event.target.closest("[data-renewal-form]");
-  if (!button) return;
-  const renewal = renewalHistoryRows.find((row) => String(row.id) === button.dataset.renewalForm);
-  if (renewal?.status === "approved") showRenewalSubmission(renewal);
-});
-byId("renewalHistory").addEventListener("click", (event) => {
-  const button = event.target.closest("[data-pmbl-form]");
-  if (!button) return;
-  const renewal = renewalHistoryRows.find((row) => String(row.id) === button.dataset.pmblForm);
-  if (renewal) showPmblCertification(renewal);
-});
+  const renewalButton = event.target.closest("[data-renewal-form]");
+  if (renewalButton) {
+    const renewal = renewalHistoryRows.find((row) => String(row.id) === renewalButton.dataset.renewalForm);
+    if (renewal?.status === "approved") showRenewalSubmission(renewal);
+    return;
+  }
+  const pmblButton = event.target.closest("[data-pmbl-form]");
+  if (pmblButton) {
+    const renewal = renewalHistoryRows.find((row) => String(row.id) === pmblButton.dataset.pmblForm);
+    if (renewal) showPmblCertification(renewal);
+  }
+}
+byId("renewalHistory").addEventListener("click", handleRenewalDocumentClick);
+byId("approvedDocumentCenter").addEventListener("click", handleRenewalDocumentClick);
 byId("logoutBtn").addEventListener("click", () => signOutAndRedirect("index.html"));
 showRenewalPage(1);
 init();
