@@ -6,7 +6,7 @@
   <title>Franchise Renewal - TFRO</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
   <link rel="stylesheet" href="../css/operatorportal.css">
-  <link rel="stylesheet" href="../css/renewal.css?v=20260826-080000">
+  <link rel="stylesheet" href="../css/renewal.css?v=20261015-1">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20261014-1">
   <link rel="stylesheet" href="../css/mobile-portals.css?v=20261014-1">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
@@ -51,6 +51,17 @@
     </section>
 
     <div class="renewal-alert" id="renewalStatus" hidden></div>
+
+    <section class="approved-document-center" id="approvedDocumentCenter" hidden aria-labelledby="approvedDocumentsTitle">
+      <div class="approved-document-icon"><i class="ri-file-shield-2-line"></i></div>
+      <div class="approved-document-content">
+        <span class="approved-document-eyebrow">APPROVED &amp; READY TO PRINT</span>
+        <h2 id="approvedDocumentsTitle">Your complete renewal document set</h2>
+        <p id="approvedDocumentSummary"></p>
+        <div class="approved-document-actions" id="approvedDocumentActions"></div>
+        <small><i class="ri-information-line"></i> Open each auto-filled PDF, verify the details, then print and bring the set with your original requirements to the TFRO office.</small>
+      </div>
+    </section>
 
     <section class="renewal-card" id="renewalFormCard">
       <div class="card-title"><div><span class="step-number" id="renewalStepNumber">1</span><h2 id="renewalStepTitle">Renewal Details</h2></div><small>Fields marked * are required</small></div>
@@ -140,11 +151,11 @@
 
     <section class="renewal-card">
       <div class="card-title"><div><i class="ri-history-line card-icon"></i><h2>Renewal History</h2></div></div>
-      <div class="table-wrap"><table><thead><tr><th>Request</th><th>Case</th><th>Status</th><th>Reason / Next Step</th><th>Requirements Date</th><th>Hardcopies</th><th>Submitted</th><th>Form</th></tr></thead><tbody id="renewalHistory"><tr><td colspan="8">No renewal requests yet.</td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Request</th><th>Case</th><th>Status</th><th>Reason / Next Step</th><th>Requirements Date</th><th>Hardcopies</th><th>Submitted</th><th>Documents</th></tr></thead><tbody id="renewalHistory"><tr><td colspan="8">No renewal requests yet.</td></tr></tbody></table></div>
     </section>
   </main>
 </div>
-<script type="module" src="../js/renewal.js?v=20261015-4"></script>
+<script type="module" src="../js/renewal.js?v=20261015-5"></script>
 <script src="../js/portal-theme-toggle.js?v=20261014-1" defer></script>
 <script src="../js/mobile-portal-tables.js?v=20261014-1" defer></script>
 <script type="module" src="../js/sidebar-user.js?v=20261014-1"></script>
