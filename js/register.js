@@ -23,13 +23,11 @@ const operatorFields = [...document.querySelectorAll("[data-operator-field]")];
 const enforcerFields = [...document.querySelectorAll("[data-enforcer-field]")];
 const franchiseNumberInput = document.getElementById("franchiseNumber");
 const enforcerIdInput = document.getElementById("enforcerId");
-const profilePictureInput = document.getElementById("profilePicture");
 const termsConsent = document.getElementById("termsConsent");
 const consentModal = document.getElementById("consentModal");
 const acceptConsentButton = document.getElementById("acceptConsent");
 const TERMS_VERSION = "TFRO-TERMS-2026-09-08";
 const PRIVACY_VERSION = "TFRO-PRIVACY-2026-09-08";
-let profilePreviewUrl = "";
 let registrationEnabled = true;
 
 function openConsentModal() {
@@ -67,35 +65,6 @@ async function loadRegistrationSetting() {
       : "New account registration is currently disabled by the Administrator.");
   }
 }
-
-profilePictureInput.addEventListener("change", () => {
-  const file = profilePictureInput.files[0];
-  const preview = document.getElementById("signupProfilePreview");
-  const placeholder = document.getElementById("profilePhotoPlaceholder");
-  const filename = document.getElementById("profilePhotoFileName");
-  if (profilePreviewUrl) URL.revokeObjectURL(profilePreviewUrl);
-  profilePreviewUrl = "";
-  if (!file) {
-    preview.hidden = true;
-    preview.removeAttribute("src");
-    placeholder.hidden = false;
-    filename.textContent = "No photo selected";
-    document.getElementById("profilePhotoButtonText").textContent = "Choose Photo";
-    return;
-  }
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
-    profilePictureInput.value = "";
-    showRegisterWarning("Choose a JPG, PNG, or WebP formal photo no larger than 5 MB.");
-    filename.textContent = "Invalid photo";
-    return;
-  }
-  profilePreviewUrl = URL.createObjectURL(file);
-  preview.src = profilePreviewUrl;
-  preview.hidden = false;
-  placeholder.hidden = true;
-  filename.textContent = file.name;
-  document.getElementById("profilePhotoButtonText").textContent = "Change Photo";
-});
 
 function selectedRole() {
   return roleInputs.find((input) => input.checked)?.value || "operator";
@@ -280,12 +249,11 @@ registerForm.addEventListener("submit", async (event) => {
   const enforcerId = enforcerIdInput.value.trim().toUpperCase();
   const password = passwordInput.value;
   const confirmPassword = confirmPasswordInput.value;
-  const profilePicture = document.getElementById("profilePicture").files[0];
 
   /* VALIDATION */
   if (!firstName || !lastName || !email || !contactNumber
       || (role === "operator" && (!address || !franchiseNumber))
-      || (role === "traffic_enforcer" && !enforcerId) || !profilePicture) {
+      || (role === "traffic_enforcer" && !enforcerId)) {
     showRegisterWarning("Please fill in all the required fields.");
     return;
   }
@@ -296,11 +264,6 @@ registerForm.addEventListener("submit", async (event) => {
       "a lowercase letter, a number, and a symbol."
     );
     passwordInput.focus();
-    return;
-  }
-
-  if (!["image/jpeg", "image/png", "image/webp"].includes(profilePicture.type) || profilePicture.size > 5 * 1024 * 1024) {
-    showRegisterWarning("Upload a formal JPG, PNG, or WebP profile picture no larger than 5 MB.");
     return;
   }
 
@@ -383,22 +346,6 @@ registerForm.addEventListener("submit", async (event) => {
     await supabase.auth.signOut({ scope: "local" });
     showRegisterWarning("Account created, but its TFRO profile could not be loaded. Please sign in again.");
     window.location.replace("login.html");
-    return;
-  }
-
-  const extension = profilePicture.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-  const picturePath = `${data.user.id}/formal-profile-${Date.now()}.${extension}`;
-  const uploadResult = await supabase.storage.from("account-profile-pictures").upload(picturePath, profilePicture, { contentType: profilePicture.type, upsert: false });
-  if (uploadResult.error) {
-    await supabase.auth.signOut({ scope: "local" });
-    showRegisterWarning("Account created, but the required formal profile picture could not be saved. Please sign in and contact the Administrator.");
-    return;
-  }
-  const pictureUpdate = await supabase.from("profiles").update({ profile_picture_path: picturePath }).eq("id", data.user.id);
-  if (pictureUpdate.error) {
-    await supabase.storage.from("account-profile-pictures").remove([picturePath]);
-    await supabase.auth.signOut({ scope: "local" });
-    showRegisterWarning("Account created, but its formal profile picture could not be linked. Please contact the Administrator.");
     return;
   }
 

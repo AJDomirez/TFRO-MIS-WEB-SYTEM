@@ -6,7 +6,6 @@ let enforcers = [];
 let ticketCounts = new Map();
 let commissionTotals = new Map();
 let commissionRanks = new Map();
-let profilePictures = new Map();
 let registryChanges = null;
 const money = new Intl.NumberFormat("en-PH", { style:"currency", currency:"PHP" });
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" }[character]));
@@ -41,17 +40,15 @@ function renderEnforcers() {
 }
 
 async function loadData() {
-  const [enforcerResult, ticketResult, commissionResult, profileResult] = await Promise.all([
+  const [enforcerResult, ticketResult, commissionResult] = await Promise.all([
     supabase.from("traffic_enforcers").select("*").order("created_at", { ascending:false }),
     supabase.from("violation_enforcers").select("enforcer_id"),
     supabase.from("payment_enforcer_commissions").select("enforcer_id,commission_amount"),
-    supabase.from("profiles").select("id,profile_picture_path"),
   ]);
   if (enforcerResult.error) throw enforcerResult.error;
   if (ticketResult.error) throw ticketResult.error;
   if (commissionResult.error) throw commissionResult.error;
   enforcers = enforcerResult.data || [];
-  profilePictures = new Map((profileResult.data || []).map((profile) => [profile.id,profile.profile_picture_path]));
   ticketCounts = new Map();
   (ticketResult.data || []).forEach((row) => { if (row.enforcer_id) ticketCounts.set(row.enforcer_id, (ticketCounts.get(row.enforcer_id) || 0) + 1); });
   commissionTotals = new Map();
@@ -71,7 +68,7 @@ function watchRegistryChanges() {
 }
 
 const detail = (label,value) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value || "—")}</strong></div>`;
-async function viewProfile(id) { const row=enforcers.find((item)=>String(item.id)===String(id)); if(!row)return; document.getElementById("enforcerProfileDetails").innerHTML=[detail("Full Name",row.full_name),detail("Enforcer ID",row.enforcer_id),detail("Email",row.email),detail("Contact Number",row.contact_number),detail("Unit / Assignment",row.unit_assignment),detail("Account",row.user_id?"Linked":"Awaiting signup"),detail("Status",row.status),detail("Assigned Tickets",ticketCounts.get(row.id)||0),detail("Total Commission",money.format(commissionTotals.get(row.id)||0)),detail("Registered",row.created_at?new Date(row.created_at).toLocaleString("en-PH"):"—")].join(""); const image=document.getElementById("enforcerFormalPhoto"),missing=document.getElementById("enforcerPhotoMissing"); image.hidden=true; image.removeAttribute("src"); missing.hidden=false; const path=profilePictures.get(row.user_id); if(path){const {data}=await supabase.storage.from("account-profile-pictures").createSignedUrl(path,600);if(data?.signedUrl){image.src=data.signedUrl;image.hidden=false;missing.hidden=true;}} document.getElementById("enforcerProfileModal").hidden=false;}
+async function viewProfile(id) { const row=enforcers.find((item)=>String(item.id)===String(id)); if(!row)return; document.getElementById("enforcerProfileDetails").innerHTML=[detail("Full Name",row.full_name),detail("Enforcer ID",row.enforcer_id),detail("Email",row.email),detail("Contact Number",row.contact_number),detail("Unit / Assignment",row.unit_assignment),detail("Account",row.user_id?"Linked":"Awaiting signup"),detail("Status",row.status),detail("Assigned Tickets",ticketCounts.get(row.id)||0),detail("Total Commission",money.format(commissionTotals.get(row.id)||0)),detail("Registered",row.created_at?new Date(row.created_at).toLocaleString("en-PH"):"—")].join(""); document.getElementById("enforcerProfileModal").hidden=false;}
 
 async function createEnforcer(event) {
   event.preventDefault(); const form = event.currentTarget, values = Object.fromEntries(new FormData(form));
