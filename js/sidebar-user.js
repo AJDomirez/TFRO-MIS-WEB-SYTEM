@@ -53,13 +53,9 @@ function setupSystemLoader() {
       : "No internet connection. Trying to reconnect";
     loader.innerHTML = `
       <div class="tfro-loader-card">
-        <div class="tfro-loader-scene" aria-hidden="true">
-          <span class="tfro-loader-sun"></span>
-          <span class="tfro-loader-cloud tfro-loader-cloud-one"></span>
-          <span class="tfro-loader-cloud tfro-loader-cloud-two"></span>
+        <div class="tfro-loader-mark" aria-hidden="true">
           <img class="tfro-loader-tricycle" src="../Tricycle Image.png" alt="">
-          <span class="tfro-loader-exhaust"></span>
-          <div class="tfro-loader-road"><span></span><span></span><span></span></div>
+          <span class="tfro-loader-track"></span>
         </div>
         <strong>TFRO MIS</strong>
         <p>${connectionMessage}<span class="tfro-loader-dots" aria-hidden="true"></span></p>
