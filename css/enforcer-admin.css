@@ -6,3 +6,4 @@
 /* Account profile pictures are intentionally not collected; keep profile forms text-only. */
 .profile-form-sheet > main { display: block; }
 @media print { .profile-form-sheet > main { display: block; } }
+.account-state{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}.account-active{background:#dff5e8;color:#126338}.account-pending_approval{background:#fff0bc;color:#725300}.account-rejected,.account-suspended{background:#ffe1df;color:#9b241d}.account-awaiting_signup{background:#e8eef3;color:#455d6f}.approve-account{background:#157347!important;color:#fff!important}.reject-account{color:#a12620!important}.registry-actions{flex-wrap:wrap}

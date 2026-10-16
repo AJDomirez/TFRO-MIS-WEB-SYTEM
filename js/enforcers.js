@@ -6,6 +6,7 @@ let enforcers = [];
 let ticketCounts = new Map();
 let commissionTotals = new Map();
 let commissionRanks = new Map();
+let accountStatuses = new Map();
 let registryChanges = null;
 const money = new Intl.NumberFormat("en-PH", { style:"currency", currency:"PHP" });
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" }[character]));
@@ -37,6 +38,14 @@ function renderEnforcers() {
     const colorClass = rankClass(row.id);
     return `<tr class="enforcer-registry-row ${colorClass}"><td><strong>${escapeHtml(row.enforcer_id)}</strong></td><td><span class="enforcer-name-chip ${colorClass}"><i class="ri-shield-user-line"></i>${escapeHtml(row.full_name)}</span><br><small>${escapeHtml(row.email || "")}</small></td><td>${escapeHtml(row.contact_number || "—")}</td><td>${escapeHtml(row.unit_assignment || "—")}</td><td><span class="${row.user_id ? "account-linked" : "account-waiting"}">${row.user_id ? "Linked" : "Awaiting signup"}</span></td><td><select class="status-select" data-status-id="${row.id}" aria-label="Status for ${escapeHtml(row.full_name)}"><option value="active"${row.status === "active" ? " selected" : ""}>Active</option><option value="suspended"${row.status === "suspended" ? " selected" : ""}>Suspended</option><option value="inactive"${row.status === "inactive" ? " selected" : ""}>Inactive</option></select></td><td><strong>${ticketCounts.get(row.id) || 0}</strong></td><td><span class="enforcer-total-commission ${colorClass}"><small>${rankLabel(row.id)}</small><strong>${money.format(commissionTotals.get(row.id) || 0)}</strong></span></td><td><div class="registry-actions"><button class="row-action" data-view-id="${row.id}">View Form</button><button class="row-action" data-save-id="${row.id}">Save</button></div></td></tr>`;
   }).join("") : '<tr><td class="empty-row" colspan="9">No TFRO Enforcers found.</td></tr>';
+  rows.forEach((row, index) => {
+    const tableRow = document.getElementById("enforcerTable").rows[index];
+    if (!tableRow) return;
+    const approval = row.user_id ? (accountStatuses.get(row.user_id) || "pending_approval") : "awaiting_signup";
+    const accountLabel = { active:"Approved", pending_approval:"Pending approval", rejected:"Rejected", suspended:"Suspended", awaiting_signup:"Awaiting signup" }[approval] || approval;
+    tableRow.cells[4].innerHTML = `<span class="account-state account-${escapeHtml(approval)}">${escapeHtml(accountLabel)}</span>`;
+    if (approval === "pending_approval") tableRow.cells[8].querySelector(".registry-actions")?.insertAdjacentHTML("beforeend", `<button class="row-action approve-account" data-approve-id="${row.id}"><i class="ri-user-follow-line"></i> Approve Account</button><button class="row-action reject-account" data-reject-id="${row.id}">Reject</button>`);
+  });
 }
 
 async function loadData() {
@@ -49,6 +58,13 @@ async function loadData() {
   if (ticketResult.error) throw ticketResult.error;
   if (commissionResult.error) throw commissionResult.error;
   enforcers = enforcerResult.data || [];
+  const linkedUserIds = enforcers.map((row) => row.user_id).filter(Boolean);
+  accountStatuses = new Map();
+  if (linkedUserIds.length) {
+    const { data: profiles, error: profilesError } = await supabase.from("profiles").select("id,account_status").in("id", linkedUserIds);
+    if (profilesError) throw profilesError;
+    accountStatuses = new Map((profiles || []).map((profile) => [profile.id, profile.account_status]));
+  }
   ticketCounts = new Map();
   (ticketResult.data || []).forEach((row) => { if (row.enforcer_id) ticketCounts.set(row.enforcer_id, (ticketCounts.get(row.enforcer_id) || 0) + 1); });
   commissionTotals = new Map();
@@ -87,6 +103,18 @@ async function saveStatus(id) {
   await logAudit({ action:"Updated TFRO Enforcer Status", actionType:"update", record:row.enforcer_id, description:`Changed ${row.full_name} from ${row.status} to ${status}.`, previousValue:row.status, newValue:status }); await loadData();
 }
 
+async function decideAccount(id, approved) {
+  const row = enforcers.find((item) => String(item.id) === String(id));
+  if (!row?.user_id) return alert("This Enforcer ID does not have a linked signup account yet.");
+  const verb = approved ? "approve" : "reject";
+  if (!window.confirm(`Are you sure you want to ${verb} the account for ${row.full_name}?`)) return;
+  const { error } = await supabase.rpc("approve_enforcer_account", { p_enforcer_record_id:Number(id), p_approved:approved });
+  if (error) return alert(`Could not ${verb} the Enforcer account: ${error.message}`);
+  await logAudit({ action:approved?"Approved TFRO Enforcer Account":"Rejected TFRO Enforcer Account", actionType:"update", record:row.enforcer_id, description:`${approved?"Approved":"Rejected"} the portal account linked to ${row.full_name}.` });
+  alert(approved ? "Enforcer account approved. The confirmed user will be sent to the Enforcer homepage." : "Enforcer account rejected.");
+  await loadData();
+}
+
 async function initialize() {
   const { user } = await requireRole(["admin", "admin_viewer"]); if (!user) return;
   try { await loadData(); } catch (error) { alert(`Could not load TFRO Enforcers: ${error.message}`); }
@@ -95,7 +123,7 @@ async function initialize() {
   document.getElementById("cancelEnforcerForm").addEventListener("click", () => { document.getElementById("enforcerFormPanel").hidden = true; });
   document.getElementById("enforcerForm").addEventListener("submit", createEnforcer);
   document.getElementById("enforcerSearch").addEventListener("input", renderEnforcers);
-  document.getElementById("enforcerTable").addEventListener("click", (event) => { const save = event.target.closest("[data-save-id]"), view=event.target.closest("[data-view-id]"); if(save)void saveStatus(save.dataset.saveId); if(view)void viewProfile(view.dataset.viewId); });
+  document.getElementById("enforcerTable").addEventListener("click", (event) => { const save = event.target.closest("[data-save-id]"), view=event.target.closest("[data-view-id]"), approve=event.target.closest("[data-approve-id]"), reject=event.target.closest("[data-reject-id]"); if(save)void saveStatus(save.dataset.saveId); if(view)void viewProfile(view.dataset.viewId); if(approve)void decideAccount(approve.dataset.approveId,true); if(reject)void decideAccount(reject.dataset.rejectId,false); });
   document.getElementById("closeEnforcerProfile").addEventListener("click",()=>{document.getElementById("enforcerProfileModal").hidden=true;});
   document.getElementById("printEnforcerProfile").addEventListener("click",()=>window.print());
 }

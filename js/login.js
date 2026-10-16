@@ -245,6 +245,13 @@ async function routeUser(user, suppliedFranchiseNumber = "") {
     return false;
   }
 
+  if (profile.account_status && profile.account_status !== "active") {
+    localStorage.setItem("role", role);
+    localStorage.setItem("userId", user.id);
+    window.location.replace("account-status.html");
+    return true;
+  }
+
   if (role === "operator") {
     const franchiseNumber = suppliedFranchiseNumber.trim().toUpperCase();
     if (!franchiseNumber) {
@@ -402,7 +409,14 @@ loginForm.addEventListener("submit", async (event) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
       const profileResult = await loadUserProfile(session.user.id);
-      if (profileResult.data?.role !== "operator") await routeUser(session.user);
+      const profile = profileResult.data;
+      const isConfirmationReturn = new URLSearchParams(window.location.search).get("confirmed") === "1";
+      if (profile?.role === "operator" && profile.account_status === "active" && isConfirmationReturn) {
+        const { data: operator } = await supabase.from("operators").select("franchise_number").eq("user_id", session.user.id).limit(1).maybeSingle();
+        await routeUser(session.user, operator?.franchise_number || "");
+      } else if (profile?.role !== "operator" || profile?.account_status !== "active") {
+        await routeUser(session.user);
+      }
     }
   } catch (error) {
     console.error("Could not restore the existing session:", error);

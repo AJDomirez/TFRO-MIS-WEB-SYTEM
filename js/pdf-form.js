@@ -254,7 +254,7 @@ function money(amount) {
   return `PHP ${Number(amount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function editFields(title, fields, editable, onSend = null) {
+function editFields(title, fields, editable, onSend = null, savedValues = {}) {
   if (!editable) return Promise.resolve(Object.fromEntries(fields.map((field) => [field.key, field.value])));
   return new Promise((resolve) => {
     const dialog = document.createElement("dialog");
@@ -284,8 +284,9 @@ function editFields(title, fields, editable, onSend = null) {
       input.name = field.key;
       input.type = field.type || "text";
       input.required = Boolean(field.required);
-      if (input.type === "checkbox") input.checked = Boolean(field.value);
-      else input.value = value(field.value);
+      const initialValue = Object.prototype.hasOwnProperty.call(savedValues || {}, field.key) ? savedValues[field.key] : field.value;
+      if (input.type === "checkbox") input.checked = Boolean(initialValue);
+      else input.value = value(initialValue);
       if (field.exclusiveGroup) {
         input.dataset.exclusiveGroup = field.exclusiveGroup;
         input.addEventListener("change", () => {
@@ -430,7 +431,7 @@ async function embedPicture(pdfDoc, page, pictureUrl) {
   }
 }
 
-export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, changeMotor = {}, editable = false, onSend = null }) {
+export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, changeMotor = {}, editable = false, onSend = null, savedValues = {} }) {
   const documentTitle = "TFRO-001 Temporary MTOP";
   let popup = editable ? null : openPdfWindow(documentTitle);
   if (!editable && !popup) return;
@@ -465,7 +466,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
       { key: "chassis", label: "Chassis number", value: details.chassis },
       { key: "plate", label: "Plate number", value: details.plate },
       { key: "expiration", label: "Expiration date", value: details.expiration },
-    ], editable, onSend);
+    ], editable, onSend, savedValues);
     if (!details) { popup?.close(); return; }
     const reviewedVehicle = normalizeVehicleMakeModel(details.make, details.model);
     details = { ...details, make: reviewedVehicle.make, model: reviewedVehicle.model };
@@ -528,7 +529,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
   }
 }
 
-export async function openFinalMtopPermitPdfForm({ renewal, franchise = {}, changeMotor = {}, editable = false }) {
+export async function openFinalMtopPermitPdfForm({ renewal, franchise = {}, changeMotor = {}, editable = false, onSend = null, savedValues = {} }) {
   const documentTitle = "Motorized Tricycle Operator's Permit";
   let popup = editable ? null : openPdfWindow(documentTitle);
   if (!editable && !popup) return;
@@ -572,7 +573,7 @@ export async function openFinalMtopPermitPdfForm({ renewal, franchise = {}, chan
       { key: "plate", label: "Plate number", value: details.plate },
       { key: "route", label: "Authorized route", value: details.route },
       { key: "expiration", label: "Good Until", value: details.expiration },
-    ], editable);
+    ], editable, onSend, savedValues);
     if (!details) { popup?.close(); return; }
     const reviewedVehicle = normalizeVehicleMakeModel(details.make, details.model);
     details = { ...details, make: reviewedVehicle.make, model: reviewedVehicle.model };
@@ -622,7 +623,7 @@ export async function openFinalMtopPermitPdfForm({ renewal, franchise = {}, chan
   }
 }
 
-export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor = {}, pictureUrl = "", editable = false, onSend = null }) {
+export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor = {}, pictureUrl = "", editable = false, onSend = null, savedValues = {} }) {
   const documentTitle = "TFRO-005 Application for Motorized Tricycle Operator Permit";
   let popup = editable ? null : openPdfWindow(documentTitle);
   if (!editable && !popup) return;
@@ -677,7 +678,7 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
       { key: "chassis", label: "Chassis number", value: answers.chassis },
       { key: "crNumber", label: "C.R. number", value: answers.crNumber },
       { key: "route", label: "Authorized route", value: answers.route },
-    ], editable, onSend);
+    ], editable, onSend, savedValues);
     if (!manual) { popup?.close(); return; }
     const reviewedVehicle = normalizeVehicleMakeModel(manual.make, manual.model);
     manual = {
@@ -709,7 +710,7 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
   }
 }
 
-export async function openPmblPdfForm({ renewal, franchise = {}, editable = false, onSend = null }) {
+export async function openPmblPdfForm({ renewal, franchise = {}, editable = false, onSend = null, savedValues = {} }) {
   const documentTitle = "PMBL TFRO-003 Certification";
   let popup = editable ? null : openPdfWindow(documentTitle);
   if (!editable && !popup) return;
@@ -747,7 +748,7 @@ export async function openPmblPdfForm({ renewal, franchise = {}, editable = fals
       { key: "day", label: "Issued day", value: String(issued.getDate()) },
       { key: "month", label: "Issued month", value: issued.toLocaleDateString("en-PH", { month: "long" }) },
       { key: "year", label: "Issued year (last two digits)", value: String(issued.getFullYear()).slice(-2) },
-    ], editable, onSend);
+    ], editable, onSend, savedValues);
     if (!manual) { popup?.close(); return; }
     if (manual.both || (manual.driver && manual.operator)) {
       manual = { ...manual, driver: false, operator: false, both: true };
@@ -776,7 +777,7 @@ export async function openPmblPdfForm({ renewal, franchise = {}, editable = fals
   }
 }
 
-export async function openChecklistPdfForm({ renewal, documents = [], editable = false, onSend = null }) {
+export async function openChecklistPdfForm({ renewal, documents = [], editable = false, onSend = null, savedValues = {} }) {
   const documentTitle = "TFRO-004 Checklist of Requirements for Renewal of MTOP";
   let popup = editable ? null : openPdfWindow(documentTitle);
   if (!editable && !popup) return;
@@ -821,7 +822,7 @@ export async function openChecklistPdfForm({ renewal, documents = [], editable =
         { key: `${key}_pass`, label: `${key.replaceAll("_", " ")} — PASS`, value: inspection[key] === true, type: "checkbox" },
         { key: `${key}_fail`, label: `${key.replaceAll("_", " ")} — FAIL`, value: inspection[key] === false, type: "checkbox" },
       ]),
-    ], editable, onSend);
+    ], editable, onSend, savedValues);
     if (!manual) { popup?.close(); return; }
     manual = { ...manual, date: formatDate(manual.date) };
     popup ||= openPdfWindow(documentTitle);

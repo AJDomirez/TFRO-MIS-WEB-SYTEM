@@ -75,7 +75,7 @@ export function destinationForRole(role) {
 export async function loadUserProfile(userId) {
   return supabase
     .from("profiles")
-    .select("id, role, full_name, contact_number")
+    .select("id, role, full_name, contact_number, account_status")
     .eq("id", userId)
     .maybeSingle();
 }
@@ -114,6 +114,12 @@ export async function requireRole(allowedRoles) {
     await supabase.auth.signOut({ scope: "local" });
     clearCachedIdentity();
     window.location.replace("login.html");
+    return { user: null, profile: null };
+  }
+
+  if (profile.account_status && profile.account_status !== "active") {
+    clearCachedIdentity();
+    window.location.replace("account-status.html");
     return { user: null, profile: null };
   }
 
