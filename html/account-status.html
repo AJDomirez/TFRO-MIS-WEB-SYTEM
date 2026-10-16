@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TFRO Account Confirmation</title>
+  <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg" />
+  <link rel="stylesheet" href="../css/style.css?v=20261016-1" />
+  <link rel="stylesheet" href="../css/account-status.css?v=20261016-1" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+</head>
+<body class="account-status-page">
+  <main class="account-status-card" aria-live="polite">
+    <img src="../Logo/TFRO Logo.jpg" alt="TFRO Lucena City logo" />
+    <div class="account-status-icon" id="statusIcon"><i class="ri-loader-4-line ri-spin"></i></div>
+    <p class="account-status-kicker">TFRO MIS ACCOUNT</p>
+    <h1 id="statusTitle">Confirming your account</h1>
+    <p id="statusMessage">Please wait while TFRO verifies your email and official record.</p>
+    <div class="account-status-reference" id="statusReference" hidden></div>
+    <div class="account-status-actions">
+      <button type="button" id="checkAgainBtn"><i class="ri-refresh-line"></i> Check Again</button>
+      <button type="button" class="secondary" id="signOutBtn"><i class="ri-logout-box-r-line"></i> Sign Out</button>
+    </div>
+  </main>
+  <script type="module" src="../js/account-status.js?v=20261016-1"></script>
+</body>
+</html>

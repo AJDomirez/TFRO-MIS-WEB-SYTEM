@@ -291,7 +291,7 @@ registerForm.addEventListener("submit", async (event) => {
       options: {
         // This exact URL must be included in Supabase Authentication >
         // URL Configuration > Redirect URLs.
-        emailRedirectTo: new URL("./login.html", window.location.href).href,
+        emailRedirectTo: new URL("./login.html?confirmed=1", window.location.href).href,
         data: {
           role,
           full_name: fullName,
@@ -337,7 +337,7 @@ registerForm.addEventListener("submit", async (event) => {
     alert(
       "Account created! Please check your email to confirm your account before signing in."
     );
-    window.location.href = "login.html";
+    window.location.href = "login.html?confirmation=sent";
     return;
   }
 
@@ -349,8 +349,12 @@ registerForm.addEventListener("submit", async (event) => {
     return;
   }
 
-  alert("Account created successfully!");
-  window.location.replace(destinationForRole(profile.role));
+  if (profile.account_status && profile.account_status !== "active") {
+    window.location.replace("account-status.html");
+  } else {
+    alert("Account created successfully!");
+    window.location.replace(destinationForRole(profile.role));
+  }
 });
 
 void loadRegistrationSetting();

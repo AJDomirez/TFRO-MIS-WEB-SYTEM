@@ -4,9 +4,10 @@ import { logAudit } from "./audit-helper.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
 import { sendOperatorForm } from "./form-delivery.js";
 
-const renewalFormSender = (formCode, renewal) => () => sendOperatorForm({
+const renewalFormSender = (formCode, renewal) => (formData = {}) => sendOperatorForm({
   formCode, recordType: "renewal", recordId: renewal.id,
   recordLabel: renewal.renewal_code || renewal.id,
+  formData,
 });
 
 async function openSavedSubmissionForm(options) {

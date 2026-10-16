@@ -2,6 +2,7 @@ import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
+import { sendOperatorForm } from "./form-delivery.js";
 
 let franchises = [];
 let operatorAccounts = [];
@@ -9,6 +10,7 @@ let editingId = null;
 let deleteTargetId = null;
 let preparedCsvImport = [];
 let currentRole = localStorage.getItem("role") || "";
+let generatedDocumentContext = new Map();
 
 /* ---------- Safe element access ---------- */
 function el(id) { return document.getElementById(id); }
@@ -706,21 +708,46 @@ function formsSection(title, subtitle, cards) {
   return `<section class="saved-forms-section"><div class="saved-forms-heading"><div><h4>${escapeHtml(title)}</h4><p>${escapeHtml(subtitle)}</p></div><span>${cards.length}</span></div><div class="saved-forms-list">${cards.join("")}</div></section>`;
 }
 
+function generatedDocumentCard(document) {
+  const delivery = document.delivered_to_operator ? "Available to Operator" : "Office draft";
+  return `<article class="saved-form-card generated-form-card">
+    <div class="saved-form-icon"><i class="ri-file-shield-2-line"></i></div>
+    <div class="saved-form-copy"><strong>${escapeHtml(document.document_name)}</strong><span>${escapeHtml(document.form_code)} · Editable auto-filled record</span><small>${delivery}${document.updated_at ? ` · ${escapeHtml(new Date(document.updated_at).toLocaleDateString("en-PH"))}` : ""}</small></div>
+    <button type="button" class="saved-form-open" data-generated-document-id="${document.id}"><i class="ri-edit-box-line"></i> View / Edit</button>
+  </article>`;
+}
+
+async function openGeneratedDocument(documentId) {
+  const context = generatedDocumentContext.get(String(documentId));
+  if (!context?.renewal) return alert("The source renewal record for this document is unavailable.");
+  const { document, renewal, documents, franchise } = context;
+  const pdf = await import("./pdf-form.js?v=20261016-1");
+  const onSend = (formData = {}) => sendOperatorForm({ formCode:document.form_code, recordType:"renewal", recordId:renewal.id, recordLabel:renewal.renewal_code || renewal.id, formData });
+  const options = { renewal, franchise, editable:true, onSend, savedValues:document.form_data || {} };
+  if (document.form_code === "TFRO-001") return pdf.openTemporaryMtopPdfForm(options);
+  if (document.form_code === "MTOP-PERMIT") return pdf.openFinalMtopPermitPdfForm(options);
+  if (document.form_code === "TFRO-003") return pdf.openPmblPdfForm(options);
+  if (document.form_code === "TFRO-004") return pdf.openChecklistPdfForm({ ...options, documents });
+  if (document.form_code === "TFRO-005") return pdf.openRenewalPdfForm(options);
+  alert(`${document.form_code} is saved in this Franchise Record, but its editor is opened from the related transaction page.`);
+}
+
 async function showForms(row) {
   el("formsModalSubtitle").textContent = `${row.franchise_number} · ${row.operator_name}`;
   el("formsBody").innerHTML = '<div class="forms-loading"><i class="ri-loader-4-line"></i> Loading saved forms...</div>';
   openModal("formsModal");
 
-  const [applicationResult, renewalsResult, driversResult, motorResult] = await Promise.all([
+  const [applicationResult, renewalsResult, driversResult, motorResult, generatedResult] = await Promise.all([
     row.application_id
       ? supabase.from("franchise_documents").select("id, doc_type, file_name, storage_path, status, verified, uploaded_at").eq("application_id", row.application_id).order("uploaded_at")
       : Promise.resolve({ data: [], error: null }),
-    supabase.from("franchise_renewals").select("id, renewal_code, status, created_at").eq("franchise_id", row.id).order("created_at", { ascending: false }),
+    supabase.from("franchise_renewals").select("*").eq("franchise_id", row.id).order("created_at", { ascending: false }),
     supabase.from("drivers").select("id, full_name, picture_storage_path, license_status, created_at").eq("franchise_id", row.id).order("created_at", { ascending: false }),
     supabase.from("change_motor_requests").select("id, request_code, supporting_file_name, supporting_storage_path, picture_storage_path, status, created_at").eq("franchise_id", row.id).order("created_at", { ascending: false }),
+    supabase.from("franchise_generated_documents").select("*").eq("franchise_id", row.id).order("updated_at", { ascending:false }),
   ]);
 
-  const initialError = [applicationResult, renewalsResult, driversResult, motorResult].find((result) => result.error)?.error;
+  const initialError = [applicationResult, renewalsResult, driversResult, motorResult, generatedResult].find((result) => result.error)?.error;
   if (initialError) {
     console.error("Could not load franchise forms:", initialError);
     el("formsBody").innerHTML = `<div class="forms-empty error"><i class="ri-error-warning-line"></i><strong>Forms could not be loaded</strong><span>${escapeHtml(initialError.message)}</span></div>`;
@@ -782,7 +809,16 @@ async function showForms(row) {
     }));
   }
 
+  generatedDocumentContext = new Map((generatedResult.data || []).map((document) => [String(document.id), {
+    document,
+    renewal: renewals.find((renewal) => String(renewal.id) === String(document.renewal_id)),
+    documents: (renewalDocsResult.data || []).filter((item) => String(item.renewal_id) === String(document.renewal_id)),
+    franchise: row,
+  }]));
+  const generatedForms = (generatedResult.data || []).map(generatedDocumentCard);
+
   const content = [
+    formsSection("Official Auto-Filled Documents", "Generated permits and forms saved to this Franchise Record; administrators can review, edit, and resend them", generatedForms),
     formsSection("Initial Application", "Documents submitted with the franchise application", applicationDocs),
     formsSection("Renewal Requirements", "Documents saved across all renewal submissions", renewalDocs),
     formsSection("Driver Forms", "Saved files from assigned driver submissions", driverForms),
@@ -1019,6 +1055,10 @@ function bindEvents() {
   });
 
   el("franchiseTable")?.addEventListener("click", onTableClick);
+  el("formsBody")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-generated-document-id]");
+    if (button) void openGeneratedDocument(button.dataset.generatedDocumentId);
+  });
   el("searchInput")?.addEventListener("input", renderTable);
   el("statusFilter")?.addEventListener("change", renderTable);
   bindDateCsvExport({

@@ -1,19 +1,19 @@
-const CACHE_NAME = "tfro-imis-shell-v40";
+const CACHE_NAME = "tfro-imis-shell-v41";
 const CORE_ASSETS = [
   "./",
   "html/application.html", "html/auditlog.html", "html/dashboard.html", "html/driver.html",
   "html/driververify.html", "html/enforcerportal.html", "html/enforcers.html", "html/franchise.html",
-  "html/index.html", "html/login.html", "html/motorequests.html", "html/notification.html",
+  "html/index.html", "html/login.html", "html/account-status.html", "html/motorequests.html", "html/notification.html",
   "html/operator.html", "html/operatorapplication.html", "html/operatorportal.html",
   "html/operatorprofile.html", "html/payment.html", "html/profile.html",
   "html/register.html", "html/renewal.html", "html/renewals.html", "html/report.html", "html/violation.html",
-  "css/application.css", "css/auditlog.css", "css/dashboard.css", "css/driver.css",
+  "css/account-status.css", "css/application.css", "css/auditlog.css", "css/dashboard.css", "css/driver.css",
   "css/driververify.css", "css/enforcer-admin.css", "css/enforcer.css", "css/franchise.css", "css/motor-admin.css",
   "css/guided-tour.css", "css/landing.css", "css/notification.css", "css/operator.css",
   "css/operatorportal.css", "css/operatorprofile.css", "css/payment.css", "css/profile.css",
   "css/renewal-admin.css", "css/renewal.css", "css/report.css", "css/mobile-portals.css",
   "css/style.css", "css/tfro-theme.css", "css/ticket-camera.css", "css/violation.css",
-  "js/application.js", "js/audit-helper.js", "js/auditlog.js", "js/auth-guard.js",
+  "js/account-status.js", "js/application.js", "js/audit-helper.js", "js/auditlog.js", "js/auth-guard.js",
   "js/csv-export.js", "js/dashboard.js", "js/driver.js", "js/driververify.js",
   "js/enforcerportal.js", "js/enforcers.js", "js/form-delivery.js", "js/franchise.js",
   "js/guided-tour.js", "js/landing.js", "js/login.js", "js/mobile-portal-tables.js", "js/motorequests.js",

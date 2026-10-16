@@ -1,11 +1,12 @@
 import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 
-export async function sendOperatorForm({ formCode, recordType, recordId, recordLabel = recordId }) {
+export async function sendOperatorForm({ formCode, recordType, recordId, recordLabel = recordId, formData = {} }) {
   const { error } = await supabase.rpc("send_operator_form", {
     p_form_code: formCode,
     p_record_type: recordType,
     p_record_id: Number(recordId),
+    p_form_data: formData || {},
   });
   if (error) {
     alert(`Could not send ${formCode}: ${error.message}`);
