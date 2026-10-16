@@ -1663,11 +1663,28 @@ html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) .main-co
 html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) .admin-users-main{
   background:linear-gradient(145deg,#f8fafc 0%,var(--tfro-canvas) 100%) !important;
 }
-html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) :is(.topbar,h1,h2,h3,h4,strong){
+/* Keep these defaults deliberately low-specificity. Page components with a
+   branded/dark surface must be able to supply their own readable text color. */
+:where(html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) :is(.topbar,h1,h2,h3,h4)){
   color:var(--tfro-ink);
 }
-html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) :is(.topbar p,.subtitle,.hint,.muted,small){
+:where(html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) :is(.topbar p,.subtitle,.hint,.muted,small)){
   color:var(--tfro-muted);
+}
+
+/* System-wide contrast safeguards for navy/blue branded surfaces. */
+html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar,.enforcer-sidebar)
+  :is(.sidebar,.welcome-card,.capacity-card,.ticket-photo-header,.consent-dialog-header,.report-modal-header,.toast,.violation-toast)
+  :is(h1,h2,h3,h4,strong){
+  color:#fff !important;
+  -webkit-text-fill-color:#fff !important;
+}
+body:is(.admin-sidebar,.operator-sidebar,.enforcer-sidebar) button :is(span,strong,small,i),
+body:is(.admin-sidebar,.operator-sidebar,.enforcer-sidebar)
+  :is(.add-btn,.new-btn,.save-btn,.mark-btn,.export-btn,.download-btn,.btn-primary,.btn-submit,.btn-accept,.saved-form-open)
+  :is(span,strong,small,i){
+  color:inherit !important;
+  -webkit-text-fill-color:currentColor !important;
 }
 html:not([data-theme="dark"]) body:is(.admin-sidebar,.operator-sidebar) :is(.card,.content-card,.admin-card,.portal-card,.summary-card,.table-card,.profile-card,.application-card,.report-card,.notification-card){
   background:var(--tfro-surface) !important;
