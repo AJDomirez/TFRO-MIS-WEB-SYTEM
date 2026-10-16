@@ -83,6 +83,16 @@ html[data-theme="dark"] body.operator-sidebar :is(.cm-section-title,.driver-sect
   color: #dbeafe !important;
 }
 
+/* Preserve contrast inside the branded welcome banner. This final stylesheet
+   is loaded after the shared light-theme heading rules, including in mobile
+   in-app browsers that may otherwise retain the heading text fill. */
+body.operator-sidebar .welcome-card > #welcomeName {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .22);
+}
+
 @media (max-width: 768px) {
   body.operator-sidebar .welcome-card {
     min-height: 0;
