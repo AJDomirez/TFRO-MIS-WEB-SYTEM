@@ -711,6 +711,11 @@ body.admin-sidebar .form-actions button[type="button"]:not(.btn-reject):not(.btn
 .welcome-card span{
   color:#cfe8dd !important;
 }
+.welcome-card h2,
+.welcome-card #welcomeName{
+  color:#fff !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.22);
+}
 
 /* --- Profile avatars (blue → green) --- */
 .profile-avatar,
