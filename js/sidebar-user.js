@@ -102,6 +102,7 @@ if (savedRole) {
   document.body.classList.toggle("admin-sidebar", ["admin", "admin_viewer", "staff"].includes(savedRole));
   document.body.classList.toggle("operator-sidebar", ["operator", "traffic_enforcer"].includes(savedRole));
   document.body.classList.toggle("enforcer-sidebar", savedRole === "traffic_enforcer");
+  window.dispatchEvent(new CustomEvent("tfrorolechange", { detail: { role: savedRole } }));
 }
 
 function initials(name = "") {
@@ -258,6 +259,7 @@ async function loadSidebarUser() {
     document.body.classList.toggle("admin-sidebar", ["admin", "admin_viewer", "staff"].includes(role));
     document.body.classList.toggle("operator-sidebar", ["operator", "traffic_enforcer"].includes(role));
     document.body.classList.toggle("enforcer-sidebar", role === "traffic_enforcer");
+    window.dispatchEvent(new CustomEvent("tfrorolechange", { detail: { role } }));
   }
   if (role === "operator") setupOperatorNavigation();
   if (role === "staff") setupStaffNavigation();

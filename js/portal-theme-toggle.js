@@ -1,71 +1,43 @@
-/* Appearance preference for Operator and Traffic Enforcer portals. */
-(function setupPortalThemeToggle() {
-  const STORAGE_KEY = "tfro-theme";
+/* Operator and Traffic Enforcer portals always use the accessible light theme.
+   The shared Admin theme preference remains stored for Admin pages only. */
+(function lockUserPortalsToLightTheme() {
   const PORTAL_ROLES = new Set(["operator", "traffic_enforcer"]);
 
-  function preferredTheme() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === "light" || saved === "dark") return saved;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }
-
-  function buttonMarkup(theme) {
-    return theme === "dark"
-      ? '<i class="ri-sun-line" aria-hidden="true"></i><span>Light mode</span>'
-      : '<i class="ri-moon-clear-line" aria-hidden="true"></i><span>Dark mode</span>';
-  }
-
-  function applyTheme(theme) {
-    document.documentElement.dataset.theme = theme;
-    document.documentElement.style.colorScheme = theme;
-    document.querySelectorAll(".tfro-theme-toggle").forEach((button) => {
-      const dark = theme === "dark";
-      button.setAttribute("aria-pressed", String(dark));
-      button.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
-      button.title = dark ? "Use light mode" : "Use dark mode";
-      button.innerHTML = buttonMarkup(theme);
-    });
-    window.dispatchEvent(new CustomEvent("tfrothemechange", { detail: { theme } }));
-  }
-
-  function initialize() {
-    const role = localStorage.getItem("role") || "";
-    const portalShell = document.body.classList.contains("operator-sidebar")
+  function isUserPortal(role = localStorage.getItem("role") || "") {
+    return PORTAL_ROLES.has(role)
+      || document.body.classList.contains("operator-sidebar")
       || document.body.classList.contains("enforcer-sidebar");
-    if (!PORTAL_ROLES.has(role) && !portalShell) return;
-
-    const theme = preferredTheme();
-    applyTheme(theme);
-
-    const header = document.querySelector(".topbar");
-    if (!header || header.querySelector(".tfro-theme-toggle")) return;
-
-    const actions = document.createElement("div");
-    actions.className = "tfro-theme-actions portal-topbar-actions";
-    [...header.children]
-      .filter((child) => child.matches("button, .back-link, .enforcer-badge"))
-      .forEach((control) => actions.appendChild(control));
-
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "tfro-theme-toggle";
-    button.addEventListener("click", () => {
-      const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-      localStorage.setItem(STORAGE_KEY, next);
-      applyTheme(next);
-    });
-    actions.appendChild(button);
-    header.appendChild(actions);
-    applyTheme(theme);
   }
 
-  window.addEventListener("storage", (event) => {
-    if (event.key === STORAGE_KEY && (event.newValue === "light" || event.newValue === "dark")) {
-      applyTheme(event.newValue);
-    }
+  function applyLightOnlyTheme(role) {
+    if (!isUserPortal(role)) return;
+
+    // Keep the saved Admin preference so it can be restored on an Admin page.
+    delete document.documentElement.dataset.theme;
+    document.documentElement.style.colorScheme = "light";
+
+    document.querySelectorAll(".tfro-theme-toggle").forEach((button) => button.remove());
+    document.querySelectorAll(".portal-topbar-actions, .tfro-theme-actions").forEach((actions) => {
+      if (!actions.children.length) actions.remove();
+    });
+
+    window.dispatchEvent(new CustomEvent("tfrothemechange", {
+      detail: { theme: "light", locked: true },
+    }));
+  }
+
+  window.addEventListener("tfrorolechange", (event) => {
+    applyLightOnlyTheme(event.detail?.role || "");
   });
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize, { once: true });
-  else initialize();
+  window.addEventListener("storage", (event) => {
+    if (event.key === "tfro-theme") applyLightOnlyTheme();
+  });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => applyLightOnlyTheme(), { once: true });
+  } else {
+    applyLightOnlyTheme();
+  }
 })();
 
