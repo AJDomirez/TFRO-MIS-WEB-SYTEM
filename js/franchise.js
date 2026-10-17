@@ -3,6 +3,7 @@ import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
 import { sendOperatorForm } from "./form-delivery.js";
+import { generatedFormDraftBindings } from "./form-drafts.js?v=20261017-1";
 
 let franchises = [];
 let operatorAccounts = [];
@@ -721,9 +722,10 @@ async function openGeneratedDocument(documentId) {
   const context = generatedDocumentContext.get(String(documentId));
   if (!context?.renewal) return alert("The source renewal record for this document is unavailable.");
   const { document, renewal, documents, franchise } = context;
-  const pdf = await import("./pdf-form.js?v=20261016-1");
+  const pdf = await import("./pdf-form.js?v=20261017-1");
   const onSend = (formData = {}) => sendOperatorForm({ formCode:document.form_code, recordType:"renewal", recordId:renewal.id, recordLabel:renewal.renewal_code || renewal.id, formData });
-  const options = { renewal, franchise, editable:true, onSend, savedValues:document.form_data || {} };
+  const draft = await generatedFormDraftBindings({ formCode:document.form_code, recordType:"renewal", recordId:renewal.id });
+  const options = { renewal, franchise, editable:true, onSend, ...draft };
   if (document.form_code === "TFRO-001") return pdf.openTemporaryMtopPdfForm(options);
   if (document.form_code === "MTOP-PERMIT") return pdf.openFinalMtopPermitPdfForm(options);
   if (document.form_code === "TFRO-003") return pdf.openPmblPdfForm(options);

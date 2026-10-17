@@ -1,14 +1,29 @@
 import { supabase } from "./supabase.js";
 import { requireRole } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
-import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20261014-2";
+import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20261017-1";
 import { sendOperatorForm } from "./form-delivery.js";
+import { generatedFormDraftBindings } from "./form-drafts.js?v=20261017-1";
 
 let payments = [], pendingViolations = [], currentUserId = null, currentRole = null, editingPaymentId = null;
-const paymentFormSender = (formCode, payment) => () => sendOperatorForm({
+const paymentFormSender = (formCode, payment) => (formData = {}) => sendOperatorForm({
   formCode, recordType: "payment", recordId: payment.id,
   recordLabel: payment.receipt || payment.id,
+  formData,
 });
+async function openPaymentGeneratedForm(formCode, payment) {
+  const editable = currentRole === "admin";
+  const draft = editable
+    ? await generatedFormDraftBindings({ formCode, recordType:"payment", recordId:payment.id })
+    : {};
+  const options = {
+    payment, violation:payment.violations || {}, editable, ...draft,
+    onSend:editable ? paymentFormSender(formCode, payment) : null,
+  };
+  return formCode === "TFRO-009"
+    ? openPaymentOrderPdfForm(options)
+    : openUnitReleasePdfForm(options);
+}
 const table = document.getElementById("paymentsTable"), modal = document.getElementById("paymentModal"), form = document.getElementById("paymentForm");
 const peso = (amount) => "₱" + Number(amount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" })[char]);
@@ -75,7 +90,7 @@ form.addEventListener("submit",async(event)=>{
   if(result.error)return alert(`Could not save payment details: ${result.error.message}`);
   await logAudit({action:editingPaymentId?"Updated Payment Release Details":"Recorded Violation Payment",actionType:editingPaymentId?"update":"create",record:String(result.data.id),description:releaseRequired?`Recorded payment and TFRO-010 details for ticket ${d.violation_id}.`:`Recorded payment for ticket ${d.violation_id}; no vehicle release was required.`});
   const wasEditing=Boolean(editingPaymentId);closeModal();await loadPayments();
-  if(!wasEditing){const saved=payments.find((p)=>p.id===result.data.id);if(saved)void openPaymentOrderPdfForm({payment:saved,violation:saved.violations||{},editable:currentRole==="admin",onSend:paymentFormSender("TFRO-009",saved)});}
+  if(!wasEditing){const saved=payments.find((p)=>p.id===result.data.id);if(saved)void openPaymentGeneratedForm("TFRO-009",saved);}
 });
-table.addEventListener("click",(event)=>{const button=event.target.closest("button[data-action]");if(!button)return;const p=payments.find((row)=>String(row.id)===button.dataset.id);if(!p)return;const editable=currentRole==="admin";if(button.dataset.action==="order")void openPaymentOrderPdfForm({payment:p,violation:p.violations||{},editable,onSend:editable?paymentFormSender("TFRO-009",p):null});if(button.dataset.action==="release")void openUnitReleasePdfForm({payment:p,violation:p.violations||{},editable,onSend:editable?paymentFormSender("TFRO-010",p):null});if(button.dataset.action==="edit")openEditPayment(p);if(button.dataset.action==="proof")void openProof(p);});
+table.addEventListener("click",(event)=>{const button=event.target.closest("button[data-action]");if(!button)return;const p=payments.find((row)=>String(row.id)===button.dataset.id);if(!p)return;if(button.dataset.action==="order")void openPaymentGeneratedForm("TFRO-009",p);if(button.dataset.action==="release")void openPaymentGeneratedForm("TFRO-010",p);if(button.dataset.action==="edit")openEditPayment(p);if(button.dataset.action==="proof")void openProof(p);});
 (async()=>{if(await verifyAccess()){await loadPayments();const requestedViolation=new URLSearchParams(window.location.search).get("violation");if(requestedViolation&&currentRole==="staff")openNewPayment(requestedViolation);}})();

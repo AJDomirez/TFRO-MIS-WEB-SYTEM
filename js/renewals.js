@@ -3,6 +3,7 @@ import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
 import { sendOperatorForm } from "./form-delivery.js";
+import { generatedFormDraftBindings } from "./form-drafts.js?v=20261017-1";
 
 const renewalFormSender = (formCode, renewal) => (formData = {}) => sendOperatorForm({
   formCode, recordType: "renewal", recordId: renewal.id,
@@ -11,8 +12,9 @@ const renewalFormSender = (formCode, renewal) => (formData = {}) => sendOperator
 });
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261015-6");
-  openRenewalPdfForm({ ...options, editable: true, onSend: renewalFormSender("TFRO-005", options.renewal) });
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  const draft = await generatedFormDraftBindings({ formCode:"TFRO-005", recordType:"renewal", recordId:options.renewal.id });
+  openRenewalPdfForm({ ...options, ...draft, editable: true, onSend: renewalFormSender("TFRO-005", options.renewal) });
 }
 
 const DOC_LABELS = {
@@ -374,8 +376,9 @@ async function printCurrentTemporaryMtop() {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261015-6");
-  openTemporaryMtopPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, changeMotor, editable: true, onSend: renewalFormSender("TFRO-001", currentRenewal) });
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  const draft = await generatedFormDraftBindings({ formCode:"TFRO-001", recordType:"renewal", recordId:currentRenewal.id });
+  openTemporaryMtopPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, changeMotor, ...draft, editable: true, onSend: renewalFormSender("TFRO-001", currentRenewal) });
 }
 
 async function printCurrentFinalMtopPermit() {
@@ -389,8 +392,9 @@ async function printCurrentFinalMtopPermit() {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openFinalMtopPermitPdfForm } = await import("./pdf-form.js?v=20261015-6");
-  openFinalMtopPermitPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, changeMotor, editable: true });
+  const { openFinalMtopPermitPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  const draft = await generatedFormDraftBindings({ formCode:"MTOP-PERMIT", recordType:"renewal", recordId:currentRenewal.id });
+  openFinalMtopPermitPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, changeMotor, ...draft, editable: true });
 }
 
 async function sendCurrentTemporaryMtop() {
@@ -429,14 +433,16 @@ async function sendCurrentTemporaryMtop() {
 
 async function printCurrentPmblCertification() {
   if (!currentRenewal) return;
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261015-6");
-  openPmblPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, editable: true, onSend: renewalFormSender("TFRO-003", currentRenewal) });
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  const draft = await generatedFormDraftBindings({ formCode:"TFRO-003", recordType:"renewal", recordId:currentRenewal.id });
+  openPmblPdfForm({ renewal: currentRenewal, franchise: currentRenewal.franchises || {}, ...draft, editable: true, onSend: renewalFormSender("TFRO-003", currentRenewal) });
 }
 
 async function printCurrentChecklist() {
   if (!currentRenewal) return;
-  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261015-6");
-  openChecklistPdfForm({ renewal: currentRenewal, documents: currentDocuments, editable: true, onSend: renewalFormSender("TFRO-004", currentRenewal) });
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  const draft = await generatedFormDraftBindings({ formCode:"TFRO-004", recordType:"renewal", recordId:currentRenewal.id });
+  openChecklistPdfForm({ renewal: currentRenewal, documents: currentDocuments, ...draft, editable: true, onSend: renewalFormSender("TFRO-004", currentRenewal) });
 }
 
 function inspectionResults() {

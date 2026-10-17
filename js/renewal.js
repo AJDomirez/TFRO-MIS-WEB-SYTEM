@@ -1,11 +1,16 @@
 import { supabase } from "./supabase.js";
 import { requireRole, signOutAndRedirect } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
+import { loadGeneratedFormValues } from "./form-drafts.js?v=20261017-1";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261015-6");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261017-1");
   openRenewalPdfForm(options);
 }
+
+const deliveredFormValues = (formCode, renewalId) => loadGeneratedFormValues({
+  formCode, recordType:"renewal", recordId:renewalId, preferDraft:false,
+});
 
 const BASE_DOCUMENTS = [
   "voters_certificate", "cedula", "barangay_clearance", "drivers_license",
@@ -273,19 +278,20 @@ async function showRenewalSubmission(renewal) {
   await openSavedSubmissionForm({
     renewal, franchise: currentFranchise, pictureUrl,
     changeMotor,
+    savedValues:await deliveredFormValues("TFRO-005", renewal.id),
     documentTypes: (documents || []).map((document) => document.doc_type),
   });
 }
 
 async function showPmblCertification(renewal) {
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261015-6");
-  openPmblPdfForm({ renewal, franchise: currentFranchise || {} });
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  openPmblPdfForm({ renewal, franchise: currentFranchise || {}, savedValues:await deliveredFormValues("TFRO-003", renewal.id) });
 }
 
 async function showRenewalChecklist(renewal) {
   const { data: documents } = await supabase.from("renewal_documents").select("doc_type,status,verified").eq("renewal_id", renewal.id);
-  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261015-6");
-  openChecklistPdfForm({ renewal, documents: documents || [] });
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  openChecklistPdfForm({ renewal, documents: documents || [], savedValues:await deliveredFormValues("TFRO-004", renewal.id) });
 }
 
 async function showTemporaryMtop(renewal) {
@@ -298,8 +304,8 @@ async function showTemporaryMtop(renewal) {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261015-6");
-  openTemporaryMtopPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor });
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  openTemporaryMtopPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor, savedValues:await deliveredFormValues("TFRO-001", renewal.id) });
 }
 
 async function showFinalMtopPermit(renewal) {
@@ -312,8 +318,8 @@ async function showFinalMtopPermit(renewal) {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openFinalMtopPermitPdfForm } = await import("./pdf-form.js?v=20261015-6");
-  openFinalMtopPermitPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor });
+  const { openFinalMtopPermitPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  openFinalMtopPermitPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor, savedValues:await deliveredFormValues("MTOP-PERMIT", renewal.id) });
 }
 
 function prefillRenewal(renewal) {
