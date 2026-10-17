@@ -3,6 +3,8 @@ import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
 import { openSubmissionForm } from "./submission-form.js?v=20260909-180000";
+import { sendOperatorForm } from "./form-delivery.js";
+import { generatedFormDraftBindings, loadGeneratedFormValues } from "./form-drafts.js?v=20261017-1";
 
 let requests = [];
 let currentReq = null;
@@ -325,12 +327,14 @@ alert("Request rejected. The operator has been notified.");
 
 async function openChangeMotorPdf(formCode) {
   if (!currentReq) return;
-  const module = await import("./pdf-form.js?v=20261014-2");
+  const module = await import("./pdf-form.js?v=20261017-1");
+  const draft = await generatedFormDraftBindings({ formCode, recordType:"change_motor", recordId:currentReq.id });
   const options = {
     request: currentReq,
     franchise: currentReq.franchise || {},
     operator: currentReq.operator_profile || {},
-    editable: false,
+    editable: true,
+    ...draft,
   };
   if (formCode === "TFRO-002") module.openDroppingPetitionPdfForm(options);
   else module.openDroppingCertificationPdfForm(options);
@@ -347,6 +351,17 @@ async function sendChangeMotorForms() {
   if (update.error) {
     alert("Could not send the forms: " + update.error.message);
     return false;
+  }
+  for (const formCode of ["TFRO-002", "TFRO-007"]) {
+    const formData = await loadGeneratedFormValues({ formCode, recordType:"change_motor", recordId:currentReq.id });
+    const delivered = await sendOperatorForm({
+      formCode, recordType:"change_motor", recordId:currentReq.id,
+      recordLabel:currentReq.request_code || currentReq.id, formData, notify:false,
+    });
+    if (!delivered) {
+      await supabase.from("change_motor_requests").update({ forms_sent_to_operator_at:null, forms_sent_by:null }).eq("id", currentReq.id);
+      return false;
+    }
   }
   currentReq.forms_sent_to_operator_at = sentAt;
   currentReq.forms_sent_by = auth.data.user?.id || null;

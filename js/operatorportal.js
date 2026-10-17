@@ -1,7 +1,8 @@
 import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
-import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20261014-2";
+import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20261017-1";
+import { loadGeneratedFormValues } from "./form-drafts.js?v=20261017-1";
 
 async function openSavedSubmissionForm(options) {
   const { openSubmissionForm } = await import("./submission-form.js?v=20260909-180000");
@@ -98,11 +99,13 @@ async function submitTreasurerReceipt(violationId) {
   loadPortal();
 }
 
-function openOperatorPaymentForm(paymentId, code) {
+async function openOperatorPaymentForm(paymentId, code) {
   const violation = (window.__operatorViolations || []).find((row) => (row.payments || []).some((payment) => String(payment.id) === String(paymentId)));
   const payment = violation?.payments?.find((row) => String(row.id) === String(paymentId));
   if (!payment) return;
-  const options = { payment, violation, viewOnly: true };
+  const formCode = code === "009" ? "TFRO-009" : "TFRO-010";
+  const savedValues = await loadGeneratedFormValues({ formCode, recordType:"payment", recordId:payment.id, preferDraft:false });
+  const options = { payment, violation, viewOnly: true, savedValues };
   if (code === "009") void openPaymentOrderPdfForm(options);
   else void openUnitReleasePdfForm(options);
 }
@@ -613,8 +616,9 @@ async function loadChangeMotorHistory(userId) {
 
 async function showMotorSubmission(request, formCode) {
   if (request.status !== "approved" || !request.forms_sent_to_operator_at) return alert("These forms have not been sent by TFRO Admin yet.");
-  const module = await import("./pdf-form.js?v=20261014-2");
-  const options = { request, franchise: window.__currentFranchise || {}, operator: currentOperatorRecord || {} };
+  const module = await import("./pdf-form.js?v=20261017-1");
+  const savedValues = await loadGeneratedFormValues({ formCode, recordType:"change_motor", recordId:request.id, preferDraft:false });
+  const options = { request, franchise: window.__currentFranchise || {}, operator: currentOperatorRecord || {}, savedValues };
   if (formCode === "TFRO-002") module.openDroppingPetitionPdfForm(options);
   else module.openDroppingCertificationPdfForm(options);
   return;

@@ -2,8 +2,9 @@ import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
 import { bindDateCsvExport, isWithinDateRange } from "./csv-export.js";
-import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20261014-2";
+import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20261017-1";
 import { sendOperatorForm } from "./form-delivery.js";
+import { generatedFormDraftBindings } from "./form-drafts.js?v=20261017-1";
 
 let violations = [];
 let catalog = [];
@@ -163,8 +164,11 @@ function printNotice(row) {
   tab.document.close();
 }
 
-function printOrderPayment(row) {
+async function printOrderPayment(row) {
   const payment = paidPayment(row) || {};
+  const draft = canEditPdfFields && payment.id
+    ? await generatedFormDraftBindings({ formCode:"TFRO-009", recordType:"payment", recordId:payment.id })
+    : {};
   void openPaymentOrderPdfForm({
     payment: {
       ...payment,
@@ -172,28 +176,35 @@ function printOrderPayment(row) {
       amount: payment.amount ?? netAmount(row),
     },
     violation: row,
+    ...draft,
     editable: canEditPdfFields,
-    onSend: canEditPdfFields && payment.id ? () => sendOperatorForm({
+    onSend: canEditPdfFields && payment.id ? (formData = {}) => sendOperatorForm({
       formCode: "TFRO-009",
       recordType: "payment",
       recordId: payment.id,
       recordLabel: payment.receipt || payment.id,
+      formData,
     }) : null,
   });
 }
 
-function openVehicleReleaseSlip(row) {
+async function openVehicleReleaseSlip(row) {
   const payment = paidPayment(row);
   if (!payment) return window.alert("TFRO-010 is available after TFRO Staff records the payment and releasing details.");
+  const draft = canEditPdfFields
+    ? await generatedFormDraftBindings({ formCode:"TFRO-010", recordType:"payment", recordId:payment.id })
+    : {};
   void openUnitReleasePdfForm({
     payment,
     violation: row,
+    ...draft,
     editable: canEditPdfFields,
-    onSend: canEditPdfFields ? () => sendOperatorForm({
+    onSend: canEditPdfFields ? (formData = {}) => sendOperatorForm({
       formCode: "TFRO-010",
       recordType: "payment",
       recordId: payment.id,
       recordLabel: payment.receipt || payment.id,
+      formData,
     }) : null,
   });
 }

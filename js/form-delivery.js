@@ -1,7 +1,7 @@
 import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 
-export async function sendOperatorForm({ formCode, recordType, recordId, recordLabel = recordId, formData = {} }) {
+export async function sendOperatorForm({ formCode, recordType, recordId, recordLabel = recordId, formData = {}, notify = true }) {
   const { error } = await supabase.rpc("send_operator_form", {
     p_form_code: formCode,
     p_record_type: recordType,
@@ -18,6 +18,6 @@ export async function sendOperatorForm({ formCode, recordType, recordId, recordL
     record: String(recordLabel),
     description: `Sent ${formCode} to the linked operator account.`,
   });
-  alert(`${formCode} has been sent to the operator account.`);
+  if (notify) alert(`${formCode} has been sent to the operator account.`);
   return true;
 }
