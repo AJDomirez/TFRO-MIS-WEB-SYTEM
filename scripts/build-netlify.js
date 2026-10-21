@@ -26,6 +26,12 @@ fs.mkdirSync(output, { recursive: true });
 for (const directory of publicDirectories) {
   fs.cpSync(path.join(root, directory), path.join(output, directory), {
     recursive: true,
+    // Documentation source files are kept in the repository, while only the
+    // browser-viewable guides and downloadable PDFs are published.
+    filter: (source) => {
+      if (directory !== "docs" || fs.statSync(source).isDirectory()) return true;
+      return new Set([".html", ".pdf"]).has(path.extname(source).toLowerCase());
+    },
   });
 }
 

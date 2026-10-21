@@ -42,7 +42,9 @@ http
       path.extname(projectRelativePath).toLowerCase() === ".pdf";
     const formAssetsDirectory = path.join("forms", "public", "assets");
     const isFormAsset = projectRelativePath.startsWith(`${formAssetsDirectory}${path.sep}`);
-    const isPublicPath = isQrVendor || isFormTemplate || isFormAsset || publicDirectories.has(topLevelEntry) ||
+    const isPublicDocument = topLevelEntry === "docs" &&
+      new Set([".html", ".pdf"]).has(path.extname(projectRelativePath).toLowerCase());
+    const isPublicPath = isQrVendor || isFormTemplate || isFormAsset || isPublicDocument || publicDirectories.has(topLevelEntry) ||
       (projectRelativePath === topLevelEntry && publicRootFiles.has(topLevelEntry));
 
     if (
