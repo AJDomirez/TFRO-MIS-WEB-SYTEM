@@ -718,13 +718,81 @@ function generatedDocumentCard(document) {
   </article>`;
 }
 
+const DIRECT_FRANCHISE_FORMS = [
+  { code: "MTOP-PERMIT", name: "Final MTOP Permit", icon: "ri-file-shield-2-line" },
+  { code: "TFRO-001", name: "Temporary MTOP", icon: "ri-file-pdf-2-line" },
+  { code: "TFRO-003", name: "PMBL Certification", icon: "ri-file-text-line" },
+  { code: "TFRO-004", name: "Renewal Checklist", icon: "ri-checkbox-multiple-line" },
+  { code: "TFRO-005", name: "MTOP Application", icon: "ri-file-edit-line" },
+];
+
+function directFormSection(row) {
+  const cards = DIRECT_FRANCHISE_FORMS.map((form) => `<button type="button" class="direct-form-button" data-direct-form-code="${form.code}" data-franchise-id="${row.id}">
+    <i class="${form.icon}"></i><span><strong>${escapeHtml(form.code)}</strong><small>${escapeHtml(form.name)}</small></span>
+  </button>`).join("");
+  return `<section class="saved-forms-section direct-forms-section">
+    <div class="saved-forms-heading"><div><h4>Create Official Document</h4><p>Generate from this franchise record even when the operator has not submitted a renewal</p></div><span>${DIRECT_FRANCHISE_FORMS.length}</span></div>
+    <div class="direct-form-grid">${cards}</div>
+  </section>`;
+}
+
+function franchiseAsFormRecord(franchise) {
+  return {
+    id: franchise.id,
+    renewal_code: franchise.franchise_number,
+    franchise_number: franchise.franchise_number,
+    operator_name: franchise.operator_name,
+    operator_address: franchise.address,
+    contact_number: franchise.contact_number,
+    birth_date: franchise.birth_date,
+    birth_place: franchise.birth_place,
+    civil_status: franchise.civil_status,
+    motorcycle_brand: franchise.motorcycle_brand,
+    motorcycle_year_model: franchise.motorcycle_year_model,
+    engine_number: franchise.engine_number,
+    chassis_number: franchise.chassis_number,
+    plate_number: franchise.plate_number,
+    official_receipt_number: franchise.official_receipt_number,
+    route: franchise.route,
+    toda_name: franchise.toda_name,
+    new_expiration_date: franchise.expiration_date,
+    temporary_mtop_expiration_date: franchise.expiration_date,
+    request_date: todayForInput(),
+    inspection_results: {},
+  };
+}
+
+async function openDirectFranchiseForm(formCode, franchise) {
+  if (!DIRECT_FRANCHISE_FORMS.some((form) => form.code === formCode)) return;
+  const pdf = await import("./pdf-form.js?v=20261021-1");
+  const renewal = franchiseAsFormRecord(franchise);
+  const draft = await generatedFormDraftBindings({ formCode, recordType:"franchise", recordId:franchise.id });
+  const onSend = (formData = {}) => sendOperatorForm({
+    formCode,
+    recordType:"franchise",
+    recordId:franchise.id,
+    recordLabel:franchise.franchise_number || franchise.id,
+    formData,
+  });
+  const options = { renewal, franchise, editable:true, onSend, ...draft };
+  if (formCode === "TFRO-001") return pdf.openTemporaryMtopPdfForm(options);
+  if (formCode === "MTOP-PERMIT") return pdf.openFinalMtopPermitPdfForm(options);
+  if (formCode === "TFRO-003") return pdf.openPmblPdfForm(options);
+  if (formCode === "TFRO-004") return pdf.openChecklistPdfForm({ ...options, documents:[] });
+  if (formCode === "TFRO-005") return pdf.openRenewalPdfForm(options);
+}
+
 async function openGeneratedDocument(documentId) {
   const context = generatedDocumentContext.get(String(documentId));
-  if (!context?.renewal) return alert("The source renewal record for this document is unavailable.");
-  const { document, renewal, documents, franchise } = context;
-  const pdf = await import("./pdf-form.js?v=20261017-1");
-  const onSend = (formData = {}) => sendOperatorForm({ formCode:document.form_code, recordType:"renewal", recordId:renewal.id, recordLabel:renewal.renewal_code || renewal.id, formData });
-  const draft = await generatedFormDraftBindings({ formCode:document.form_code, recordType:"renewal", recordId:renewal.id });
+  if (!context) return alert("The source record for this document is unavailable.");
+  const { document, documents, franchise } = context;
+  const recordType = document.source_type || "renewal";
+  const renewal = recordType === "franchise" ? franchiseAsFormRecord(franchise) : context.renewal;
+  if (!renewal) return alert("The source transaction for this document is unavailable.");
+  const recordId = recordType === "franchise" ? franchise.id : document.source_id;
+  const pdf = await import("./pdf-form.js?v=20261021-1");
+  const onSend = (formData = {}) => sendOperatorForm({ formCode:document.form_code, recordType, recordId, recordLabel:renewal.renewal_code || recordId, formData });
+  const draft = await generatedFormDraftBindings({ formCode:document.form_code, recordType, recordId });
   const options = { renewal, franchise, editable:true, onSend, ...draft };
   if (document.form_code === "TFRO-001") return pdf.openTemporaryMtopPdfForm(options);
   if (document.form_code === "MTOP-PERMIT") return pdf.openFinalMtopPermitPdfForm(options);
@@ -820,6 +888,7 @@ async function showForms(row) {
   const generatedForms = (generatedResult.data || []).map(generatedDocumentCard);
 
   const content = [
+    directFormSection(row),
     formsSection("Official Auto-Filled Documents", "Generated permits and forms saved to this Franchise Record; administrators can review, edit, and resend them", generatedForms),
     formsSection("Initial Application", "Documents submitted with the franchise application", applicationDocs),
     formsSection("Renewal Requirements", "Documents saved across all renewal submissions", renewalDocs),
@@ -1058,6 +1127,12 @@ function bindEvents() {
 
   el("franchiseTable")?.addEventListener("click", onTableClick);
   el("formsBody")?.addEventListener("click", (event) => {
+    const directButton = event.target.closest("[data-direct-form-code]");
+    if (directButton) {
+      const franchise = franchises.find((row) => String(row.id) === String(directButton.dataset.franchiseId));
+      if (franchise) void openDirectFranchiseForm(directButton.dataset.directFormCode, franchise);
+      return;
+    }
     const button = event.target.closest("[data-generated-document-id]");
     if (button) void openGeneratedDocument(button.dataset.generatedDocumentId);
   });
