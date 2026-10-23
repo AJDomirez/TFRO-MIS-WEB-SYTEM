@@ -327,7 +327,7 @@ alert("Request rejected. The operator has been notified.");
 
 async function openChangeMotorPdf(formCode) {
   if (!currentReq) return;
-  const module = await import("./pdf-form.js?v=20261017-1");
+  const module = await import("./pdf-form.js?v=20261023-1");
   const draft = await generatedFormDraftBindings({ formCode, recordType:"change_motor", recordId:currentReq.id });
   const options = {
     request: currentReq,

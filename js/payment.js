@@ -1,7 +1,7 @@
 import { supabase } from "./supabase.js";
 import { requireRole } from "./auth-guard.js";
 import { logAudit } from "./audit-helper.js";
-import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20261017-1";
+import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20261023-1";
 import { sendOperatorForm } from "./form-delivery.js";
 import { generatedFormDraftBindings } from "./form-drafts.js?v=20261017-1";
 
