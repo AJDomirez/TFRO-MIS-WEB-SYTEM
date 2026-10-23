@@ -4,7 +4,7 @@ import { logAudit } from "./audit-helper.js";
 import { loadGeneratedFormValues } from "./form-drafts.js?v=20261017-1";
 
 async function openSavedSubmissionForm(options) {
-  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  const { openRenewalPdfForm } = await import("./pdf-form.js?v=20261023-1");
   openRenewalPdfForm(options);
 }
 
@@ -284,13 +284,13 @@ async function showRenewalSubmission(renewal) {
 }
 
 async function showPmblCertification(renewal) {
-  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  const { openPmblPdfForm } = await import("./pdf-form.js?v=20261023-1");
   openPmblPdfForm({ renewal, franchise: currentFranchise || {}, savedValues:await deliveredFormValues("TFRO-003", renewal.id) });
 }
 
 async function showRenewalChecklist(renewal) {
   const { data: documents } = await supabase.from("renewal_documents").select("doc_type,status,verified").eq("renewal_id", renewal.id);
-  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  const { openChecklistPdfForm } = await import("./pdf-form.js?v=20261023-1");
   openChecklistPdfForm({ renewal, documents: documents || [], savedValues:await deliveredFormValues("TFRO-004", renewal.id) });
 }
 
@@ -304,7 +304,7 @@ async function showTemporaryMtop(renewal) {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  const { openTemporaryMtopPdfForm } = await import("./pdf-form.js?v=20261023-1");
   openTemporaryMtopPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor, savedValues:await deliveredFormValues("TFRO-001", renewal.id) });
 }
 
@@ -318,7 +318,7 @@ async function showFinalMtopPermit(renewal) {
     if (error) return alert(`Could not load the Change Motor data: ${error.message}`);
     changeMotor = data || {};
   }
-  const { openFinalMtopPermitPdfForm } = await import("./pdf-form.js?v=20261017-1");
+  const { openFinalMtopPermitPdfForm } = await import("./pdf-form.js?v=20261023-1");
   openFinalMtopPermitPdfForm({ renewal, franchise: currentFranchise || {}, changeMotor, savedValues:await deliveredFormValues("MTOP-PERMIT", renewal.id) });
 }
 

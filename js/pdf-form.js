@@ -46,6 +46,23 @@ function value(value) {
   return String(value ?? "").trim();
 }
 
+// Database imports can contain line breaks or repeated spacing. PDF fields in
+// the official forms are single-line boxes, so normalize those values before
+// measuring and drawing them. pdf-lib otherwise treats a hidden line break as
+// a second line and can paint it outside the field.
+export function pdfSingleLineValue(input) {
+  return value(input).replace(/\s+/g, " ");
+}
+
+// Internal/sample records may include storage prefixes that are not part of
+// the franchise number printed on official forms.
+export function documentFranchiseNumber(input) {
+  return pdfSingleLineValue(input)
+    .toUpperCase()
+    .replace(/^SAMPLE(?:[-_\s]+FR)?[-_\s]*/i, "")
+    .replace(/^FR[-_\s]*/i, "");
+}
+
 function firstValue(...candidates) {
   for (const candidate of candidates) {
     const resolved = value(candidate);
@@ -55,8 +72,8 @@ function firstValue(...candidates) {
 }
 
 function normalizeVehicleMakeModel(make, model) {
-  const normalizedMake = value(make);
-  const normalizedModel = value(model);
+  const normalizedMake = pdfSingleLineValue(make);
+  const normalizedModel = pdfSingleLineValue(model);
   const isYear = (candidate) => {
     if (!/^\d{4}$/.test(candidate)) return false;
     const year = Number(candidate);
@@ -88,7 +105,7 @@ function renewalDocumentDetails(renewal = {}, franchise = {}, changeMotor = {}) 
     operatorName: firstValue(renewal.operator_name, renewal.full_name, franchise.operator_name),
     operatorAddress: firstValue(renewal.operator_address, residentialAddress, franchise.address),
     contact: firstValue(renewal.operator_contact, renewal.contact_number, franchise.contact_number),
-    franchiseNumber: firstValue(renewal.franchise_number, franchise.franchise_number),
+    franchiseNumber: documentFranchiseNumber(firstValue(renewal.franchise_number, franchise.franchise_number)),
     street: firstValue(renewal.residential_street),
     barangay: firstValue(renewal.residential_barangay),
     birthDate: firstValue(renewal.applicant_birth_date, renewal.birth_date, franchise.birth_date),
@@ -173,26 +190,32 @@ function ageFromBirthDate(input) {
 }
 
 function fitTextSize(font, text, preferredSize, maxWidth, minimumSize = 5.5) {
-  const content = value(text);
+  const content = pdfSingleLineValue(text);
   let fittedSize = Math.max(Number(preferredSize) || 12, minimumSize);
   while (fittedSize > minimumSize && font.widthOfTextAtSize(content, fittedSize) > maxWidth) {
     fittedSize = Math.max(minimumSize, fittedSize - 0.25);
+  }
+  // The minimum is a readability target, not permission to cross a printed
+  // border. Extremely long imported values still remain inside their box.
+  const fittedWidth = font.widthOfTextAtSize(content, fittedSize);
+  if (fittedWidth > maxWidth && fittedWidth > 0) {
+    fittedSize = Math.max(1, fittedSize * (maxWidth / fittedWidth));
   }
   return fittedSize;
 }
 
 function alignedTextX(font, text, size, x, maxWidth, align = "left") {
-  const textWidth = font.widthOfTextAtSize(value(text), size);
+  const textWidth = font.widthOfTextAtSize(pdfSingleLineValue(text), size);
   if (align === "center") return x + Math.max(0, (maxWidth - textWidth) / 2);
   if (align === "right") return x + Math.max(0, maxWidth - textWidth);
   return x;
 }
 
 function drawScaled(page, font, text, x, y, size = 12, options = {}) {
-  if (!value(text)) return;
+  if (!pdfSingleLineValue(text)) return;
   const sx = page.getWidth() / (options.baseWidth || 612);
   const sy = page.getHeight() / (options.baseHeight || 936);
-  const content = value(text);
+  const content = pdfSingleLineValue(text);
   const maxWidth = options.maxWidth || 500;
   const minimumSize = options.minSize ?? 5.5;
   const fittedSize = fitTextSize(font, content, size, maxWidth, minimumSize);
@@ -207,7 +230,7 @@ function drawScaled(page, font, text, x, y, size = 12, options = {}) {
 }
 
 function drawTextInBox(page, font, text, options = {}) {
-  const content = value(text);
+  const content = pdfSingleLineValue(text);
   if (!content) return;
   const {
     x, y, width, height = 16, size = 10, minSize = 4.75,
@@ -248,6 +271,68 @@ function coverBoxInterior(page, color, options = {}) {
     height: Math.max(0, height - (inset * 2)) * sy,
     color,
   });
+}
+
+export function drawFinalMtopPermitFields({ page, bold, boldItalic, ink, white, details }) {
+  const reviewedVehicle = normalizeVehicleMakeModel(details.make, details.model);
+  const printable = {
+    ...details,
+    franchise: documentFranchiseNumber(details.franchise),
+    make: reviewedVehicle.make,
+    model: reviewedVehicle.model,
+  };
+  const cover = (x, y, width, height, inset = .8) =>
+    coverBoxInterior(page, white, { x, y, width, height, inset });
+  const fittedText = (text, x, y, width, height, size = 9, align = "center", font = bold) =>
+    drawTextInBox(page, font, text, { x, y, width, height, size, minSize: 4.75, align, color: ink });
+
+  // Remove the example record from the supplied official template, then place approved system data.
+  cover(120, 786, 266, 13);
+  cover(414, 786, 151, 13);
+  cover(120, 768, 266, 14);
+  fittedText(printable.name, 124, 786, 255, 13, 9, "center");
+  fittedText(`Franchise No. ${printable.franchise}`, 418, 786, 143, 13, 8, "center", boldItalic);
+  fittedText(printable.address, 124, 768, 255, 14, 8, "center");
+  page.drawLine({ start: { x: 124, y: 787 }, end: { x: 379, y: 787 }, thickness: .6, color: ink });
+  page.drawLine({ start: { x: 124, y: 769 }, end: { x: 379, y: 769 }, thickness: .6, color: ink });
+
+  cover(55, 716, 516, 22, 1.2);
+  fittedText(printable.route, 59, 716, 508, 22, 13, "center");
+  page.drawLine({ start: { x: 55, y: 716 }, end: { x: 571, y: 716 }, thickness: 1.15, color: ink });
+
+  const vehicleCells = [
+    [printable.make, 46, 84], [printable.model, 131, 69], [printable.motor, 202, 144],
+    [printable.chassis, 348, 146], [printable.plate, 496, 67],
+  ];
+  vehicleCells.forEach(([text, x, width]) => {
+    cover(x, 631, width, 17, 1.2);
+    fittedText(text, x + 1.5, 631, width - 3, 17, 8, "center");
+  });
+
+  // Clear the full interior of the supplied sample's GRANTED box. Covering only
+  // the date line leaves the example expiration visible underneath the real one.
+  cover(159, 238, 405, 55, 1.7);
+  fittedText("GRANTED", 165, 269, 393, 20, 17, "center");
+  fittedText(`GOOD UNTIL: ${printable.expiration}`, 165, 245, 393, 24, 14, "center");
+  return printable;
+}
+
+export function drawRenewalApplicationFields({ page, font, bold, ink, white, manual }) {
+  const field = (text, x, y, width, height = 18, size = 10, align = "center", useBold = false) =>
+    drawTextInBox(page, useBold ? bold : font, text, {
+      x, y, width, height, size, minSize: 4.75, align,
+      baseWidth: 612, baseHeight: 936, color: ink,
+    });
+
+  field(manual.date, 505, 819, 65, 23, 10, "center");
+  field(documentFranchiseNumber(manual.franchise), 528, 798, 42, 19, 9, "right", true);
+  field(manual.last, 40, 766, 177, 24, 10); field(manual.first, 218, 766, 109, 24, 10); field(manual.middle, 328, 766, 120, 24, 10);
+  field(manual.contact, 451, 766, 120, 24, 10); field(manual.street, 40, 708, 278, 25, 9.5, "left"); field(manual.barangay, 323, 708, 248, 25, 9.5, "left");
+  field(manual.birthDate, 40, 657, 160, 24, 9); field(manual.birthPlace, 203, 657, 163, 24, 9); field(manual.age, 370, 657, 70, 24, 9); field(manual.civilStatus, 450, 657, 121, 24, 9);
+  field(manual.make, 88, 618, 213, 19, 9.5, "left"); field(manual.plate, 382, 618, 189, 19, 9.5, "left"); field(manual.model, 88, 597, 213, 19, 9.5, "left"); field(manual.orNumber, 372, 597, 199, 19, 9.5, "left");
+  field(manual.engine, 108, 576, 193, 19, 9.5, "left"); field(manual.orDate, 392, 576, 179, 19, 9.5, "left"); field(manual.chassis, 112, 554, 189, 19, 9.5, "left"); field(manual.crNumber, 367, 554, 204, 19, 9.5, "left");
+  coverBoxInterior(page, white, { x: 468, y: 517, width: 103, height: 40, inset: 1.2, baseWidth: 612, baseHeight: 936 });
+  field(manual.route, 469, 518, 101, 38, 11, "center", true);
 }
 
 function money(amount) {
@@ -468,7 +553,7 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     const answers = renewalDocumentDetails(renewal, franchise, changeMotor);
     let details = {
       name: answers.operatorName,
-      franchise: answers.franchiseNumber,
+      franchise: documentFranchiseNumber(answers.franchiseNumber),
       address: answers.operatorAddress,
       make: answers.make,
       model: answers.model,
@@ -490,7 +575,12 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     ], editable, onSend, savedValues, onSave);
     if (!details) { popup?.close(); return; }
     const reviewedVehicle = normalizeVehicleMakeModel(details.make, details.model);
-    details = { ...details, make: reviewedVehicle.make, model: reviewedVehicle.model };
+    details = {
+      ...details,
+      franchise: documentFranchiseNumber(details.franchise),
+      make: reviewedVehicle.make,
+      model: reviewedVehicle.model,
+    };
     popup ||= openPdfWindow(documentTitle);
     if (!popup) return;
     const permitFrontUrl = new URL("../forms/public/assets/tfro-001-permit-front.jpg?v=20261014-1", import.meta.url);
@@ -515,15 +605,16 @@ export async function openTemporaryMtopPdfForm({ renewal, franchise = {}, change
     const artworkWidth = 1335;
     const artworkHeight = 1888;
     const drawArtworkValue = (text, x, baselineFromTop, width, size = 10, align = "left", color = ink) => {
-      if (!value(text)) return;
+      const content = pdfSingleLineValue(text);
+      if (!content) return;
       const scaleX = pageWidth / artworkWidth;
       const scaleY = pageHeight / artworkHeight;
       const targetX = x * scaleX;
       const targetY = pageHeight - baselineFromTop * scaleY;
       const targetWidth = width * scaleX;
-      const fitted = fitTextSize(bold, value(text), size, targetWidth, 6.25);
-      const alignedX = alignedTextX(bold, value(text), fitted, targetX, targetWidth, align);
-      page.drawText(value(text), { x: alignedX, y: targetY, maxWidth: targetWidth, size: fitted, font: bold, color });
+      const fitted = fitTextSize(bold, content, size, targetWidth, 6.25);
+      const alignedX = alignedTextX(bold, content, fitted, targetX, targetWidth, align);
+      page.drawText(content, { x: alignedX, y: targetY, maxWidth: targetWidth, size: fitted, font: bold, color });
     };
 
     drawArtworkValue(details.name, 154, 414, 450, 10.5);
@@ -573,7 +664,7 @@ export async function openFinalMtopPermitPdfForm({ renewal, franchise = {}, chan
     const answers = renewalDocumentDetails(renewal, franchise, changeMotor);
     let details = {
       name: answers.operatorName.toUpperCase(),
-      franchise: answers.franchiseNumber.toUpperCase(),
+      franchise: documentFranchiseNumber(answers.franchiseNumber),
       address: answers.operatorAddress.toUpperCase(),
       make: answers.make.toUpperCase(),
       model: answers.model.toUpperCase(),
@@ -596,44 +687,9 @@ export async function openFinalMtopPermitPdfForm({ renewal, franchise = {}, chan
       { key: "expiration", label: "Good Until", value: details.expiration },
     ], editable, onSend, savedValues, onSave);
     if (!details) { popup?.close(); return; }
-    const reviewedVehicle = normalizeVehicleMakeModel(details.make, details.model);
-    details = { ...details, make: reviewedVehicle.make, model: reviewedVehicle.model };
     popup ||= openPdfWindow(documentTitle);
     if (!popup) return;
-
-    const cover = (x, y, width, height, inset = .8) =>
-      coverBoxInterior(page, white, { x, y, width, height, inset });
-    const fittedText = (text, x, y, width, height, size = 9, align = "center", font = bold) =>
-      drawTextInBox(page, font, text, { x, y, width, height, size, minSize: 4.75, align, color: ink });
-
-    // Remove the example record from the supplied official template, then place approved system data.
-    cover(120, 786, 266, 13);
-    cover(414, 786, 151, 13);
-    cover(120, 768, 266, 14);
-    fittedText(details.name, 124, 786, 255, 13, 9, "center");
-    fittedText(`Franchise No. ${details.franchise}`, 418, 786, 143, 13, 8, "center", boldItalic);
-    fittedText(details.address, 124, 768, 255, 14, 8, "center");
-    page.drawLine({ start: { x: 124, y: 787 }, end: { x: 379, y: 787 }, thickness: .6, color: ink });
-    page.drawLine({ start: { x: 124, y: 769 }, end: { x: 379, y: 769 }, thickness: .6, color: ink });
-
-    cover(55, 716, 516, 22, 1.2);
-    fittedText(details.route, 59, 716, 508, 22, 13, "center");
-    page.drawLine({ start: { x: 55, y: 716 }, end: { x: 571, y: 716 }, thickness: 1.15, color: ink });
-
-    const vehicleCells = [
-      [details.make, 46, 84], [details.model, 131, 69], [details.motor, 202, 144],
-      [details.chassis, 348, 146], [details.plate, 496, 67],
-    ];
-    vehicleCells.forEach(([text, x, width]) => {
-      cover(x, 631, width, 17, 1.2);
-      fittedText(text, x + 1.5, 631, width - 3, 17, 8, "center");
-    });
-
-    // Clear the full interior of the supplied sample's GRANTED box. Covering only
-    // the date line leaves the example expiration visible underneath the real one.
-    cover(159, 238, 405, 55, 1.7);
-    fittedText("GRANTED", 165, 269, 393, 20, 17, "center");
-    fittedText(`GOOD UNTIL: ${details.expiration}`, 165, 245, 393, 24, 14, "center");
+    drawFinalMtopPermitFields({ page, bold, boldItalic, ink, white, details });
 
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `MTOP-PERMIT-${value(renewal.renewal_code || renewal.id)}.pdf`, { title: documentTitle });
@@ -669,17 +725,13 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
       barangay: firstValue(answers.barangay, fallbackAddress.barangay),
     };
     const ink = rgb(0, 0, 0);
-    const field = (text, x, y, width, height = 18, size = 10, align = "center", useBold = false) =>
-      drawTextInBox(page, useBold ? bold : font, text, {
-        x, y, width, height, size, minSize: 4.75, align,
-        baseWidth: 612, baseHeight: 936, color: ink,
-      });
+    const white = rgb(1, 1, 1);
 
-    const fullRenewalFranchiseNumber = answers.franchiseNumber;
+    const fullRenewalFranchiseNumber = documentFranchiseNumber(answers.franchiseNumber);
     const birthDate = answers.birthDate;
     let manual = await editFields(documentTitle, [
       { key: "date", label: "Application date", value: dateInputValue(firstValue(renewal.request_date, renewal.created_at)), type: "date", required: true },
-      { key: "franchise", label: "Franchise number", value: fullRenewalFranchiseNumber.replace(/^FR-/i, "") },
+      { key: "franchise", label: "Franchise number", value: fullRenewalFranchiseNumber },
       { key: "last", label: "Last name", value: names.last },
       { key: "first", label: "First name", value: names.first },
       { key: "middle", label: "Middle name", value: names.middle },
@@ -712,15 +764,7 @@ export async function openRenewalPdfForm({ renewal, franchise = {}, changeMotor 
     };
     popup ||= openPdfWindow(documentTitle);
     if (!popup) return;
-    field(manual.date, 505, 819, 65, 23, 10, "center");
-    field(manual.franchise, 528, 798, 42, 19, 9, "right", true);
-    field(manual.last, 40, 766, 177, 24, 10); field(manual.first, 218, 766, 109, 24, 10); field(manual.middle, 328, 766, 120, 24, 10);
-    field(manual.contact, 451, 766, 120, 24, 10); field(manual.street, 40, 708, 278, 25, 9.5, "left"); field(manual.barangay, 323, 708, 248, 25, 9.5, "left");
-    field(manual.birthDate, 40, 657, 160, 24, 9); field(manual.birthPlace, 203, 657, 163, 24, 9); field(manual.age, 370, 657, 70, 24, 9); field(manual.civilStatus, 450, 657, 121, 24, 9);
-    field(manual.make, 88, 618, 213, 19, 9.5, "left"); field(manual.plate, 382, 618, 189, 19, 9.5, "left"); field(manual.model, 88, 597, 213, 19, 9.5, "left"); field(manual.orNumber, 372, 597, 199, 19, 9.5, "left");
-    field(manual.engine, 108, 576, 193, 19, 9.5, "left"); field(manual.orDate, 392, 576, 179, 19, 9.5, "left"); field(manual.chassis, 112, 554, 189, 19, 9.5, "left"); field(manual.crNumber, 367, 554, 204, 19, 9.5, "left");
-    coverBoxInterior(page, rgb(1, 1, 1), { x: 468, y: 517, width: 103, height: 40, inset: 1.2, baseWidth: 612, baseHeight: 936 });
-    field(manual.route, 469, 518, 101, 38, 11, "center", true);
+    drawRenewalApplicationFields({ page, font, bold, ink, white, manual });
     await embedPicture(pdfDoc, page, pictureUrl);
     const bytes = await pdfDoc.save();
     await showPdf(popup, bytes, `TFRO-005-${value(renewal.renewal_code || renewal.id)}.pdf`, { title: documentTitle });
@@ -915,14 +959,15 @@ export async function openDroppingPetitionPdfForm({ request, franchise = {}, ope
     popup ||= openPdfWindow(documentTitle);
     if (!popup) return;
     const write = (text, x, y, maxWidth, size = 11, centered = false, useBold = false, wrapAtHyphens = false) => {
-      if (!text) return;
+      const content = pdfSingleLineValue(text);
+      if (!content) return;
       const selected = useBold ? bold : font;
-      const fitted = fitTextSize(selected, text, size, maxWidth, 7);
+      const fitted = fitTextSize(selected, content, size, maxWidth, 7);
       const textOptions = {
-        x: centered ? alignedTextX(selected, text, fitted, x, maxWidth, "center") : x,
+        x: centered ? alignedTextX(selected, content, fitted, x, maxWidth, "center") : x,
         y, size: fitted, font: selected, color: ink,
       };
-      page.drawText(text, textOptions);
+      page.drawText(content, textOptions);
     };
     write(data.operator, 72, 801, 180, 11, true, true);
     write(data.requestCode, 487, 801, 80, 11, true, false);
@@ -989,11 +1034,12 @@ export async function openDroppingCertificationPdfForm({ request, franchise = {}
     popup ||= openPdfWindow(documentTitle);
     if (!popup) return;
     const write = (text, x, y, maxWidth, size = 11, useBold = false, align = "left") => {
-      if (!text) return;
+      const content = pdfSingleLineValue(text);
+      if (!content) return;
       const selected = useBold ? bold : font;
-      const fitted = fitTextSize(selected, text, size, maxWidth, 7);
-      const drawX = alignedTextX(selected, text, fitted, x, maxWidth, align);
-      page.drawText(text, { x: drawX, y, size: fitted, font: selected, color: ink });
+      const fitted = fitTextSize(selected, content, size, maxWidth, 7);
+      const drawX = alignedTextX(selected, content, fitted, x, maxWidth, align);
+      page.drawText(content, { x: drawX, y, size: fitted, font: selected, color: ink });
     };
 
     write("C E R T I F I C A T I O N", 80, 665, 435, 22, false, "center");

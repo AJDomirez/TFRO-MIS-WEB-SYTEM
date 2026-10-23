@@ -764,7 +764,7 @@ function franchiseAsFormRecord(franchise) {
 
 async function openDirectFranchiseForm(formCode, franchise) {
   if (!DIRECT_FRANCHISE_FORMS.some((form) => form.code === formCode)) return;
-  const pdf = await import("./pdf-form.js?v=20261021-1");
+  const pdf = await import("./pdf-form.js?v=20261023-1");
   const renewal = franchiseAsFormRecord(franchise);
   const draft = await generatedFormDraftBindings({ formCode, recordType:"franchise", recordId:franchise.id });
   const onSend = (formData = {}) => sendOperatorForm({
@@ -790,7 +790,7 @@ async function openGeneratedDocument(documentId) {
   const renewal = recordType === "franchise" ? franchiseAsFormRecord(franchise) : context.renewal;
   if (!renewal) return alert("The source transaction for this document is unavailable.");
   const recordId = recordType === "franchise" ? franchise.id : document.source_id;
-  const pdf = await import("./pdf-form.js?v=20261021-1");
+  const pdf = await import("./pdf-form.js?v=20261023-1");
   const onSend = (formData = {}) => sendOperatorForm({ formCode:document.form_code, recordType, recordId, recordLabel:renewal.renewal_code || recordId, formData });
   const draft = await generatedFormDraftBindings({ formCode:document.form_code, recordType, recordId });
   const options = { renewal, franchise, editable:true, onSend, ...draft };

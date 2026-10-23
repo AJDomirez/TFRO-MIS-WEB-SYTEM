@@ -1,7 +1,7 @@
 import { supabase } from "./supabase.js";
 import { logAudit } from "./audit-helper.js";
 import { requireRole } from "./auth-guard.js";
-import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20261017-1";
+import { openPaymentOrderPdfForm, openUnitReleasePdfForm } from "./pdf-form.js?v=20261023-1";
 import { loadGeneratedFormValues } from "./form-drafts.js?v=20261017-1";
 
 async function openSavedSubmissionForm(options) {
@@ -616,7 +616,7 @@ async function loadChangeMotorHistory(userId) {
 
 async function showMotorSubmission(request, formCode) {
   if (request.status !== "approved" || !request.forms_sent_to_operator_at) return alert("These forms have not been sent by TFRO Admin yet.");
-  const module = await import("./pdf-form.js?v=20261017-1");
+  const module = await import("./pdf-form.js?v=20261023-1");
   const savedValues = await loadGeneratedFormValues({ formCode, recordType:"change_motor", recordId:request.id, preferDraft:false });
   const options = { request, franchise: window.__currentFranchise || {}, operator: currentOperatorRecord || {}, savedValues };
   if (formCode === "TFRO-002") module.openDroppingPetitionPdfForm(options);
