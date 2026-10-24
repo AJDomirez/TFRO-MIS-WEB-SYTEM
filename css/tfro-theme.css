@@ -1019,6 +1019,35 @@ body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
   body.operator-sidebar .sidebar:not(:hover):not(:focus-within) .sidebar-user .user-left{display:none !important;}
   body.admin-sidebar .sidebar:not(:hover):not(:focus-within) .sidebar-user,
   body.operator-sidebar .sidebar:not(:hover):not(:focus-within) .sidebar-user{padding-inline:0 !important;}
+
+  /* Keep the PWA control usable inside the collapsed 76px admin rail. */
+  body.admin-sidebar .sidebar:not(:hover):not(:focus-within) .install-app-btn:not([hidden]){
+    display:grid !important;
+    place-items:center !important;
+    flex:0 0 36px !important;
+    width:36px !important;
+    height:36px !important;
+    min-width:36px !important;
+    padding:0 !important;
+    border-radius:9px !important;
+  }
+  body.admin-sidebar .sidebar:not(:hover):not(:focus-within) .install-app-btn:not([hidden]) > span{
+    display:none !important;
+  }
+  body.admin-sidebar .sidebar:not(:hover):not(:focus-within) .install-app-btn:not([hidden]) > i{
+    margin:0 !important;
+    font-size:18px !important;
+    line-height:1 !important;
+  }
+  body.admin-sidebar .sidebar:hover .user-section.sidebar-user,
+  body.admin-sidebar .sidebar:focus-within .user-section.sidebar-user{
+    flex-wrap:wrap !important;
+  }
+  body.admin-sidebar .sidebar:hover .install-app-btn,
+  body.admin-sidebar .sidebar:focus-within .install-app-btn{
+    flex:1 0 100% !important;
+    width:100% !important;
+  }
 }
 
 /* Minimal shared loading screen */
