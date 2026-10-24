@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TFRO Violations</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <meta name="theme-color" content="#0f2d6b">
+  <link rel="apple-touch-icon" href="../assets/icons/tfro-app-192.png">
 
 <link rel="stylesheet" href="../css/violation.css?v=20261011-2">
-  <link rel="stylesheet" href="../css/tfro-theme.css?v=20261016-5">
+  <link rel="stylesheet" href="../css/tfro-theme.css?v=20261024-3">
 
   <!-- Remix Icons -->
   <link
@@ -92,7 +95,12 @@
 </ul>
 
 <!-- USER PROFILE -->
-<div class="sidebar-user">
+<div class="sidebar-user install-enabled">
+
+  <button class="install-app-btn" id="installAppBtn" type="button" title="Install TFRO APP" aria-label="Install TFRO APP" hidden>
+    <i class="ri-download-cloud-2-line"></i>
+    <span>Install TFRO APP</span>
+  </button>
 
   <div class="user-left">
 
@@ -257,6 +265,7 @@
 
 <script type="module" src="../js/violation.js?v=20261017-1"></script>
 <script type="module" src="../js/sidebar-user.js?v=20261016-4"></script>
+<script type="module" src="../js/admin-pwa.js?v=20261024-2"></script>
 </body>
 </html>
 

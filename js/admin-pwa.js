@@ -2,6 +2,7 @@ import { supabase } from "./supabase.js";
 import { loadUserProfile } from "./auth-guard.js";
 
 const installButton = document.getElementById("installAppBtn");
+const INSTALLABLE_ROLES = new Set(["admin", "admin_viewer", "staff"]);
 let installPrompt = null;
 
 function isStandalone() {
@@ -19,7 +20,7 @@ function setInstalledState() {
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
   installPrompt = event;
-  if (installButton?.dataset.adminAuthorized === "true") installButton.hidden = false;
+  if (installButton?.dataset.installAuthorized === "true") installButton.hidden = false;
 });
 
 window.addEventListener("appinstalled", () => {
@@ -46,16 +47,16 @@ installButton?.addEventListener("click", async () => {
   installPrompt = null;
 });
 
-async function enableForHeadAdministrator() {
+async function enableForAuthorizedRole() {
   if (!installButton) return;
 
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user) return;
 
   const { data: profile, error: profileError } = await loadUserProfile(user.id);
-  if (profileError || profile?.role !== "admin" || profile.account_status !== "active") return;
+  if (profileError || !INSTALLABLE_ROLES.has(profile?.role) || profile.account_status !== "active") return;
 
-  installButton.dataset.adminAuthorized = "true";
+  installButton.dataset.installAuthorized = "true";
   installButton.hidden = false;
 
   if ("serviceWorker" in navigator) {
@@ -69,4 +70,4 @@ async function enableForHeadAdministrator() {
   if (isStandalone()) setInstalledState();
 }
 
-void enableForHeadAdministrator();
+void enableForAuthorizedRole();
