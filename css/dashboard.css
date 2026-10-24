@@ -83,7 +83,29 @@ font-weight: 600;
   justify-content:space-between;
 
   background:rgba(255,255,255,0.03);
+  flex-wrap:wrap;
+  gap:10px;
 }
+
+.install-app-btn{
+  width:100%;
+  border:1px solid rgba(255,255,255,.28);
+  border-radius:10px;
+  padding:10px 12px;
+  background:#fff;
+  color:#0f2d6b;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.install-app-btn:hover{ background:#eaf2ff; }
+.install-app-btn:disabled{ cursor:default; opacity:.78; }
+.install-app-btn[hidden]{ display:none; }
 
 .user-info{
   display:flex;

@@ -1,6 +1,7 @@
-const CACHE_NAME = "tfro-imis-shell-v48";
+const CACHE_NAME = "tfro-imis-shell-v49";
 const CORE_ASSETS = [
   "./",
+  "manifest.webmanifest", "assets/icons/tfro-app-192.png", "assets/icons/tfro-app-512.png",
   "html/application.html", "html/auditlog.html", "html/dashboard.html", "html/driver.html",
   "html/driververify.html", "html/enforcerportal.html", "html/enforcers.html", "html/franchise.html",
   "html/index.html", "html/login.html", "html/account-status.html", "html/motorequests.html", "html/notification.html",
@@ -13,7 +14,7 @@ const CORE_ASSETS = [
   "css/operatorportal.css", "css/operatorprofile.css", "css/payment.css", "css/profile.css",
   "css/renewal-admin.css", "css/renewal.css", "css/report.css", "css/mobile-portals.css",
   "css/style.css", "css/tfro-theme.css", "css/ticket-camera.css", "css/violation.css",
-  "js/account-status.js", "js/application.js", "js/audit-helper.js", "js/auditlog.js", "js/auth-guard.js",
+  "js/account-status.js", "js/admin-pwa.js", "js/application.js", "js/audit-helper.js", "js/auditlog.js", "js/auth-guard.js",
   "js/csv-export.js", "js/dashboard.js", "js/driver.js", "js/driververify.js",
   "js/enforcerportal.js", "js/enforcers.js", "js/form-delivery.js", "js/form-drafts.js", "js/franchise.js",
   "js/guided-tour.js", "js/landing.js", "js/login.js", "js/mobile-portal-tables.js", "js/motorequests.js",

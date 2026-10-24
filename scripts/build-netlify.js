@@ -3,11 +3,12 @@ const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
 const output = path.join(root, "dist");
-const publicDirectories = ["css", "docs", "html", "js", "Logo"];
+const publicDirectories = ["assets", "css", "docs", "html", "js", "Logo"];
 const publicRootFiles = [
   "Tricycle Image.png",
   "index.html",
   "favicon.svg",
+  "manifest.webmanifest",
   ".nojekyll",
   "service-worker.js",
   "robots.txt",
