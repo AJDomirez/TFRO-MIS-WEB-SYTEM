@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TFRO Dashboard</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <meta name="theme-color" content="#0f2d6b">
+  <link rel="apple-touch-icon" href="../assets/icons/tfro-app-192.png">
 
 <link rel="stylesheet" href="../css/dashboard.css?v=20260817-234500">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20261016-5">
@@ -95,6 +98,11 @@
 
 <!-- USER PROFILE -->
 <div class="user-section sidebar-user">
+
+      <button class="install-app-btn" id="installAppBtn" type="button" hidden>
+        <i class="ri-download-cloud-2-line"></i>
+        <span>Install TFRO APP</span>
+      </button>
 
       <div class="user-info user-left">
 
@@ -239,6 +247,7 @@
 
 <script type="module" src="../js/dashboard.js?v=20260818-043000"></script>
 <script type="module" src="../js/sidebar-user.js?v=20261016-4"></script>
+<script type="module" src="../js/admin-pwa.js?v=20261024-1"></script>
 
 <script>
 
