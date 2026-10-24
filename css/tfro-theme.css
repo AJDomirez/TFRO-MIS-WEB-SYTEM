@@ -605,6 +605,26 @@ body.admin-sidebar .sidebar .user-section .user-details p{
 body.admin-sidebar .sidebar .user-section .user-details p{margin-top:2px !important;}
 body.admin-sidebar .sidebar .user-section .logout-btn{flex:0 0 36px !important;}
 
+body.admin-sidebar .install-app-btn{
+  width:100%;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:10px;
+  padding:10px 12px;
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font:inherit;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+}
+body.admin-sidebar .install-app-btn:hover{background:rgba(255,255,255,.18);}
+body.admin-sidebar .install-app-btn:disabled{cursor:default;opacity:.78;}
+body.admin-sidebar .install-app-btn[hidden]{display:none !important;}
+
 @media(min-width:769px){
   body.admin-sidebar .sidebar:not(:hover):not(:focus-within) .user-section.sidebar-user{
     justify-content:center !important;
@@ -1039,8 +1059,8 @@ body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
     font-size:18px !important;
     line-height:1 !important;
   }
-  body.admin-sidebar .sidebar:hover .user-section.sidebar-user,
-  body.admin-sidebar .sidebar:focus-within .user-section.sidebar-user{
+  body.admin-sidebar .sidebar:hover .sidebar-user.install-enabled,
+  body.admin-sidebar .sidebar:focus-within .sidebar-user.install-enabled{
     display:grid !important;
     grid-template-columns:minmax(0,1fr) 36px !important;
     align-items:center !important;
@@ -1051,14 +1071,14 @@ body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
     grid-column:1 / -1 !important;
     width:100% !important;
   }
-  body.admin-sidebar .sidebar:hover .user-section .user-info,
-  body.admin-sidebar .sidebar:focus-within .user-section .user-info{
+  body.admin-sidebar .sidebar:hover .install-enabled :is(.user-info,.user-left),
+  body.admin-sidebar .sidebar:focus-within .install-enabled :is(.user-info,.user-left){
     grid-column:1 !important;
     width:100% !important;
     max-width:100% !important;
   }
-  body.admin-sidebar .sidebar:hover .user-section .logout-btn,
-  body.admin-sidebar .sidebar:focus-within .user-section .logout-btn{
+  body.admin-sidebar .sidebar:hover .install-enabled .logout-btn,
+  body.admin-sidebar .sidebar:focus-within .install-enabled .logout-btn{
     grid-column:2 !important;
   }
 }
