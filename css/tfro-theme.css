@@ -1041,12 +1041,25 @@ body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
   }
   body.admin-sidebar .sidebar:hover .user-section.sidebar-user,
   body.admin-sidebar .sidebar:focus-within .user-section.sidebar-user{
-    flex-wrap:wrap !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 36px !important;
+    align-items:center !important;
+    gap:8px !important;
   }
   body.admin-sidebar .sidebar:hover .install-app-btn,
   body.admin-sidebar .sidebar:focus-within .install-app-btn{
-    flex:1 0 100% !important;
+    grid-column:1 / -1 !important;
     width:100% !important;
+  }
+  body.admin-sidebar .sidebar:hover .user-section .user-info,
+  body.admin-sidebar .sidebar:focus-within .user-section .user-info{
+    grid-column:1 !important;
+    width:100% !important;
+    max-width:100% !important;
+  }
+  body.admin-sidebar .sidebar:hover .user-section .logout-btn,
+  body.admin-sidebar .sidebar:focus-within .user-section .logout-btn{
+    grid-column:2 !important;
   }
 }
 
