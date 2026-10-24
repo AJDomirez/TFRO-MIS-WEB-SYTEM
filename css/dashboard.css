@@ -89,11 +89,11 @@ font-weight: 600;
 
 .install-app-btn{
   width:100%;
-  border:1px solid rgba(255,255,255,.28);
+  border:1px solid rgba(255,255,255,.22);
   border-radius:10px;
   padding:10px 12px;
-  background:#fff;
-  color:#0f2d6b;
+  background:rgba(255,255,255,.1);
+  color:#fff;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -103,7 +103,7 @@ font-weight: 600;
   cursor:pointer;
 }
 
-.install-app-btn:hover{ background:#eaf2ff; }
+.install-app-btn:hover{ background:rgba(255,255,255,.18); }
 .install-app-btn:disabled{ cursor:default; opacity:.78; }
 .install-app-btn[hidden]{ display:none; }
 
