@@ -296,7 +296,7 @@ async function resetManagedAccountPassword(button) {
   if (currentUserRole !== "admin" || button.disabled) return;
   const role = button.dataset.role;
   let username = button.dataset.username || "";
-  if (["admin", "admin_viewer"].includes(role)) {
+  if (role === "admin_viewer") {
     username = window.prompt("Enter the Administrator username. This will be used for login:", username) ?? "";
     if (!username.trim()) return;
   }
@@ -306,7 +306,7 @@ async function resetManagedAccountPassword(button) {
   if (status) status.textContent = "Generating secure temporary credentials…";
   try {
     const result = await manageAdministratorAccounts("reset_password", { user_id: button.dataset.userId, username: username.trim() });
-    const credentials = `Login: ${result.username}\nTemporary password: ${result.temporary_password}`;
+    const credentials = `Login: ${result.login}\nTemporary password: ${result.temporary_password}`;
     await navigator.clipboard?.writeText(credentials).catch(() => {});
     window.alert(`Temporary credentials (shown once):\n\n${credentials}\n\nThey were copied to the clipboard when browser permission allowed it.`);
     if (status) status.textContent = `Password reset completed for ${button.dataset.name}. The action was recorded in the Audit Log.`;

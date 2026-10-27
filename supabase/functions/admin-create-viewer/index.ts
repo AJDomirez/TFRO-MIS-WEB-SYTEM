@@ -98,7 +98,7 @@ Deno.serve(async (request) => {
 
       let username = target.username || "";
       const authUpdate: { password: string; email?: string; email_confirm?: boolean } = { password: generatedPassword() };
-      if (["admin", "admin_viewer"].includes(target.role)) {
+      if (target.role === "admin_viewer") {
         username = requestedUsername || username || suggestedUsername(target.role, target.full_name || "", target.id);
         if (!USERNAME_PATTERN.test(username)) return rejected("Administrator username must contain 3–32 lowercase letters, numbers, dots, hyphens, or underscores and start with a letter.");
         const { data: duplicate, error: duplicateError } = await adminClient.from("profiles")
@@ -111,7 +111,7 @@ Deno.serve(async (request) => {
 
       const { data: updated, error: updateError } = await adminClient.auth.admin.updateUserById(target.id, authUpdate);
       if (updateError || !updated.user) throw updateError || new Error("The password could not be reset.");
-      if (["admin", "admin_viewer"].includes(target.role)) {
+      if (target.role === "admin_viewer") {
         const { error: profileUpdateError } = await adminClient.from("profiles").update({ username }).eq("id", target.id);
         if (profileUpdateError) throw profileUpdateError;
       }
@@ -124,7 +124,7 @@ Deno.serve(async (request) => {
         record: target.full_name || target.id,
         description: `Reset the ${target.role} account password. The temporary password was displayed once and was not stored.`,
       });
-      return json({ success: true, username: username || updated.user.email || "", temporary_password: authUpdate.password });
+      return json({ success: true, login: target.role === "admin_viewer" ? username : updated.user.email || "", temporary_password: authUpdate.password });
     }
 
     if (action === "list") {

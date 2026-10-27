@@ -16,7 +16,7 @@
     .notes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}.note{padding:13px;border-radius:12px;background:var(--sky);border:1px solid #c8dcf6}.note h3{margin:0 0 6px;font-size:13px;color:var(--blue)}.note p,.note li{margin:0;color:var(--muted);font-size:11px;line-height:1.5}.note ul{margin:4px 0 0;padding-left:17px}.warning{background:#fff9cf;border-color:#ead342}.role-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.role{padding:16px;border:1px solid var(--line);border-top:6px solid var(--blue);border-radius:13px;background:#fbfdff}.role h2{margin:0 0 7px;font-size:17px;color:var(--navy)}.role p{margin:0 0 8px;color:var(--muted);font-size:11px}.role ul{margin:0;padding-left:18px;font-size:11px;line-height:1.55}.role.staff{border-top-color:#e1bd00}.role.operator{border-top-color:#087f5b}.role.enforcer{border-top-color:#b85c00}
     .steps{counter-reset:step;display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.step{position:relative;padding:13px 13px 13px 48px;border:1px solid var(--line);border-radius:11px;background:#fbfdff}.step:before{counter-increment:step;content:counter(step);position:absolute;left:12px;top:12px;display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:900}.step b{display:block;font-size:12px}.step span{display:block;margin-top:4px;color:var(--muted);font-size:10px;line-height:1.4}.legend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 18px;font-size:10px;color:var(--muted)}.legend i{display:inline-block;width:12px;height:12px;margin-right:5px;border-radius:3px;vertical-align:-2px}.guide-table{width:100%;border-collapse:collapse;font-size:10px;line-height:1.35}.guide-table th{padding:8px;background:var(--navy);color:#fff;text-align:left}.guide-table td{padding:8px;border:1px solid var(--line);vertical-align:top}.guide-table tr:nth-child(even) td{background:#f4f8ff}.callout{margin:12px 0;padding:11px 14px;border-left:6px solid var(--yellow);background:#fff9cf;font-size:11px;line-height:1.5}.footer{margin-top:18px;padding-top:9px;border-top:1px solid var(--line);color:#7283a0;font-size:9px;text-align:center}
     @media(max-width:760px){.page{padding:22px 16px}.notes,.role-grid,.steps,.branch{grid-template-columns:1fr}.lanes{grid-template-columns:1fr}.lane-label{border-bottom:0}.flow{flex-direction:column}.arrow{transform:rotate(90deg)}.node{width:100%;max-width:none}.toolbar span{display:none}}
-    @media print{@page{size:A4 landscape;margin:8mm}html,body{background:#fff}.toolbar{display:none}.document{width:auto;margin:0}.page{width:auto;min-height:0;margin:0;padding:7mm;box-shadow:none}.cover{height:190mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}.node,.role,.note,.step{break-inside:avoid}.footer{position:relative}}
+    @media print{@page{size:A4 landscape;margin:8mm}html,body{background:#fff}.toolbar{display:none}.document{width:auto;margin:0}.page{width:125%;min-height:0;height:242mm;margin:0;padding:7mm;box-shadow:none;zoom:.8;overflow:hidden}.cover{height:242mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}.node,.role,.note,.step{break-inside:avoid}.footer{position:relative}}
   </style>
 </head>
 <body>
@@ -29,7 +29,7 @@
         <h1>TFRO Integrated Management Information System</h1>
         <h2>System Workflow and User Guide</h2>
         <p>A printable overview of how users enter the system, how records move between roles, and how franchise, renewal, change-motor, violation, payment, and administrative processes are completed.</p>
-        <div class="meta">City Government of Lucena · Workflow reference prepared from the implemented TFRO IMIS</div>
+        <div class="meta">City Government of Lucena · Production workflow reference · Revision 27 October 2026 · Version 2.0</div>
       </div>
     </section>
 
@@ -232,6 +232,38 @@
       </div>
       <div class="notes"><article class="note"><h3>Status meanings</h3><p><b>Pending:</b> waiting for action. <b>Reviewing:</b> assessment underway. <b>Approved/Paid:</b> required decision completed. <b>Rejected/Correction:</b> user action is required.</p></article><article class="note warning"><h3>If something fails</h3><p>Read the displayed message, verify your internet connection and role, refresh once, then report the record number and exact error to the Head Administrator.</p></article><article class="note"><h3>Printing this guide</h3><p>Choose A4, Landscape, Default margins, 100% scale, and enable Background graphics. Use “Save as PDF” to distribute electronically.</p></article></div>
       <div class="footer">End of TFRO IMIS System Workflow and User Guide</div>
+    </section>
+
+    <section class="page">
+      <header class="page-head"><div><span class="page-kicker">Production handoff</span><h1>13. Deployment, Daily Operation, and Support</h1></div><span class="page-no">13</span></header>
+      <p class="lead">The production system is delivered as a browser-based service. GitHub Pages hosts the approved frontend, while Supabase provides authentication, database records, file storage, and access controls.</p>
+      <div class="flow">
+        <div class="node start"><b>Publish Approved Build</b><span>Deploy reviewed static files to GitHub Pages</span></div><div class="arrow">→</div>
+        <div class="node action"><b>Open Production URL</b><span>Use the official bookmarked address in Chrome</span></div><div class="arrow">→</div>
+        <div class="node decision"><b>Authenticate & Authorize</b><span>Supabase session, profile status, and role</span></div><div class="arrow">→</div>
+        <div class="node action"><b>Perform Office Work</b><span>Use only the assigned workflow and account</span></div><div class="arrow">→</div>
+        <div class="node success"><b>Verify & Close</b><span>Confirm saved status, print if required, then sign out</span></div>
+      </div>
+      <div class="role-grid">
+        <article class="role"><h2>Daily Opening Check</h2><ul><li>Confirm the production URL loads over HTTPS.</li><li>Sign in using an authorized test or staff account.</li><li>Check Dashboard totals, pending work, and Notifications.</li><li>Open one non-destructive record to confirm database access.</li><li>Report errors before processing new transactions.</li></ul></article>
+        <article class="role staff"><h2>Daily Closing Check</h2><ul><li>Confirm submitted work has the expected saved status.</li><li>Resolve or endorse pending corrections and payments.</li><li>Export required operational reports according to office policy.</li><li>Close sensitive documents and sign out of shared devices.</li><li>Record incidents, record numbers, time, user, and exact error.</li></ul></article>
+        <article class="role operator"><h2>Data Protection</h2><ul><li>Never publish passwords, secret/service-role keys, or private documents.</li><li>Use individual accounts; do not share credentials.</li><li>Verify the person and record before editing, approving, or deleting.</li><li>Use the application workflow so validation, relationships, and audit entries are preserved.</li><li>Follow TFRO retention and privacy rules for exports and printed copies.</li></ul></article>
+        <article class="role enforcer"><h2>Incident and Recovery</h2><ul><li>Stop repeated submissions if the network or page becomes unstable.</li><li>Capture the exact message and affected record number—never the password.</li><li>Head Admin verifies account status, permissions, and linked records.</li><li>Escalate hosting, database, or storage outages to the authorized technical custodian.</li><li>Restore data only from an approved backup after scope and ownership are verified.</li></ul></article>
+      </div>
+      <h2 style="margin:16px 0 8px;font-size:17px">Production Status Lifecycle</h2>
+      <table class="guide-table">
+        <thead><tr><th>Stage</th><th>Meaning</th><th>Responsible role</th><th>Required control</th></tr></thead>
+        <tbody>
+          <tr><td><b>Draft / Entry</b></td><td>Information is being prepared and is not yet an official decision.</td><td>Operator, Enforcer, Staff, or Admin</td><td>Validate identity, required fields, and supporting evidence.</td></tr>
+          <tr><td><b>Pending / Reviewing</b></td><td>The record has been submitted and awaits authorized office action.</td><td>Admin or TFRO Staff</td><td>Do not create a duplicate; review the linked record and files.</td></tr>
+          <tr><td><b>Correction / Rejected</b></td><td>The submission cannot proceed until identified issues are resolved.</td><td>Submitting user and reviewer</td><td>Give a specific reason and update the existing record where allowed.</td></tr>
+          <tr><td><b>Approved / Verified</b></td><td>The authorized review checkpoints have been completed.</td><td>Authorized Admin</td><td>Confirm linked master records and printable outputs were synchronized.</td></tr>
+          <tr><td><b>Paid / Released</b></td><td>Staff verified official payment evidence and completed applicable release details.</td><td>TFRO Staff</td><td>Match receipt, amount, date, violation, payor, and release information.</td></tr>
+          <tr><td><b>Archived / Historical</b></td><td>The record is retained for reference but excluded from active work.</td><td>Head Admin under office policy</td><td>Confirm retention authority; do not use deletion as routine filing.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout"><b>Official production address:</b> https://ajdomirez.github.io/TFRO-MIS-WEB-SYTEM/ &nbsp;·&nbsp; This guide describes the implemented workflow as of 27 October 2026. Future policy, database, or interface changes require a new revision and PDF.</div>
+      <div class="footer">TFRO IMIS · System Workflow and User Guide · Version 2.0 · 27 October 2026</div>
     </section>
   </main>
 </body>

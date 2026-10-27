@@ -6,6 +6,7 @@
     "build": "node scripts/build-netlify.js",
     "start": "node server.js",
     "check": "node scripts/validate-project.js",
+    "workflow:pdf": "node scripts/generate-workflow-pdf.js",
     "test": "npm run check"
   },
   "dependencies": {
