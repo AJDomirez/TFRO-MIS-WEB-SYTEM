@@ -209,8 +209,24 @@ Deno.serve(async (request) => {
         await adminClient.from("internal_admin_provisioning").delete().eq("email", internalEmail);
         return rejected(errorText(created, authText || `Supabase Auth failed with HTTP ${authResponse.status}.`));
       }
-      const { error: roleError } = await adminClient.from("profiles").update({ role: "staff", username, full_name: fullName, contact_number: contactNumber || null }).eq("id", createdUserId);
+      // The public signup trigger deliberately treats new identities as
+      // Operators until this trusted provisioning function assigns the staff
+      // role. Activate the staff profile here so it never enters the
+      // franchise-verification flow.
+      const { error: roleError } = await adminClient.from("profiles").update({
+        role: "staff",
+        account_status: "active",
+        username,
+        full_name: fullName,
+        contact_number: contactNumber || null,
+      }).eq("id", createdUserId);
       if (roleError) { await adminClient.auth.admin.deleteUser(createdUserId, true); return rejected(roleError.message); }
+      const { error: operatorCleanupError } = await adminClient.from("operators")
+        .delete().eq("user_id", createdUserId).eq("verified", false);
+      if (operatorCleanupError) {
+        await adminClient.auth.admin.deleteUser(createdUserId, true);
+        return rejected(`Unable to finish TFRO Staff provisioning: ${operatorCleanupError.message}`);
+      }
       await adminClient.from("audit_logs").insert({
         user_id: caller.id, user_name: callerProfile.full_name || "Head Administrator", role: "admin",
         action: "Created TFRO Staff account", action_type: "create", record: fullName,
@@ -265,8 +281,20 @@ Deno.serve(async (request) => {
       console.error("Unable to create restricted Administrator Auth user", authResponse.status, detail);
       return rejected(detail);
     }
-    const { error: roleError } = await adminClient.from("profiles").update({ role: "admin_viewer", username, full_name: fullName, contact_number: contactNumber || null }).eq("id", createdUserId);
+    const { error: roleError } = await adminClient.from("profiles").update({
+      role: "admin_viewer",
+      account_status: "active",
+      username,
+      full_name: fullName,
+      contact_number: contactNumber || null,
+    }).eq("id", createdUserId);
     if (roleError) { await adminClient.auth.admin.deleteUser(createdUserId, true); return rejected(roleError.message); }
+    const { error: operatorCleanupError } = await adminClient.from("operators")
+      .delete().eq("user_id", createdUserId).eq("verified", false);
+    if (operatorCleanupError) {
+      await adminClient.auth.admin.deleteUser(createdUserId, true);
+      return rejected(`Unable to finish Administrator provisioning: ${operatorCleanupError.message}`);
+    }
     await adminClient.from("audit_logs").insert({ user_id: caller.id, user_name: callerProfile.full_name || "Head Administrator", role: "admin", action: "Created restricted Administrator account", action_type: "create", record: fullName, description: `Created restricted Administrator username ${username}.` });
     return json({ success: true, user_id: createdUserId, username }, 201);
   } catch (error) {
