@@ -595,4 +595,62 @@ table td{
   font-size: 0.9rem;
   font-weight: 700;
 }
-.franchise-pagination{display:flex;align-items:center;justify-content:center;gap:14px;margin:18px 0 4px}.franchise-pagination button{display:inline-flex;align-items:center;gap:5px;padding:9px 14px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#123f73;font-weight:700;cursor:pointer}.franchise-pagination button:hover:not(:disabled){background:#eff6ff;border-color:#123f73}.franchise-pagination button:disabled{opacity:.45;cursor:not-allowed}.franchise-pagination span{min-width:110px;color:#475569;font-size:13px;font-weight:700;text-align:center}
+.main-content .franchise-pagination{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  width:max-content;
+  max-width:100%;
+  margin:20px auto 6px;
+  padding:8px;
+  border:1px solid #dbe5ef;
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 7px 20px rgba(18,63,115,.08);
+}
+.main-content .franchise-pagination button{
+  min-height:40px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:9px 15px;
+  border:1px solid #123f73;
+  border-radius:9px;
+  background:#123f73;
+  color:#fff;
+  font:700 13px/1 Arial,sans-serif;
+  cursor:pointer;
+  transition:background .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.main-content .franchise-pagination button:hover:not(:disabled){
+  border-color:#0d7a43;
+  background:#0d7a43;
+  box-shadow:0 5px 12px rgba(13,122,67,.2);
+  transform:translateY(-1px);
+}
+.main-content .franchise-pagination button:focus-visible{outline:3px solid rgba(244,196,48,.55);outline-offset:2px}
+.main-content .franchise-pagination button:disabled{
+  border-color:#d7e0e8;
+  background:#eef2f6;
+  color:#8b9aaa;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+.main-content .franchise-page-indicator{
+  min-width:118px;
+  padding:9px 12px;
+  border-radius:9px;
+  background:#eef5fb;
+  color:#123f73;
+  font-size:13px;
+  font-weight:800;
+  text-align:center;
+  white-space:nowrap;
+}
+@media(max-width:520px){
+  .main-content .franchise-pagination{width:100%;gap:7px;padding:7px}
+  .main-content .franchise-pagination button{flex:1;padding:9px 8px}
+  .main-content .franchise-page-indicator{min-width:auto;padding:9px 7px;font-size:12px}
+}
