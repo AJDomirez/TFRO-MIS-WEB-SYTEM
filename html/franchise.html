@@ -322,6 +322,12 @@
 
     </div>
 
+    <nav class="franchise-pagination" aria-label="Franchise record pages">
+      <button type="button" id="previousRecordPage"><i class="ri-arrow-left-s-line"></i> Previous</button>
+      <span id="recordPageInfo">Page 1 of 1</span>
+      <button type="button" id="nextRecordPage">Next <i class="ri-arrow-right-s-line"></i></button>
+    </nav>
+
   </main>
 
 </div>
@@ -524,7 +530,7 @@
 <!-- SUCCESS TOAST -->
 <div class="toast" id="toast" hidden></div>
 
-<script type="module" src="../js/franchise.js?v=20261028-2"></script>
+<script type="module" src="../js/franchise.js?v=20261028-3"></script>
 <script type="module" src="../js/sidebar-user.js?v=20261016-4"></script>
 <script>
   const role = localStorage.getItem("role");

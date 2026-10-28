@@ -12,6 +12,8 @@ let deleteTargetId = null;
 let preparedCsvImport = [];
 let currentRole = localStorage.getItem("role") || "";
 let generatedDocumentContext = new Map();
+const TABLE_PAGE_SIZE = 100;
+let currentTablePage = 1;
 
 /* ---------- Safe element access ---------- */
 function el(id) { return document.getElementById(id); }
@@ -225,12 +227,20 @@ function renderTable() {
   if (!table) return;
   const rows = filteredFranchises();
   const visibleTotal = franchises.filter((row) => !row.is_archived).length;
+  const pageCount = Math.max(1, Math.ceil(rows.length / TABLE_PAGE_SIZE));
+  currentTablePage = Math.min(Math.max(currentTablePage, 1), pageCount);
+  const pageStart = (currentTablePage - 1) * TABLE_PAGE_SIZE;
+  const pageRows = rows.slice(pageStart, pageStart + TABLE_PAGE_SIZE);
   const count = el("recordCount");
-  if (count) count.textContent = rows.length === visibleTotal
-    ? `${visibleTotal.toLocaleString()} franchise records`
-    : `Showing ${rows.length.toLocaleString()} of ${visibleTotal.toLocaleString()} franchise records`;
+  if (count) {
+    const range = rows.length ? `${(pageStart + 1).toLocaleString()}–${Math.min(pageStart + TABLE_PAGE_SIZE, rows.length).toLocaleString()}` : "0";
+    count.textContent = `Showing ${range} of ${rows.length.toLocaleString()} matching records · ${visibleTotal.toLocaleString()} total`;
+  }
+  if (el("recordPageInfo")) el("recordPageInfo").textContent = `Page ${currentTablePage.toLocaleString()} of ${pageCount.toLocaleString()}`;
+  if (el("previousRecordPage")) el("previousRecordPage").disabled = currentTablePage <= 1;
+  if (el("nextRecordPage")) el("nextRecordPage").disabled = currentTablePage >= pageCount;
 
-  table.innerHTML = rows.length ? rows.map((row) => {
+  table.innerHTML = pageRows.length ? pageRows.map((row) => {
     const status = displayStatus(row.status);
     return `<tr>
       <td class="franchise-number">${escapeHtml(conciseFranchiseNumber(row.franchise_number))}</td>
@@ -1151,8 +1161,15 @@ function bindEvents() {
     const button = event.target.closest("[data-generated-document-id]");
     if (button) void openGeneratedDocument(button.dataset.generatedDocumentId);
   });
-  el("searchInput")?.addEventListener("input", renderTable);
-  el("statusFilter")?.addEventListener("change", renderTable);
+  el("searchInput")?.addEventListener("input", () => { currentTablePage = 1; renderTable(); });
+  el("statusFilter")?.addEventListener("change", () => { currentTablePage = 1; renderTable(); });
+  el("previousRecordPage")?.addEventListener("click", () => {
+    if (currentTablePage > 1) { currentTablePage -= 1; renderTable(); }
+  });
+  el("nextRecordPage")?.addEventListener("click", () => {
+    currentTablePage += 1;
+    renderTable();
+  });
   bindDateCsvExport({
     getRows: filteredFranchises,
     render: renderTable,

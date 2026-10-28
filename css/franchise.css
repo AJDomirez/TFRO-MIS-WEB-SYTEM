@@ -595,3 +595,4 @@ table td{
   font-size: 0.9rem;
   font-weight: 700;
 }
+.franchise-pagination{display:flex;align-items:center;justify-content:center;gap:14px;margin:18px 0 4px}.franchise-pagination button{display:inline-flex;align-items:center;gap:5px;padding:9px 14px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#123f73;font-weight:700;cursor:pointer}.franchise-pagination button:hover:not(:disabled){background:#eff6ff;border-color:#123f73}.franchise-pagination button:disabled{opacity:.45;cursor:not-allowed}.franchise-pagination span{min-width:110px;color:#475569;font-size:13px;font-weight:700;text-align:center}
