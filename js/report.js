@@ -65,12 +65,19 @@ function withinPeriod(value, period) {
 }
 
 async function selectRows(table, columns = "*", options = {}) {
-  let query = supabase.from(table).select(columns);
-  if (options.order) query = query.order(options.order, { ascending: options.ascending ?? false });
-  if (options.limit) query = query.limit(options.limit);
-  const { data, error } = await query;
-  if (error) throw new Error(`${options.label || table}: ${error.message}`);
-  return data || [];
+  const pageSize = 1000;
+  const rows = [];
+  for (let start = 0; ; start += pageSize) {
+    let query = supabase.from(table).select(columns);
+    if (options.order) query = query.order(options.order, { ascending: options.ascending ?? false });
+    if (options.limit) query = query.limit(options.limit);
+    else query = query.range(start, start + pageSize - 1);
+    const { data, error } = await query;
+    if (error) throw new Error(`${options.label || table}: ${error.message}`);
+    rows.push(...(data || []));
+    if (options.limit || !data || data.length < pageSize) break;
+  }
+  return rows;
 }
 
 const reportDefinitions = {

@@ -61,13 +61,28 @@ function renderFranchiseStatuses(franchises) {
   }).join("");
 }
 
+async function loadAllFranchiseStatuses() {
+  const pageSize = 1000;
+  const rows = [];
+  for (let start = 0; ; start += pageSize) {
+    const { data, error } = await supabase
+      .from("franchises")
+      .select("application_date, application_type, status, created_at")
+      .range(start, start + pageSize - 1);
+    if (error) return { data: null, error, count: null };
+    rows.push(...(data || []));
+    if (!data || data.length < pageSize) break;
+  }
+  return { data: rows, error: null, count: rows.length };
+}
+
 async function loadDashboard() {
   const { user } = await requireRole(["admin", "admin_viewer"]);
   if (!user) return;
   const today = new Date(), todayIso = today.toISOString().slice(0, 10), expiryDate = new Date(today);
   expiryDate.setDate(today.getDate() + 14);
   const results = await Promise.all([
-    supabase.from("franchises").select("application_date, application_type, status, created_at", { count: "exact" }),
+    loadAllFranchiseStatuses(),
     supabase.from("franchises").select("id", { count: "exact", head: true }).eq("status", "active"),
     supabase.from("franchise_renewals").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
     supabase.from("franchises").select("id, franchise_number, operator_name, route, expiration_date, operator_id").gte("expiration_date", todayIso).lte("expiration_date", expiryDate.toISOString().slice(0, 10)).order("expiration_date").limit(10),

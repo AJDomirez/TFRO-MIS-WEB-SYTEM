@@ -588,3 +588,10 @@ table td{
 
 .motor-form-actions{flex-wrap:wrap;justify-content:flex-start}
 .motor-form-actions button{min-width:140px;justify-content:center}
+/* Visible registry total helps distinguish loaded rows from filtered rows. */
+.franchise-record-count {
+  margin: 10px 2px 12px;
+  color: #475569;
+  font-size: 0.9rem;
+  font-weight: 700;
+}

@@ -53,7 +53,7 @@ function formatDate(value) {
 function conciseFranchiseNumber(value) {
   const text = String(value ?? "").trim();
   const trailingNumber = text.match(/(\d+)$/)?.[1];
-  return trailingNumber ? trailingNumber.padStart(4, "0") : (text || "—");
+  return trailingNumber || text || "—";
 }
 
 function ageFromBirthDate(value) {
@@ -224,6 +224,11 @@ function renderTable() {
   const table = el("franchiseTable");
   if (!table) return;
   const rows = filteredFranchises();
+  const visibleTotal = franchises.filter((row) => !row.is_archived).length;
+  const count = el("recordCount");
+  if (count) count.textContent = rows.length === visibleTotal
+    ? `${visibleTotal.toLocaleString()} franchise records`
+    : `Showing ${rows.length.toLocaleString()} of ${visibleTotal.toLocaleString()} franchise records`;
 
   table.innerHTML = rows.length ? rows.map((row) => {
     const status = displayStatus(row.status);
@@ -247,13 +252,23 @@ function renderTable() {
 }
 
 async function loadFranchises() {
-  const { data, error } = await supabase.from("franchises").select("*").order("franchise_number", { ascending: true });
-  if (error) {
-    console.error(error);
-    showToast("Could not load franchises. Check database setup.");
-    return;
+  const pageSize = 1000;
+  const allRows = [];
+  for (let start = 0; ; start += pageSize) {
+    const { data, error } = await supabase
+      .from("franchises")
+      .select("*")
+      .order("franchise_number", { ascending: true })
+      .range(start, start + pageSize - 1);
+    if (error) {
+      console.error(error);
+      showToast("Could not load franchises. Check database setup.");
+      return;
+    }
+    allRows.push(...(data || []));
+    if (!data || data.length < pageSize) break;
   }
-  franchises = (data || []).sort((a, b) => String(a.franchise_number || "").localeCompare(
+  franchises = allRows.sort((a, b) => String(a.franchise_number || "").localeCompare(
     String(b.franchise_number || ""),
     undefined,
     { numeric: true, sensitivity: "base" },
