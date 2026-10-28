@@ -58,6 +58,14 @@ function conciseFranchiseNumber(value) {
   return trailingNumber || text || "—";
 }
 
+function franchiseNumberDigits(value) {
+  return String(value ?? "").trim().match(/(\d+)$/)?.[1] || "";
+}
+
+function isSpecialFranchise(row) {
+  return franchiseNumberDigits(row?.franchise_number).length === 3;
+}
+
 function ageFromBirthDate(value) {
   if (!value) return "—";
   const birthDate = new Date(`${value}T00:00:00`);
@@ -194,11 +202,15 @@ function validateCommon(entry, errPrefix) {
 function filteredFranchises() {
   const searchInput = el("searchInput");
   const statusFilter = el("statusFilter");
+  const seriesFilter = el("seriesFilter");
   const term = searchInput ? searchInput.value.trim().toLowerCase() : "";
   const filter = statusFilter ? statusFilter.value : "all";
+  const series = seriesFilter ? seriesFilter.value : "all";
   return franchises.filter((row) => {
     if (row.is_archived) return false;
     if (!isWithinDateRange(row.application_date || row.created_at)) return false;
+    if (series === "special" && !isSpecialFranchise(row)) return false;
+    if (series === "regular" && isSpecialFranchise(row)) return false;
     const matchesStatus = filter === "all" || displayStatus(row.status) === filter;
     if (!term) return matchesStatus;
     const searchable = [
@@ -242,8 +254,9 @@ function renderTable() {
 
   table.innerHTML = pageRows.length ? pageRows.map((row) => {
     const status = displayStatus(row.status);
+    const special = isSpecialFranchise(row);
     return `<tr>
-      <td class="franchise-number">${escapeHtml(conciseFranchiseNumber(row.franchise_number))}</td>
+      <td class="franchise-number">${escapeHtml(conciseFranchiseNumber(row.franchise_number))}${special ? '<span class="special-franchise-badge">Special</span>' : ""}</td>
       <td>${escapeHtml(row.operator_name) || "—"}</td>
       <td>${escapeHtml(row.address) || "—"}</td>
       <td>${escapeHtml(formatDate(row.previous_mtop_expiration))}</td>
@@ -278,11 +291,12 @@ async function loadFranchises() {
     allRows.push(...(data || []));
     if (!data || data.length < pageSize) break;
   }
-  franchises = allRows.sort((a, b) => String(a.franchise_number || "").localeCompare(
-    String(b.franchise_number || ""),
-    undefined,
-    { numeric: true, sensitivity: "base" },
-  ));
+  franchises = allRows.sort((a, b) => {
+    const aDigits = franchiseNumberDigits(a.franchise_number);
+    const bDigits = franchiseNumberDigits(b.franchise_number);
+    if (aDigits.length !== bDigits.length) return aDigits.length - bDigits.length;
+    return Number(aDigits) - Number(bDigits);
+  });
   renderTable();
   const selector = el("edit_record_selector");
   if (selector) {
@@ -1163,6 +1177,7 @@ function bindEvents() {
   });
   el("searchInput")?.addEventListener("input", () => { currentTablePage = 1; renderTable(); });
   el("statusFilter")?.addEventListener("change", () => { currentTablePage = 1; renderTable(); });
+  el("seriesFilter")?.addEventListener("change", () => { currentTablePage = 1; renderTable(); });
   el("previousRecordPage")?.addEventListener("click", () => {
     if (currentTablePage > 1) { currentTablePage -= 1; renderTable(); }
   });

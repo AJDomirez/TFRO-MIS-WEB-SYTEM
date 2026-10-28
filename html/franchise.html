@@ -286,6 +286,12 @@
         <option value="expired">Expired</option>
       </select>
 
+      <select id="seriesFilter" aria-label="Franchise number series">
+        <option value="all">All Number Series</option>
+        <option value="special">Special 001–090</option>
+        <option value="regular">Regular 0001–5702</option>
+      </select>
+
       <div class="date-export-controls">
         <label>Start Date<input type="date" id="startDate"></label>
         <label>End Date<input type="date" id="endDate"></label>
@@ -530,7 +536,7 @@
 <!-- SUCCESS TOAST -->
 <div class="toast" id="toast" hidden></div>
 
-<script type="module" src="../js/franchise.js?v=20261028-3"></script>
+<script type="module" src="../js/franchise.js?v=20261028-4"></script>
 <script type="module" src="../js/sidebar-user.js?v=20261016-4"></script>
 <script>
   const role = localStorage.getItem("role");
