@@ -49,11 +49,10 @@ function renderViolations(violations) {
   });
 }
 
-function renderFranchiseStatuses(franchises) {
+function renderFranchiseStatuses(counts, franchiseTotal) {
   const statusOrder = ["active", "pending", "suspended", "expired", "revoked"];
   const labels = { active: "Active", pending: "Pending", suspended: "Suspended", expired: "Expired", revoked: "Revoked" };
-  const counts = franchises.reduce((all, row) => ({ ...all, [row.status]: (all[row.status] || 0) + 1 }), {});
-  const total = Math.max(franchises.length, 1);
+  const total = Math.max(franchiseTotal, 1);
   document.getElementById("franchiseStatusBreakdown").innerHTML = statusOrder.map((status) => {
     const count = counts[status] || 0;
     const percent = Math.round(count / total * 100);
@@ -62,18 +61,17 @@ function renderFranchiseStatuses(franchises) {
 }
 
 async function loadAllFranchiseStatuses() {
-  const pageSize = 1000;
-  const rows = [];
-  for (let start = 0; ; start += pageSize) {
-    const { data, error } = await supabase
+  const statuses = ["active", "pending", "suspended", "expired", "revoked"];
+  const results = await Promise.all([
+    supabase.from("franchises").select("id", { count: "exact", head: true }),
+    ...statuses.map((status) => supabase
       .from("franchises")
-      .select("application_date, application_type, status, created_at")
-      .range(start, start + pageSize - 1);
-    if (error) return { data: null, error, count: null };
-    rows.push(...(data || []));
-    if (!data || data.length < pageSize) break;
-  }
-  return { data: rows, error: null, count: rows.length };
+      .select("id", { count: "exact", head: true })
+      .eq("status", status)),
+  ]);
+  const error = results.find((result) => result.error)?.error || null;
+  const counts = Object.fromEntries(statuses.map((status, index) => [status, results[index + 1].count || 0]));
+  return { data: counts, error, count: results[0].count || 0 };
 }
 
 async function loadDashboard() {
@@ -121,7 +119,7 @@ async function loadDashboard() {
   setText("snapshotCollections", money);
   const months = lastSixMonths();
   setText("dashboardPeriod", `${monthFormatter.format(months[0])} ${months[0].getFullYear()} – ${monthFormatter.format(months[5])} ${months[5].getFullYear()}`);
-  renderFranchiseStatuses(franchises.data || []);
+  renderFranchiseStatuses(franchises.data || {}, franchises.count || 0);
   document.getElementById("expiringRows").innerHTML = expiring.data?.length ? expiring.data.map((row) => {
     const days = Math.ceil((new Date(`${row.expiration_date}T00:00:00`) - today) / 86400000);
     const disabled = row.operator_id ? "" : " disabled";
