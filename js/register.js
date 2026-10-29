@@ -26,10 +26,31 @@ const enforcerIdInput = document.getElementById("enforcerId");
 const termsConsent = document.getElementById("termsConsent");
 const consentModal = document.getElementById("consentModal");
 const acceptConsentButton = document.getElementById("acceptConsent");
+const successModal = document.getElementById("registrationSuccessModal");
+const successMessage = document.getElementById("registrationSuccessMessage");
+const successNote = document.getElementById("registrationSuccessNote");
+const successAction = document.getElementById("registrationSuccessAction");
 const TERMS_VERSION = "TFRO-TERMS-2026-09-08";
 const PRIVACY_VERSION = "TFRO-PRIVACY-2026-09-08";
 const FRANCHISE_NUMBER_PATTERN = /^FR-\d{4}-\d{3,4}$/;
 let registrationEnabled = true;
+let successDestination = "login.html";
+
+function showRegistrationSuccess({ message, destination, confirmationRequired = false }) {
+  successDestination = destination;
+  successMessage.textContent = message;
+  successNote.hidden = !confirmationRequired;
+  successAction.innerHTML = confirmationRequired
+    ? 'Continue to Sign In <i class="ri-arrow-right-line" aria-hidden="true"></i>'
+    : 'Open My Account <i class="ri-arrow-right-line" aria-hidden="true"></i>';
+  successModal.hidden = false;
+  document.body.classList.add("registration-success-open");
+  successAction.focus();
+}
+
+successAction.addEventListener("click", () => {
+  window.location.replace(successDestination);
+});
 
 franchiseNumberInput.addEventListener("input", () => {
   franchiseNumberInput.value = franchiseNumberInput.value.toUpperCase().replace(/\s+/g, "");
@@ -347,10 +368,11 @@ registerForm.addEventListener("submit", async (event) => {
   // deliberately server-controlled.
 
   if (!data.session) {
-    alert(
-      "Account created! Please check your email to confirm your account before signing in."
-    );
-    window.location.href = "login.html?confirmation=sent";
+    showRegistrationSuccess({
+      message: "Your registration was received successfully.",
+      destination: "login.html?confirmation=sent",
+      confirmationRequired: true,
+    });
     return;
   }
 
@@ -363,10 +385,15 @@ registerForm.addEventListener("submit", async (event) => {
   }
 
   if (profile.account_status && profile.account_status !== "active") {
-    window.location.replace("account-status.html");
+    showRegistrationSuccess({
+      message: "Your account was created and is ready for TFRO review.",
+      destination: "account-status.html",
+    });
   } else {
-    alert("Account created successfully!");
-    window.location.replace(destinationForRole(profile.role));
+    showRegistrationSuccess({
+      message: "Your account was created successfully.",
+      destination: destinationForRole(profile.role),
+    });
   }
 });
 

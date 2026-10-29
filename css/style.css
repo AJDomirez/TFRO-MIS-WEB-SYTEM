@@ -543,6 +543,24 @@ body.signup-page{
 .consent-accept{border:1px solid #f4c430;background:#123f73;color:#fff;}
 .consent-modal-open{overflow:hidden;}
 
+.registration-success-modal[hidden]{display:none;}
+.registration-success-modal{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:20px;}
+.registration-success-backdrop{position:absolute;inset:0;background:rgba(4,25,49,.8);backdrop-filter:blur(5px);}
+.registration-success-card{position:relative;width:min(440px,100%);padding:34px 30px 30px;border:1px solid #d5e1eb;border-top:5px solid #f4c430;border-radius:20px;background:#fff;text-align:center;box-shadow:0 28px 80px rgba(3,24,48,.42);animation:registrationSuccessEnter .24s cubic-bezier(.22,1,.36,1);}
+.registration-success-icon{display:grid;width:68px;height:68px;margin:0 auto 16px;place-items:center;border-radius:50%;background:#e9f7f0;color:#0d704d;font-size:38px;box-shadow:0 0 0 8px #f4faf7;}
+.registration-success-kicker{margin:0;color:#b47d00;font-size:11px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;}
+.registration-success-card h2{margin:7px 0 9px;color:#0b2f55;font-size:27px;}
+.registration-success-card>p:not(.registration-success-kicker){margin:0;color:#5d7068;line-height:1.55;}
+.registration-success-note{display:flex;align-items:flex-start;gap:10px;margin:20px 0 0;padding:13px 14px;border-left:4px solid #f4c430;border-radius:9px;background:#fff9df;color:#564715;text-align:left;font-size:13px;font-weight:700;line-height:1.45;}
+.registration-success-note[hidden]{display:none;}
+.registration-success-note i{flex:0 0 auto;color:#0d4778;font-size:21px;}
+.registration-success-action{display:inline-flex;width:100%;min-height:48px;margin-top:22px;align-items:center;justify-content:center;gap:8px;border:0;border-bottom:3px solid #f4c430;border-radius:10px;background:#123f73;color:#fff;font:inherit;font-weight:900;cursor:pointer;transition:transform .15s ease,background .15s ease;}
+.registration-success-action:hover{background:#0d4778;transform:translateY(-1px);}
+.registration-success-action:focus-visible{outline:3px solid rgba(244,196,48,.5);outline-offset:3px;}
+.registration-success-open{overflow:hidden;}
+@keyframes registrationSuccessEnter{from{opacity:0;transform:translateY(14px) scale(.97);}}
+@media(max-width:480px){.registration-success-card{padding:30px 20px 22px}.registration-success-card h2{font-size:24px;}}
+
 .inline-form-message{margin:0 0 14px;padding:11px 13px;border:1px solid #efb4b4;border-left:4px solid #c62828;border-radius:8px;background:#fff1f1;color:#a11f1f;font-size:13px;font-weight:700;line-height:1.45;}
 .inline-form-message[hidden]{display:none;}
 
