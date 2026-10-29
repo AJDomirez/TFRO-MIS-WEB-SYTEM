@@ -299,9 +299,7 @@ async function loadFranchises() {
   renderTable();
   const selector = el("edit_record_selector");
   if (selector) {
-    selector.innerHTML = '<option value="">Select a franchise...</option>' + franchises.map((row) =>
-      `<option value="${row.id}">${escapeHtml(row.franchise_number)} — ${escapeHtml(row.operator_name || "No operator")}</option>`
-    ).join("");
+    selector.innerHTML = '<option value="">Use the table search, then click the pencil icon</option>';
   }
 }
 
@@ -946,7 +944,10 @@ async function showForms(row) {
 /* ---------- Edit modal ---------- */
 function openEditForm(row) {
   editingId = row.id;
-  if (el("edit_record_selector")) el("edit_record_selector").value = String(row.id);
+  if (el("edit_record_selector")) {
+    el("edit_record_selector").innerHTML = `<option value="${row.id}">${escapeHtml(row.franchise_number)} — ${escapeHtml(row.operator_name || "No operator")}</option>`;
+    el("edit_record_selector").value = String(row.id);
+  }
   clearAllErrors("err-edit-");
   el("edit_franchise_number").value = row.franchise_number || "";
   el("edit_previous_registration").value = row.previous_registration || "";
@@ -982,10 +983,8 @@ function openEditChooser() {
     showToast("No franchise records are available to edit.");
     return;
   }
-  editingId = null;
-  el("editForm")?.reset();
-  openModal("editModal");
-  el("edit_record_selector")?.focus();
+  el("searchInput")?.focus();
+  showToast("Search for the franchise, then click its pencil icon to edit it.");
 }
 
 function readEditForm() {

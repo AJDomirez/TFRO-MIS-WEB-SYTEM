@@ -27,7 +27,12 @@ function localTarget(sourceFile, reference) {
   }
 }
 
-const javascriptFiles = [path.join(root, "server.js"), ...filesIn("js", ".js")];
+const javascriptFiles = [
+  path.join(root, "server.js"),
+  path.join(root, "service-worker.js"),
+  ...filesIn("js", ".js"),
+  ...filesIn("scripts", ".js"),
+];
 for (const file of javascriptFiles) {
   const result = spawnSync(process.execPath, ["--check", file], { encoding: "utf8" });
   if (result.status !== 0) {
@@ -45,7 +50,8 @@ for (const file of javascriptFiles) {
   }
 }
 
-for (const file of filesIn("html", ".html")) {
+const htmlFiles = [path.join(root, "index.html"), ...filesIn("html", ".html")];
+for (const file of htmlFiles) {
   const source = fs.readFileSync(file, "utf8");
   const ids = new Set();
   for (const match of source.matchAll(/\bid=["']([^"']+)["']/g)) {
@@ -87,5 +93,5 @@ if (errors.length) {
 
 console.log(
   `Project validation passed: ${javascriptFiles.length} JavaScript files, ` +
-  `${filesIn("html", ".html").length} HTML files, and ${filesIn("css", ".css").length} CSS files checked.`
+  `${htmlFiles.length} HTML files, and ${filesIn("css", ".css").length} CSS files checked.`
 );
