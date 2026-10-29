@@ -1,11 +1,18 @@
 node_modules/
 dist/
 .codex-preview/
+.codex-thesis-*/
+.pages-deploy-*/
+.pages-publish-*/
+.pdf-previews/
 .env
 .env.*
 !.env.example
 *.log
 supabase/.temp/
+forms/.pdf-previews/
+forms/dist/
+forms/node_modules/
 
 # Local Netlify folder
 .netlify
