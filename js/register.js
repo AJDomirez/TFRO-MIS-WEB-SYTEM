@@ -258,7 +258,7 @@ registerForm.addEventListener("submit", async (event) => {
   const confirmPassword = confirmPasswordInput.value;
 
   /* VALIDATION */
-  if (!firstName || !lastName || !email || !contactNumber
+  if (!firstName || !middleName || !lastName || !email || !contactNumber
       || (role === "operator" && (!address || !franchiseNumber))
       || (role === "traffic_enforcer" && !enforcerId)) {
     showRegisterWarning("Please fill in all the required fields.");
@@ -309,7 +309,7 @@ registerForm.addEventListener("submit", async (event) => {
           role,
           full_name: fullName,
           first_name: firstName,
-          middle_name: middleName || null,
+          middle_name: middleName,
           last_name: lastName,
           contact_number: contactNumber,
           address,

@@ -118,8 +118,8 @@ if (profileForm) {
     const address = document.getElementById("address").value.trim();
     const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
 
-    if (!firstName || !lastName) {
-      showProfileWarning("profileMessage", "Please enter your first and last name.");
+    if (!firstName || !middleName || !lastName) {
+      showProfileWarning("profileMessage", "Please enter your first, middle, and last name.");
       return;
     }
 
@@ -139,7 +139,7 @@ if (profileForm) {
       return;
     }
 
-    await supabase.auth.updateUser({ data: { full_name: fullName, first_name: firstName, middle_name: middleName || null, last_name: lastName } });
+    await supabase.auth.updateUser({ data: { full_name: fullName, first_name: firstName, middle_name: middleName, last_name: lastName } });
 
     const relatedTable = currentUserRole === "traffic_enforcer" ? "traffic_enforcers" : "operators";
     const relatedChanges = currentUserRole === "traffic_enforcer"
