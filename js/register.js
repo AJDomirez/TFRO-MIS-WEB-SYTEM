@@ -27,6 +27,7 @@ const termsConsent = document.getElementById("termsConsent");
 const consentModal = document.getElementById("consentModal");
 const acceptConsentButton = document.getElementById("acceptConsent");
 const successModal = document.getElementById("registrationSuccessModal");
+const successTitle = document.getElementById("registrationSuccessTitle");
 const successMessage = document.getElementById("registrationSuccessMessage");
 const successNote = document.getElementById("registrationSuccessNote");
 const successAction = document.getElementById("registrationSuccessAction");
@@ -36,13 +37,23 @@ const FRANCHISE_NUMBER_PATTERN = /^FR-\d{4}-\d{3,4}$/;
 let registrationEnabled = true;
 let successDestination = "login.html";
 
-function showRegistrationSuccess({ message, destination, confirmationRequired = false }) {
+function showRegistrationSuccess({
+  title = "Account created",
+  message,
+  destination,
+  confirmationRequired = false,
+  actionLabel,
+}) {
   successDestination = destination;
+  successTitle.textContent = title;
   successMessage.textContent = message;
   successNote.hidden = !confirmationRequired;
-  successAction.innerHTML = confirmationRequired
-    ? 'Continue to Sign In <i class="ri-arrow-right-line" aria-hidden="true"></i>'
-    : 'Open My Account <i class="ri-arrow-right-line" aria-hidden="true"></i>';
+  const buttonText = actionLabel || (confirmationRequired ? "Continue to Sign In" : "Open My Account");
+  successAction.replaceChildren(document.createTextNode(`${buttonText} `));
+  const arrow = document.createElement("i");
+  arrow.className = "ri-arrow-right-line";
+  arrow.setAttribute("aria-hidden", "true");
+  successAction.append(arrow);
   successModal.hidden = false;
   document.body.classList.add("registration-success-open");
   successAction.focus();
@@ -366,6 +377,22 @@ registerForm.addEventListener("submit", async (event) => {
   // The database auth trigger creates the profile from the sign-up metadata.
   // Do not write profiles directly from the browser: role assignment is
   // deliberately server-controlled.
+
+  // Supabase returns an obfuscated user with no identities for a repeated
+  // signup so an existing account cannot be enumerated. It does not send a
+  // second confirmation message in this case.
+  const isRepeatedSignup = !data.session
+    && Array.isArray(data.user.identities)
+    && data.user.identities.length === 0;
+  if (isRepeatedSignup) {
+    showRegistrationSuccess({
+      title: "Check your existing account",
+      message: "If this email is already registered, no new confirmation email is sent. Sign in with your existing password, or use Forgot Password on the sign-in page.",
+      destination: "login.html",
+      actionLabel: "Continue to Sign In",
+    });
+    return;
+  }
 
   if (!data.session) {
     showRegistrationSuccess({
