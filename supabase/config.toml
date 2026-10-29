@@ -251,8 +251,12 @@ otp_expiry = 3600
 # content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.confirmation]
-subject = "Confirm Your TFRO Account"
+subject = "Confirm Your TFRO-Lucena MIS Account"
 content_path = "./supabase/email-template-confirm-signup.html"
+
+[auth.email.template.recovery]
+subject = "Your TFRO-Lucena MIS Recovery Code"
+content_path = "./supabase/email-template-reset-password.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
