@@ -1,7 +1,7 @@
 {
   "id": "./html/dashboard.html",
-  "name": "TFRO APP",
-  "short_name": "TFRO APP",
+  "name": "TFRO-Lucena MIS",
+  "short_name": "TFRO-Lucena MIS",
   "description": "TFRO Integrated Management Information System application for authorized TFRO personnel.",
   "start_url": "./html/login.html?source=pwa",
   "scope": "./",

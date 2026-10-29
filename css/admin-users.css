@@ -16,6 +16,13 @@ body { margin: 0; background: #f3f6fb; color: #16213a; font-family: Arial, sans-
 }
 .capacity-card > i { color: #f4c430 !important; }
 
+.password-input-wrap { position: relative; display: block; width: 100%; }
+.password-input-wrap input { width: 100%; padding-right: 92px !important; }
+.password-visibility-toggle { position: absolute; top: 50%; right: 7px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-width: 76px; min-height: 34px; padding: 5px 9px; transform: translateY(-50%); border: 1px solid #cbd5e1; border-radius: 7px; background: #f8fafc; color: #0d4778; font: 700 12px/1 inherit; cursor: pointer; }
+.password-visibility-toggle:hover { border-color: #145187; background: #eef6fc; }
+.password-visibility-toggle:focus-visible { outline: 3px solid rgba(20,81,135,.22); outline-offset: 1px; }
+.password-visibility-toggle i { font-size: 16px; }
+
 .delete-account, .delete-staff-account { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #efb7b2; border-radius: 8px; background: #fff4f3; color: #aa3029; padding: 8px 11px; font-weight: 700; cursor: pointer; }
 .delete-account:hover, .delete-staff-account:hover { background: #b83c33; color: #fff; }
 .delete-account:disabled, .delete-staff-account:disabled { opacity: .55; cursor: wait; }

@@ -19,10 +19,13 @@ let canManageViolations = false;
 let canEditPdfFields = false;
 let ticketPhotoObjectUrl = "";
 let ticketPhotoFilename = "ticket-image.jpg";
+let franchiseLookupTimer = null;
+let franchiseLookupRequest = 0;
 
 const table = document.getElementById("violationsTable");
 const formPanel = document.getElementById("violationFormPanel");
 const form = document.getElementById("violationForm");
+const franchiseLookupResult = document.getElementById("franchiseLookupResult");
 const money = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
 
 function escapeHtml(value) {
@@ -325,8 +328,83 @@ function updateEnforcerCommissionPreview() {
   preview.innerHTML = `<b>Estimated after payment: ${money.format(totalCommission)} total</b><span>${enforcers.filter((enforcer) => selectedIds.includes(enforcer.id)).map((enforcer) => `<i class="enforcer-commission-chip ${enforcerRankClass(enforcer.id)}"><b>${escapeHtml(enforcer.full_name)}</b><em>${money.format(shares.get(enforcer.id) || 0)}</em></i>`).join("")}</span>`;
 }
 
+function franchiseDetail(label, value) {
+  return `<span><small>${escapeHtml(label)}</small><b>${escapeHtml(value || "—")}</b></span>`;
+}
+
+function clearFranchiseLookup() {
+  franchiseLookupRequest += 1;
+  franchiseLookupResult.hidden = true;
+  franchiseLookupResult.className = "franchise-lookup-result";
+  franchiseLookupResult.innerHTML = "";
+}
+
+async function lookupFranchiseRecord() {
+  const franchiseNumber = form.elements.franchise_number.value.trim().toUpperCase();
+  if (!franchiseNumber) {
+    clearFranchiseLookup();
+    return;
+  }
+
+  const requestId = ++franchiseLookupRequest;
+  franchiseLookupResult.hidden = false;
+  franchiseLookupResult.className = "franchise-lookup-result lookup-loading";
+  franchiseLookupResult.innerHTML = '<i class="ri-loader-4-line" aria-hidden="true"></i> Checking franchise records…';
+
+  const { data, error } = await supabase
+    .from("franchises")
+    .select("franchise_number,operator_name,address,contact_number,status,driver_name,driver_contact_number,motorcycle_brand,motorcycle_year_model,plate_number,engine_number,chassis_number")
+    .eq("franchise_number", franchiseNumber)
+    .eq("is_archived", false)
+    .limit(1)
+    .maybeSingle();
+
+  if (requestId !== franchiseLookupRequest) return;
+  if (error) {
+    franchiseLookupResult.className = "franchise-lookup-result lookup-error";
+    franchiseLookupResult.textContent = `Could not check the franchise record: ${error.message}`;
+    return;
+  }
+  if (!data) {
+    franchiseLookupResult.className = "franchise-lookup-result lookup-empty";
+    franchiseLookupResult.innerHTML = '<i class="ri-information-line" aria-hidden="true"></i> No matching franchise record was found. Check the number or enter the details manually.';
+    return;
+  }
+
+  form.elements.franchise_number.value = data.franchise_number || franchiseNumber;
+  form.elements.subject_name.value = data.operator_name || form.elements.subject_name.value;
+  form.elements.subject_type.value = "operator";
+  form.elements.classification.value = "with_franchise";
+  const motorcycle = [data.motorcycle_brand, data.motorcycle_year_model].filter(Boolean).join(" · ");
+  franchiseLookupResult.className = "franchise-lookup-result lookup-found";
+  franchiseLookupResult.innerHTML = `
+    <strong class="lookup-heading"><i class="ri-checkbox-circle-line" aria-hidden="true"></i> Franchise record found — operator details filled automatically</strong>
+    ${franchiseDetail("Operator", data.operator_name)}
+    ${franchiseDetail("Status", data.status)}
+    ${franchiseDetail("Contact", data.contact_number)}
+    ${franchiseDetail("Address", data.address)}
+    ${franchiseDetail("Registered driver", data.driver_name)}
+    ${franchiseDetail("Driver contact", data.driver_contact_number)}
+    ${franchiseDetail("Motorcycle", motorcycle)}
+    ${franchiseDetail("Plate number", data.plate_number)}
+    ${franchiseDetail("Engine number", data.engine_number)}
+    ${franchiseDetail("Chassis number", data.chassis_number)}
+  `;
+}
+
+function scheduleFranchiseLookup() {
+  window.clearTimeout(franchiseLookupTimer);
+  const franchiseNumber = form.elements.franchise_number.value.trim();
+  if (!franchiseNumber) {
+    clearFranchiseLookup();
+    return;
+  }
+  franchiseLookupTimer = window.setTimeout(() => { void lookupFranchiseRecord(); }, 450);
+}
+
 function setFormMode(mode, row = null) {
   form.reset();
+  clearFranchiseLookup();
   editingViolationId = mode === "edit" ? row.id : null;
   document.getElementById("violationFormTitle").textContent = mode === "edit" ? "Edit Violation" : "Record Violation";
   document.getElementById("saveViolationBtn").textContent = mode === "edit" ? "Save Changes" : "Save Selected Violations";
@@ -363,6 +441,7 @@ function setFormMode(mode, row = null) {
 
 function closeViolationForm() {
   form.reset();
+  clearFranchiseLookup();
   editingViolationId = null;
   formPanel.hidden = true;
   document.getElementById("addViolationBtn").setAttribute("aria-expanded", "false");
@@ -473,6 +552,11 @@ function bindEvents() {
     document.getElementById("violationChecklist").addEventListener("change", applyCatalogSelection);
     document.getElementById("violationEnforcers").addEventListener("change", updateEnforcerCommissionPreview);
     form.elements.discounted.addEventListener("input", updateEnforcerCommissionPreview);
+    form.elements.franchise_number.addEventListener("input", scheduleFranchiseLookup);
+    form.elements.franchise_number.addEventListener("blur", () => {
+      window.clearTimeout(franchiseLookupTimer);
+      void lookupFranchiseRecord();
+    });
   }
   document.getElementById("searchInput").addEventListener("input", render);
   document.getElementById("statusFilter").addEventListener("change", render);

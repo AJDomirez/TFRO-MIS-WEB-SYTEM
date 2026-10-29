@@ -918,6 +918,11 @@ body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
     --tfro-sidebar-expanded:240px;
   }
 
+  /* The Enforcer's longer ticketing label needs a wider revealed sidebar. */
+  body.operator-sidebar.enforcer-sidebar{
+    --tfro-sidebar-expanded:290px;
+  }
+
   body.admin-sidebar .sidebar,
   body.operator-sidebar .sidebar{
     width:var(--tfro-sidebar-collapsed) !important;
@@ -989,6 +994,10 @@ body.admin-sidebar .toolbar > .add-btn { flex: 1 1 100%; margin-left: 0; }
     max-width:170px;
     opacity:1;
     pointer-events:auto;
+  }
+  body.operator-sidebar.enforcer-sidebar .sidebar:hover .menu a > span,
+  body.operator-sidebar.enforcer-sidebar .sidebar:focus-within .menu a > span{
+    max-width:220px;
   }
 
   body.admin-sidebar .menu li a,

@@ -254,9 +254,8 @@ function renderTable() {
 
   table.innerHTML = pageRows.length ? pageRows.map((row) => {
     const status = displayStatus(row.status);
-    const special = isSpecialFranchise(row);
     return `<tr>
-      <td class="franchise-number">${escapeHtml(conciseFranchiseNumber(row.franchise_number))}${special ? '<span class="special-franchise-badge">Special</span>' : ""}</td>
+      <td class="franchise-number">${escapeHtml(conciseFranchiseNumber(row.franchise_number))}</td>
       <td>${escapeHtml(row.operator_name) || "—"}</td>
       <td>${escapeHtml(row.address) || "—"}</td>
       <td>${escapeHtml(formatDate(row.previous_mtop_expiration))}</td>
@@ -1050,15 +1049,19 @@ closeModal("editModal");
 
 /* ---------- Delete modal ---------- */
 function openDeleteModal(row) {
+  if (currentRole !== "admin") {
+    alert("Only a Head Administrator can delete a franchise record.");
+    return;
+  }
   deleteTargetId = row.id;
   const msg = el("deleteMessage");
-  if (msg) msg.textContent = `Remove franchise ${row.franchise_number} from active records? Its transaction history will be retained.`;
+  if (msg) msg.textContent = `Warning: permanently delete franchise ${row.franchise_number} for ${row.operator_name || "this operator"}? This cannot be undone. Linked transaction records may also be deleted or unlinked.`;
   openModal("deleteModal");
 }
 
 async function confirmDelete() {
   if (currentRole !== "admin") {
-    alert("Only a Head Administrator can remove a franchise record.");
+    alert("Only a Head Administrator can delete a franchise record.");
     closeModal("deleteModal");
     return;
   }
@@ -1067,40 +1070,40 @@ async function confirmDelete() {
   const confirmButton = el("confirmDeleteBtn");
   if (confirmButton) {
     confirmButton.disabled = true;
-    confirmButton.textContent = "Removing...";
+    confirmButton.textContent = "Deleting...";
   }
 
   try {
     const { data, error } = await supabase
       .from("franchises")
-      .update({ is_archived: true })
+      .delete()
       .eq("id", deleteTargetId)
       .select("id")
       .maybeSingle();
     if (error) {
       throw error;
     }
-    if (!data) throw new Error("The record was not updated. Check your administrator permissions.");
+    if (!data) throw new Error("The record was not deleted. Check your Head Administrator permissions.");
 
     deleteTargetId = null;
     closeModal("deleteModal");
     await loadFranchises();
-    showToast("Franchise removed from active records.");
+    showToast("Franchise permanently deleted.");
     await logAudit({
-      action: "Archived Franchise",
-      actionType: "update",
+      action: "Deleted Franchise",
+      actionType: "delete",
       record: target ? target.franchise_number : null,
       description: target
-        ? `Archived franchise record ${target.franchise_number} for ${target.operator_name}.`
-        : "Archived a franchise record.",
+        ? `Permanently deleted franchise record ${target.franchise_number} for ${target.operator_name}.`
+        : "Permanently deleted a franchise record.",
     });
   } catch (error) {
-    console.error("Could not archive franchise:", error);
-    alert(`Could not remove franchise: ${error.message}`);
+    console.error("Could not delete franchise:", error);
+    alert(`Could not delete franchise: ${error.message}`);
   } finally {
     if (confirmButton) {
       confirmButton.disabled = false;
-      confirmButton.textContent = "Remove";
+      confirmButton.textContent = "Delete Permanently";
     }
   }
 }

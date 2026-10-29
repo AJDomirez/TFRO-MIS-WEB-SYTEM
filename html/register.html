@@ -110,7 +110,7 @@
         </div>
 
         <p class="account-note register-full" data-operator-field>
-          <strong>Operator reminder:</strong> Enter your complete legal name in the correct First, Middle, and Last Name boxes. It must contain the same name shown in your TFRO franchise record. You do not need to copy the database's “LAST, FIRST MIDDLE” order.
+          <strong>Operator reminder:</strong> Your franchise number is the only TFRO record ID used to qualify your operator account. Enter the exact number shown on your franchise record. Your name is still required for your account profile, but it does not need to match the record's name format.
         </p>
 
         <div class="input-group">
@@ -141,7 +141,8 @@
 
         <div class="input-group register-full" data-operator-field>
           <label>Operator Franchise Number</label>
-          <input type="text" id="franchiseNumber" placeholder="FR-2026-0001" autocomplete="off" required />
+          <input type="text" id="franchiseNumber" placeholder="FR-2026-0001" autocomplete="off" inputmode="text" maxlength="12" pattern="FR-[0-9]{4}-[0-9]{3,4}" required />
+          <small class="field-help">Use the exact current ID, such as FR-2026-0001 (or a 3-digit special number). Its year is updated when TFRO approves a renewal.</small>
         </div>
 
         <div class="input-group register-full" data-enforcer-field hidden>

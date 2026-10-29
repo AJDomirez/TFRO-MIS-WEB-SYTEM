@@ -18,6 +18,21 @@ const escapeHtml = (value) => { const element = document.createElement("div"); e
 function showMessage(text, type = "") { message.textContent = text; message.className = `form-message ${type}`; }
 function showStaffMessage(text, type = "") { staffMessage.textContent = text; staffMessage.className = `form-message ${type}`; }
 
+function setPasswordVisibility(button, visible) {
+  const input = document.getElementById(button.dataset.passwordTarget);
+  if (!input) return;
+  const accountType = input.id === "staffPassword" ? "Staff" : "Administrator";
+  input.type = visible ? "text" : "password";
+  button.setAttribute("aria-pressed", String(visible));
+  button.setAttribute("aria-label", `${visible ? "Hide" : "Show"} ${accountType} password`);
+  button.querySelector("i").className = visible ? "ri-eye-off-line" : "ri-eye-line";
+  button.querySelector("span").textContent = visible ? "Hide" : "Show";
+}
+
+document.querySelectorAll(".password-visibility-toggle").forEach((button) => {
+  button.addEventListener("click", () => setPasswordVisibility(button, button.getAttribute("aria-pressed") !== "true"));
+});
+
 function readableError(value, fallback) {
   if (typeof value === "string" && value.trim() && value.trim() !== "{}") return value.trim();
   if (value && typeof value === "object") {
@@ -105,6 +120,7 @@ form.addEventListener("submit", async (event) => {
       contact_number: document.getElementById("contactNumber").value.trim(),
     });
     form.reset();
+    setPasswordVisibility(document.querySelector('[data-password-target="password"]'), false);
     showMessage(`Account created. Username: ${result.username}. Give the password to the user securely; it cannot be displayed later.`, "success");
   } catch (error) {
     showMessage(error.message, "error");
@@ -130,6 +146,7 @@ staffForm.addEventListener("submit", async (event) => {
       contact_number: document.getElementById("staffContactNumber").value.trim(),
     });
     staffForm.reset();
+    setPasswordVisibility(document.querySelector('[data-password-target="staffPassword"]'), false);
     showStaffMessage(`TFRO Staff account created. Username: ${result.username}.`, "success");
   } catch (error) {
     showStaffMessage(error.message, "error");

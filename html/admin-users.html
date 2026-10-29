@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin Users | TFRO MIS</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
-  <link rel="stylesheet" href="../css/admin-users.css?v=20261016-1">
+  <link rel="stylesheet" href="../css/admin-users.css?v=20261029-2">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20261016-5">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
 </head>
@@ -26,7 +26,7 @@
         <form id="createAdminForm" novalidate>
           <label>Full name<input id="fullName" name="full_name" maxlength="120" required autocomplete="name"></label>
           <label>Username<input id="username" name="username" maxlength="32" pattern="[a-z][a-z0-9_.-]{2,31}" required autocomplete="username" placeholder="e.g. admin.juan"></label>
-          <label>Password <span class="field-requirement">12+ characters with uppercase, lowercase, number, and symbol</span><input id="password" name="password" type="password" minlength="12" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{12,}" title="Use at least 12 characters including an uppercase letter, lowercase letter, number, and symbol." required autocomplete="new-password"></label>
+          <label>Password <span class="field-requirement">12+ characters with uppercase, lowercase, number, and symbol</span><span class="password-input-wrap"><input id="password" name="password" type="password" minlength="12" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{12,}" title="Use at least 12 characters including an uppercase letter, lowercase letter, number, and symbol." required autocomplete="new-password"><button class="password-visibility-toggle" type="button" data-password-target="password" aria-label="Show Administrator password" aria-pressed="false"><i class="ri-eye-line" aria-hidden="true"></i><span>Show</span></button></span></label>
           <label>Contact number <span class="optional">(optional)</span><input id="contactNumber" name="contact_number" maxlength="40" autocomplete="tel"></label>
           <button class="primary-button" id="createAdminButton" type="submit"><i class="ri-user-add-line"></i> Create restricted Administrator</button>
         </form>
@@ -39,7 +39,7 @@
         <form id="createStaffForm" novalidate>
           <label>Full name<input id="staffFullName" maxlength="120" required autocomplete="name"></label>
           <label>Username<input id="staffUsername" maxlength="32" pattern="[a-z][a-z0-9_.-]{2,31}" required autocomplete="username" placeholder="e.g. staff.juan"></label>
-          <label>Password <span class="field-requirement">12+ characters with uppercase, lowercase, number, and symbol</span><input id="staffPassword" type="password" minlength="12" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{12,}" required autocomplete="new-password"></label>
+          <label>Password <span class="field-requirement">12+ characters with uppercase, lowercase, number, and symbol</span><span class="password-input-wrap"><input id="staffPassword" type="password" minlength="12" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{12,}" required autocomplete="new-password"><button class="password-visibility-toggle" type="button" data-password-target="staffPassword" aria-label="Show Staff password" aria-pressed="false"><i class="ri-eye-line" aria-hidden="true"></i><span>Show</span></button></span></label>
           <label>Contact number <span class="optional">(optional)</span><input id="staffContactNumber" maxlength="40" autocomplete="tel"></label>
           <button class="primary-button" id="createStaffButton" type="submit"><i class="ri-user-add-line"></i> Create TFRO Staff</button>
         </form>
@@ -63,6 +63,6 @@
     </section>
   </div>
   <script type="module" src="../js/sidebar-user.js?v=20261016-4"></script>
-  <script type="module" src="../js/admin-users.js?v=20261004-2"></script>
+  <script type="module" src="../js/admin-users.js?v=20261029-2"></script>
 </body>
 </html>

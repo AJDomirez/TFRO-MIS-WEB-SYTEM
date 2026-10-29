@@ -220,6 +220,15 @@ select{
 #violationForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
 #violationForm label{display:flex;flex-direction:column;gap:6px;color:#475569;font-size:13px;font-weight:bold;}
 #violationForm input,#violationForm select{padding:10px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;}
+.franchise-lookup-result{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:13px 15px;border:1px solid #bfdbfe;border-left:4px solid #145187;border-radius:9px;background:#f0f7ff;color:#334155;font-size:12px;}
+.franchise-lookup-result[hidden]{display:none;}
+.franchise-lookup-result.lookup-loading,.franchise-lookup-result.lookup-empty,.franchise-lookup-result.lookup-error{display:block;}
+.franchise-lookup-result.lookup-empty{border-color:#fde68a;border-left-color:#d59b00;background:#fffbeb;color:#785c00;}
+.franchise-lookup-result.lookup-error{border-color:#fecaca;border-left-color:#dc2626;background:#fef2f2;color:#991b1b;}
+.franchise-lookup-result .lookup-heading{grid-column:1/-1;display:flex;align-items:center;gap:7px;color:#0d4778;font-size:13px;}
+.franchise-lookup-result span{min-width:0;overflow-wrap:anywhere;}
+.franchise-lookup-result small{display:block;margin-bottom:3px;color:#64748b;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;}
+.franchise-lookup-result b{color:#0f172a;}
 
 .staff-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0;}
 .staff-summary article{display:flex;align-items:center;gap:13px;background:#fff;border:1px solid #d1d5db;border-top:3px solid #f4c430;border-radius:12px;padding:17px;box-shadow:0 5px 18px rgba(13,71,120,.06);}
@@ -229,7 +238,8 @@ select{
 .staff-summary span{font-size:12px;color:#64748b;}
 
 @media (max-width:900px){.staff-summary{grid-template-columns:repeat(2,minmax(0,1fr));}}
-@media (max-width:520px){.staff-summary{grid-template-columns:1fr}.staff-summary article{padding:14px}}
+@media (max-width:900px){.franchise-lookup-result{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media (max-width:520px){.staff-summary{grid-template-columns:1fr}.staff-summary article{padding:14px}.franchise-lookup-result{grid-template-columns:1fr;}}
 .violation-form-actions{grid-column:1/-1;display:flex;gap:10px;}
 .violation-form-actions button[type="button"]{padding:10px 16px;border:1px solid #cbd5e1;border-radius:8px;background:white;cursor:pointer;}
 

@@ -10,6 +10,7 @@ let catalog = [];
 let cameraStream = null;
 let capturedTicketPhoto = null;
 let capturedPreviewUrl = "";
+let ticketHistoryChannel = null;
 const enforcerAudit = (entry) => logAudit({ ...entry, description: `TFRO Enforcer ${enforcer?.enforcer_id || "account"}: ${entry.description || entry.action}.` });
 
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;" }[character]));
@@ -214,9 +215,23 @@ async function openPhoto(path) {
 
 async function loadTickets() {
   const body = document.getElementById("ticketHistory");
-  const { data, error } = await supabase.from("violations").select("id,occurred_at,ticket_number,subject_name,violation_type,penalty,status,ticket_photo_path").eq("recorded_by", currentUser.id).order("created_at", { ascending: false });
-  if (error) { body.innerHTML = `<tr><td colspan="7">${escapeHtml(error.message)}</td></tr>`; return; }
-  body.innerHTML = data?.length ? data.map((row) => `<tr><td>${new Date(row.occurred_at).toLocaleDateString("en-PH")}</td><td>${escapeHtml(row.ticket_number)}</td><td>${escapeHtml(row.subject_name)}</td><td>${escapeHtml(row.violation_type)}</td><td>${money.format(row.penalty)}</td><td><span class="status-pill">${escapeHtml(row.status)}</span></td><td>${row.ticket_photo_path ? `<button class="photo-link" data-photo="${escapeHtml(row.ticket_photo_path)}"><i class="ri-image-line"></i> View</button>` : "—"}</td></tr>`).join("") : '<tr><td colspan="7">No submitted tickets yet.</td></tr>';
+  const summary = document.getElementById("ticketHistorySummary");
+  const refreshButton = document.getElementById("refreshTicketHistory");
+  refreshButton.disabled = true;
+  refreshButton.querySelector("i").classList.add("ri-spin");
+  const { data, error } = await supabase.from("violations").select("id,created_at,occurred_at,ticket_number,subject_name,violation_type,penalty,status,ticket_photo_path").eq("recorded_by", currentUser.id).order("created_at", { ascending: false });
+  refreshButton.disabled = false;
+  refreshButton.querySelector("i").classList.remove("ri-spin");
+  if (error) {
+    summary.textContent = "Your ticket history could not be loaded.";
+    body.innerHTML = `<tr><td colspan="7">${escapeHtml(error.message)}</td></tr>`;
+    return;
+  }
+  const tickets = data || [];
+  const pending = tickets.filter((row) => row.status === "pending").length;
+  summary.textContent = `${tickets.length} ticket${tickets.length === 1 ? "" : "s"} submitted · ${pending} awaiting TFRO action`;
+  const statusLabel = (value) => ({ pending: "Awaiting TFRO review", paid: "Paid / processed", dismissed: "Dismissed by TFRO" }[value] || String(value || "Pending").replace(/_/g, " "));
+  body.innerHTML = tickets.length ? tickets.map((row) => `<tr><td>${new Date(row.created_at).toLocaleString("en-PH")}</td><td>${escapeHtml(row.ticket_number)}</td><td>${escapeHtml(row.subject_name)}</td><td>${escapeHtml(row.violation_type)}</td><td>${money.format(row.penalty)}</td><td><span class="status-pill status-${escapeHtml(row.status)}">${escapeHtml(statusLabel(row.status))}</span></td><td>${row.ticket_photo_path ? `<button class="photo-link" data-photo="${escapeHtml(row.ticket_photo_path)}"><i class="ri-image-line"></i> View</button>` : "—"}</td></tr>`).join("") : '<tr><td colspan="7">No submitted tickets yet.</td></tr>';
 }
 
 async function initialize() {
@@ -239,8 +254,12 @@ async function initialize() {
     cameraMessage("Camera turned off. You can allow it again or upload a picture.");
   });
   document.getElementById("ticketPhotoFile").addEventListener("change", handleFilePhoto);
+  document.getElementById("refreshTicketHistory").addEventListener("click", loadTickets);
   document.getElementById("ticketHistory").addEventListener("click", (event) => { const button = event.target.closest("[data-photo]"); if (button) void openPhoto(button.dataset.photo); });
-  window.addEventListener("pagehide", stopCamera);
+  ticketHistoryChannel = supabase.channel(`enforcer-ticket-history-${currentUser.id}`)
+    .on("postgres_changes", { event: "*", schema: "public", table: "violations", filter: `recorded_by=eq.${currentUser.id}` }, () => void loadTickets())
+    .subscribe();
+  window.addEventListener("pagehide", () => { stopCamera(); if (ticketHistoryChannel) void supabase.removeChannel(ticketHistoryChannel); });
   document.addEventListener("visibilitychange", () => { if (document.hidden) stopCamera(); });
 }
 

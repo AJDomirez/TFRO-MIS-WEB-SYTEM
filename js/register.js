@@ -28,7 +28,12 @@ const consentModal = document.getElementById("consentModal");
 const acceptConsentButton = document.getElementById("acceptConsent");
 const TERMS_VERSION = "TFRO-TERMS-2026-09-08";
 const PRIVACY_VERSION = "TFRO-PRIVACY-2026-09-08";
+const FRANCHISE_NUMBER_PATTERN = /^FR-\d{4}-\d{3,4}$/;
 let registrationEnabled = true;
+
+franchiseNumberInput.addEventListener("input", () => {
+  franchiseNumberInput.value = franchiseNumberInput.value.toUpperCase().replace(/\s+/g, "");
+});
 
 function openConsentModal() {
   consentModal.hidden = false;
@@ -75,7 +80,9 @@ function updateRoleFields() {
   operatorFields.forEach((field) => { field.hidden = isEnforcer; });
   enforcerFields.forEach((field) => { field.hidden = !isEnforcer; });
   franchiseNumberInput.required = !isEnforcer;
+  franchiseNumberInput.disabled = isEnforcer;
   enforcerIdInput.required = isEnforcer;
+  enforcerIdInput.disabled = !isEnforcer;
 }
 
 roleInputs.forEach((input) => input.addEventListener("change", updateRoleFields));
@@ -255,6 +262,12 @@ registerForm.addEventListener("submit", async (event) => {
       || (role === "operator" && (!address || !franchiseNumber))
       || (role === "traffic_enforcer" && !enforcerId)) {
     showRegisterWarning("Please fill in all the required fields.");
+    return;
+  }
+
+  if (role === "operator" && !FRANCHISE_NUMBER_PATTERN.test(franchiseNumber)) {
+    showRegisterWarning("Enter the current franchise ID in FR-YYYY-NNNN format, for example FR-2026-0001. Three-digit special franchise numbers are also accepted.");
+    franchiseNumberInput.focus();
     return;
   }
 

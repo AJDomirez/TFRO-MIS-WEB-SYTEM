@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#0f2d6b">
   <link rel="apple-touch-icon" href="../assets/icons/tfro-app-192.png">
 
-<link rel="stylesheet" href="../css/violation.css?v=20261011-2">
+<link rel="stylesheet" href="../css/violation.css?v=20261028-3">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20261024-3">
 
   <!-- Remix Icons -->
@@ -194,7 +194,8 @@
         </fieldset>
         <label>Classification<select name="classification"><option value="with_franchise">With Franchise</option><option value="colorum">Colorum</option><option value="temporary">Temporary</option></select></label>
         <label>Discounted Amount (PHP)<input name="discounted" type="number" min="0" step="0.01" value="0" required></label>
-        <label>Franchise number<input name="franchise_number" placeholder="Required when applicable"></label>
+        <label>Franchise number<input name="franchise_number" placeholder="Enter a franchise number to find its record" autocomplete="off"></label>
+        <div class="franchise-lookup-result" id="franchiseLookupResult" role="status" aria-live="polite" hidden></div>
         <label>Ticket number<input name="ticket_number" required></label>
         <div class="enforcer-picker-field"><span class="enforcer-picker-title">Apprehending enforcer/s <small>Select every enforcer involved · Red #1, Blue #2, Green #3 by accumulated commission</small></span><div class="enforcer-checkbox-list" id="violationEnforcers" role="group" aria-label="Apprehending enforcers"><p>Loading active enforcers…</p></div><span class="enforcer-selection-help"><i class="ri-checkbox-multiple-line"></i> You can check multiple enforcers. No Ctrl or Command key is required.</span><span class="enforcer-commission-preview" id="enforcerCommissionPreview">Select enforcers to preview their 20% commission share.</span></div>
         <label>Penalty (PHP)<input name="penalty" type="number" min="0" step="0.01" required readonly></label>
@@ -263,7 +264,7 @@
   </div>
 </div>
 
-<script type="module" src="../js/violation.js?v=20261017-1"></script>
+<script type="module" src="../js/violation.js?v=20261028-2"></script>
 <script type="module" src="../js/sidebar-user.js?v=20261016-4"></script>
 <script type="module" src="../js/admin-pwa.js?v=20261024-2"></script>
 </body>
