@@ -12,6 +12,18 @@ if (togglePassword && passwordInput) {
   });
 }
 
+document.querySelectorAll(".recovery-password-toggle").forEach((button) => {
+  button.addEventListener("click", () => {
+    const input = document.getElementById(button.dataset.target);
+    if (!input) return;
+    const willShow = input.type === "password";
+    input.type = willShow ? "text" : "password";
+    button.setAttribute("aria-pressed", String(willShow));
+    button.setAttribute("aria-label", `${willShow ? "Hide" : "Show"} ${input.id === "recoveryPasswordConfirm" ? "confirmed" : "new"} password`);
+    button.querySelector("i").className = willShow ? "ri-eye-off-line" : "ri-eye-line";
+  });
+});
+
 const loginForm = document.getElementById("loginForm");
 const submitButton = loginForm.querySelector('button[type="submit"]');
 const loginMessage = document.getElementById("loginMessage");

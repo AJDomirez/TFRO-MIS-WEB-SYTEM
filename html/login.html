@@ -130,11 +130,21 @@
           </div>
           <div class="input-group">
             <label for="recoveryPassword">New Password</label>
-            <input type="password" id="recoveryPassword" minlength="8" autocomplete="new-password" placeholder="Create a strong password" required />
+            <div class="password-box">
+              <input type="password" id="recoveryPassword" minlength="8" autocomplete="new-password" placeholder="Create a strong password" required />
+              <button type="button" class="recovery-password-toggle" data-target="recoveryPassword" aria-label="Show new password" aria-pressed="false">
+                <i class="ri-eye-line" aria-hidden="true"></i>
+              </button>
+            </div>
           </div>
           <div class="input-group">
             <label for="recoveryPasswordConfirm">Confirm New Password</label>
-            <input type="password" id="recoveryPasswordConfirm" minlength="8" autocomplete="new-password" placeholder="Repeat your new password" required />
+            <div class="password-box">
+              <input type="password" id="recoveryPasswordConfirm" minlength="8" autocomplete="new-password" placeholder="Repeat your new password" required />
+              <button type="button" class="recovery-password-toggle" data-target="recoveryPasswordConfirm" aria-label="Show confirmed password" aria-pressed="false">
+                <i class="ri-eye-line" aria-hidden="true"></i>
+              </button>
+            </div>
           </div>
           <small class="recovery-password-help">Use at least 8 characters with uppercase, lowercase, number, and symbol.</small>
           <button type="submit" class="login-btn" id="verifyRecoveryCodeBtn">
@@ -162,7 +172,7 @@
   </div>
 </div>
 
-<script type="module" src="../js/login.js?v=20261016-1"></script>
+<script type="module" src="../js/login.js?v=20261029-1"></script>
 <script src="../js/trike-drive.js?v=20260908-191500"></script>
 </body>
 </html>
