@@ -17,8 +17,7 @@ function render() {
 async function loadOperators() {
   const [operatorResult, driverResult] = await Promise.all([
     supabase.from("operators")
-      .select("id,user_id,full_name,email,address,contact_number,franchise_number,status,verified,created_at,profile:profiles!operators_user_id_fkey!inner(role)")
-      .eq("profile.role", "operator")
+      .select("id,user_id,full_name,email,address,contact_number,franchise_number,status,verified,created_at")
       .order("full_name"),
     supabase.from("drivers").select("id,full_name,license_number,operator_name,contact_number,violation_count,compliance,created_at,franchise_id,operator_id,address,license_type,license_expiration,license_status,license_verified_at,picture_storage_path").order("full_name"),
   ]);
