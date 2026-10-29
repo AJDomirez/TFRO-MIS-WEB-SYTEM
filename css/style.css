@@ -519,6 +519,7 @@ body.signup-page{
 .register-box .account-note{margin:-2px 0 20px;padding:11px 13px;border-left:3px solid #f4c430;background:#fffbeb;border-radius:0 8px 8px 0;color:#596d64;}
 .register-box .switch-link{margin-top:16px;}
 .field-help{color:#64748b;font-size:12px;line-height:1.45;}
+.email-account-reminder{display:block;margin-top:7px;padding-left:2px;color:#536b61;}
 .registration-consent{margin:4px 0 18px;padding:14px 16px;border:1px solid #b8c5d3;border-left:4px solid #f4c430;border-radius:10px;background:#fff;color:#17324d;}
 .consent-checkbox{display:flex;align-items:flex-start;gap:10px;font-size:14px;font-weight:650;line-height:1.55;cursor:pointer;}
 .consent-checkbox input{flex:0 0 auto;width:19px!important;height:19px;min-height:0!important;margin-top:2px;accent-color:#123f73;}

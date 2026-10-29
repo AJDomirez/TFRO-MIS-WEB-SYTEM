@@ -386,8 +386,8 @@ registerForm.addEventListener("submit", async (event) => {
     && data.user.identities.length === 0;
   if (isRepeatedSignup) {
     showRegistrationSuccess({
-      title: "Check your existing account",
-      message: "If this email is already registered, no new confirmation email is sent. Sign in with your existing password, or use Forgot Password on the sign-in page.",
+      title: "Email may already be registered",
+      message: "This email may already be connected to a TFRO account. No new confirmation email is sent for a repeated registration. Sign in with your existing password, or use Forgot Password on the sign-in page.",
       destination: "login.html",
       actionLabel: "Continue to Sign In",
     });

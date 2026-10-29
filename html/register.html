@@ -119,8 +119,12 @@
             type="email"
             id="email"
             placeholder="you@email.com"
+            autocomplete="email"
             required
           />
+          <small class="field-help email-account-reminder">
+            Use an email that is not already connected to a TFRO account. If you already registered, sign in or use Forgot Password instead.
+          </small>
         </div>
 
         <div class="input-group">
@@ -331,7 +335,7 @@ Already have an account?
 </div>
 
 <!-- Version query ensures browsers fetch the current registration error handling. -->
-<script type="module" src="../js/register.js?v=20261029-2"></script>
+<script type="module" src="../js/register.js?v=20261029-3"></script>
 <script src="../js/trike-drive.js?v=20260908-191500"></script>
 </body>
 </html>
