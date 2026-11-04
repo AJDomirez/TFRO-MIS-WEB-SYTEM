@@ -157,13 +157,15 @@ async function sendRecoveryCode() {
     if (error) throw error;
     recoveryRequestForm.hidden = true;
     recoveryVerifyForm.hidden = false;
-    showRecoveryMessage("If this email belongs to an Operator account, a six-digit recovery code has been sent. Check the inbox and spam folder.", "success");
+    showRecoveryMessage("If this email belongs to an Operator account, an eight-digit recovery code has been sent. Check the inbox and spam folder.", "success");
     document.getElementById("recoveryCode").focus();
   } catch (error) {
     const rateLimited = error?.status === 429 || String(error?.message || "").toLowerCase().includes("rate limit");
     showRecoveryMessage(rateLimited
       ? "Too many recovery requests. Please wait before requesting another code."
-      : "The recovery code could not be sent. Please try again.");
+      : error?.status >= 500
+        ? "The email service is unavailable. Please try again later or contact TFRO support."
+        : "The recovery code could not be sent. Please try again.");
   } finally {
     sendRecoveryCodeButton.disabled = false;
     sendRecoveryCodeButton.innerHTML = '<i class="ri-mail-send-line"></i> Send Verification Code';
@@ -193,8 +195,8 @@ recoveryVerifyForm.addEventListener("submit", async (event) => {
   const newPassword = document.getElementById("recoveryPassword").value;
   const confirmation = document.getElementById("recoveryPasswordConfirm").value;
 
-  if (!/^[0-9]{6}$/.test(token)) {
-    showRecoveryMessage("Enter the complete six-digit code from the recovery email.");
+  if (!/^[0-9]{8}$/.test(token)) {
+    showRecoveryMessage("Enter the complete eight-digit code from the recovery email.");
     return;
   }
   if (!passwordMeetsRequirements(newPassword)) {
@@ -315,19 +317,19 @@ function friendlyLoginError(error) {
   const message = (error && (error.message || error.error_description)) || "";
   const lower = String(message).toLowerCase();
 
-  // "Invalid login credentials" — provided by Supabase when the email is not
+  // "Invalid login credentials" â€” provided by Supabase when the email is not
   // registered OR the password is wrong. The message is intentionally generic
   // for security.
   if (lower.includes("invalid login credentials")) {
     return "Login failed: Incorrect email or password. Please try again.";
   }
 
-  // "Email not confirmed" — user registered but hasn't clicked the confirmation link.
+  // "Email not confirmed" â€” user registered but hasn't clicked the confirmation link.
   if (lower.includes("email not confirmed") || lower.includes("confirmation email")) {
     return "Login failed: Your email has not been confirmed yet. Please check your inbox for the confirmation link.";
   }
 
-  // "User already registered" — treated as login failure to avoid revealing
+  // "User already registered" â€” treated as login failure to avoid revealing
   // whether an email exists, but it usually means the user is trying to register.
   if (lower.includes("user already registered")) {
     return "Login failed: No account found with these details. Please double-check your email and password, or create a new account.";
@@ -436,3 +438,4 @@ loginForm.addEventListener("submit", async (event) => {
 })();
 
 void loadPasswordSecuritySettings();
+
