@@ -23,6 +23,8 @@ const operatorFields = [...document.querySelectorAll("[data-operator-field]")];
 const enforcerFields = [...document.querySelectorAll("[data-enforcer-field]")];
 const franchiseNumberInput = document.getElementById("franchiseNumber");
 const enforcerIdInput = document.getElementById("enforcerId");
+const emailInput = document.getElementById("email");
+const addressInput = document.getElementById("address");
 const termsConsent = document.getElementById("termsConsent");
 const consentModal = document.getElementById("consentModal");
 const acceptConsentButton = document.getElementById("acceptConsent");
@@ -115,6 +117,10 @@ function updateRoleFields() {
   franchiseNumberInput.disabled = isEnforcer;
   enforcerIdInput.required = isEnforcer;
   enforcerIdInput.disabled = !isEnforcer;
+  emailInput.required = !isEnforcer;
+  emailInput.disabled = isEnforcer;
+  addressInput.required = !isEnforcer;
+  addressInput.disabled = isEnforcer;
 }
 
 roleInputs.forEach((input) => input.addEventListener("change", updateRoleFields));
@@ -290,7 +296,7 @@ registerForm.addEventListener("submit", async (event) => {
   const confirmPassword = confirmPasswordInput.value;
 
   /* VALIDATION */
-  if (!firstName || !middleName || !lastName || !email || !contactNumber
+  if (!firstName || !middleName || !lastName || (role === "operator" && !email) || !contactNumber
       || (role === "operator" && (!address || !franchiseNumber))
       || (role === "traffic_enforcer" && !enforcerId)) {
     showRegisterWarning("Please fill in all the required fields.");
@@ -330,7 +336,26 @@ registerForm.addEventListener("submit", async (event) => {
   let data;
   let error;
   try {
-    ({ data, error } = await supabase.auth.signUp({
+    if (role === "traffic_enforcer") {
+      const result = await supabase.functions.invoke("enforcer-register", {
+        body: {
+          enforcer_id: enforcerId,
+          password,
+          full_name: fullName,
+          contact_number: contactNumber,
+          terms_accepted: true,
+          terms_version: TERMS_VERSION,
+          privacy_notice_version: PRIVACY_VERSION,
+        },
+      });
+      if (result.error) throw result.error;
+      const loginResult = await supabase.auth.signInWithPassword({
+        email: result.data.login_email,
+        password,
+      });
+      data = loginResult.data;
+      error = loginResult.error;
+    } else ({ data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -403,6 +428,14 @@ registerForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  if (role === "traffic_enforcer") {
+    showRegistrationSuccess({
+      message: "Your account was created and is waiting for Administrator approval.",
+      destination: "account-status.html",
+    });
+    return;
+  }
+
   const { data: profile, error: profileError } = await loadUserProfile(data.user.id);
   if (profileError || !profile) {
     await supabase.auth.signOut({ scope: "local" });
@@ -425,3 +458,4 @@ registerForm.addEventListener("submit", async (event) => {
 });
 
 void loadRegistrationSetting();
+
