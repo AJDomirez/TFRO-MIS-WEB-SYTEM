@@ -12,7 +12,7 @@ function showPending(profile) {
   icon.innerHTML = '<i class="ri-time-line"></i>';
   if (profile.account_status === "pending_approval" && profile.role === "traffic_enforcer") {
     title.textContent = "Waiting for administrator approval";
-    message.textContent = "Your email and Enforcer ID are linked. A TFRO administrator must approve this account before the Enforcer homepage opens.";
+    message.textContent = "Your Enforcer ID is linked. A TFRO administrator must approve this account before the Enforcer homepage opens.";
   } else if (profile.account_status === "pending_verification") {
     title.textContent = "Franchise record needs verification";
     message.textContent = "The full name and Franchise Number did not match one existing TFRO franchise record. Staff must verify or link the record before this account can be used.";
