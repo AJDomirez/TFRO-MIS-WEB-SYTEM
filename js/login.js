@@ -360,11 +360,13 @@ loginForm.addEventListener("submit", async (event) => {
   loginMessage.hidden = true;
 
   const accountInput = document.getElementById("email").value.trim();
-  // Administrator usernames map to an internal, auto-confirmed email identity.
-  // Regular users continue to sign in with their real email address.
+  // Enforcers sign in with their roster ID. Administrator usernames map to
+  // their internal identity; other users continue to use their email.
   const email = accountInput.includes("@")
     ? accountInput
-    : `${accountInput.toLowerCase()}@admin.tfro-mis.local`;
+    : accountInput.toUpperCase().startsWith("TE-")
+      ? `${accountInput.toLowerCase()}@enforcer.tfro-mis.local`
+      : `${accountInput.toLowerCase()}@admin.tfro-mis.local`;
   const password = document.getElementById("password").value;
   const franchiseNumber = document.getElementById("franchiseNumber").value;
 
