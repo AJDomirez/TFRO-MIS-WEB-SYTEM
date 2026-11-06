@@ -23,8 +23,8 @@ Deno.serve(async (request: Request) => {
     if (!/^TE-[A-Z0-9-]{2,37}$/.test(enforcerId) || !fullName || !contactNumber) {
       return json({ error: "Enter a valid Enforcer ID and complete your name and contact number." }, 400);
     }
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).{8,}/.test(password)) {
-      return json({ error: "Password must be at least 8 characters and include uppercase, lowercase, a number, and a symbol." }, 400);
+    if (password.length < 6) {
+      return json({ error: "Password must be at least 6 characters." }, 400);
     }
     if (body?.terms_accepted !== true || !body?.terms_version || !body?.privacy_notice_version) {
       return json({ error: "Accept the Terms of Use and Data Privacy Notice before creating an account." }, 400);
