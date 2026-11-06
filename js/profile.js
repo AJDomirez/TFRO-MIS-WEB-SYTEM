@@ -641,6 +641,7 @@ document.getElementById("passwordForm").addEventListener("submit", async (e) => 
   }
 
   const { error: updateError } = await supabase.auth.updateUser({
+    current_password: currentPassword,
     password: newPassword,
   });
 
