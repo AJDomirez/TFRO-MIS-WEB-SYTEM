@@ -79,7 +79,11 @@ async function loadProfile() {
     ? await supabase.from("operators").select("address, franchise_number").eq("user_id", user.id).order("id", { ascending: true }).limit(1).maybeSingle()
     : { data: null };
 
-  const fullName = profile?.full_name || user.user_metadata?.full_name || "";
+  // The sign-in account keeps the name entered at registration. The linked
+  // franchise record remains the source of the official Operator name.
+  const fullName = currentUserRole === "operator"
+    ? user.user_metadata?.full_name || profile?.full_name || ""
+    : profile?.full_name || user.user_metadata?.full_name || "";
   const contact = profile?.contact_number || user.user_metadata?.contact_number || "";
   const email = user.email || "";
 
@@ -144,7 +148,7 @@ if (profileForm) {
     const relatedTable = currentUserRole === "traffic_enforcer" ? "traffic_enforcers" : "operators";
     const relatedChanges = currentUserRole === "traffic_enforcer"
       ? { full_name: fullName, contact_number: contactNumber }
-      : { full_name: fullName, contact_number: contactNumber, address };
+      : { contact_number: contactNumber, address };
     const { error: operatorError } = await supabase.from(relatedTable).update(relatedChanges).eq("user_id", currentUserId);
 
     if (operatorError) {
