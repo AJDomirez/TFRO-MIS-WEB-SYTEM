@@ -23,6 +23,8 @@ const operatorFields = [...document.querySelectorAll("[data-operator-field]")];
 const enforcerFields = [...document.querySelectorAll("[data-enforcer-field]")];
 const franchiseNumberInput = document.getElementById("franchiseNumber");
 const enforcerIdInput = document.getElementById("enforcerId");
+const emailInput = document.getElementById("email");
+const addressInput = document.getElementById("address");
 const termsConsent = document.getElementById("termsConsent");
 const consentModal = document.getElementById("consentModal");
 const acceptConsentButton = document.getElementById("acceptConsent");
@@ -115,6 +117,10 @@ function updateRoleFields() {
   franchiseNumberInput.disabled = isEnforcer;
   enforcerIdInput.required = isEnforcer;
   enforcerIdInput.disabled = !isEnforcer;
+  emailInput.required = !isEnforcer;
+  emailInput.disabled = isEnforcer;
+  addressInput.required = !isEnforcer;
+  addressInput.disabled = isEnforcer;
 }
 
 roleInputs.forEach((input) => input.addEventListener("change", updateRoleFields));
@@ -226,11 +232,22 @@ function extractAuthErrorMessage(error) {
     401: "You are not authorized to perform this action.",
     422: "The email address is already registered or the password is too weak.",
     429: "Too many attempts. Please wait a few minutes and try again.",
-    500: "Supabase reached Gmail, but Gmail rejected the saved SMTP login (535). Open Supabase Authentication > Emails > SMTP Settings and replace the password with a 16-character Google App Password. A Supabase Pro plan is not required.",
+    500: "The registration service encountered a server error. Please try again, and contact a TFRO Administrator if it continues.",
   };
   if (known[status]) return known[status];
 
   return null;
+}
+
+async function extractFunctionErrorMessage(error) {
+  const response = error?.context;
+  if (!response || typeof response.clone !== "function") return null;
+  try {
+    const body = await response.clone().json();
+    return body?.error || body?.message || null;
+  } catch {
+    return null;
+  }
 }
 
 function showRegistrationError(error) {
@@ -290,7 +307,7 @@ registerForm.addEventListener("submit", async (event) => {
   const confirmPassword = confirmPasswordInput.value;
 
   /* VALIDATION */
-  if (!firstName || !middleName || !lastName || !email || !contactNumber
+  if (!firstName || !middleName || !lastName || (role === "operator" && !email) || !contactNumber
       || (role === "operator" && (!address || !franchiseNumber))
       || (role === "traffic_enforcer" && !enforcerId)) {
     showRegisterWarning("Please fill in all the required fields.");
@@ -330,7 +347,26 @@ registerForm.addEventListener("submit", async (event) => {
   let data;
   let error;
   try {
-    ({ data, error } = await supabase.auth.signUp({
+    if (role === "traffic_enforcer") {
+      const result = await supabase.functions.invoke("enforcer-register", {
+        body: {
+          enforcer_id: enforcerId,
+          password,
+          full_name: fullName,
+          contact_number: contactNumber,
+          terms_accepted: true,
+          terms_version: TERMS_VERSION,
+          privacy_notice_version: PRIVACY_VERSION,
+        },
+      });
+      if (result.error) throw result.error;
+      const loginResult = await supabase.auth.signInWithPassword({
+        email: result.data.login_email,
+        password,
+      });
+      data = loginResult.data;
+      error = loginResult.error;
+    } else ({ data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -354,6 +390,15 @@ registerForm.addEventListener("submit", async (event) => {
       },
     }));
   } catch (requestError) {
+    const functionMessage = role === "traffic_enforcer"
+      ? await extractFunctionErrorMessage(requestError)
+      : null;
+    if (functionMessage) {
+      showRegisterWarning(`Registration failed: ${functionMessage}`);
+      submitButton.disabled = false;
+      submitButton.innerHTML = defaultButtonHtml;
+      return;
+    }
     showRegistrationError(requestError);
     submitButton.disabled = false;
     submitButton.innerHTML = defaultButtonHtml;
@@ -369,6 +414,16 @@ registerForm.addEventListener("submit", async (event) => {
 
   if (!data?.user) {
     showRegisterWarning("Something went wrong. Please try again.");
+    submitButton.disabled = false;
+    submitButton.innerHTML = defaultButtonHtml;
+    return;
+  }
+
+  if (role === "traffic_enforcer" && !data.session) {
+    showRegisterWarning(
+      "Your Enforcer account was created, but automatic sign-in did not complete. " +
+      "Sign in with your TFRO Enforcer ID and password. Administrator approval is still required."
+    );
     submitButton.disabled = false;
     submitButton.innerHTML = defaultButtonHtml;
     return;
@@ -403,6 +458,14 @@ registerForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  if (role === "traffic_enforcer") {
+    showRegistrationSuccess({
+      message: "Your account was created and is waiting for Administrator approval.",
+      destination: "account-status.html",
+    });
+    return;
+  }
+
   const { data: profile, error: profileError } = await loadUserProfile(data.user.id);
   if (profileError || !profile) {
     await supabase.auth.signOut({ scope: "local" });
@@ -417,11 +480,12 @@ registerForm.addEventListener("submit", async (event) => {
       destination: "account-status.html",
     });
   } else {
-    showRegistrationSuccess({
-      message: "Your account was created successfully.",
-      destination: destinationForRole(profile.role),
-    });
+    // A session is present, so Supabase has already authenticated this new
+    // account. Take Operators directly to their portal after the database
+    // trigger has created and linked their profile/franchise records.
+    window.location.replace(destinationForRole(profile.role));
   }
 });
 
 void loadRegistrationSetting();
+
