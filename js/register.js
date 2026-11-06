@@ -232,11 +232,22 @@ function extractAuthErrorMessage(error) {
     401: "You are not authorized to perform this action.",
     422: "The email address is already registered or the password is too weak.",
     429: "Too many attempts. Please wait a few minutes and try again.",
-    500: "Supabase reached Gmail, but Gmail rejected the saved SMTP login (535). Open Supabase Authentication > Emails > SMTP Settings and replace the password with a 16-character Google App Password. A Supabase Pro plan is not required.",
+    500: "The registration service encountered a server error. Please try again, and contact a TFRO Administrator if it continues.",
   };
   if (known[status]) return known[status];
 
   return null;
+}
+
+async function extractFunctionErrorMessage(error) {
+  const response = error?.context;
+  if (!response || typeof response.clone !== "function") return null;
+  try {
+    const body = await response.clone().json();
+    return body?.error || body?.message || null;
+  } catch {
+    return null;
+  }
 }
 
 function showRegistrationError(error) {
@@ -379,6 +390,15 @@ registerForm.addEventListener("submit", async (event) => {
       },
     }));
   } catch (requestError) {
+    const functionMessage = role === "traffic_enforcer"
+      ? await extractFunctionErrorMessage(requestError)
+      : null;
+    if (functionMessage) {
+      showRegisterWarning(`Registration failed: ${functionMessage}`);
+      submitButton.disabled = false;
+      submitButton.innerHTML = defaultButtonHtml;
+      return;
+    }
     showRegistrationError(requestError);
     submitButton.disabled = false;
     submitButton.innerHTML = defaultButtonHtml;
@@ -394,6 +414,16 @@ registerForm.addEventListener("submit", async (event) => {
 
   if (!data?.user) {
     showRegisterWarning("Something went wrong. Please try again.");
+    submitButton.disabled = false;
+    submitButton.innerHTML = defaultButtonHtml;
+    return;
+  }
+
+  if (role === "traffic_enforcer" && !data.session) {
+    showRegisterWarning(
+      "Your Enforcer account was created, but automatic sign-in did not complete. " +
+      "Sign in with your TFRO Enforcer ID and password. Administrator approval is still required."
+    );
     submitButton.disabled = false;
     submitButton.innerHTML = defaultButtonHtml;
     return;
