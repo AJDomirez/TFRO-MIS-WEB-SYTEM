@@ -157,13 +157,15 @@ async function sendRecoveryCode() {
     if (error) throw error;
     recoveryRequestForm.hidden = true;
     recoveryVerifyForm.hidden = false;
-    showRecoveryMessage("If this email belongs to an Operator account, a six-digit recovery code has been sent. Check the inbox and spam folder.", "success");
+    showRecoveryMessage("If this email belongs to an Operator account, an eight-digit recovery code has been sent. Check the inbox and spam folder.", "success");
     document.getElementById("recoveryCode").focus();
   } catch (error) {
     const rateLimited = error?.status === 429 || String(error?.message || "").toLowerCase().includes("rate limit");
     showRecoveryMessage(rateLimited
       ? "Too many recovery requests. Please wait before requesting another code."
-      : "The recovery code could not be sent. Please try again.");
+      : error?.status >= 500
+        ? "The email service is unavailable. Please try again later or contact TFRO support."
+        : "The recovery code could not be sent. Please try again.");
   } finally {
     sendRecoveryCodeButton.disabled = false;
     sendRecoveryCodeButton.innerHTML = '<i class="ri-mail-send-line"></i> Send Verification Code';
@@ -193,8 +195,8 @@ recoveryVerifyForm.addEventListener("submit", async (event) => {
   const newPassword = document.getElementById("recoveryPassword").value;
   const confirmation = document.getElementById("recoveryPasswordConfirm").value;
 
-  if (!/^[0-9]{6}$/.test(token)) {
-    showRecoveryMessage("Enter the complete six-digit code from the recovery email.");
+  if (!/^[0-9]{8}$/.test(token)) {
+    showRecoveryMessage("Enter the complete eight-digit code from the recovery email.");
     return;
   }
   if (!passwordMeetsRequirements(newPassword)) {
@@ -358,11 +360,13 @@ loginForm.addEventListener("submit", async (event) => {
   loginMessage.hidden = true;
 
   const accountInput = document.getElementById("email").value.trim();
-  // Administrator usernames map to an internal, auto-confirmed email identity.
-  // Regular users continue to sign in with their real email address.
+  // Enforcers sign in with their roster ID. Administrator usernames map to
+  // their internal identity; other users continue to use their email.
   const email = accountInput.includes("@")
     ? accountInput
-    : `${accountInput.toLowerCase()}@admin.tfro-mis.local`;
+    : accountInput.toUpperCase().startsWith("TE-")
+      ? `${accountInput.toLowerCase()}@enforcer.tfro-mis.local`
+      : `${accountInput.toLowerCase()}@admin.tfro-mis.local`;
   const password = document.getElementById("password").value;
   const franchiseNumber = document.getElementById("franchiseNumber").value;
 
@@ -436,3 +440,4 @@ loginForm.addEventListener("submit", async (event) => {
 })();
 
 void loadPasswordSecuritySettings();
+
