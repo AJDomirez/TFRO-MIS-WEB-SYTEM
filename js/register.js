@@ -117,8 +117,8 @@ function updateRoleFields() {
   franchiseNumberInput.disabled = isEnforcer;
   enforcerIdInput.required = isEnforcer;
   enforcerIdInput.disabled = !isEnforcer;
-  emailInput.required = !isEnforcer;
-  emailInput.disabled = isEnforcer;
+  emailInput.required = true;
+  emailInput.disabled = false;
   addressInput.required = !isEnforcer;
   addressInput.disabled = isEnforcer;
 }
@@ -303,7 +303,7 @@ registerForm.addEventListener("submit", async (event) => {
   const confirmPassword = confirmPasswordInput.value;
 
   /* VALIDATION */
-  if (!firstName || !middleName || !lastName || (role === "operator" && !email) || !contactNumber
+  if (!firstName || !middleName || !lastName || !email || !contactNumber
       || (role === "operator" && (!address || !franchiseNumber))
       || (role === "traffic_enforcer" && !enforcerId)) {
     showRegisterWarning("Please fill in all the required fields.");
@@ -346,6 +346,7 @@ registerForm.addEventListener("submit", async (event) => {
       const result = await supabase.functions.invoke("enforcer-register", {
         body: {
           enforcer_id: enforcerId,
+          email,
           password,
           full_name: fullName,
           contact_number: contactNumber,
@@ -417,7 +418,7 @@ registerForm.addEventListener("submit", async (event) => {
   if (role === "traffic_enforcer" && !data.session) {
     showRegisterWarning(
       "Your Enforcer account was created, but automatic sign-in did not complete. " +
-      "Sign in with your TFRO Enforcer ID and password. Administrator approval is still required."
+      "Sign in with your email address and password. Administrator approval is still required."
     );
     submitButton.disabled = false;
     submitButton.innerHTML = defaultButtonHtml;
