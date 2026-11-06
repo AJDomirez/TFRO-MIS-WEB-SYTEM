@@ -588,6 +588,18 @@ document.getElementById("settingsForm").addEventListener("submit", async (event)
 });
 
 /* CHANGE PASSWORD */
+document.querySelectorAll(".profile-password-toggle").forEach((button) => {
+  button.addEventListener("click", () => {
+    const input = document.getElementById(button.dataset.passwordTarget);
+    if (!input) return;
+    const reveal = input.type === "password";
+    input.type = reveal ? "text" : "password";
+    button.setAttribute("aria-pressed", String(reveal));
+    button.setAttribute("aria-label", `${reveal ? "Hide" : "Show"} ${button.dataset.passwordTarget === "currentPassword" ? "current" : button.dataset.passwordTarget === "newPassword" ? "new" : "confirmed"} password`);
+    button.querySelector("i").className = reveal ? "ri-eye-off-line" : "ri-eye-line";
+  });
+});
+
 document.getElementById("passwordForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
