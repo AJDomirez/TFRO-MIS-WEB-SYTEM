@@ -470,8 +470,9 @@ async function init() {
   if (!auth.user) return;
   currentUser = auth.user;
   currentProfile = auth.profile;
-  byId("userName").textContent = currentProfile.full_name || "Operator";
-  byId("userAvatar").textContent = (currentProfile.full_name || "OP").split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+  const accountName = currentUser.user_metadata?.full_name || currentProfile.full_name || "Operator";
+  byId("userName").textContent = accountName;
+  byId("userAvatar").textContent = accountName.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
   try {
     await Promise.all([loadFranchise(), loadDrivers(), loadChangeMotorRequests()]);
     await loadHistory();
