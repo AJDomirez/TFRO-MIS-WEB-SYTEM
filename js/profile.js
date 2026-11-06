@@ -230,7 +230,7 @@ function renderManagedAccounts() {
       <td><span class="account-role ${escapeHtml(account.role)}">${escapeHtml(roleLabel(account.role))}</span></td>
       <td>${escapeHtml(account.contact_number || account.reference || "—")}</td>
       <td><span class="account-link-status"><i class="ri-checkbox-circle-fill"></i> Portal linked</span></td>
-      <td><button type="button" class="reset-password-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-username="${escapeHtml(account.username || "")}" data-name="${escapeHtml(account.full_name)}"><i class="ri-key-2-line"></i> Reset Password</button>${account.can_delete && ["admin_viewer", "staff", "operator", "traffic_enforcer"].includes(account.role) ? ` <button type="button" class="delete-account-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-name="${escapeHtml(account.full_name)}"><i class="ri-delete-bin-6-line"></i> Delete</button>` : ""}</td>
+      <td>${["operator", "traffic_enforcer"].includes(account.role) ? `<button type="button" class="change-email-btn" data-user-id="${escapeHtml(account.id)}" data-email="${escapeHtml(account.email || "")}" data-name="${escapeHtml(account.full_name || "")}"><i class="ri-mail-edit-line"></i> Change Email</button> ` : ""}<button type="button" class="reset-password-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-username="${escapeHtml(account.username || "")}" data-name="${escapeHtml(account.full_name)}"><i class="ri-key-2-line"></i> Reset Password</button>${account.can_delete && ["admin_viewer", "staff", "operator", "traffic_enforcer"].includes(account.role) ? ` <button type="button" class="delete-account-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-name="${escapeHtml(account.full_name)}"><i class="ri-delete-bin-6-line"></i> Delete</button>` : ""}</td>
     </tr>`).join("") : '<tr><td colspan="5" class="account-empty">No linked accounts match this filter.</td></tr>';
 }
 
@@ -317,6 +317,28 @@ async function resetManagedAccountPassword(button) {
   }
 }
 
+async function changeManagedAccountEmail(button) {
+  if (currentUserRole !== "admin" || button.disabled) return;
+  const name = button.dataset.name || "this account";
+  const email = window.prompt(`Enter the correct email for ${name}:`, button.dataset.email || "")?.trim().toLowerCase();
+  if (!email) return;
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    window.alert("Enter a valid email address.");
+    return;
+  }
+  button.disabled = true;
+  const status = document.getElementById("accountManagementStatus");
+  if (status) status.textContent = `Updating ${name}'s sign-in email…`;
+  try {
+    await manageAdministratorAccounts("update_email", { user_id: button.dataset.userId, email });
+    if (status) status.textContent = `${name}'s email was corrected. They can now sign in with ${email}; their password is unchanged.`;
+    await loadManagedAccounts();
+  } catch (error) {
+    if (status) status.textContent = `Could not update the email: ${error.message}`;
+    button.disabled = false;
+  }
+}
+
 function closeDeleteAccountModal() {
   if (document.getElementById("confirmDeleteAccount")?.disabled) return;
   document.getElementById("deleteAccountModal").hidden = true;
@@ -398,6 +420,11 @@ document.getElementById("accountSearch")?.addEventListener("input", renderManage
 document.getElementById("accountRoleFilter")?.addEventListener("change", renderManagedAccounts);
 document.getElementById("refreshAccountsBtn")?.addEventListener("click", loadManagedAccounts);
 document.getElementById("accountManagementRows")?.addEventListener("click", (event) => {
+  const emailButton = event.target.closest(".change-email-btn");
+  if (emailButton) {
+    void changeManagedAccountEmail(emailButton);
+    return;
+  }
   const historyButton = event.target.closest(".account-history-btn");
   if (historyButton) {
     void openAccountHistory(historyButton);
@@ -532,4 +559,5 @@ logoutBtn.addEventListener("click", async () => {
 });
 
 loadProfile();
+
 
