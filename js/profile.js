@@ -317,25 +317,83 @@ async function resetManagedAccountPassword(button) {
   }
 }
 
-async function changeManagedAccountEmail(button) {
+let pendingEmailChange = null;
+
+function openManagedAccountEmail(button) {
   if (currentUserRole !== "admin" || button.disabled) return;
-  const name = button.dataset.name || "this account";
-  const email = window.prompt(`Enter the correct email for ${name}:`, button.dataset.email || "")?.trim().toLowerCase();
-  if (!email) return;
+  const name = button.dataset.name || "Selected account";
+  pendingEmailChange = { button, userId: button.dataset.userId, name, email: (button.dataset.email || "").trim().toLowerCase() };
+  setText("editAccountEmailName", name);
+  setText("editAccountEmailRole", button.dataset.role ? roleLabel(button.dataset.role) : "Portal account");
+  setText("editAccountEmailInitials", initials(name));
+  const input = document.getElementById("editAccountEmail");
+  input.value = pendingEmailChange.email;
+  input.disabled = false;
+  document.getElementById("editAccountEmailError").hidden = true;
+  const save = document.getElementById("saveEditAccountEmail");
+  save.disabled = false;
+  save.innerHTML = '<i class="ri-check-line"></i> Save Email';
+  document.getElementById("cancelEditAccountEmail").disabled = false;
+  document.getElementById("editAccountEmailModal").hidden = false;
+  input.focus();
+  input.select();
+}
+
+function closeManagedAccountEmail() {
+  if (document.getElementById("saveEditAccountEmail")?.disabled) return;
+  document.getElementById("editAccountEmailModal").hidden = true;
+  pendingEmailChange?.button?.focus();
+  pendingEmailChange = null;
+}
+
+async function saveManagedAccountEmail(event) {
+  event.preventDefault();
+  if (!pendingEmailChange || currentUserRole !== "admin") return;
+  const email = document.getElementById("editAccountEmail").value.trim().toLowerCase();
+  const errorMessage = document.getElementById("editAccountEmailError");
   if (!/^\S+@\S+\.\S+$/.test(email)) {
-    window.alert("Enter a valid email address.");
+    errorMessage.textContent = "Enter a valid email address, such as name@example.com.";
+    errorMessage.hidden = false;
+    document.getElementById("editAccountEmail").focus();
     return;
   }
-  button.disabled = true;
+  if (email === pendingEmailChange.email) {
+    errorMessage.textContent = "This is already the email address on the account.";
+    errorMessage.hidden = false;
+    document.getElementById("editAccountEmail").focus();
+    return;
+  }
+  const { button, userId, name } = pendingEmailChange;
   const status = document.getElementById("accountManagementStatus");
+  const save = document.getElementById("saveEditAccountEmail");
+  const cancel = document.getElementById("cancelEditAccountEmail");
+  const input = document.getElementById("editAccountEmail");
+  errorMessage.hidden = true;
+  button.disabled = true;
+  save.disabled = true;
+  cancel.disabled = true;
+  input.disabled = true;
+  save.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Saving…';
   if (status) status.textContent = `Updating ${name}'s sign-in email…`;
   try {
-    await manageAdministratorAccounts("update_email", { user_id: button.dataset.userId, email });
-    if (status) status.textContent = `${name}'s email was corrected. They can now sign in with ${email}; their password is unchanged.`;
+    await manageAdministratorAccounts("update_email", { user_id: userId, email });
+    document.getElementById("editAccountEmailModal").hidden = true;
+    pendingEmailChange = null;
     await loadManagedAccounts();
+    if (status) {
+      status.textContent = `${name}'s email was corrected. They can sign in with ${email}; their password is unchanged.`;
+      status.focus();
+    }
   } catch (error) {
-    if (status) status.textContent = `Could not update the email: ${error.message}`;
     button.disabled = false;
+    save.disabled = false;
+    cancel.disabled = false;
+    input.disabled = false;
+    save.innerHTML = '<i class="ri-check-line"></i> Save Email';
+    errorMessage.textContent = `Could not update the email: ${error.message}`;
+    errorMessage.hidden = false;
+    input.focus();
+    if (status) status.textContent = "The email was not changed. Review the message and try again.";
   }
 }
 
@@ -422,7 +480,7 @@ document.getElementById("refreshAccountsBtn")?.addEventListener("click", loadMan
 document.getElementById("accountManagementRows")?.addEventListener("click", (event) => {
   const emailButton = event.target.closest(".change-email-btn");
   if (emailButton) {
-    void changeManagedAccountEmail(emailButton);
+    openManagedAccountEmail(emailButton);
     return;
   }
   const historyButton = event.target.closest(".account-history-btn");
@@ -439,6 +497,12 @@ document.getElementById("accountManagementRows")?.addEventListener("click", (eve
   if (button) openDeleteAccountModal(button);
 });
 document.getElementById("confirmDeleteAccount")?.addEventListener("click", confirmManagedAccountDeletion);
+document.getElementById("editAccountEmailForm")?.addEventListener("submit", saveManagedAccountEmail);
+document.getElementById("cancelEditAccountEmail")?.addEventListener("click", closeManagedAccountEmail);
+document.getElementById("closeEditAccountEmail")?.addEventListener("click", closeManagedAccountEmail);
+document.getElementById("editAccountEmailModal")?.addEventListener("click", (event) => {
+  if (event.target === event.currentTarget) closeManagedAccountEmail();
+});
 document.getElementById("cancelDeleteAccount")?.addEventListener("click", closeDeleteAccountModal);
 document.getElementById("closeDeleteAccountModal")?.addEventListener("click", closeDeleteAccountModal);
 document.getElementById("deleteAccountModal")?.addEventListener("click", (event) => {
@@ -446,6 +510,7 @@ document.getElementById("deleteAccountModal")?.addEventListener("click", (event)
 });
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !document.getElementById("deleteAccountModal")?.hidden) closeDeleteAccountModal();
+  if (event.key === "Escape" && !document.getElementById("editAccountEmailModal")?.hidden) closeManagedAccountEmail();
   if (event.key === "Escape" && !document.getElementById("accountHistoryModal")?.hidden) closeAccountHistoryModal();
 });
 document.getElementById("closeAccountHistoryModal")?.addEventListener("click", closeAccountHistoryModal);
@@ -559,5 +624,4 @@ logoutBtn.addEventListener("click", async () => {
 });
 
 loadProfile();
-
 
