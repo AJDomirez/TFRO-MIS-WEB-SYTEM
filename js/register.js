@@ -134,11 +134,7 @@ function showRegisterWarning(message) {
 
 // Keep the browser checks aligned with the password rules shown in the form.
 const passwordRules = Object.freeze({
-  length: (value) => value.length >= 8,
-  lowercase: (value) => /[a-z]/.test(value),
-  uppercase: (value) => /[A-Z]/.test(value),
-  number: (value) => /[0-9]/.test(value),
-  symbol: (value) => /[^A-Za-z0-9\s]/.test(value),
+  length: (value) => value.length >= 6,
 });
 
 function passwordMeetsRequirements(value) {
@@ -322,8 +318,7 @@ registerForm.addEventListener("submit", async (event) => {
 
   if (!passwordMeetsRequirements(password)) {
     showRegisterWarning(
-      "Password must be at least 8 characters and include an uppercase letter, " +
-      "a lowercase letter, a number, and a symbol."
+      "Password must be at least 6 characters."
     );
     passwordInput.focus();
     return;
