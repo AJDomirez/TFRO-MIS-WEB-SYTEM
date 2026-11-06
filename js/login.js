@@ -133,18 +133,14 @@ function setRecoveryOpen(open) {
 }
 
 function passwordMeetsRequirements(value) {
-  return value.length >= 8
-    && /[a-z]/.test(value)
-    && /[A-Z]/.test(value)
-    && /[0-9]/.test(value)
-    && /[^A-Za-z0-9\s]/.test(value);
+  return value.length >= 6;
 }
 
 async function sendRecoveryCode() {
   recoveryEmail = recoveryEmailInput.value.trim().toLowerCase();
   if (!recoveryEmail) return;
   if (!recoveryEmail.includes("@")) {
-    showRecoveryMessage("Restricted Administrator accounts use usernames and do not have email recovery. Ask a Head Administrator to delete and recreate the account with a new password.");
+    showRecoveryMessage("Enter the email address registered to this account. Administrator username accounts do not have email recovery.");
     return;
   }
 
@@ -157,7 +153,7 @@ async function sendRecoveryCode() {
     if (error) throw error;
     recoveryRequestForm.hidden = true;
     recoveryVerifyForm.hidden = false;
-    showRecoveryMessage("If this email belongs to an Operator account, an eight-digit recovery code has been sent. Check the inbox and spam folder.", "success");
+    showRecoveryMessage("If this email belongs to an account, an eight-digit recovery code has been sent. Check the inbox and spam folder.", "success");
     document.getElementById("recoveryCode").focus();
   } catch (error) {
     const rateLimited = error?.status === 429 || String(error?.message || "").toLowerCase().includes("rate limit");
@@ -200,7 +196,7 @@ recoveryVerifyForm.addEventListener("submit", async (event) => {
     return;
   }
   if (!passwordMeetsRequirements(newPassword)) {
-    showRecoveryMessage("Password must have at least 8 characters, including uppercase, lowercase, number, and symbol.");
+    showRecoveryMessage("Password must be at least 6 characters.");
     return;
   }
   if (newPassword !== confirmation) {
@@ -219,9 +215,9 @@ recoveryVerifyForm.addEventListener("submit", async (event) => {
     if (verificationError || !data.user) throw verificationError || new Error("Recovery verification failed.");
 
     const { data: profile, error: profileError } = await loadUserProfile(data.user.id);
-    if (profileError || profile?.role !== "operator") {
+    if (profileError || !["operator", "traffic_enforcer"].includes(profile?.role)) {
       await supabase.auth.signOut({ scope: "local" });
-      showRecoveryMessage("This recovery form is only for registered Operator accounts.");
+      showRecoveryMessage("This recovery form is only for registered Operator and Enforcer accounts.");
       return;
     }
 
@@ -255,7 +251,7 @@ async function routeUser(user, suppliedFranchiseNumber = "") {
 
   if (!role) {
     await supabase.auth.signOut();
-    showLoginWarning("This account has no authorized TFRO role. Only Operators, Administrators, and TFRO Staff can sign in.");
+      showLoginWarning("This account has no authorized TFRO role. Only Operators, Enforcers, Administrators, and TFRO Staff can sign in.");
     return false;
   }
 
@@ -360,13 +356,11 @@ loginForm.addEventListener("submit", async (event) => {
   loginMessage.hidden = true;
 
   const accountInput = document.getElementById("email").value.trim();
-  // Enforcers sign in with their roster ID. Administrator usernames map to
-  // their internal identity; other users continue to use their email.
+  // Administrator usernames map to their internal identity. Operators and
+  // Enforcers sign in with the real email address used during registration.
   const email = accountInput.includes("@")
     ? accountInput
-    : accountInput.toUpperCase().startsWith("TE-")
-      ? `${accountInput.toLowerCase()}@enforcer.tfro-mis.local`
-      : `${accountInput.toLowerCase()}@admin.tfro-mis.local`;
+    : `${accountInput.toLowerCase()}@admin.tfro-mis.local`;
   const password = document.getElementById("password").value;
   const franchiseNumber = document.getElementById("franchiseNumber").value;
 
