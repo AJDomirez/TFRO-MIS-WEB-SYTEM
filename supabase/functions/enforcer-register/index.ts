@@ -39,8 +39,31 @@ Deno.serve(async (request: Request) => {
       .select("id, enforcer_id, full_name, status, user_id")
       .eq("enforcer_id", enforcerId).maybeSingle();
     if (rosterError) throw rosterError;
-    if (!roster || roster.status !== "active") return json({ error: "This Enforcer ID is not registered or active. Contact a TFRO Administrator." }, 400);
-    if (roster.user_id) return json({ error: "This Enforcer ID is already linked to an account. Sign in with its registered email or contact an Administrator." }, 409);
+    let rosterId = roster?.id;
+    let createdRosterEntry = false;
+    if (!roster) {
+      const { data: createdRoster, error: createRosterError } = await admin.from("traffic_enforcers")
+        .insert({
+          enforcer_id: enforcerId,
+          full_name: fullName,
+          email,
+          contact_number: contactNumber,
+          status: "active",
+        })
+        .select("id")
+        .single();
+      if (createRosterError) {
+        if (createRosterError.code === "23505") {
+          return json({ error: "This Enforcer ID is already being registered. Please try signing in or contact an Administrator." }, 409);
+        }
+        throw createRosterError;
+      }
+      rosterId = createdRoster.id;
+      createdRosterEntry = true;
+    } else if (roster.status !== "active") {
+      return json({ error: "This Enforcer ID is inactive or suspended. Contact a TFRO Administrator." }, 400);
+    }
+    if (roster?.user_id) return json({ error: "This Enforcer ID is already linked to an account. Sign in with its registered email or contact an Administrator." }, 409);
 
     const { data, error } = await admin.auth.admin.createUser({
       email,
@@ -58,10 +81,18 @@ Deno.serve(async (request: Request) => {
       },
     });
     if (error) {
+      if (createdRosterEntry) {
+        await admin.from("traffic_enforcers").delete().eq("id", rosterId).is("user_id", null);
+      }
       console.error("Enforcer account creation failed:", error.message);
       return json({ error: error.message || "The Enforcer account could not be created." }, 400);
     }
-    if (!data.user) return json({ error: "The Enforcer account could not be created." }, 500);
+    if (!data.user) {
+      if (createdRosterEntry) {
+        await admin.from("traffic_enforcers").delete().eq("id", rosterId).is("user_id", null);
+      }
+      return json({ error: "The Enforcer account could not be created." }, 500);
+    }
     return json({ success: true, login_email: email }, 201);
   } catch (error) {
     console.error("Enforcer registration failed:", error);
