@@ -6,7 +6,7 @@
   <title>TFRO Profile</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
 
-<link rel="stylesheet" href="../css/profile.css?v=20261106-2">
+<link rel="stylesheet" href="../css/profile.css?v=20261106-3">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20261028-6">
 
   <link
@@ -311,7 +311,24 @@
   </section>
 </div>
 
-<script type="module" src="../js/profile.js?v=20261106-2"></script>
+<div class="email-edit-modal" id="editAccountEmailModal" hidden>
+  <section class="email-edit-card" role="dialog" aria-modal="true" aria-labelledby="editAccountEmailTitle" aria-describedby="editAccountEmailDescription">
+    <button type="button" class="email-edit-close" id="closeEditAccountEmail" aria-label="Close email editor"><i class="ri-close-line"></i></button>
+    <div class="email-edit-icon"><i class="ri-mail-edit-line"></i></div>
+    <span class="email-edit-kicker">ACCOUNT MANAGEMENT</span>
+    <h2 id="editAccountEmailTitle">Correct account email</h2>
+    <p class="email-edit-description" id="editAccountEmailDescription">Update the email this person uses to sign in. Their password and linked records stay the same.</p>
+    <div class="email-edit-account"><span id="editAccountEmailInitials">U</span><div><strong id="editAccountEmailName">Selected account</strong><small id="editAccountEmailRole">Portal user</small></div></div>
+    <form id="editAccountEmailForm" novalidate>
+      <label for="editAccountEmail">Correct email address</label>
+      <div class="email-edit-input-wrap"><i class="ri-mail-line" aria-hidden="true"></i><input id="editAccountEmail" name="email" type="email" autocomplete="email" inputmode="email" required></div>
+      <p class="email-edit-error" id="editAccountEmailError" role="alert" hidden></p>
+      <div class="email-edit-actions"><button type="button" class="email-edit-cancel" id="cancelEditAccountEmail">Cancel</button><button type="submit" class="email-edit-save" id="saveEditAccountEmail"><i class="ri-check-line"></i> Save Email</button></div>
+    </form>
+  </section>
+</div>
+
+<script type="module" src="../js/profile.js?v=20261106-3"></script>
 <script type="module" src="../js/sidebar-user.js?v=20261016-4"></script>
 
 <script>
@@ -328,5 +345,4 @@
 </script>
 </body>
 </html>
-
 
