@@ -450,10 +450,9 @@ registerForm.addEventListener("submit", async (event) => {
       destination: "account-status.html",
     });
   } else {
-    showRegistrationSuccess({
-      message: "Your account was created successfully.",
-      destination: destinationForRole(profile.role),
-    });
+    // Auth returned a session and the profile is active. Open the Operator
+    // portal immediately after the database trigger has linked the account.
+    window.location.replace(destinationForRole(profile.role));
   }
 });
 
