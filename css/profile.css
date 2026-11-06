@@ -6,6 +6,7 @@
 }
 
 .reset-password-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #9bc3e7;border-radius:8px;background:#eef7ff;color:#0d4778;font-weight:800;cursor:pointer;white-space:nowrap}.reset-password-btn:hover{background:#1768ad;color:#fff}.reset-password-btn:disabled{opacity:.55;cursor:wait}
+.change-email-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #9bc3e7;border-radius:8px;background:#eef7ff;color:#0d4778;font-weight:800;cursor:pointer;white-space:nowrap}.change-email-btn:hover{background:#1768ad;color:#fff}.change-email-btn:disabled{opacity:.55;cursor:wait}
 
 body{
   background:#f1f5f9;
@@ -307,4 +308,5 @@ font-weight: 600;
 .account-history-empty{padding:34px!important;text-align:center!important;color:#708393!important}.account-history-empty.error{color:#a6322a!important}
 .account-history-card>footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 24px;border-top:1px solid #dbe6ef;background:#f8fafc}.account-history-card>footer a{color:#0d4778;font-size:11px;font-weight:800;text-decoration:none}.account-history-card>footer button{min-width:90px;padding:9px 14px;border:0;border-radius:8px;background:#0d4778;color:#fff;font-weight:800;cursor:pointer}
 @media(max-width:700px){.account-history-modal{padding:8px}.account-history-card{max-height:94vh}.account-history-head{padding:17px}.account-history-notice{padding:10px 17px}.account-history-card>footer{padding:12px 17px}.account-history-table{min-width:760px}}
+
 
