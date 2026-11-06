@@ -6,7 +6,7 @@
   <title>TFRO Profile</title>
   <link rel="icon" type="image/jpeg" href="../Logo/TFRO%20Logo.jpg">
 
-<link rel="stylesheet" href="../css/profile.css?v=20261106-3">
+<link rel="stylesheet" href="../css/profile.css?v=20261106-4">
   <link rel="stylesheet" href="../css/tfro-theme.css?v=20261028-6">
 
   <link
@@ -255,17 +255,24 @@
 
         <section class="account-management" aria-labelledby="accountManagementTitle">
           <div class="account-management-heading">
-            <div><span class="settings-kicker">HEAD ADMINISTRATOR ONLY</span><h3 id="accountManagementTitle">Account Credentials</h3><p>Correct email addresses for Operator and Enforcer accounts, view login usernames, and securely reset passwords. Existing passwords are hashed and can never be displayed.</p></div>
+            <div><span class="settings-kicker">HEAD ADMINISTRATOR ONLY</span><h3 id="accountManagementTitle">Account Management</h3><p>Review account access, correct Operator and Enforcer email addresses, view login usernames, and securely reset passwords.</p></div>
             <button type="button" class="account-refresh-btn" id="refreshAccountsBtn"><i class="ri-refresh-line"></i> Refresh</button>
           </div>
+          <div class="account-summary" aria-label="Account totals">
+            <article class="account-summary-card"><span class="account-summary-icon all"><i class="ri-group-line"></i></span><div><small>Accounts in system</small><strong id="accountTotalCount">—</strong></div></article>
+            <article class="account-summary-card"><span class="account-summary-icon active"><i class="ri-checkbox-circle-line"></i></span><div><small>Ready to sign in</small><strong id="accountActiveCount">—</strong></div></article>
+            <article class="account-summary-card"><span class="account-summary-icon review"><i class="ri-time-line"></i></span><div><small>Needs review</small><strong id="accountReviewCount">—</strong></div></article>
+            <article class="account-summary-card"><span class="account-summary-icon blocked"><i class="ri-lock-line"></i></span><div><small>Access paused</small><strong id="accountPausedCount">—</strong></div></article>
+          </div>
           <div class="account-management-tools">
-            <div class="account-search"><i class="ri-search-line"></i><input type="search" id="accountSearch" placeholder="Search name, username, email, or role"></div>
-            <select id="accountRoleFilter" aria-label="Filter accounts by role"><option value="all">All account types</option><option value="admin">Head Administrators</option><option value="admin_viewer">Restricted Administrators</option><option value="staff">TFRO Staff</option><option value="operator">Operators</option><option value="traffic_enforcer">TFRO Enforcers</option></select>
+            <label class="account-search"><i class="ri-search-line" aria-hidden="true"></i><input type="search" id="accountSearch" placeholder="Search by name, username, email, or role" aria-label="Search accounts"></label>
+            <select id="accountRoleFilter" aria-label="Filter accounts by role"><option value="all">All roles</option><option value="admin">Head Administrators</option><option value="admin_viewer">Restricted Administrators</option><option value="staff">TFRO Staff</option><option value="operator">Operators</option><option value="traffic_enforcer">TFRO Enforcers</option></select>
+            <select id="accountStatusFilter" aria-label="Filter accounts by access status"><option value="all">All statuses</option><option value="active">Ready to sign in</option><option value="review">Needs review</option><option value="rejected">Rejected</option><option value="suspended">Suspended</option></select>
           </div>
           <p class="settings-status" id="accountManagementStatus" aria-live="polite">Loading accounts…</p>
           <div class="account-table-wrap">
             <table class="account-management-table">
-              <thead><tr><th>Account</th><th>Role</th><th>Reference</th><th>Status</th><th>Action</th></tr></thead>
+              <thead><tr><th>Account</th><th>Role</th><th>Reference</th><th>Access status</th><th>Action</th></tr></thead>
               <tbody id="accountManagementRows"></tbody>
             </table>
           </div>
@@ -328,7 +335,7 @@
   </section>
 </div>
 
-<script type="module" src="../js/profile.js?v=20261106-3"></script>
+<script type="module" src="../js/profile.js?v=20261106-4"></script>
 <script type="module" src="../js/sidebar-user.js?v=20261016-4"></script>
 
 <script>
