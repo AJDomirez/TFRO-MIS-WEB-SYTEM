@@ -107,11 +107,10 @@ async function decideAccount(id, approved) {
   const row = enforcers.find((item) => String(item.id) === String(id));
   if (!row?.user_id) return alert("This Enforcer ID does not have a linked signup account yet.");
   const verb = approved ? "approve" : "reject";
-  if (!window.confirm(`Are you sure you want to ${verb} the account for ${row.full_name}?`)) return;
+  if (!approved && !window.confirm(`Are you sure you want to reject the account for ${row.full_name}?`)) return;
   const { error } = await supabase.rpc("approve_enforcer_account", { p_enforcer_record_id:Number(id), p_approved:approved });
   if (error) return alert(`Could not ${verb} the Enforcer account: ${error.message}`);
   await logAudit({ action:approved?"Approved TFRO Enforcer Account":"Rejected TFRO Enforcer Account", actionType:"update", record:row.enforcer_id, description:`${approved?"Approved":"Rejected"} the portal account linked to ${row.full_name}.` });
-  alert(approved ? "Enforcer account approved. The confirmed user will be sent to the Enforcer homepage." : "Enforcer account rejected.");
   await loadData();
 }
 
@@ -129,3 +128,4 @@ async function initialize() {
 }
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize, { once:true }); else void initialize();
+
