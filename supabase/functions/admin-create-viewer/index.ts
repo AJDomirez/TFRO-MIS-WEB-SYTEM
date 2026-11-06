@@ -71,7 +71,7 @@ Deno.serve(async (request) => {
     if (action === "list_accounts") {
       const visibleRoles = ["admin", "admin_viewer", "staff", "operator", "traffic_enforcer"];
       const { data: profiles, error } = await adminClient.from("profiles")
-        .select("id, role, full_name, username, contact_number").in("role", visibleRoles).order("role").order("full_name");
+        .select("id, role, full_name, username, contact_number, account_status").in("role", visibleRoles).order("role").order("full_name");
       if (error) throw error;
       const accounts = await Promise.all((profiles || []).map(async (profile) => {
         const { data } = await adminClient.auth.admin.getUserById(profile.id);
@@ -80,6 +80,7 @@ Deno.serve(async (request) => {
           ...profile,
           login: profile.username || email || "—",
           email: email.endsWith("@admin.tfro-mis.local") ? "" : email,
+          email_confirmed: Boolean(data.user?.email_confirmed_at),
           can_delete: ["admin_viewer", "staff", "operator", "traffic_enforcer"].includes(profile.role) && profile.id !== caller.id,
         };
       }));
@@ -397,4 +398,3 @@ Deno.serve(async (request) => {
     return rejected(errorText(error, "Unable to manage the account."));
   }
 });
-
