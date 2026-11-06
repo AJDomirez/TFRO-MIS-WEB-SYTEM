@@ -17,11 +17,12 @@ Deno.serve(async (request: Request) => {
   try {
     const body = await request.json();
     const enforcerId = String(body?.enforcer_id || "").trim().toUpperCase();
+    const email = String(body?.email || "").trim().toLowerCase();
     const password = String(body?.password || "");
     const fullName = String(body?.full_name || "").trim().slice(0, 160);
     const contactNumber = String(body?.contact_number || "").trim().slice(0, 40);
-    if (!/^TE-[A-Z0-9-]{2,37}$/.test(enforcerId) || !fullName || !contactNumber) {
-      return json({ error: "Enter a valid Enforcer ID and complete your name and contact number." }, 400);
+    if (!/^TE-[A-Z0-9-]{2,37}$/.test(enforcerId) || !/^\S+@\S+\.\S+$/.test(email) || !fullName || !contactNumber) {
+      return json({ error: "Enter a valid Enforcer ID, email address, name, and contact number." }, 400);
     }
     if (password.length < 6) {
       return json({ error: "Password must be at least 6 characters." }, 400);
@@ -39,13 +40,10 @@ Deno.serve(async (request: Request) => {
       .eq("enforcer_id", enforcerId).maybeSingle();
     if (rosterError) throw rosterError;
     if (!roster || roster.status !== "active") return json({ error: "This Enforcer ID is not registered or active. Contact a TFRO Administrator." }, 400);
-    if (roster.user_id) return json({ error: "This Enforcer ID is already linked to an account. Sign in with your Enforcer ID or contact an Administrator." }, 409);
+    if (roster.user_id) return json({ error: "This Enforcer ID is already linked to an account. Sign in with its registered email or contact an Administrator." }, 409);
 
-    // Supabase Auth requires an email identity. This internal address is derived
-    // only from the pre-registered roster ID and never sends or receives mail.
-    const loginEmail = `${enforcerId.toLowerCase()}@enforcer.tfro-mis.local`;
     const { data, error } = await admin.auth.admin.createUser({
-      email: loginEmail,
+      email,
       password,
       email_confirm: true,
       user_metadata: {
@@ -53,6 +51,7 @@ Deno.serve(async (request: Request) => {
         full_name: fullName,
         contact_number: contactNumber,
         enforcer_id: enforcerId,
+        email,
         terms_accepted: true,
         terms_version: String(body.terms_version).slice(0, 80),
         privacy_notice_version: String(body.privacy_notice_version).slice(0, 80),
@@ -63,7 +62,7 @@ Deno.serve(async (request: Request) => {
       return json({ error: error.message || "The Enforcer account could not be created." }, 400);
     }
     if (!data.user) return json({ error: "The Enforcer account could not be created." }, 500);
-    return json({ success: true, login_email: loginEmail }, 201);
+    return json({ success: true, login_email: email }, 201);
   } catch (error) {
     console.error("Enforcer registration failed:", error);
     return json({ error: "Enforcer registration could not be completed. Please try again or contact a TFRO Administrator." }, 500);
