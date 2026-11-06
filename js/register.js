@@ -24,7 +24,6 @@ const enforcerFields = [...document.querySelectorAll("[data-enforcer-field]")];
 const franchiseNumberInput = document.getElementById("franchiseNumber");
 const enforcerIdInput = document.getElementById("enforcerId");
 const emailInput = document.getElementById("email");
-const addressInput = document.getElementById("address");
 const termsConsent = document.getElementById("termsConsent");
 const consentModal = document.getElementById("consentModal");
 const acceptConsentButton = document.getElementById("acceptConsent");
@@ -119,8 +118,6 @@ function updateRoleFields() {
   enforcerIdInput.disabled = !isEnforcer;
   emailInput.required = true;
   emailInput.disabled = false;
-  addressInput.required = !isEnforcer;
-  addressInput.disabled = isEnforcer;
 }
 
 roleInputs.forEach((input) => input.addEventListener("change", updateRoleFields));
@@ -296,7 +293,6 @@ registerForm.addEventListener("submit", async (event) => {
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
   const email = document.getElementById("email").value.trim();
   const contactNumber = document.getElementById("contactNumber").value.trim();
-  const address = document.getElementById("address").value.trim();
   const franchiseNumber = document.getElementById("franchiseNumber").value.trim().toUpperCase();
   const enforcerId = enforcerIdInput.value.trim().toUpperCase();
   const password = passwordInput.value;
@@ -304,7 +300,7 @@ registerForm.addEventListener("submit", async (event) => {
 
   /* VALIDATION */
   if (!firstName || !middleName || !lastName || !email || !contactNumber
-      || (role === "operator" && (!address || !franchiseNumber))
+      || (role === "operator" && !franchiseNumber)
       || (role === "traffic_enforcer" && !enforcerId)) {
     showRegisterWarning("Please fill in all the required fields.");
     return;
@@ -376,7 +372,6 @@ registerForm.addEventListener("submit", async (event) => {
           middle_name: middleName,
           last_name: lastName,
           contact_number: contactNumber,
-          address,
           franchise_number: role === "operator" ? franchiseNumber : null,
           enforcer_id: role === "traffic_enforcer" ? enforcerId : null,
           terms_accepted: true,
@@ -484,4 +479,3 @@ registerForm.addEventListener("submit", async (event) => {
 });
 
 void loadRegistrationSetting();
-
