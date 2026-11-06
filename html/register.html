@@ -163,7 +163,7 @@
               type="password"
               id="password"
               placeholder="Create a password"
-              minlength="8"
+              minlength="6"
               autocomplete="new-password"
               aria-describedby="passwordRequirements"
               required
@@ -183,7 +183,7 @@
               type="password"
               id="confirmPassword"
               placeholder="Repeat your password"
-              minlength="8"
+              minlength="6"
               autocomplete="new-password"
               aria-describedby="passwordMatchStatus"
               required
@@ -205,27 +205,11 @@
           id="passwordRequirements"
           aria-live="polite"
         >
-          <strong>Password must include:</strong>
+          <strong>Password must be at least 6 characters.</strong>
           <ul>
             <li data-password-rule="length">
               <i class="ri-close-circle-line" aria-hidden="true"></i>
-              At least 8 characters
-            </li>
-            <li data-password-rule="lowercase">
-              <i class="ri-close-circle-line" aria-hidden="true"></i>
-              One lowercase letter
-            </li>
-            <li data-password-rule="uppercase">
-              <i class="ri-close-circle-line" aria-hidden="true"></i>
-              One uppercase letter
-            </li>
-            <li data-password-rule="number">
-              <i class="ri-close-circle-line" aria-hidden="true"></i>
-              One number
-            </li>
-            <li data-password-rule="symbol">
-              <i class="ri-close-circle-line" aria-hidden="true"></i>
-              One symbol (for example: ! @ # $ %)
+              6 characters or more
             </li>
           </ul>
         </div>
@@ -336,7 +320,7 @@ Already have an account?
 </div>
 
 <!-- Version query ensures browsers fetch the current registration error handling. -->
-<script type="module" src="../js/register.js?v=20261106-2"></script>
+<script type="module" src="../js/register.js?v=20261106-3"></script>
 <script src="../js/trike-drive.js?v=20260908-191500"></script>
 </body>
 </html>
