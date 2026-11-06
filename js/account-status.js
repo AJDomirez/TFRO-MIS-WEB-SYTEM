@@ -66,3 +66,4 @@ checkButton.addEventListener("click", checkStatus);
 document.getElementById("signOutBtn").addEventListener("click", () => signOutAndRedirect("login.html"));
 void checkStatus();
 pollTimer = window.setInterval(checkStatus, 5000);
+

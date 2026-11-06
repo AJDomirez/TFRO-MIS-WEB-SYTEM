@@ -86,6 +86,62 @@ Deno.serve(async (request) => {
       return json({ accounts });
     }
 
+    if (action === "create_head_admin") {
+      const fullName = cleanText(body?.full_name, 120);
+      const username = cleanText(body?.username, 32).toLowerCase();
+      const password = String(body?.password || "");
+      const contactNumber = cleanText(body?.contact_number, 40);
+      if (!fullName || !USERNAME_PATTERN.test(username)) return rejected("Username must start with a letter and contain 3–32 lowercase letters, numbers, dots, hyphens, or underscores.");
+      if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}/.test(password)) {
+        return rejected("Password must have at least 12 characters, including uppercase, lowercase, a number, and a symbol.");
+      }
+      const { data: duplicate, error: duplicateError } = await adminClient.from("profiles").select("id").ilike("username", username).maybeSingle();
+      if (duplicateError) throw duplicateError;
+      if (duplicate) return rejected("That username is already in use.");
+
+      const internalEmail = `${username}@admin.tfro-mis.local`;
+      const { error: markerError } = await adminClient.from("internal_admin_provisioning").upsert({
+        email: internalEmail, requested_by: caller.id,
+        expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      });
+      if (markerError) return rejected(`Unable to authorize internal account provisioning: ${markerError.message}`);
+      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+      const projectUrl = Deno.env.get("SUPABASE_URL") || "";
+      const authResponse = await fetch(`${projectUrl}/auth/v1/admin/users`, {
+        method: "POST",
+        headers: { apikey: serviceRoleKey, authorization: `Bearer ${serviceRoleKey}`, "content-type": "application/json" },
+        body: JSON.stringify({
+          email: internalEmail, password, email_confirm: true,
+          user_metadata: { full_name: fullName, contact_number: contactNumber, role: "operator" },
+          app_metadata: { account_type: "admin_viewer", provisioned_by: "head_admin" },
+        }),
+      });
+      const authText = await authResponse.text();
+      let created: { id?: string; user?: { id?: string } } | null = null;
+      try { created = authText ? JSON.parse(authText) : null; } catch { /* Use the response text below. */ }
+      const createdUserId = created?.user?.id || created?.id;
+      await adminClient.from("internal_admin_provisioning").delete().eq("email", internalEmail);
+      if (!authResponse.ok || !createdUserId) {
+        return rejected(errorText(created, authText || `Supabase Auth failed with HTTP ${authResponse.status}.`));
+      }
+      const { error: roleError } = await adminClient.from("profiles").update({
+        role: "admin", account_status: "active", username, full_name: fullName,
+        contact_number: contactNumber || null,
+      }).eq("id", createdUserId);
+      if (roleError) { await adminClient.auth.admin.deleteUser(createdUserId, true); return rejected(roleError.message); }
+      const { error: operatorCleanupError } = await adminClient.from("operators").delete().eq("user_id", createdUserId).eq("verified", false);
+      if (operatorCleanupError) {
+        await adminClient.auth.admin.deleteUser(createdUserId, true);
+        return rejected(`Unable to finish Head Administrator provisioning: ${operatorCleanupError.message}`);
+      }
+      await adminClient.from("audit_logs").insert({
+        user_id: caller.id, user_name: callerProfile.full_name || "Head Administrator", role: "admin",
+        action: "Created Head Administrator account", action_type: "create", record: fullName,
+        description: `Created Head Administrator username ${username}.`,
+      });
+      return json({ success: true, user_id: createdUserId, username }, 201);
+    }
+
     if (action === "reset_password") {
       const userId = cleanText(body?.user_id, 64);
       const requestedUsername = cleanText(body?.username, 32).toLowerCase();
@@ -302,3 +358,4 @@ Deno.serve(async (request) => {
     return rejected(errorText(error, "Unable to manage the account."));
   }
 });
+

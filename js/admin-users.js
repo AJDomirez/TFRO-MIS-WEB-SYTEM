@@ -8,6 +8,9 @@ const viewerRows = document.getElementById("adminRows");
 const headRows = document.getElementById("headAdminRows");
 const count = document.getElementById("viewerCount");
 const createButton = document.getElementById("createAdminButton");
+const headForm = document.getElementById("createHeadAdminForm");
+const headMessage = document.getElementById("headFormMessage");
+const createHeadButton = document.getElementById("createHeadAdminButton");
 const staffForm = document.getElementById("createStaffForm");
 const staffMessage = document.getElementById("staffFormMessage");
 const staffRows = document.getElementById("staffRows");
@@ -21,7 +24,7 @@ function showStaffMessage(text, type = "") { staffMessage.textContent = text; st
 function setPasswordVisibility(button, visible) {
   const input = document.getElementById(button.dataset.passwordTarget);
   if (!input) return;
-  const accountType = input.id === "staffPassword" ? "Staff" : "Administrator";
+  const accountType = input.id === "staffPassword" ? "Staff" : input.id === "headPassword" ? "Head Administrator" : "Administrator";
   input.type = visible ? "text" : "password";
   button.setAttribute("aria-pressed", String(visible));
   button.setAttribute("aria-label", `${visible ? "Hide" : "Show"} ${accountType} password`);
@@ -85,7 +88,7 @@ async function loadAdminAccounts() {
     count.textContent = `${viewers.length} / 40`;
     createButton.disabled = viewers.length >= 40;
     headRows.innerHTML = heads.length
-      ? heads.map((account) => `<tr><td>${escapeHtml(account.full_name || "—")}</td><td><code>${escapeHtml(account.username)}</code></td></tr>`).join("")
+      ? heads.map((account) => `<tr><td>${escapeHtml(account.full_name || "—")}</td><td><code>${escapeHtml(account.login)}</code></td></tr>`).join("")
       : '<tr><td colspan="2">No Head Administrator account was found.</td></tr>';
     viewerRows.innerHTML = viewers.length
       ? viewers.map((account) => `<tr><td>${escapeHtml(account.full_name || "—")}</td><td><code>${escapeHtml(account.username)}</code></td><td>${escapeHtml(account.contact_number || "—")}</td><td><button type="button" class="delete-account" data-user-id="${escapeHtml(account.id)}" data-name="${escapeHtml(account.full_name || account.username || "Restricted Administrator")}" data-role="Restricted Administrator"><i class="ri-delete-bin-line"></i> Delete</button></td></tr>`).join("")
@@ -100,6 +103,38 @@ async function loadAdminAccounts() {
     staffRows.innerHTML = `<tr><td colspan="4">Unable to load accounts: ${safeMessage}</td></tr>`;
   }
 }
+
+headForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!headForm.reportValidity()) return;
+  const password = document.getElementById("headPassword").value;
+  if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}/.test(password)) {
+    headMessage.textContent = "Password must have at least 12 characters, including uppercase, lowercase, a number, and a symbol.";
+    headMessage.className = "form-message error";
+    document.getElementById("headPassword").focus();
+    return;
+  }
+  createHeadButton.disabled = true;
+  headMessage.textContent = "Creating Head Administrator account…";
+  headMessage.className = "form-message";
+  try {
+    const result = await manage("create_head_admin", {
+      full_name: document.getElementById("headFullName").value.trim(),
+      username: document.getElementById("headUsername").value.trim(),
+      password,
+      contact_number: document.getElementById("headContactNumber").value.trim(),
+    });
+    headForm.reset();
+    setPasswordVisibility(document.querySelector('[data-password-target="headPassword"]'), false);
+    headMessage.textContent = `Head Administrator account created. Username: ${result.username}. Share the password securely; it cannot be displayed later.`;
+    headMessage.className = "form-message success";
+  } catch (error) {
+    headMessage.textContent = error.message;
+    headMessage.className = "form-message error";
+  }
+  createHeadButton.disabled = false;
+  await loadAdminAccounts();
+});
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -227,3 +262,4 @@ document.addEventListener("keydown", (event) => { if (event.key === "Escape" && 
 document.getElementById("refreshList").addEventListener("click", () => void loadAdminAccounts());
 document.getElementById("refreshStaffList").addEventListener("click", () => void loadAdminAccounts());
 (async () => { const { user } = await requireRole("admin"); if (user) await loadAdminAccounts(); })();
+

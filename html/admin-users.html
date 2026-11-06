@@ -19,7 +19,19 @@
     <main class="admin-users-main">
       <header><span class="eyebrow">ACCESS CONTROL</span><h1>Portal Accounts</h1><p>Head Administrators can create and remove restricted Administrator and TFRO Staff accounts.</p></header>
       <section class="capacity-card"><div><span>Restricted Administrator accounts</span><strong id="viewerCount">0 / 40</strong></div><i class="ri-shield-user-line" aria-hidden="true"></i></section>
-      <section class="content-card"><h2>Head Administrator accounts</h2><p class="hint">These are the two full-access accounts. Existing accounts sign in with their email address; passwords are never displayed or recoverable.</p><div class="table-wrap"><table><thead><tr><th>Name</th><th>Sign-in account</th></tr></thead><tbody id="headAdminRows"><tr><td colspan="2">Loading accounts…</td></tr></tbody></table></div></section>
+      <section class="content-card"><h2>Head Administrator accounts</h2><p class="hint">Head Administrators have full system access, including account management and destructive actions. Accounts sign in with the listed username or email; passwords are never displayed or recoverable.</p><div class="table-wrap"><table><thead><tr><th>Name</th><th>Sign-in account</th></tr></thead><tbody id="headAdminRows"><tr><td colspan="2">Loading accounts…</td></tr></tbody></table></div></section>
+      <section class="content-card">
+        <h2>Add Head Administrator</h2>
+        <p class="hint">This grants full access to all system records, settings, and account controls. Only create an account for an authorized TFRO administrator.</p>
+        <form id="createHeadAdminForm" novalidate>
+          <label>Full name<input id="headFullName" maxlength="120" required autocomplete="name"></label>
+          <label>Username<input id="headUsername" maxlength="32" pattern="[a-z][a-z0-9_.-]{2,31}" required autocomplete="username" placeholder="e.g. head.maria"></label>
+          <label>Password <span class="field-requirement">12+ characters with uppercase, lowercase, number, and symbol</span><span class="password-input-wrap"><input id="headPassword" type="password" minlength="12" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{12,}" title="Use at least 12 characters including an uppercase letter, lowercase letter, number, and symbol." required autocomplete="new-password"><button class="password-visibility-toggle" type="button" data-password-target="headPassword" aria-label="Show Head Administrator password" aria-pressed="false"><i class="ri-eye-line" aria-hidden="true"></i><span>Show</span></button></span></label>
+          <label>Contact number <span class="optional">(optional)</span><input id="headContactNumber" maxlength="40" autocomplete="tel"></label>
+          <button class="primary-button" id="createHeadAdminButton" type="submit"><i class="ri-user-add-line"></i> Create Head Administrator</button>
+        </form>
+        <p class="hint">Share the username and password with the account holder through a secure channel.</p><p id="headFormMessage" class="form-message" role="status" aria-live="polite"></p>
+      </section>
       <section class="content-card">
         <h2>Add restricted Administrator</h2>
         <p class="hint">This account can view, add, edit, save, and approve records. It cannot delete or archive data, manage system settings, or create and delete Administrator accounts.</p>
@@ -66,3 +78,4 @@
   <script type="module" src="../js/admin-users.js?v=20261029-2"></script>
 </body>
 </html>
+

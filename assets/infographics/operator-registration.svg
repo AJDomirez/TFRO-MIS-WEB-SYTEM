@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1800" viewBox="0 0 1200 1800">
+<defs><style>
+.bg{fill:#f4f7fb}.navy{fill:#123f73}.blue{fill:#1767a8}.gold{fill:#f4c430}.ink{fill:#18324b}.muted{fill:#60758a}.white{fill:#fff}.line{stroke:#d9e3ed;stroke-width:3}.title{font:800 58px Arial,sans-serif}.subtitle{font:500 25px Arial,sans-serif}.step{font:700 27px Arial,sans-serif}.body{font:400 21px Arial,sans-serif}.small{font:400 18px Arial,sans-serif}.number{font:800 26px Arial,sans-serif}
+</style></defs>
+<rect class="bg" width="1200" height="1800"/>
+<rect class="navy" width="1200" height="365"/><rect class="gold" x="0" y="350" width="1200" height="15"/>
+<circle cx="1040" cy="170" r="112" fill="#ffffff" opacity=".08"/><circle cx="1040" cy="170" r="78" fill="#ffffff" opacity=".08"/>
+<text x="76" y="75" fill="#f4c430" font-family="Arial" font-size="20" font-weight="700" letter-spacing="4">GABAY PARA SA OPERATOR • LUCENA CITY</text>
+<text x="76" y="165" fill="#fff" class="title">GUMAWA NG</text><text x="76" y="232" fill="#fff" class="title">OPERATOR ACCOUNT</text>
+<text x="78" y="288" fill="#deebf7" class="subtitle">Para sa pag-manage ng prangkisa at mga aplikasyon ng driver.</text>
+<text x="78" y="325" fill="#deebf7" class="small">Ihanda ang kasalukuyang Franchise Number at aktibong email.</text>
+<text x="76" y="421" class="ink" font-family="Arial" font-size="22" font-weight="700">SUNDAN ANG MGA HAKBANG</text>
+<line x1="106" y1="490" x2="106" y2="1220" class="line"/>
+<g font-family="Arial">
+<circle cx="106" cy="510" r="28" class="blue"/><text x="98" y="519" fill="#fff" class="number">1</text><text x="160" y="502" class="ink step">Buksan ang TFRO MIS</text><text x="160" y="537" class="muted body">I-scan ang QR code sa ibaba. Piliin ang “Create Account”.</text>
+<circle cx="106" cy="635" r="28" class="blue"/><text x="98" y="644" fill="#fff" class="number">2</text><text x="160" y="627" class="ink step">Piliin ang “Operator”</text><text x="160" y="662" class="muted body">Ito ang account para sa may-ari ng rehistradong prangkisa.</text>
+<circle cx="106" cy="760" r="28" class="blue"/><text x="98" y="769" fill="#fff" class="number">3</text><text x="160" y="752" class="ink step">Ilagay ang personal na detalye</text><text x="160" y="787" class="muted body">Pangalan, email, contact number, at kumpletong tirahan.</text>
+<circle cx="106" cy="885" r="28" class="blue"/><text x="98" y="894" fill="#fff" class="number">4</text><text x="160" y="877" class="ink step">Ilagay ang eksaktong Franchise Number</text><text x="160" y="912" class="muted body">Halimbawa: FR-2026-0001. Gamitin ang ID sa rekord ng TFRO.</text>
+<circle cx="106" cy="1010" r="28" class="blue"/><text x="98" y="1019" fill="#fff" class="number">5</text><text x="160" y="1002" class="ink step">Gumawa at kumpirmahin ang password</text><text x="160" y="1037" class="muted body">8+ character; may maliit/malaking letra, numero, at simbolo.</text>
+<circle cx="106" cy="1135" r="28" class="blue"/><text x="98" y="1144" fill="#fff" class="number">6</text><text x="160" y="1127" class="ink step">Basahin ang paunawa at isumite</text><text x="160" y="1162" class="muted body">Tanggapin ang Terms at Data Privacy Notice, saka “Create Account”.</text>
+<circle cx="106" cy="1260" r="28" class="blue"/><text x="98" y="1269" fill="#fff" class="number">7</text><text x="160" y="1252" class="ink step">Mag-sign in at tingnan ang iyong account</text><text x="160" y="1287" class="muted body">Kung hindi makapasok, magpa-verify sa TFRO Staff.</text></g>
+<rect x="68" y="1360" width="1064" height="330" rx="28" class="white"/><rect x="68" y="1360" width="14" height="330" rx="7" class="gold"/>
+<g font-family="Arial"><text x="112" y="1418" class="navy" font-size="23" font-weight="700">I-SCAN PARA BUKSAN ANG SYSTEM</text><text x="112" y="1462" class="muted small">Opisyal na portal ng TFRO Lucena City</text><text x="112" y="1501" class="muted small">Para sa prangkisa, renewal, impormasyon ng driver,</text><text x="112" y="1530" class="muted small">mga aplikasyon, at pagsubaybay ng transaksyon.</text><text x="112" y="1595" class="blue" font-size="17" font-weight="700">PAALALA</text><text x="112" y="1627" class="muted small">Huwag ibahagi ang iyong password. Isang account bawat operator.</text></g>
+<g transform="translate(825 1410)"><rect width="240" height="240" rx="10" fill="#fff" stroke="#d9e3ed" stroke-width="2"/><image href="tfro-mis-qr.svg" x="10" y="10" width="220" height="220"/></g>
+<text x="600" y="1740" text-anchor="middle" class="muted" font-family="Arial" font-size="16">TFRO-LUCENA MIS • OPERATOR QUICK GUIDE</text>
+</svg>
+

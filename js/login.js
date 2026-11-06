@@ -317,19 +317,19 @@ function friendlyLoginError(error) {
   const message = (error && (error.message || error.error_description)) || "";
   const lower = String(message).toLowerCase();
 
-  // "Invalid login credentials" â€” provided by Supabase when the email is not
+  // "Invalid login credentials" — provided by Supabase when the email is not
   // registered OR the password is wrong. The message is intentionally generic
   // for security.
   if (lower.includes("invalid login credentials")) {
     return "Login failed: Incorrect email or password. Please try again.";
   }
 
-  // "Email not confirmed" â€” user registered but hasn't clicked the confirmation link.
+  // "Email not confirmed" — user registered but hasn't clicked the confirmation link.
   if (lower.includes("email not confirmed") || lower.includes("confirmation email")) {
     return "Login failed: Your email has not been confirmed yet. Please check your inbox for the confirmation link.";
   }
 
-  // "User already registered" â€” treated as login failure to avoid revealing
+  // "User already registered" — treated as login failure to avoid revealing
   // whether an email exists, but it usually means the user is trying to register.
   if (lower.includes("user already registered")) {
     return "Login failed: No account found with these details. Please double-check your email and password, or create a new account.";

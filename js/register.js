@@ -480,8 +480,9 @@ registerForm.addEventListener("submit", async (event) => {
       destination: "account-status.html",
     });
   } else {
-    // Auth returned a session and the profile is active. Open the Operator
-    // portal immediately after the database trigger has linked the account.
+    // A session is present, so Supabase has already authenticated this new
+    // account. Take Operators directly to their portal after the database
+    // trigger has created and linked their profile/franchise records.
     window.location.replace(destinationForRole(profile.role));
   }
 });
