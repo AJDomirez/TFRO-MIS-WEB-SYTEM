@@ -342,3 +342,10 @@ font-weight: 600;
 @media(max-width:900px){.account-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.account-management-tools{flex-wrap:wrap}.account-management-tools select{flex:1;min-width:180px}}
 @media(max-width:600px){.account-management{padding:19px 14px}.account-management-heading{gap:12px}.account-summary{gap:8px}.account-summary-card{padding:10px}.account-summary-card small{font-size:9px}.account-summary-icon{flex-basis:34px;width:34px;height:34px}.account-management-tools{gap:8px}}
 
+.profile-password-box{display:flex;width:100%;min-height:44px;border:1px solid #b8cad9;border-radius:9px;background:#fff;overflow:hidden;transition:border-color .16s,box-shadow .16s}
+.profile-password-box:focus-within{border-color:#1768ad;box-shadow:0 0 0 3px rgba(23,104,173,.14)}
+.profile-password-box input{flex:1;min-width:0;width:100%;border:0!important;border-radius:0!important;outline:0;box-shadow:none!important;background:transparent}
+.profile-password-box input:focus{border:0!important;box-shadow:none!important}
+.profile-password-toggle{display:grid;place-items:center;flex:0 0 46px;width:46px;border:0;border-left:1px solid #e3ebf1;background:#f3f7fa;color:#145184;font-size:18px;cursor:pointer;transition:background .16s,color .16s}
+.profile-password-toggle:hover{background:#e7f1f8;color:#0d4778}.profile-password-toggle:focus-visible{outline:3px solid rgba(23,104,173,.35);outline-offset:-3px}
+
