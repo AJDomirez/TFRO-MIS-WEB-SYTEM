@@ -142,6 +142,45 @@ Deno.serve(async (request) => {
       return json({ success: true, user_id: createdUserId, username }, 201);
     }
 
+    if (action === "update_email") {
+      const userId = cleanText(body?.user_id, 64);
+      const email = cleanText(body?.email, 254).toLowerCase();
+      if (!userId || !/^\S+@\S+\.\S+$/.test(email)) return rejected("Enter a valid email address.");
+      const { data: target, error: targetError } = await adminClient.from("profiles")
+        .select("id, role, full_name").eq("id", userId).maybeSingle();
+      if (targetError) throw targetError;
+      if (!target || !["operator", "traffic_enforcer"].includes(target.role)) {
+        return rejected("Email correction is available for Operator and Enforcer accounts only.");
+      }
+      const { data: authUser, error: authLookupError } = await adminClient.auth.admin.getUserById(target.id);
+      if (authLookupError || !authUser.user) throw authLookupError || new Error("The selected account could not be found.");
+      const previousEmail = authUser.user.email || "";
+      if (previousEmail.toLowerCase() === email) return rejected("That email is already set on this account.");
+
+      const { data: updated, error: updateError } = await adminClient.auth.admin.updateUserById(target.id, {
+        email,
+        email_confirm: true,
+      });
+      if (updateError || !updated.user) throw updateError || new Error("The account email could not be changed.");
+
+      const table = target.role === "operator" ? "operators" : "traffic_enforcers";
+      const { error: recordError } = await adminClient.from(table).update({ email }).eq("user_id", target.id);
+      if (recordError) {
+        await adminClient.auth.admin.updateUserById(target.id, { email: previousEmail, email_confirm: true });
+        throw recordError;
+      }
+      await adminClient.from("audit_logs").insert({
+        user_id: caller.id,
+        user_name: callerProfile.full_name || "Head Administrator",
+        role: "admin",
+        action: "Corrected portal account email",
+        action_type: "update",
+        record: target.full_name || target.id,
+        description: `Corrected the ${target.role} account email. The new email was confirmed by the Head Administrator.` ,
+      });
+      return json({ success: true, email });
+    }
+
     if (action === "reset_password") {
       const userId = cleanText(body?.user_id, 64);
       const requestedUsername = cleanText(body?.username, 32).toLowerCase();
