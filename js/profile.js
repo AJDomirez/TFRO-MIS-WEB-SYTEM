@@ -212,26 +212,58 @@ async function loadSystemSettings() {
 function filteredManagedAccounts() {
   const term = document.getElementById("accountSearch")?.value.trim().toLowerCase() || "";
   const role = document.getElementById("accountRoleFilter")?.value || "all";
+  const status = document.getElementById("accountStatusFilter")?.value || "all";
   return managedAccounts.filter((account) => {
     if (role !== "all" && account.role !== role) return false;
+    const accountStatus = account.account_status || "active";
+    const needsReview = !account.email_confirmed || ["pending_approval", "pending_verification"].includes(accountStatus);
+    if (status === "active" && (accountStatus !== "active" || !account.email_confirmed)) return false;
+    if (status === "review" && !needsReview) return false;
+    if (status === "rejected" && accountStatus !== "rejected") return false;
+    if (status === "suspended" && accountStatus !== "suspended") return false;
     if (!term) return true;
     return [account.full_name, account.login, account.email, account.role, account.reference]
       .some((value) => String(value || "").toLowerCase().includes(term));
   });
 }
 
+function managedAccountStatus(account) {
+  const status = account.account_status || "active";
+  if (!account.email_confirmed) return { label: "Email confirmation pending", className: "email-pending", icon: "ri-mail-line" };
+  if (status === "pending_approval") return { label: "Approval pending", className: "review", icon: "ri-time-line" };
+  if (status === "pending_verification") return { label: "Record review pending", className: "review", icon: "ri-file-search-line" };
+  if (status === "rejected") return { label: "Rejected", className: "rejected", icon: "ri-close-circle-line" };
+  if (status === "suspended") return { label: "Suspended", className: "suspended", icon: "ri-lock-line" };
+  return { label: "Ready to sign in", className: "active", icon: "ri-checkbox-circle-line" };
+}
+
+function renderAccountSummary() {
+  const total = managedAccounts.length;
+  const active = managedAccounts.filter((account) => managedAccountStatus(account).className === "active").length;
+  const review = managedAccounts.filter((account) => ["review", "email-pending"].includes(managedAccountStatus(account).className)).length;
+  const paused = managedAccounts.filter((account) => ["rejected", "suspended"].includes(managedAccountStatus(account).className)).length;
+  document.getElementById("accountTotalCount").textContent = String(total);
+  document.getElementById("accountActiveCount").textContent = String(active);
+  document.getElementById("accountReviewCount").textContent = String(review);
+  document.getElementById("accountPausedCount").textContent = String(paused);
+}
+
 function renderManagedAccounts() {
   const rows = document.getElementById("accountManagementRows");
   if (!rows) return;
   const accounts = filteredManagedAccounts();
-  rows.innerHTML = accounts.length ? accounts.map((account) => `
+  renderAccountSummary();
+  rows.innerHTML = accounts.length ? accounts.map((account) => {
+    const state = managedAccountStatus(account);
+    return `
     <tr>
       <td><button type="button" class="managed-account account-history-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-name="${escapeHtml(account.full_name || "Unnamed account")}" title="View account activity history"><span>${escapeHtml(initials(account.full_name))}</span><div><strong>${escapeHtml(account.full_name || "Unnamed account")}</strong><small>${escapeHtml(account.login || account.email || "No login recorded")}</small><em><i class="ri-history-line"></i> View activity history</em></div></button></td>
       <td><span class="account-role ${escapeHtml(account.role)}">${escapeHtml(roleLabel(account.role))}</span></td>
       <td>${escapeHtml(account.contact_number || account.reference || "—")}</td>
-      <td><span class="account-link-status"><i class="ri-checkbox-circle-fill"></i> Portal linked</span></td>
+      <td><span class="account-access-status ${state.className}"><i class="${state.icon}"></i> ${state.label}</span></td>
       <td>${["operator", "traffic_enforcer"].includes(account.role) ? `<button type="button" class="change-email-btn" data-user-id="${escapeHtml(account.id)}" data-email="${escapeHtml(account.email || "")}" data-name="${escapeHtml(account.full_name || "")}"><i class="ri-mail-edit-line"></i> Change Email</button> ` : ""}<button type="button" class="reset-password-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-username="${escapeHtml(account.username || "")}" data-name="${escapeHtml(account.full_name)}"><i class="ri-key-2-line"></i> Reset Password</button>${account.can_delete && ["admin_viewer", "staff", "operator", "traffic_enforcer"].includes(account.role) ? ` <button type="button" class="delete-account-btn" data-user-id="${escapeHtml(account.id)}" data-role="${escapeHtml(account.role)}" data-name="${escapeHtml(account.full_name)}"><i class="ri-delete-bin-6-line"></i> Delete</button>` : ""}</td>
-    </tr>`).join("") : '<tr><td colspan="5" class="account-empty">No linked accounts match this filter.</td></tr>';
+    </tr>`;
+  }).join("") : '<tr><td colspan="5" class="account-empty">No accounts match these filters.</td></tr>';
 }
 
 function formatAccountHistoryDate(value) {
@@ -288,7 +320,7 @@ async function loadManagedAccounts() {
     if (status) status.textContent = `Could not load accounts: ${error.message}`;
     return;
   }
-  if (status) status.textContent = `${managedAccounts.length} linked account${managedAccounts.length === 1 ? "" : "s"} available.`;
+  if (status) status.textContent = `${managedAccounts.length} account${managedAccounts.length === 1 ? "" : "s"} in the system.`;
   renderManagedAccounts();
 }
 
@@ -476,6 +508,7 @@ async function confirmManagedAccountDeletion() {
 
 document.getElementById("accountSearch")?.addEventListener("input", renderManagedAccounts);
 document.getElementById("accountRoleFilter")?.addEventListener("change", renderManagedAccounts);
+document.getElementById("accountStatusFilter")?.addEventListener("change", renderManagedAccounts);
 document.getElementById("refreshAccountsBtn")?.addEventListener("click", loadManagedAccounts);
 document.getElementById("accountManagementRows")?.addEventListener("click", (event) => {
   const emailButton = event.target.closest(".change-email-btn");
