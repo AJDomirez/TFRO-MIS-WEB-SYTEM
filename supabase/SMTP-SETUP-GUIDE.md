@@ -6,7 +6,8 @@ Supabase Auth logs show Gmail rejecting confirmation mail with
 `535 5.7.8 Username and Password not accepted`. Replace the saved SMTP
 password with a Gmail **App Password**; do not use the account's normal
 password. Registration cannot finish while email confirmation is enabled and
-this SMTP error remains.
+this SMTP error remains. This affects Operator registration, which sends a
+confirmation email. TFRO Enforcer registration does not send one.
 
 Custom SMTP is available on Supabase Free projects; a Pro subscription is not
 required. Never save an SMTP password in this repository or share it in chat.

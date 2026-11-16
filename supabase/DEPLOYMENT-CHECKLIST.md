@@ -85,8 +85,9 @@ specifically report a null `confirmation_token` conversion error.
 In **Authentication → Providers → Email**:
 
 - Keep **Allow new users to sign up** enabled.
-- Decide whether **Confirm email** is required. The application supports either
-  setting. When enabled, the new user is sent to `login.html` after confirming.
+- Keep **Confirm email** enabled for Operator registrations. TFRO Enforcer
+  registration confirms the account during administrator-authorized account
+  creation and does not send a confirmation email.
 
 If confirmation emails fail, inspect **Authentication → Logs** first. Configure
 custom SMTP only when the logs show a mail delivery problem; see
