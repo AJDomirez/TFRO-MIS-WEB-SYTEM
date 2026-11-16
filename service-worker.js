@@ -1,4 +1,4 @@
-const CACHE_NAME = "tfro-imis-shell-v57";
+const CACHE_NAME = "tfro-imis-shell-v58";
 const CORE_ASSETS = [
   "./",
   "manifest.webmanifest", "assets/icons/tfro-app-192.png", "assets/icons/tfro-app-512.png",
