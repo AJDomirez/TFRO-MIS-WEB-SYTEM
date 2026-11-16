@@ -35,6 +35,7 @@ const successAction = document.getElementById("registrationSuccessAction");
 const TERMS_VERSION = "TFRO-TERMS-2026-09-08";
 const PRIVACY_VERSION = "TFRO-PRIVACY-2026-09-08";
 const FRANCHISE_NUMBER_PATTERN = /^FR-\d{4}-\d{3,4}$/;
+const ENFORCER_ID_PATTERN = /^TE-[A-Z0-9-]{2,37}$/;
 let registrationEnabled = true;
 let successDestination = "login.html";
 
@@ -131,7 +132,11 @@ function showRegisterWarning(message) {
 
 // Keep the browser checks aligned with the password rules shown in the form.
 const passwordRules = Object.freeze({
-  length: (value) => value.length >= 6,
+  length: (value) => value.length >= 8,
+  lowercase: (value) => /[a-z]/.test(value),
+  uppercase: (value) => /[A-Z]/.test(value),
+  number: (value) => /[0-9]/.test(value),
+  symbol: (value) => /[^A-Za-z0-9]/.test(value),
 });
 
 function passwordMeetsRequirements(value) {
@@ -312,9 +317,15 @@ registerForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  if (role === "traffic_enforcer" && !ENFORCER_ID_PATTERN.test(enforcerId)) {
+    showRegisterWarning("Enter a valid TFRO Enforcer ID, such as TE-2026-0001.");
+    enforcerIdInput.focus();
+    return;
+  }
+
   if (!passwordMeetsRequirements(password)) {
     showRegisterWarning(
-      "Password must be at least 6 characters."
+      "Password must include at least 8 characters, a lowercase letter, an uppercase letter, a number, and a symbol."
     );
     passwordInput.focus();
     return;

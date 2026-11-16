@@ -160,7 +160,9 @@
               type="password"
               id="password"
               placeholder="Create a password"
-              minlength="6"
+              minlength="8"
+              pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}"
+              title="Use at least 8 characters including a lowercase letter, uppercase letter, number, and symbol."
               autocomplete="new-password"
               aria-describedby="passwordRequirements"
               required
@@ -180,7 +182,9 @@
               type="password"
               id="confirmPassword"
               placeholder="Repeat your password"
-              minlength="6"
+              minlength="8"
+              pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}"
+              title="Use at least 8 characters including a lowercase letter, uppercase letter, number, and symbol."
               autocomplete="new-password"
               aria-describedby="passwordMatchStatus"
               required
@@ -202,12 +206,16 @@
           id="passwordRequirements"
           aria-live="polite"
         >
-          <strong>Password must be at least 6 characters.</strong>
+          <strong>Password must include:</strong>
           <ul>
             <li data-password-rule="length">
               <i class="ri-close-circle-line" aria-hidden="true"></i>
-              6 characters or more
+              At least 8 characters
             </li>
+            <li data-password-rule="lowercase"><i class="ri-close-circle-line" aria-hidden="true"></i>One lowercase letter</li>
+            <li data-password-rule="uppercase"><i class="ri-close-circle-line" aria-hidden="true"></i>One uppercase letter</li>
+            <li data-password-rule="number"><i class="ri-close-circle-line" aria-hidden="true"></i>One number</li>
+            <li data-password-rule="symbol"><i class="ri-close-circle-line" aria-hidden="true"></i>One symbol (for example: ! @ # $ %)</li>
           </ul>
         </div>
 
@@ -317,7 +325,7 @@ Already have an account?
 </div>
 
 <!-- Version query ensures browsers fetch the current registration error handling. -->
-<script type="module" src="../js/register.js?v=20261106-7"></script>
+<script type="module" src="../js/register.js?v=20261116-1"></script>
 <script src="../js/trike-drive.js?v=20260908-191500"></script>
 </body>
 </html>
