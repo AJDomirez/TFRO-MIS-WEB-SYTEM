@@ -296,6 +296,8 @@ registerForm.addEventListener("submit", async (event) => {
   const middleName = document.getElementById("middleName").value.trim();
   const lastName = document.getElementById("lastName").value.trim();
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
+  const recordNameInput = document.getElementById("recordName");
+  const recordName = recordNameInput.value.trim();
   const email = document.getElementById("email").value.trim();
   const contactNumber = document.getElementById("contactNumber").value.trim();
   const franchiseNumber = document.getElementById("franchiseNumber").value.trim().toUpperCase();
@@ -306,6 +308,7 @@ registerForm.addEventListener("submit", async (event) => {
   /* VALIDATION */
   if (!firstName || !middleName || !lastName || !email || !contactNumber
       || (role === "operator" && !franchiseNumber)
+      || (role === "operator" && !recordName)
       || (role === "traffic_enforcer" && !enforcerId)) {
     showRegisterWarning("Please fill in all the required fields.");
     return;
@@ -378,7 +381,8 @@ registerForm.addEventListener("submit", async (event) => {
         emailRedirectTo: new URL("./login.html?confirmed=1", window.location.href).href,
         data: {
           role,
-          full_name: fullName,
+          full_name: role === "operator" ? recordName : fullName,
+          account_name: fullName,
           first_name: firstName,
           middle_name: middleName,
           last_name: lastName,
