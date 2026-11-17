@@ -381,8 +381,9 @@ registerForm.addEventListener("submit", async (event) => {
         emailRedirectTo: new URL("./login.html?confirmed=1", window.location.href).href,
         data: {
           role,
-          full_name: role === "operator" ? recordName : fullName,
+          full_name: fullName,
           account_name: fullName,
+          operator_record_name: role === "operator" ? recordName : null,
           first_name: firstName,
           middle_name: middleName,
           last_name: lastName,

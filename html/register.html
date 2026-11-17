@@ -110,7 +110,7 @@
         </div>
 
         <p class="account-note register-full" data-operator-field>
-          <strong>Operator reminder:</strong> Enter the franchise number and operator name exactly as they appear on your TFRO franchise record.
+          <strong>Operator reminder:</strong> Your account name is used for your sign-in profile. Enter the operator's full recorded name and franchise number exactly as shown on your TFRO record to verify the account.
         </p>
 
         <div class="input-group">
@@ -142,15 +142,15 @@
         </div>
 
         <div class="input-group register-full" data-operator-field>
-          <label>Operator Franchise Number</label>
-          <input type="text" id="franchiseNumber" placeholder="FR-2026-0001" autocomplete="off" inputmode="text" maxlength="12" pattern="FR-[0-9]{4}-[0-9]{3,4}" required />
-          <small class="field-help">Use the exact current ID, such as FR-2026-0001 (or a 3-digit special number). Its year is updated when TFRO approves a renewal.</small>
+          <label>Operator's Recorded Name</label>
+          <input type="text" id="recordName" placeholder="Full name exactly as shown on the franchise record" autocomplete="off" required />
+          <small class="field-help">The full operator name and franchise number are used together as the unique TFRO record ID.</small>
         </div>
 
         <div class="input-group register-full" data-operator-field>
-          <label>Name in the Record</label>
-          <input type="text" id="recordName" placeholder="Name as shown on the franchise record" autocomplete="name" required />
-          <small class="field-help">This name and your franchise number are used together to find your TFRO record.</small>
+          <label>Operator Franchise Number</label>
+          <input type="text" id="franchiseNumber" placeholder="FR-2026-0001" autocomplete="off" inputmode="text" maxlength="12" pattern="FR-[0-9]{4}-[0-9]{3,4}" required />
+          <small class="field-help">Use the exact current ID, such as FR-2026-0001 (or a 3-digit special number). Its year is updated when TFRO approves a renewal.</small>
         </div>
 
         <div class="input-group register-full" data-enforcer-field hidden>

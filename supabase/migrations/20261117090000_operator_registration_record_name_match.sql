@@ -1,6 +1,6 @@
--- Operator registration qualifies against both the current franchise number
--- and the registered operator name. Enforcer and internally provisioned
--- account flows keep their existing qualification paths.
+-- Operator registration qualifies against the full recorded operator name
+-- and current franchise number together. The separate account name remains
+-- profile data. Enforcer and internally provisioned flows are unchanged.
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -14,7 +14,10 @@ declare
   is_head_admin_provisioned boolean :=
     internal_account_type in ('admin_viewer', 'staff')
     and coalesce(new.raw_app_meta_data ->> 'provisioned_by', '') = 'head_admin';
-  supplied_name text := nullif(btrim(new.raw_user_meta_data ->> 'full_name'), '');
+  supplied_name text := nullif(btrim(coalesce(
+    new.raw_user_meta_data ->> 'operator_record_name',
+    new.raw_user_meta_data ->> 'full_name'
+  )), '');
   supplied_account_name text := nullif(btrim(new.raw_user_meta_data ->> 'account_name'), '');
   supplied_contact text := nullif(btrim(new.raw_user_meta_data ->> 'contact_number'), '');
   supplied_address text := nullif(btrim(new.raw_user_meta_data ->> 'address'), '');
@@ -60,7 +63,7 @@ begin
   end if;
 
   if supplied_franchise is null or supplied_name is null then
-    raise exception 'Both the franchise number and name shown on the TFRO record are required.' using errcode = 'P0001';
+    raise exception 'The operator full name and franchise number shown on the TFRO record are both required.' using errcode = 'P0001';
   end if;
 
   if supplied_franchise !~ '^FR-[0-9]{4}-[0-9]{3,4}$' then
@@ -76,7 +79,7 @@ begin
   order by f.id limit 1 for update;
 
   if not found then
-    raise exception 'The franchise number and name do not match an active TFRO franchise record.' using errcode = 'P0001';
+    raise exception 'The operator full name and franchise number do not match an active TFRO record.' using errcode = 'P0001';
   end if;
 
   select * into matched_operator from public.operators o
@@ -91,8 +94,8 @@ begin
     raise exception 'This operator record is already linked to another account. Contact TFRO staff.' using errcode = '23505';
   end if;
 
-    insert into public.profiles (id, role, full_name, contact_number, account_status)
-    values (new.id, 'operator', supplied_account_name,
+  insert into public.profiles (id, role, full_name, contact_number, account_status)
+  values (new.id, 'operator', coalesce(supplied_account_name, supplied_name),
           coalesce(matched_franchise.contact_number, supplied_contact), 'active')
   on conflict (id) do update set role = 'operator', full_name = excluded.full_name,
     contact_number = coalesce(excluded.contact_number, public.profiles.contact_number),
